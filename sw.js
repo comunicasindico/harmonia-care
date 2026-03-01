@@ -1,4 +1,4 @@
-const CACHE_NAME = "harmonia-cache-v3";
+const CACHE_NAME = "harmonia-cache-v4";
 
 /* ==============================
    INSTALAÇÃO
@@ -39,3 +39,4 @@ self.addEventListener("fetch", event => {
       .catch(() => caches.match(event.request))
   );
 });
+
