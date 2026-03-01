@@ -28,11 +28,6 @@ input{width:100%;margin-bottom:10px;padding:8px;}
 #historicoBox{display:none;margin-top:30px;}
 .historico-item{background:#fff;padding:10px;margin-bottom:8px;border-radius:6px;font-size:14px;}
 canvas{max-width:300px;margin-top:20px;}
-@media(max-width:768px){
-body{padding:10px;}
-.rotina{flex-direction:column;align-items:flex-start;gap:8px;}
-button{width:100%;}
-}
 </style>
 </head>
 
@@ -46,7 +41,6 @@ button{width:100%;}
 </div>
 
 <div id="app" style="display:none;">
-
 <h1>
 <span>Rotinas - Turno Manhã</span>
 <div>
@@ -66,13 +60,11 @@ button{width:100%;}
 <button onclick="exportarExcel()" class="btn-executar">Exportar Excel</button>
 <div id="historicoLista"></div>
 </div>
-
 </div>
 
 <script>
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="sb_publishable_u77uCBMOBZs8rKsTaMfh6w_mI9viKdh";
-
 const { createClient }=supabase;
 const supabaseClient=createClient(SUPABASE_URL,SUPABASE_KEY);
 
@@ -80,44 +72,45 @@ const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 const TURNO_MANHA_ID="b0efcb02-29a3-41e3-bcb3-0f17ab00a000";
 
 let usuarioAtual=null;
-let roleAtual="colaborador";
+let nivelAtual=null;
 let grafico=null;
 
 async function login(){
 const email=document.getElementById("email").value;
 const senha=document.getElementById("senha").value;
+
 const {data,error}=await supabaseClient.auth.signInWithPassword({email,password:senha});
 if(error){alert("Login inválido");return;}
+
 usuarioAtual=data.user;
-roleAtual=data.user.user_metadata?.role||"colaborador";
+await carregarNivel();
 document.getElementById("loginBox").style.display="none";
 document.getElementById("app").style.display="block";
 carregarRotinas();
 }
-async function obterNivel(){
-  const { data:{ session } } = await supabaseClient.auth.getSession();
-  if(!session) return null;
 
-  const { data } = await supabaseClient
-    .from('perfis')
-    .select('nivel')
-    .eq('usuario_id', session.user.id)
-    .single();
+async function carregarNivel(){
+const { data } = await supabaseClient
+.from('perfis')
+.select('nivel')
+.eq('usuario_id', usuarioAtual.id)
+.single();
 
-  return data?.nivel;
+nivelAtual=data?.nivel||null;
 }
+
 async function logout(){
 await supabaseClient.auth.signOut();
 usuarioAtual=null;
-roleAtual="colaborador";
+nivelAtual=null;
 document.getElementById("app").style.display="none";
 document.getElementById("loginBox").style.display="block";
 }
 
-supabaseClient.auth.getSession().then(({data})=>{
+supabaseClient.auth.getSession().then(async ({data})=>{
 if(data.session){
 usuarioAtual=data.session.user;
-roleAtual=data.session.user.user_metadata?.role||"colaborador";
+await carregarNivel();
 document.getElementById("loginBox").style.display="none";
 document.getElementById("app").style.display="block";
 carregarRotinas();
@@ -144,44 +137,26 @@ data.forEach(rotina=>{
 const div=document.createElement("div");
 div.className=`rotina ${rotina.status_execucao==="concluida"?"concluida":(new Date().toLocaleTimeString()>rotina.horario_previsto?"atrasada":"pendente")}`;
 
-div.innerHTML=`<div><strong>${rotina.horario_previsto}</strong> - ${rotina.titulo}${rotina.horario_executado?`<br><small style="color:#555;">Executado às ${new Date(rotina.horario_executado+'Z').toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'})}</small>`:''}</div>${rotina.status_execucao==="concluida"?`<button class="btn-disabled">Concluída</button>`:`<button class="btn-executar" onclick="executar('${rotina.id}')">Executar</button>`}`;
+const podeExecutar=(nivelAtual==="admin"||nivelAtual==="supervisor");
+
+div.innerHTML=`<div><strong>${rotina.horario_previsto}</strong> - ${rotina.titulo}${rotina.horario_executado?`<br><small style="color:#555;">Executado às ${new Date(rotina.horario_executado+'Z').toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'})}</small>`:''}</div>${rotina.status_execucao==="concluida"?`<button class="btn-disabled">Concluída</button>`:(podeExecutar?`<button class="btn-executar" onclick="executar('${rotina.id}')">Executar</button>`:`<button class="btn-disabled">Sem permissão</button>`)}`;
 
 lista.appendChild(div);
 });
 }
 
-function atualizarGrafico(concluidas,pendentes,atrasadas){
-const ctx=document.getElementById("graficoTurno").getContext("2d");
-if(grafico)grafico.destroy();
-grafico=new Chart(ctx,{
-type:"doughnut",
-data:{
-labels:["Concluídas","Pendentes","Atrasadas"],
-datasets:[{
-data:[concluidas,pendentes,atrasadas],
-backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
-}]
-},
-options:{responsive:true}
-});
-}
-const nivel = await obterNivel();
-
-if(nivel !== 'admin' && nivel !== 'supervisor'){
-  alert("Acesso restrito ao administrador");
-  return;
-}
 async function executar(rotinaId){
-const { data:{ session } }=await supabaseClient.auth.getSession();
-if(!session){alert("Sessão expirada.");logout();return;}
-usuarioAtual=session.user;
+if(!(nivelAtual==="admin"||nivelAtual==="supervisor")){
+alert("Acesso restrito");
+return;
+}
 const { error }=await supabaseClient.rpc('executar_rotina',{p_rotina_id:rotinaId,p_usuario_id:usuarioAtual.id});
 if(error){alert("Erro ao executar");console.error(error);return;}
 carregarRotinas();
 }
 
 function toggleHistorico(){
-if(roleAtual!=="admin"){alert("Acesso restrito ao administrador");return;}
+if(nivelAtual!=="admin"){alert("Acesso restrito ao administrador");return;}
 const box=document.getElementById("historicoBox");
 box.style.display=box.style.display==="none"?"block":"none";
 if(box.style.display==="block")carregarHistorico();
@@ -196,21 +171,6 @@ if(error){console.error(error);return;}
 renderHistorico(data);
 }
 
-async function filtrarPorData(){
-const dataSelecionada=document.getElementById("filtroData").value;
-if(!dataSelecionada)return;
-const inicio=dataSelecionada+"T00:00:00";
-const fim=dataSelecionada+"T23:59:59";
-
-const {data,error}=await supabaseClient.from('rotinas_execucao')
-.select('rotina_id,usuario_id,horario_executado')
-.gte('horario_executado',inicio)
-.lte('horario_executado',fim)
-.order('horario_executado',{ascending:false});
-if(error){console.error(error);return;}
-renderHistorico(data);
-}
-
 function renderHistorico(data){
 const box=document.getElementById("historicoLista");
 box.innerHTML="";
@@ -221,28 +181,10 @@ Rotina: ${r.rotina_id} | Usuário: ${r.usuario_id} | ${new Date(r.horario_execut
 });
 }
 
-async function exportarExcel(){
-const {data,error}=await supabaseClient.from('rotinas_execucao')
-.select('*')
-.order('horario_executado',{ascending:false});
-if(error){console.error(error);return;}
-let csv="Rotina,Usuario,Horario\n";
-data.forEach(r=>{
-csv+=`${r.rotina_id},${r.usuario_id},${new Date(r.horario_executado+'Z').toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})}\n`;
-});
-const blob=new Blob([csv],{type:"text/csv"});
-const url=URL.createObjectURL(blob);
-const a=document.createElement("a");
-a.href=url;
-a.download="historico.csv";
-a.click();
-}
-
 if("serviceWorker" in navigator){
 navigator.serviceWorker.register("sw.js");
 }
 </script>
 
 </body>
-
 </html>
