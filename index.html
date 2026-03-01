@@ -8,77 +8,30 @@
 <!-- ITEM 0 – BIBLIOTECAS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2c3e50">
 
 <style>
-
 /* ITEM CSS 1 – BASE */
 body{font-family:Arial;margin:0;padding:20px;background:#f4f6f9}
 h1{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
-
 /* ITEM CSS 2 – CARDS */
-.rotina{
-background:#fff;
-padding:15px;
-border-radius:10px;
-margin-bottom:12px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-box-shadow:0 2px 6px rgba(0,0,0,.1)
-}
-
+.rotina{background:#fff;padding:15px;border-radius:10px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 6px rgba(0,0,0,.1)}
 .pendente{border-left:6px solid #e74c3c}
 .concluida{border-left:6px solid #2ecc71}
 .atrasada{border-left:6px solid #f39c12}
-
 /* ITEM CSS 3 – BOTÕES */
-button{
-padding:8px 14px;
-border:0;
-border-radius:6px;
-font-weight:bold;
-cursor:pointer
-}
-
+button{padding:8px 14px;border:0;border-radius:6px;font-weight:bold;cursor:pointer}
 .btn-executar{background:#3498db;color:#fff}
 .btn-disabled{background:#bdc3c7}
 .btn-logout{background:#e74c3c;color:#fff}
 .btn-historico{background:#2c3e50;color:#fff}
-
 /* ITEM CSS 4 – LOGIN */
-#loginBox{
-max-width:300px;
-margin:80px auto;
-text-align:center
-}
-
-input{
-width:100%;
-margin-bottom:10px;
-padding:8px
-}
-
-#historicoBox{
-display:none;
-margin-top:30px
-}
-
-.historico-item{
-background:#fff;
-padding:10px;
-margin-bottom:8px;
-border-radius:6px;
-font-size:14px
-}
-
-canvas{
-max-width:320px;
-margin-top:20px
-}
-
+#loginBox{max-width:300px;margin:80px auto;text-align:center}
+input{width:100%;margin-bottom:10px;padding:8px}
+#historicoBox{display:none;margin-top:30px}
+.historico-item{background:#fff;padding:10px;margin-bottom:8px;border-radius:6px;font-size:14px}
+canvas{max-width:320px;margin-top:20px}
 </style>
 </head>
 
@@ -94,7 +47,6 @@ margin-top:20px
 
 <!-- ITEM 2 – APP -->
 <div id="app" style="display:none">
-
 <h1>
 <span>Rotinas - Turno Manhã</span>
 <div>
@@ -102,18 +54,13 @@ margin-top:20px
 <button onclick="logout()" class="btn-logout">Sair</button>
 </div>
 </h1>
-
 <div id="painel" style="margin-bottom:20px;font-weight:bold"></div>
-
 <canvas id="graficoTurno"></canvas>
-
 <div id="lista"></div>
-
 <div id="historicoBox">
 <h2>Histórico</h2>
 <div id="historicoLista"></div>
 </div>
-
 </div>
 
 <script>
@@ -124,26 +71,15 @@ margin-top:20px
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-/* ==============================
-   FORÇAR ATUALIZAÇÃO DO SW
-============================== */
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(reg => reg.update());
-  });
-
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    window.location.reload();
-  });
-}
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 const TURNO_ID="b0efcb02-29a3-41e3-bcb3-0f17ab00a000";
+let user=null,nivel=null,grafico=null,appReady=false;
 
-let user=null;
-let nivel=null;
-let grafico=null;
-let appReady=false;
-
+/* ITEM JS 1.1 – ATUALIZAÇÃO AUTOMÁTICA SW */
+if("serviceWorker"in navigator){
+navigator.serviceWorker.getRegistrations().then(regs=>{regs.forEach(r=>r.update())});
+navigator.serviceWorker.addEventListener("controllerchange",()=>{window.location.reload()});
+}
 
 /* =====================================================
    ITEM JS 2 – LOGIN
@@ -151,17 +87,9 @@ let appReady=false;
 async function login(){
 const email=document.getElementById("emailInput").value;
 const senha=document.getElementById("senhaInput").value;
-const {data,error}=await db.auth.signInWithPassword({
-email:email,
-password:senha
-});
-if(error){
-alert("Login inválido");
-return;
-}
-user=data.user;
-await carregarNivel();
-iniciarApp();
+const {data,error}=await db.auth.signInWithPassword({email,password:senha});
+if(error){alert("Login inválido");return;}
+user=data.user;await carregarNivel();iniciarApp();
 }
 
 /* =====================================================
@@ -169,11 +97,7 @@ iniciarApp();
 ===================================================== */
 async function carregarNivel(){
 if(!user)return;
-const {data}=await db
-.from('perfis')
-.select('nivel')
-.eq('usuario_id',user.id)
-.maybeSingle();
+const {data}=await db.from("perfis").select("nivel").eq("usuario_id",user.id).maybeSingle();
 nivel=data?.nivel||null;
 }
 
@@ -181,11 +105,7 @@ nivel=data?.nivel||null;
    ITEM JS 4 – AUTO SESSION
 ===================================================== */
 db.auth.getSession().then(async({data})=>{
-if(data.session){
-user=data.session.user;
-await carregarNivel();
-iniciarApp();
-}
+if(data.session){user=data.session.user;await carregarNivel();iniciarApp();}
 });
 
 /* =====================================================
@@ -204,16 +124,7 @@ carregarRotinas();
 function atualizarGrafico(c,p,a){
 const ctx=document.getElementById("graficoTurno").getContext("2d");
 if(grafico)grafico.destroy();
-grafico=new Chart(ctx,{
-type:"doughnut",
-data:{
-labels:["Concluídas","Pendentes","Atrasadas"],
-datasets:[{
-data:[c,p,a],
-backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
-}]
-}
-});
+grafico=new Chart(ctx,{type:"doughnut",data:{labels:["Concluídas","Pendentes","Atrasadas"],datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]}})
 }
 
 /* =====================================================
@@ -221,147 +132,60 @@ backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
 ===================================================== */
 async function carregarRotinas(){
 if(!appReady)return;
-const {data}=await db.rpc('rotina_diaria_por_turno',{
-p_empresa_id:EMPRESA_ID,
-p_turno_id:TURNO_ID
-});
+const {data}=await db.rpc("rotina_diaria_por_turno",{p_empresa_id:EMPRESA_ID,p_turno_id:TURNO_ID});
 if(!data)return;
-const lista=document.getElementById("lista");
-lista.innerHTML="";
+const lista=document.getElementById("lista");lista.innerHTML="";
 let total=data.length;
 let concluidas=data.filter(r=>r.status_execucao==="concluida").length;
 let pendentes=data.filter(r=>r.status_execucao==="pendente").length;
-let atrasadas=data.filter(r=>
-r.status_execucao==="pendente" &&
-new Date().toLocaleTimeString() > r.horario_previsto
-).length;
-
-document.getElementById("painel").innerHTML=
-`Total:${total} |
-Concluídas:${concluidas} |
-Pendentes:${pendentes} |
-Atrasadas:${atrasadas} |
-${total?Math.round(concluidas/total*100):0}%`;
-
+let atrasadas=data.filter(r=>r.status_execucao==="pendente"&&new Date().toLocaleTimeString()>r.horario_previsto).length;
+document.getElementById("painel").innerHTML=`Total:${total} | Concluídas:${concluidas} | Pendentes:${pendentes} | Atrasadas:${atrasadas} | ${total?Math.round(concluidas/total*100):0}%`;
 atualizarGrafico(concluidas,pendentes,atrasadas);
 data.forEach(r=>{
-
 let classe="rotina ";
-
-if(r.status_execucao==="concluida") classe+="concluida";
-else if(new Date().toLocaleTimeString() > r.horario_previsto) classe+="atrasada";
+if(r.status_execucao==="concluida")classe+="concluida";
+else if(new Date().toLocaleTimeString()>r.horario_previsto)classe+="atrasada";
 else classe+="pendente";
-
-let pode=(nivel==="admin"||nivel==="supervisor");
-
+let pode=(nivel==="admin"||nivel==="supervisor"||nivel==="cuidador");
 let div=document.createElement("div");
-
 div.className=classe;
-
-div.innerHTML=`
-<div>
-<strong>${r.horario_previsto}</strong> - ${r.titulo}
-${r.horario_executado?
-`<br><small>Executado às ${
-new Date(r.horario_executado+'Z')
-.toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'})
-}</small>`:''}
-</div>
-
-${r.status_execucao==="concluida"
-?`<button class="btn-disabled">Concluída</button>`
-:(pode
-?`<button class="btn-executar" onclick="executar('${r.id}')">Executar</button>`
-:`<button class="btn-disabled">Sem permissão</button>`)}
-`;
-
+div.innerHTML=`<div><strong>${r.horario_previsto}</strong> - ${r.titulo}${r.horario_executado?`<br><small>Executado às ${new Date(r.horario_executado+'Z').toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'})}</small>`:''}</div>${r.status_execucao==="concluida"?`<button class="btn-disabled">Concluída</button>`:(pode?`<button class="btn-executar" onclick="executar('${r.id}')">Executar</button>`:`<button class="btn-disabled">Sem permissão</button>`)}`
 lista.appendChild(div);
-
 });
-
 }
-
 
 /* =====================================================
    ITEM JS 8 – EXECUTAR
 ===================================================== */
-
 async function executar(id){
-
-if(!(nivel==="admin"||nivel==="supervisor")){
-alert("Acesso restrito");
-return;
-}
-
-await db.rpc('executar_rotina',{
-p_rotina_id:id,
-p_usuario_id:user.id
-});
-
+if(!(nivel==="admin"||nivel==="supervisor"||nivel==="cuidador")){alert("Acesso restrito");return;}
+await db.rpc("executar_rotina",{p_rotina_id:id,p_usuario_id:user.id});
 carregarRotinas();
-
 }
-
 
 /* =====================================================
    ITEM JS 9 – HISTÓRICO
 ===================================================== */
-
 function toggleHistorico(){
-
-if(nivel!=="admin"){
-alert("Acesso restrito ao administrador");
-return;
-}
-
+if(nivel!=="admin"&&nivel!=="ceo"){alert("Acesso restrito");return;}
 const box=document.getElementById("historicoBox");
-
 box.style.display=box.style.display==="none"?"block":"none";
-
 if(box.style.display==="block")carregarHistorico();
-
 }
-
 async function carregarHistorico(){
-
-const {data}=await db
-.from('rotinas_execucao')
-.select(`
-rotina_id,
-horario_executado,
-perfis(nome)
-`)
-.order('horario_executado',{ascending:false})
-.limit(50);
-
-const lista=document.getElementById("historicoLista");
-lista.innerHTML="";
-
+const {data}=await db.from("rotinas_execucao").select("rotina_id,horario_executado,perfis(nome)").order("horario_executado",{ascending:false}).limit(50);
+const lista=document.getElementById("historicoLista");lista.innerHTML="";
+if(!data)return;
 data.forEach(r=>{
-lista.innerHTML+=`
-<div class="historico-item">
-Rotina: ${r.rotina_id} |
-Usuário: ${r.perfis?.nome||"Não identificado"} |
-${new Date(r.horario_executado+'Z')
-.toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})}
-</div>`;
+lista.innerHTML+=`<div class="historico-item">Rotina:${r.rotina_id} | Usuário:${r.perfis?.nome||"Não identificado"} | ${new Date(r.horario_executado+'Z').toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})}</div>`
 });
-
 }
-
 
 /* =====================================================
    ITEM JS 10 – LOGOUT
 ===================================================== */
-
-async function logout(){
-await db.auth.signOut();
-location.reload();
-}
+async function logout(){await db.auth.signOut();location.reload();}
 
 </script>
 </body>
 </html>
-
-
-
