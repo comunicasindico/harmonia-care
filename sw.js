@@ -1,33 +1,41 @@
-const CACHE_NAME="harmonia-cache-v3";
-const urlsToCache=["./","./index.html"];
+const CACHE_NAME = "harmonia-cache-v3";
 
-self.addEventListener("install",event=>{
-event.waitUntil(
-caches.open(CACHE_NAME).then(cache=>{
-return cache.addAll(urlsToCache);
-})
-);
+/* ==============================
+   INSTALAÇÃO
+============================== */
+self.addEventListener("install", event => {
+  self.skipWaiting();
 });
 
-self.addEventListener("activate",event=>{
-event.waitUntil(
-caches.keys().then(cacheNames=>{
-return Promise.all(
-cacheNames.map(cache=>{
-if(cache!==CACHE_NAME){
-return caches.delete(cache);
-}
-})
-);
-})
-);
+/* ==============================
+   ATIVAÇÃO
+============================== */
+self.addEventListener("activate", event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(key => key !== CACHE_NAME)
+            .map(key => caches.delete(key))
+      )
+    )
+  );
+  self.clients.claim();
 });
 
-self.addEventListener("fetch",event=>{
-event.respondWith(
-fetch(event.request).catch(()=>{
-return caches.match(event.request);
-})
-);
-});
+/* ==============================
+   FETCH
+   NÃO CACHEAR HTML
+============================== */
+self.addEventListener("fetch", event => {
 
+  if (event.request.mode === "navigate") {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  event.respondWith(
+    fetch(event.request)
+      .then(response => response)
+      .catch(() => caches.match(event.request))
+  );
+});
