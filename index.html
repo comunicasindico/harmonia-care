@@ -121,7 +121,6 @@ margin-top:20px
 /* =====================================================
    ITEM JS 1 – CONFIG
 ===================================================== */
-
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -138,54 +137,38 @@ let appReady=false;
 /* =====================================================
    ITEM JS 2 – LOGIN
 ===================================================== */
-
 async function login(){
-
 const email=document.getElementById("emailInput").value;
 const senha=document.getElementById("senhaInput").value;
-
 const {data,error}=await db.auth.signInWithPassword({
 email:email,
 password:senha
 });
-
 if(error){
 alert("Login inválido");
 return;
 }
-
 user=data.user;
-
 await carregarNivel();
-
 iniciarApp();
-
 }
-
 
 /* =====================================================
    ITEM JS 3 – CARREGAR NÍVEL
 ===================================================== */
-
 async function carregarNivel(){
-
 if(!user)return;
-
 const {data}=await db
 .from('perfis')
 .select('nivel')
 .eq('usuario_id',user.id)
 .maybeSingle();
-
 nivel=data?.nivel||null;
-
 }
-
 
 /* =====================================================
    ITEM JS 4 – AUTO SESSION
 ===================================================== */
-
 db.auth.getSession().then(async({data})=>{
 if(data.session){
 user=data.session.user;
@@ -194,33 +177,22 @@ iniciarApp();
 }
 });
 
-
 /* =====================================================
    ITEM JS 5 – INICIAR APP
 ===================================================== */
-
 function iniciarApp(){
-
 document.getElementById("loginBox").style.display="none";
 document.getElementById("app").style.display="block";
-
 appReady=true;
-
 carregarRotinas();
-
 }
-
 
 /* =====================================================
    ITEM JS 6 – GRÁFICO
 ===================================================== */
-
 function atualizarGrafico(c,p,a){
-
 const ctx=document.getElementById("graficoTurno").getContext("2d");
-
 if(grafico)grafico.destroy();
-
 grafico=new Chart(ctx,{
 type:"doughnut",
 data:{
@@ -231,34 +203,23 @@ backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
 }]
 }
 });
-
 }
-
 
 /* =====================================================
    ITEM JS 7 – CARREGAR ROTINAS
 ===================================================== */
-
 async function carregarRotinas(){
-
 if(!appReady)return;
-
 const {data}=await db.rpc('rotina_diaria_por_turno',{
 p_empresa_id:EMPRESA_ID,
 p_turno_id:TURNO_ID
 });
-
 if(!data)return;
-
 const lista=document.getElementById("lista");
 lista.innerHTML="";
-
 let total=data.length;
-
 let concluidas=data.filter(r=>r.status_execucao==="concluida").length;
-
 let pendentes=data.filter(r=>r.status_execucao==="pendente").length;
-
 let atrasadas=data.filter(r=>
 r.status_execucao==="pendente" &&
 new Date().toLocaleTimeString() > r.horario_previsto
@@ -272,7 +233,6 @@ Atrasadas:${atrasadas} |
 ${total?Math.round(concluidas/total*100):0}%`;
 
 atualizarGrafico(concluidas,pendentes,atrasadas);
-
 data.forEach(r=>{
 
 let classe="rotina ";
@@ -391,4 +351,5 @@ location.reload();
 </script>
 </body>
 </html>
+
 
