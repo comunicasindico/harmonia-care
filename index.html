@@ -130,6 +130,22 @@ carregarRotinas();
 }
 });
 
+  function atualizarGrafico(concluidas,pendentes,atrasadas){
+  const ctx=document.getElementById("graficoTurno").getContext("2d");
+  if(window.grafico) window.grafico.destroy();
+
+  window.grafico=new Chart(ctx,{
+    type:"doughnut",
+    data:{
+      labels:["Concluídas","Pendentes","Atrasadas"],
+      datasets:[{
+        data:[concluidas,pendentes,atrasadas],
+        backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
+      }]
+    },
+    options:{responsive:true}
+  });
+}
 async function carregarRotinas(){
 const {data,error}=await supabaseClient.rpc('rotina_diaria_por_turno',{p_empresa_id:EMPRESA_ID,p_turno_id:TURNO_MANHA_ID});
 if(error){console.error(error);return;}
@@ -201,4 +217,5 @@ navigator.serviceWorker.register("sw.js");
 
 </body>
 </html>
+
 
