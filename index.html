@@ -237,7 +237,13 @@ if(box.style.display==="block")carregarHistorico();
 async function carregarHistorico(){
 const {data,error}=await supabaseClient
 .from('rotinas_execucao')
-.select('rotina_id,usuario_id,horario_executado')
+.select(`
+  rotina_id,
+  horario_executado,
+  perfis!fk_usuario (
+    nome
+  )
+`)
 .order('horario_executado',{ascending:false})
 .limit(50);
 
@@ -250,7 +256,7 @@ data.forEach(r=>{
 box.innerHTML+=`
 <div class="historico-item">
 Rotina: ${r.rotina_id} |
-Usuário: ${r.usuario_id} |
+Usuário: ${r.perfis?.nome || "Não identificado"} |
 ${new Date(r.horario_executado+'Z')
 .toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})}
 </div>`;
@@ -266,3 +272,4 @@ navigator.serviceWorker.register("sw.js");
 
 </body>
 </html>
+
