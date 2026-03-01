@@ -94,7 +94,18 @@ document.getElementById("loginBox").style.display="none";
 document.getElementById("app").style.display="block";
 carregarRotinas();
 }
+async function obterNivel(){
+  const { data:{ session } } = await supabaseClient.auth.getSession();
+  if(!session) return null;
 
+  const { data } = await supabaseClient
+    .from('perfis')
+    .select('nivel')
+    .eq('usuario_id', session.user.id)
+    .single();
+
+  return data?.nivel;
+}
 async function logout(){
 await supabaseClient.auth.signOut();
 usuarioAtual=null;
@@ -154,7 +165,12 @@ backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
 options:{responsive:true}
 });
 }
+const nivel = await obterNivel();
 
+if(nivel !== 'admin' && nivel !== 'supervisor'){
+  alert("Acesso restrito ao administrador");
+  return;
+}
 async function executar(rotinaId){
 const { data:{ session } }=await supabaseClient.auth.getSession();
 if(!session){alert("Sessão expirada.");logout();return;}
@@ -228,4 +244,5 @@ navigator.serviceWorker.register("sw.js");
 </script>
 
 </body>
+
 </html>
