@@ -90,13 +90,26 @@ carregarRotinas();
 }
 
 async function carregarNivel(){
-const { data } = await supabaseClient
-.from('perfis')
-.select('nivel')
-.eq('usuario_id', usuarioAtual.id)
-.single();
+  if(!usuarioAtual){
+    nivelAtual = null;
+    return;
+  }
 
-nivelAtual=data?.nivel||null;
+  const { data, error } = await supabaseClient
+    .from('perfis')
+    .select('nivel')
+    .eq('usuario_id', usuarioAtual.id)
+    .maybeSingle();
+
+  if(error){
+    console.error("Erro ao buscar perfil:", error);
+    nivelAtual = null;
+    return;
+  }
+
+  nivelAtual = data?.nivel || null;
+
+  console.log("Nível carregado:", nivelAtual);
 }
 
 async function logout(){
@@ -188,3 +201,4 @@ navigator.serviceWorker.register("sw.js");
 
 </body>
 </html>
+
