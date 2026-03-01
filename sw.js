@@ -1,4 +1,4 @@
-const CACHE_NAME="harmonia-cache-v2";
+const CACHE_NAME="harmonia-cache-v3";
 const urlsToCache=["./","./index.html"];
 
 self.addEventListener("install",event=>{
@@ -30,3 +30,4 @@ return caches.match(event.request);
 })
 );
 });
+
