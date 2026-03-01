@@ -48,6 +48,12 @@ canvas{max-width:350px;margin-top:20px}
 <span>Rotinas - Turno Manhã</span>
 <div>
 
+  <button onclick="toggleTodos()" class="btn-historico">Todos Idosos</button>
+  <div id="todosBox" style="display:none;margin-top:30px">
+<h2>Todos os Idosos e Medicações</h2>
+<div id="todosLista"></div>
+</div>
+  
   <button onclick="togglePaciente()" class="btn-historico">Paciente</button>
 <div id="pacienteBox" style="display:none;margin-top:30px">
 <h2>Visão por Paciente</h2>
@@ -266,8 +272,47 @@ ${d.profissional?`<br><small>Por: ${d.profissional}</small>`:''}
 </div>`;
 });
 }
+
+  /* ITEM JS – LISTAR TODOS */
+function toggleTodos(){
+const box=document.getElementById("todosBox");
+box.style.display=box.style.display==="none"?"block":"none";
+if(box.style.display==="block")carregarTodos();
+}
+
+async function carregarTodos(){
+const {data}=await db.from("idosos_medicacoes_completo").select("*");
+if(!data)return;
+
+const lista=document.getElementById("todosLista");
+lista.innerHTML="";
+
+let atual="";
+
+data.forEach(d=>{
+
+if(d.idoso!==atual){
+atual=d.idoso;
+lista.innerHTML+=`<h3 style="margin-top:25px;color:#2c3e50">${d.idoso}</h3>`;
+}
+
+let atraso=(d.status==="pendente"&&new Date().toLocaleTimeString()>d.horario_previsto);
+
+lista.innerHTML+=`
+<div class="rotina ${d.status==="concluida"?"concluida":(atraso?"atrasada piscar":"pendente")}">
+<div>
+<strong>${d.horario_previsto||"--:--"}</strong> - 
+${d.nome_medicacao||"Sem medicação"} 
+${d.dosagem?`(${d.dosagem})`:''}
+${d.profissional?`<br><small>Profissional: ${d.profissional}</small>`:''}
+</div>
+</div>`;
+});
+}
+  
 </script>
 </body>
 </html>
+
 
 
