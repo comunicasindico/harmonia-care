@@ -27,7 +27,7 @@ button{padding:8px 14px;border:none;border-radius:6px;cursor:pointer;font-weight
 input{width:100%;margin-bottom:10px;padding:8px;}
 #historicoBox{display:none;margin-top:30px;}
 .historico-item{background:#fff;padding:10px;margin-bottom:8px;border-radius:6px;font-size:14px;}
-canvas{max-width:300px;margin-top:20px;}
+canvas{max-width:320px;margin-top:20px;}
 </style>
 </head>
 
@@ -41,6 +41,7 @@ canvas{max-width:300px;margin-top:20px;}
 </div>
 
 <div id="app" style="display:none;">
+
 <h1>
 <span>Rotinas - Turno Manhã</span>
 <div>
@@ -55,18 +56,15 @@ canvas{max-width:300px;margin-top:20px;}
 
 <div id="historicoBox">
 <h2>Histórico de Execuções</h2>
-<input type="date" id="filtroData">
-<button onclick="filtrarPorData()" class="btn-executar">Filtrar</button>
-<button onclick="exportarExcel()" class="btn-executar">Exportar Excel</button>
 <div id="historicoLista"></div>
 </div>
+
 </div>
 
 <script>
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="sb_publishable_u77uCBMOBZs8rKsTaMfh6w_mI9viKdh";
-const { createClient }=supabase;
-const supabaseClient=createClient(SUPABASE_URL,SUPABASE_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 const TURNO_MANHA_ID="b0efcb02-29a3-41e3-bcb3-0f17ab00a000";
@@ -74,6 +72,8 @@ const TURNO_MANHA_ID="b0efcb02-29a3-41e3-bcb3-0f17ab00a000";
 let usuarioAtual=null;
 let nivelAtual=null;
 let grafico=null;
+
+/* ================= LOGIN ================= */
 
 async function login(){
 const email=document.getElementById("email").value;
@@ -84,32 +84,11 @@ if(error){alert("Login inválido");return;}
 
 usuarioAtual=data.user;
 await carregarNivel();
+
 document.getElementById("loginBox").style.display="none";
 document.getElementById("app").style.display="block";
+
 carregarRotinas();
-}
-
-async function carregarNivel(){
-  if(!usuarioAtual){
-    nivelAtual = null;
-    return;
-  }
-
-  const { data, error } = await supabaseClient
-    .from('perfis')
-    .select('nivel')
-    .eq('usuario_id', usuarioAtual.id)
-    .maybeSingle();
-
-  if(error){
-    console.error("Erro ao buscar perfil:", error);
-    nivelAtual = null;
-    return;
-  }
-
-  nivelAtual = data?.nivel || null;
-
-  console.log("Nível carregado:", nivelAtual);
 }
 
 async function logout(){
@@ -119,6 +98,25 @@ nivelAtual=null;
 document.getElementById("app").style.display="none";
 document.getElementById("loginBox").style.display="block";
 }
+
+/* ================= PERFIL ================= */
+
+async function carregarNivel(){
+if(!usuarioAtual){nivelAtual=null;return;}
+
+const {data,error}=await supabaseClient
+.from('perfis')
+.select('nivel')
+.eq('usuario_id',usuarioAtual.id)
+.maybeSingle();
+
+if(error){console.error(error);nivelAtual=null;return;}
+
+nivelAtual=data?.nivel||null;
+console.log("Nível carregado:",nivelAtual);
+}
+
+/* ================= AUTO SESSION ================= */
 
 supabaseClient.auth.getSession().then(async ({data})=>{
 if(data.session){
@@ -130,85 +128,136 @@ carregarRotinas();
 }
 });
 
-  function atualizarGrafico(concluidas,pendentes,atrasadas){
-  const ctx=document.getElementById("graficoTurno").getContext("2d");
-  if(window.grafico) window.grafico.destroy();
+/* ================= GRÁFICO ================= */
 
-  window.grafico=new Chart(ctx,{
-    type:"doughnut",
-    data:{
-      labels:["Concluídas","Pendentes","Atrasadas"],
-      datasets:[{
-        data:[concluidas,pendentes,atrasadas],
-        backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
-      }]
-    },
-    options:{responsive:true}
-  });
+function atualizarGrafico(concluidas,pendentes,atrasadas){
+const ctx=document.getElementById("graficoTurno").getContext("2d");
+
+if(grafico){grafico.destroy();}
+
+grafico=new Chart(ctx,{
+type:"doughnut",
+data:{
+labels:["Concluídas","Pendentes","Atrasadas"],
+datasets:[{
+data:[concluidas,pendentes,atrasadas],
+backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
+}]
+},
+options:{responsive:true}
+});
 }
+
+/* ================= ROTINAS ================= */
+
 async function carregarRotinas(){
-const {data,error}=await supabaseClient.rpc('rotina_diaria_por_turno',{p_empresa_id:EMPRESA_ID,p_turno_id:TURNO_MANHA_ID});
+const {data,error}=await supabaseClient.rpc(
+'rotina_diaria_por_turno',
+{p_empresa_id:EMPRESA_ID,p_turno_id:TURNO_MANHA_ID}
+);
+
 if(error){console.error(error);return;}
 
 const lista=document.getElementById("lista");
 lista.innerHTML="";
 
-let total=data.length,
-concluidas=data.filter(r=>r.status_execucao==="concluida").length,
-pendentes=data.filter(r=>r.status_execucao==="pendente").length,
-atrasadas=data.filter(r=>r.status_execucao==="pendente"&&new Date().toLocaleTimeString()>r.horario_previsto).length;
+let total=data.length;
+let concluidas=data.filter(r=>r.status_execucao==="concluida").length;
+let pendentes=data.filter(r=>r.status_execucao==="pendente").length;
+let atrasadas=data.filter(r=>r.status_execucao==="pendente"&&new Date().toLocaleTimeString()>r.horario_previsto).length;
 
-document.getElementById("painel").innerHTML=`Total:${total} | Concluídas:${concluidas} | Pendentes:${pendentes} | Atrasadas:${atrasadas} | ${total?Math.round((concluidas/total)*100):0}%`;
+document.getElementById("painel").innerHTML=
+`Total:${total} | Concluídas:${concluidas} | Pendentes:${pendentes} | Atrasadas:${atrasadas} | ${total?Math.round((concluidas/total)*100):0}%`;
 
 atualizarGrafico(concluidas,pendentes,atrasadas);
 
 data.forEach(rotina=>{
 const div=document.createElement("div");
-div.className=`rotina ${rotina.status_execucao==="concluida"?"concluida":(new Date().toLocaleTimeString()>rotina.horario_previsto?"atrasada":"pendente")}`;
+
+div.className=`rotina ${
+rotina.status_execucao==="concluida"
+?"concluida"
+:(new Date().toLocaleTimeString()>rotina.horario_previsto?"atrasada":"pendente")
+}`;
 
 const podeExecutar=(nivelAtual==="admin"||nivelAtual==="supervisor");
 
-div.innerHTML=`<div><strong>${rotina.horario_previsto}</strong> - ${rotina.titulo}${rotina.horario_executado?`<br><small style="color:#555;">Executado às ${new Date(rotina.horario_executado+'Z').toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'})}</small>`:''}</div>${rotina.status_execucao==="concluida"?`<button class="btn-disabled">Concluída</button>`:(podeExecutar?`<button class="btn-executar" onclick="executar('${rotina.id}')">Executar</button>`:`<button class="btn-disabled">Sem permissão</button>`)}`;
+div.innerHTML=`
+<div>
+<strong>${rotina.horario_previsto}</strong> - ${rotina.titulo}
+${rotina.horario_executado?
+`<br><small style="color:#555;">
+Executado às ${new Date(rotina.horario_executado+'Z')
+.toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'})}
+</small>`:''}
+</div>
+${
+rotina.status_execucao==="concluida"
+?`<button class="btn-disabled">Concluída</button>`
+:(podeExecutar
+?`<button class="btn-executar" onclick="executar('${rotina.id}')">Executar</button>`
+:`<button class="btn-disabled">Sem permissão</button>`)
+}
+`;
 
 lista.appendChild(div);
 });
 }
+
+/* ================= EXECUTAR ================= */
 
 async function executar(rotinaId){
 if(!(nivelAtual==="admin"||nivelAtual==="supervisor")){
 alert("Acesso restrito");
 return;
 }
-const { error }=await supabaseClient.rpc('executar_rotina',{p_rotina_id:rotinaId,p_usuario_id:usuarioAtual.id});
-if(error){alert("Erro ao executar");console.error(error);return;}
+
+const {error}=await supabaseClient.rpc(
+'executar_rotina',
+{p_rotina_id:rotinaId,p_usuario_id:usuarioAtual.id}
+);
+
+if(error){console.error(error);alert("Erro ao executar");return;}
+
 carregarRotinas();
 }
 
+/* ================= HISTÓRICO ================= */
+
 function toggleHistorico(){
-if(nivelAtual!=="admin"){alert("Acesso restrito ao administrador");return;}
+if(nivelAtual!=="admin"){
+alert("Acesso restrito ao administrador");
+return;
+}
 const box=document.getElementById("historicoBox");
 box.style.display=box.style.display==="none"?"block":"none";
 if(box.style.display==="block")carregarHistorico();
 }
 
 async function carregarHistorico(){
-const {data,error}=await supabaseClient.from('rotinas_execucao')
+const {data,error}=await supabaseClient
+.from('rotinas_execucao')
 .select('rotina_id,usuario_id,horario_executado')
 .order('horario_executado',{ascending:false})
 .limit(50);
-if(error){console.error(error);return;}
-renderHistorico(data);
-}
 
-function renderHistorico(data){
+if(error){console.error(error);return;}
+
 const box=document.getElementById("historicoLista");
 box.innerHTML="";
+
 data.forEach(r=>{
-box.innerHTML+=`<div class="historico-item">
-Rotina: ${r.rotina_id} | Usuário: ${r.usuario_id} | ${new Date(r.horario_executado+'Z').toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})}
+box.innerHTML+=`
+<div class="historico-item">
+Rotina: ${r.rotina_id} |
+Usuário: ${r.usuario_id} |
+${new Date(r.horario_executado+'Z')
+.toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})}
 </div>`;
 });
 }
+
+/* ================= SERVICE WORKER ================= */
 
 if("serviceWorker" in navigator){
 navigator.serviceWorker.register("sw.js");
@@ -217,5 +266,3 @@ navigator.serviceWorker.register("sw.js");
 
 </body>
 </html>
-
-
