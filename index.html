@@ -47,7 +47,16 @@ canvas{max-width:350px;margin-top:20px}
 <h1>
 <span>Rotinas - Turno Manhã</span>
 <div>
-<button onclick="toggleHistorico()" class="btn-historico">Histórico</button>
+
+  <button onclick="togglePaciente()" class="btn-historico">Paciente</button>
+<div id="pacienteBox" style="display:none;margin-top:30px">
+<h2>Visão por Paciente</h2>
+<select id="pacienteSelect"></select>
+<canvas id="graficoPaciente"></canvas>
+<div id="pacienteLista"></div>
+</div>
+
+  <button onclick="toggleHistorico()" class="btn-historico">Histórico</button>
 <button onclick="toggleCEO()" class="btn-ceo">CEO</button>
 <button onclick="logout()" class="btn-logout">Sair</button>
 </div>
@@ -202,7 +211,63 @@ carregarRotinas();
 /* ITEM JS 13 – LOGOUT */
 async function logout(){await db.auth.signOut();location.reload();}
 
+/* ITEM JS 14 – CARREGAR LISTA PACIENTES */
+async function carregarPacientes(){
+const {data}=await db.from("pacientes").select("id,nome_completo").order("nome_completo");
+if(!data)return;
+const select=document.getElementById("pacienteSelect");
+select.innerHTML="<option value=''>Selecione...</option>";
+data.forEach(p=>{
+select.innerHTML+=`<option value="${p.id}">${p.nome_completo}</option>`;
+});
+}
+
+/* ITEM JS 15 – TOGGLE PACIENTE */
+function togglePaciente(){
+const box=document.getElementById("pacienteBox");
+box.style.display=box.style.display==="none"?"block":"none";
+if(box.style.display==="block"){carregarPacientes();}
+}
+
+/* ITEM JS 16 – EVENTO SELECT */
+document.addEventListener("change",function(e){
+if(e.target.id==="pacienteSelect"){
+carregarPacienteDetalhado(e.target.value);
+}
+});
+
+/* ITEM JS 17 – CARREGAR DETALHE */
+async function carregarPacienteDetalhado(id){
+if(!id)return;
+const {data}=await db.from("paciente_detalhado").select("*").eq("paciente_id",id);
+if(!data)return;
+
+let total=data.length;
+let c=data.filter(d=>d.status==="concluida").length;
+let p=data.filter(d=>d.status==="pendente").length;
+
+const ctx=document.getElementById("graficoPaciente").getContext("2d");
+if(window.graficoPaciente)window.graficoPaciente.destroy();
+window.graficoPaciente=new Chart(ctx,{
+type:"doughnut",
+data:{labels:["Concluídas","Pendentes"],datasets:[{data:[c,p],backgroundColor:["#2ecc71","#e74c3c"]}]}
+});
+
+const lista=document.getElementById("pacienteLista");
+lista.innerHTML="";
+data.forEach(d=>{
+let atraso=(d.status==="pendente"&&new Date().toLocaleTimeString()>d.horario_previsto);
+lista.innerHTML+=`
+<div class="rotina ${d.status==="concluida"?"concluida":(atraso?"atrasada piscar":"pendente")}">
+<div>
+<strong>${d.horario_previsto}</strong> - ${d.nome_medicacao}
+${d.profissional?`<br><small>Por: ${d.profissional}</small>`:''}
+</div>
+</div>`;
+});
+}
 </script>
 </body>
 </html>
+
 
