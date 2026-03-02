@@ -30,7 +30,10 @@ input{width:100%;margin-bottom:10px;padding:8px}
 #historicoBox,#ceoBox{display:none;margin-top:30px}
 .historico-item{background:#fff;padding:10px;margin-bottom:8px;border-radius:6px;font-size:14px}
 canvas{max-width:350px;margin-top:20px}
-</style>
+@keyframes piscarAlerta{0%{background:#ffcccc;}50%{background:#ff0000;color:#fff;}100%{background:#ffcccc;}}
+.atrasada{animation:piscarAlerta 1s infinite;border-left:8px solid #c0392b;}
+
+  </style>
 </head>
 
 <body>
@@ -313,6 +316,7 @@ ${d.profissional?`<br><small>Profissional: ${d.profissional}</small>`:''}
 </script>
 </body>
 </html>
+
 
 
 
