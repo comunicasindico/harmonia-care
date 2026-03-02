@@ -208,6 +208,8 @@ grafico=new Chart(ctx,{type:"doughnut",data:{labels:["Concluídas","Pendentes","
 async function carregarRotinas(){
 if(!appReady) return;
 
+console.log("Entrou na função carregarRotinas");
+
 const TURNO_NOME = "manha";
 
 const {data,error} = await db.rpc("rotina_completa_por_turno",{
@@ -215,132 +217,11 @@ const {data,error} = await db.rpc("rotina_completa_por_turno",{
   p_turno:TURNO_NOME
 });
 
-if(error){ console.error(error); return; }
+console.log("Erro:", error);
+console.log("Data completa:", data);
+
+if(error){ return; }
 if(!data) return;
-
-console.log(data[0]); // 👈 COLOQUE AQUI
-  
-const lista = document.getElementById("lista");
-lista.innerHTML="";
-
-/* =============================
-   AGRUPAR POR PACIENTE
-============================= */
-
-const agrupado = {};
-
-data.forEach(r=>{
-
-  // pega o nome real vindo da RPC
-  const nomePaciente =
-    r.paciente_nome ||
-    r.nome_completo ||
-    r.paciente?.nome_completo ||
-    r.pacientes?.nome_completo ||
-    "Paciente sem nome";
-
-  if(!agrupado[nomePaciente]){
-    agrupado[nomePaciente] = [];
-  }
-
-  agrupado[nomePaciente].push(r);
-
-});
-
-/* =============================
-   DASHBOARD GERAL
-============================= */
-
-let total = data.length;
-let c = data.filter(r=>r.status==="concluida").length;
-let p = data.filter(r=>r.status==="pendente").length;
-let a = data.filter(r=>r.status==="atrasado").length;
-
-let banner = document.getElementById("bannerAtraso");
-
-if(a>0){
-  banner.style.display="block";
-  banner.innerHTML=`🚨 ATENÇÃO: ${a} ITEM(NS) EM ATRASO`;
-}else{
-  banner.style.display="none";
-}
-
-document.getElementById("painel").innerHTML=
-`Total:${total} | Concluídas:${c} | Pendentes:${p} | Atrasadas:${a} | ${total?Math.round(c/total*100):0}%`;
-
-atualizarGrafico(c,p,a);
-
-/* =============================
-   RENDER POR PACIENTE
-============================= */
-
-Object.keys(agrupado).forEach(nome=>{
-
-  const blocoPaciente = document.createElement("div");
-  blocoPaciente.style.marginTop = "35px";
-
-  /* TÍTULO DO PACIENTE */
-  const titulo = document.createElement("h2");
-  titulo.innerText = nome;
-  titulo.style.color = "#2c3e50";
-  titulo.style.borderBottom = "2px solid #ecf0f1";
-  titulo.style.paddingBottom = "5px";
-  blocoPaciente.appendChild(titulo);
-
-  /* INDICADOR POR PACIENTE */
-  const rotinasPaciente = agrupado[nome];
-  let totalP = rotinasPaciente.length;
-  let concluidasP = rotinasPaciente.filter(r=>r.status==="concluida").length;
-
-  const progresso = document.createElement("div");
-  progresso.style.marginBottom = "15px";
-  progresso.style.fontSize = "14px";
-  progresso.innerHTML =
-  `Progresso: ${concluidasP}/${totalP} (${Math.round(concluidasP/totalP*100)}%)`;
-  blocoPaciente.appendChild(progresso);
-
-  /* ROTINAS */
-  rotinasPaciente.forEach(r=>{
-
-    let classe="rotina ";
-    if(r.status==="concluida") classe+="concluida";
-    else if(r.status==="atrasado") classe+="atrasada";
-    else classe+="pendente";
-
-    let icone="";
-    if(r.tipo==="alimentacao") icone="🍽";
-    else if(r.tipo==="cuidado") icone="🛁";
-    else if(r.tipo==="higiene") icone="🧼";
-    else if(r.tipo==="medicacao") icone="💊";
-
-    let pode=(nivel==="admin"||nivel==="supervisor"||nivel==="cuidador");
-
-    let div=document.createElement("div");
-    div.className=classe;
-
-    div.innerHTML=`
-    <div>
-      <strong>${r.horario_previsto||""}</strong> 
-      ${icone} ${r.titulo}
-    </div>
-    ${
-      r.status==="concluida"
-      ? `<button class="btn-disabled">Concluída</button>`
-      : (pode
-          ? `<button class="btn-executar" onclick="executar('${r.id}')">Executar</button>`
-          : `<button class="btn-disabled">Sem permissão</button>`
-        )
-    }
-    `;
-
-    blocoPaciente.appendChild(div);
-
-  });
-
-  lista.appendChild(blocoPaciente);
-
-});
-
 }
 
 /* ITEM JS CEO */
@@ -509,6 +390,7 @@ ${d.profissional?`<br><small>Profissional: ${d.profissional}</small>`:''}
 </script>
 </body>
 </html>
+
 
 
 
