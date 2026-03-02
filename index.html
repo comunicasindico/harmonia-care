@@ -204,7 +204,7 @@ if(grafico)grafico.destroy();
 grafico=new Chart(ctx,{type:"doughnut",data:{labels:["Concluídas","Pendentes","Atrasadas"],datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]}})
 }
 
-/* ITEM JS 7 – ROTINAS */
+/* ITEM JS 7 – ROTINAS AGRUPADAS POR PACIENTE */
 async function carregarRotinas(){
 if(!appReady) return;
 
@@ -220,6 +220,23 @@ if(!data) return;
 
 const lista = document.getElementById("lista");
 lista.innerHTML="";
+
+/* =============================
+   AGRUPAR POR PACIENTE
+============================= */
+
+const agrupado = {};
+
+data.forEach(r=>{
+  if(!agrupado[r.paciente_nome]){
+    agrupado[r.paciente_nome] = [];
+  }
+  agrupado[r.paciente_nome].push(r);
+});
+
+/* =============================
+   DASHBOARD GERAL
+============================= */
 
 let total = data.length;
 let c = data.filter(r=>r.status==="concluida").length;
@@ -240,36 +257,77 @@ document.getElementById("painel").innerHTML=
 
 atualizarGrafico(c,p,a);
 
-data.forEach(r=>{
+/* =============================
+   RENDER POR PACIENTE
+============================= */
 
-let classe="rotina ";
+Object.keys(agrupado).forEach(nome=>{
 
-if(r.status==="concluida") classe+="concluida";
-else if(r.status==="atrasado") classe+="atrasada";
-else classe+="pendente";
+  const blocoPaciente = document.createElement("div");
+  blocoPaciente.style.marginTop = "35px";
 
-let icone="";
-if(r.tipo==="alimentacao") icone="🍽";
-else if(r.tipo==="cuidado") icone="🛁";
-else if(r.tipo==="higiene") icone="🧼";
-else if(r.tipo==="medicacao") icone="💊";
+  /* TÍTULO DO PACIENTE */
+  const titulo = document.createElement("h2");
+  titulo.innerText = nome;
+  titulo.style.color = "#2c3e50";
+  titulo.style.borderBottom = "2px solid #ecf0f1";
+  titulo.style.paddingBottom = "5px";
+  blocoPaciente.appendChild(titulo);
 
-let pode=(nivel==="admin"||nivel==="supervisor"||nivel==="cuidador");
+  /* INDICADOR POR PACIENTE */
+  const rotinasPaciente = agrupado[nome];
+  let totalP = rotinasPaciente.length;
+  let concluidasP = rotinasPaciente.filter(r=>r.status==="concluida").length;
 
-let div=document.createElement("div");
-div.className=classe;
+  const progresso = document.createElement("div");
+  progresso.style.marginBottom = "15px";
+  progresso.style.fontSize = "14px";
+  progresso.innerHTML =
+  `Progresso: ${concluidasP}/${totalP} (${Math.round(concluidasP/totalP*100)}%)`;
+  blocoPaciente.appendChild(progresso);
 
-div.innerHTML=`
-<div><strong>${r.horario_previsto||""}</strong> ${icone} ${r.titulo}</div>
-${r.status==="concluida"
-? `<button class="btn-disabled">Concluída</button>`
-: (pode
-  ? `<button class="btn-executar" onclick="executar('${r.id}')">Executar</button>`
-  : `<button class="btn-disabled">Sem permissão</button>`)}
-`;
+  /* ROTINAS */
+  rotinasPaciente.forEach(r=>{
 
-lista.appendChild(div);
+    let classe="rotina ";
+    if(r.status==="concluida") classe+="concluida";
+    else if(r.status==="atrasado") classe+="atrasada";
+    else classe+="pendente";
+
+    let icone="";
+    if(r.tipo==="alimentacao") icone="🍽";
+    else if(r.tipo==="cuidado") icone="🛁";
+    else if(r.tipo==="higiene") icone="🧼";
+    else if(r.tipo==="medicacao") icone="💊";
+
+    let pode=(nivel==="admin"||nivel==="supervisor"||nivel==="cuidador");
+
+    let div=document.createElement("div");
+    div.className=classe;
+
+    div.innerHTML=`
+    <div>
+      <strong>${r.horario_previsto||""}</strong> 
+      ${icone} ${r.titulo}
+    </div>
+    ${
+      r.status==="concluida"
+      ? `<button class="btn-disabled">Concluída</button>`
+      : (pode
+          ? `<button class="btn-executar" onclick="executar('${r.id}')">Executar</button>`
+          : `<button class="btn-disabled">Sem permissão</button>`
+        )
+    }
+    `;
+
+    blocoPaciente.appendChild(div);
+
+  });
+
+  lista.appendChild(blocoPaciente);
+
 });
+
 }
 
 /* ITEM JS CEO */
@@ -347,6 +405,7 @@ const {data}=await db.from("pacientes").select("id,nome_completo").order("nome_c
 if(!data)return;
 const select=document.getElementById("pacienteSelect");
 select.innerHTML="<option value=''>Selecione...</option>";
+
 data.forEach(p=>{
 select.innerHTML+=`<option value="${p.id}">${p.nome_completo}</option>`;
 });
@@ -437,6 +496,7 @@ ${d.profissional?`<br><small>Profissional: ${d.profissional}</small>`:''}
 </script>
 </body>
 </html>
+
 
 
 
