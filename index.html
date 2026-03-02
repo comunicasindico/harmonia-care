@@ -213,29 +213,16 @@ grafico=new Chart(ctx,{type:"doughnut",data:{labels:["Concluídas","Pendentes","
 }
 
 /* ITEM JS 7 – ROTINAS */
-async function carregarRotinas(){
-if(!appReady)return;
-const {data}=await db.rpc("rotina_diaria_por_turno",{p_empresa_id:EMPRESA_ID,p_turno_id:TURNO_ID});
-if(!data)return;
-const lista=document.getElementById("lista");lista.innerHTML="";
-let total=data.length;
-let c=data.filter(r=>r.status_execucao==="concluida").length;
-let p=data.filter(r=>r.status_execucao==="pendente").length;
-let a=data.filter(r=>r.status_execucao==="pendente"&&new Date().toLocaleTimeString()>r.horario_previsto).length;
-document.getElementById("painel").innerHTML=`Total:${total} | Concluídas:${c} | Pendentes:${p} | Atrasadas:${a} | ${total?Math.round(c/total*100):0}%`;
-atualizarGrafico(c,p,a);
-data.forEach(r=>{
-let classe="rotina ";
-if(r.status_execucao==="concluida")classe+="concluida";
-else if(new Date().toLocaleTimeString()>r.horario_previsto)classe+="atrasada piscar";
-else classe+="pendente";
-let pode=(nivel==="admin"||nivel==="supervisor"||nivel==="cuidador");
-let div=document.createElement("div");
-div.className=classe;
-div.innerHTML=`<div><strong>${r.horario_previsto}</strong> - ${r.titulo}</div>${r.status_execucao==="concluida"?`<button class="btn-disabled">Concluída</button>`:(pode?`<button class="btn-executar" onclick="executar('${r.id}')">Executar</button>`:`<button class="btn-disabled">Sem permissão</button>`)}`
-lista.appendChild(div);
-});
-}
+async function carregarRotinas(){if(!appReady)return;const {data}=await db.rpc("rotina_diaria_por_turno",{p_empresa_id:EMPRESA_ID,p_turno_id:TURNO_ID});
+                                 if(!data)return;const lista=document.getElementById("lista");lista.innerHTML="";let total=data.length;
+                                 let c=data.filter(r=>r.status_execucao==="concluida").length;let p=data.filter(r=>r.status_execucao==="pendente").length;
+                                 let a=data.filter(r=>r.status_execucao==="atrasado").length;document.getElementById("painel").innerHTML=`Total:${total}
+                                 | Concluídas:${c} | Pendentes:${p} | Atrasadas:${a} | ${total?Math.round(c/total*100):0}%`;atualizarGrafico(c,p,a);
+                                 data.forEach(r=>{let classe="rotina ";if(r.status_execucao==="concluida")classe+="concluida";
+                                 else if(r.status_execucao==="atrasado")classe+="atrasada";else classe+="pendente";
+                                                  let pode=(nivel==="admin"||nivel==="supervisor"||nivel==="cuidador");
+                                                  let div=document.createElement("div");div.className=classe;div.innerHTML=`<div><strong>${r.horario_previsto}</strong> - ${r.titulo}</div>${r.status_execucao==="concluida"?`<button class="btn-disabled">Concluída</button>`:(pode?`<button class="btn-executar" onclick="executar('${r.id}')">Executar</button>`:`<button class="btn-disabled">Sem permissão</button>`)}`
+;lista.appendChild(div);});}
 
 /* ITEM JS 8 – MEDICAÇÕES */
 async function carregarMedicacoes(){
@@ -386,6 +373,7 @@ ${d.profissional?`<br><small>Profissional: ${d.profissional}</small>`:''}
 </script>
 </body>
 </html>
+
 
 
 
