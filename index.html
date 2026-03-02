@@ -216,7 +216,12 @@ grafico=new Chart(ctx,{type:"doughnut",data:{labels:["Concluídas","Pendentes","
 /* ITEM JS 7 – ROTINAS */
 async function carregarRotinas(){
 if(!appReady)return;
-const {data}=await db.rpc("rotina_diaria_por_turno",{p_empresa_id:EMPRESA_ID,p_turno_id:TURNO_ID});
+const TURNO_NOME = "manha"; // depois vamos dinamizar
+
+const {data}=await db.rpc("rotina_completa_por_turno",{
+  p_empresa_id:EMPRESA_ID,
+  p_turno:TURNO_NOME
+});
 if(!data)return;
 const lista=document.getElementById("lista");
 lista.innerHTML="";
@@ -240,13 +245,18 @@ atualizarGrafico(c,p,a);
 data.forEach(r=>{
 let classe="rotina ";
 if(r.status_execucao==="concluida")classe+="concluida";
+let icone="";
+if(r.tipo==="alimentacao") icone="🍽 ";
+if(r.tipo==="cuidado") icone="🛁 ";
+if(r.tipo==="higiene") icone="🧼 ";
+if(r.tipo==="medicacao") icone="💊 ";
 else if(r.status_execucao==="atrasado")classe+="atrasada";
 else classe+="pendente";
 let pode=(nivel==="admin"||nivel==="supervisor"||nivel==="cuidador");
 let div=document.createElement("div");
 div.className=classe;
-div.innerHTML=
-`<div><strong>${r.horario_previsto}</strong> - ${r.titulo}</div>
+div.innerHTML=`
+<div><strong>${r.horario_previsto||""}</strong> ${icone} - ${r.titulo}</div>
 ${r.status_execucao==="concluida"
 ?`<button class="btn-disabled">Concluída</button>`
 :(pode
@@ -412,6 +422,7 @@ ${d.profissional?`<br><small>Profissional: ${d.profissional}</small>`:''}
 </script>
 </body>
 </html>
+
 
 
 
