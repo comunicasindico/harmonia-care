@@ -141,7 +141,14 @@ canvas{
 </div>
 </h1>
 
+  </h1>
+
+<!-- 🚨 BANNER GLOBAL DE ATRASO -->
+<div id="bannerAtraso" style="display:none;background:#c0392b;color:#fff;padding:12px;font-weight:bold;text-align:center;border-radius:8px;margin-bottom:15px;"></div>
+<!-- 📊 PAINEL EXECUTIVO -->
+<div id="painelCEO" style="display:none;background:#fff;padding:15px;border-radius:10px;margin-bottom:15px;box-shadow:0 2px 6px rgba(0,0,0,.1);"></div>
 <div id="painel" style="margin-bottom:20px;font-weight:bold"></div>
+
 <canvas id="graficoTurno"></canvas>
 <div id="lista"></div>
 
@@ -196,14 +203,8 @@ if(data.session){user=data.session.user;await carregarNivel();iniciarApp();}
 });
 
 /* ITEM JS 5 – INICIAR */
-function iniciarApp(){
-document.getElementById("loginBox").style.display="none";
-document.getElementById("app").style.display="block";
-appReady=true;
-carregarRotinas();
-carregarMedicacoes();
-if(nivel==="ceo")carregarCEO();
-}
+function iniciarApp(){document.getElementById("loginBox").style.display="none";document.getElementById("app").style.display="block";
+                      appReady=true;carregarRotinas();carregarCEO();}
 
 /* ITEM JS 6 – GRÁFICO TURNOS */
 function atualizarGrafico(c,p,a){
@@ -213,17 +214,55 @@ grafico=new Chart(ctx,{type:"doughnut",data:{labels:["Concluídas","Pendentes","
 }
 
 /* ITEM JS 7 – ROTINAS */
-async function carregarRotinas(){if(!appReady)return;const {data}=await db.rpc("rotina_diaria_por_turno",{p_empresa_id:EMPRESA_ID,p_turno_id:TURNO_ID});
-                                 if(!data)return;const lista=document.getElementById("lista");lista.innerHTML="";let total=data.length;
-                                 let c=data.filter(r=>r.status_execucao==="concluida").length;let p=data.filter(r=>r.status_execucao==="pendente").length;
-                                 let a=data.filter(r=>r.status_execucao==="atrasado").length;document.getElementById("painel").innerHTML=`Total:${total}
-                                 | Concluídas:${c} | Pendentes:${p} | Atrasadas:${a} | ${total?Math.round(c/total*100):0}%`;atualizarGrafico(c,p,a);
-                                 data.forEach(r=>{let classe="rotina ";if(r.status_execucao==="concluida")classe+="concluida";
-                                 else if(r.status_execucao==="atrasado")classe+="atrasada";else classe+="pendente";
-                                                  let pode=(nivel==="admin"||nivel==="supervisor"||nivel==="cuidador");
-                                                  let div=document.createElement("div");div.className=classe;div.innerHTML=`<div><strong>${r.horario_previsto}</strong> - ${r.titulo}</div>${r.status_execucao==="concluida"?`<button class="btn-disabled">Concluída</button>`:(pode?`<button class="btn-executar" onclick="executar('${r.id}')">Executar</button>`:`<button class="btn-disabled">Sem permissão</button>`)}`
-;lista.appendChild(div);});}
+async function carregarRotinas(){
+if(!appReady)return;
+const {data}=await db.rpc("rotina_diaria_por_turno",{p_empresa_id:EMPRESA_ID,p_turno_id:TURNO_ID});
+if(!data)return;
+const lista=document.getElementById("lista");
+lista.innerHTML="";
+let total=data.length;
+let c=data.filter(r=>r.status_execucao==="concluida").length;
+let p=data.filter(r=>r.status_execucao==="pendente").length;
+let a=data.filter(r=>r.status_execucao==="atrasado").length;
+/* 🚨 BANNER GLOBAL */
+let banner=document.getElementById("bannerAtraso");
+if(a>0){
+banner.style.display="block";
+banner.innerHTML=`🚨 ATENÇÃO: ${a} MEDICAÇÃO(ÕES) EM ATRASO`;
+}else{
+banner.style.display="none";
+}
+/* 📊 PAINEL SUPERIOR */
+document.getElementById("painel").innerHTML=
+`Total:${total} | Concluídas:${c} | Pendentes:${p} | Atrasadas:${a} | ${total?Math.round(c/total*100):0}%`;
+atualizarGrafico(c,p,a);
+/* 🧾 LISTAGEM */
+data.forEach(r=>{
+let classe="rotina ";
+if(r.status_execucao==="concluida")classe+="concluida";
+else if(r.status_execucao==="atrasado")classe+="atrasada";
+else classe+="pendente";
+let pode=(nivel==="admin"||nivel==="supervisor"||nivel==="cuidador");
+let div=document.createElement("div");
+div.className=classe;
+div.innerHTML=
+`<div><strong>${r.horario_previsto}</strong> - ${r.titulo}</div>
+${r.status_execucao==="concluida"
+?`<button class="btn-disabled">Concluída</button>`
+:(pode
+?`<button class="btn-executar" onclick="executar('${r.id}')">Executar</button>`
+:`<button class="btn-disabled">Sem permissão</button>`)}
+`;
+lista.appendChild(div);
+});
+}
 
+/* ITEM JS CEO */
+async function carregarCEO(){const {data}=await db.from("dashboard_executivo").select("*").single();if(!data)return;
+                             document.getElementById("painelCEO").style.display="block";document.getElementById("painelCEO").innerHTML=`<strong>
+                             Total Idosos:</strong> ${data.total_idosos} | <strong>Concluídas:</strong> ${data.concluidas} | 
+                             <strong>Pendentes:</strong> ${data.pendentes} | <strong>Atrasadas:</strong> ${data.atrasadas} | 
+                             <strong>Aderência:</strong> ${data.aderencia||0}%`;}  
 /* ITEM JS 8 – MEDICAÇÕES */
 async function carregarMedicacoes(){
 const {data}=await db.from("medicacoes_execucao").select("id,horario_previsto,status,pacientes(nome_completo),medicacoes(nome_medicacao)");
@@ -373,6 +412,7 @@ ${d.profissional?`<br><small>Profissional: ${d.profissional}</small>`:''}
 </script>
 </body>
 </html>
+
 
 
 
