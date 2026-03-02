@@ -218,6 +218,8 @@ const {data,error} = await db.rpc("rotina_completa_por_turno",{
 if(error){ console.error(error); return; }
 if(!data) return;
 
+console.log(data[0]); // 👈 COLOQUE AQUI
+  
 const lista = document.getElementById("lista");
 lista.innerHTML="";
 
@@ -228,10 +230,21 @@ lista.innerHTML="";
 const agrupado = {};
 
 data.forEach(r=>{
-  if(!agrupado[r.paciente_nome]){
-    agrupado[r.paciente_nome] = [];
+
+  // pega o nome real vindo da RPC
+  const nomePaciente =
+    r.paciente_nome ||
+    r.nome_completo ||
+    r.paciente?.nome_completo ||
+    r.pacientes?.nome_completo ||
+    "Paciente sem nome";
+
+  if(!agrupado[nomePaciente]){
+    agrupado[nomePaciente] = [];
   }
-  agrupado[r.paciente_nome].push(r);
+
+  agrupado[nomePaciente].push(r);
+
 });
 
 /* =============================
@@ -496,6 +509,7 @@ ${d.profissional?`<br><small>Profissional: ${d.profissional}</small>`:''}
 </script>
 </body>
 </html>
+
 
 
 
