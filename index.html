@@ -11,29 +11,99 @@
 <meta name="theme-color" content="#2c3e50">
 
 <style>
-body{font-family:Arial;margin:0;padding:20px;background:#f4f6f9}
-h1{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
-.rotina{background:#fff;padding:15px;border-radius:10px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 6px rgba(0,0,0,.1)}
-.pendente{border-left:6px solid #e74c3c}
-.concluida{border-left:6px solid #2ecc71}
-.atrasada{border-left:6px solid #f39c12}
-.piscar{animation:pisca 1s infinite}
-@keyframes pisca{0%{opacity:1}50%{opacity:.4}100%{opacity:1}}
-button{padding:8px 14px;border:0;border-radius:6px;font-weight:bold;cursor:pointer}
-.btn-executar{background:#3498db;color:#fff}
-.btn-disabled{background:#bdc3c7}
-.btn-logout{background:#e74c3c;color:#fff}
-.btn-historico{background:#2c3e50;color:#fff}
-.btn-ceo{background:#8e44ad;color:#fff}
-#loginBox{max-width:300px;margin:80px auto;text-align:center}
-input{width:100%;margin-bottom:10px;padding:8px}
-#historicoBox,#ceoBox{display:none;margin-top:30px}
-.historico-item{background:#fff;padding:10px;margin-bottom:8px;border-radius:6px;font-size:14px}
-canvas{max-width:350px;margin-top:20px}
-@keyframes piscarAlerta{0%{background:#ffcccc;}50%{background:#ff0000;color:#fff;}100%{background:#ffcccc;}}
-.atrasada{animation:piscarAlerta 1s infinite;border-left:8px solid #c0392b;}
+body{
+  font-family:Arial;
+  margin:0;
+  padding:20px;
+  background:#f4f6f9;
+}
 
-  </style>
+h1{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.rotina{
+  background:#fff;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+}
+
+.pendente{
+  border-left:6px solid #e74c3c;
+}
+
+.concluida{
+  border-left:6px solid #2ecc71;
+}
+
+/* 🔴 ALERTA PROFISSIONAL */
+@keyframes piscarAlerta{
+  0%{background:#ffe5e5;}
+  50%{background:#ff0000;color:#fff;}
+  100%{background:#ffe5e5;}
+}
+
+.atrasada{
+  animation:piscarAlerta 1s infinite;
+  border-left:8px solid #c0392b;
+}
+
+button{
+  padding:8px 14px;
+  border:0;
+  border-radius:6px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.btn-executar{background:#3498db;color:#fff;}
+.btn-disabled{background:#bdc3c7;}
+.btn-logout{background:#e74c3c;color:#fff;}
+.btn-historico{background:#2c3e50;color:#fff;}
+.btn-ceo{background:#8e44ad;color:#fff;}
+
+#loginBox{
+  max-width:300px;
+  margin:80px auto;
+  text-align:center;
+}
+
+input{
+  width:100%;
+  margin-bottom:10px;
+  padding:8px;
+}
+
+#historicoBox,
+#ceoBox{
+  display:none;
+  margin-top:30px;
+}
+
+.historico-item{
+  background:#fff;
+  padding:10px;
+  margin-bottom:8px;
+  border-radius:6px;
+  font-size:14px;
+}
+
+canvas{
+  max-width:350px;
+  margin-top:20px;
+}
+  
+</style>
+
+
 </head>
 
 <body>
@@ -316,6 +386,7 @@ ${d.profissional?`<br><small>Profissional: ${d.profissional}</small>`:''}
 </script>
 </body>
 </html>
+
 
 
 
