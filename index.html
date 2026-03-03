@@ -402,9 +402,6 @@ style="margin-bottom:15px;">
 <!-- COLUNA ESQUERDA -->
 <div class="col-esquerda">
 
-<h3>🏥 Ranking Crítico</h3>
-<div id="rankingBox"></div>
-
 <!-- SELEÇÃO DE PACIENTE -->
 <div class="painel-bloco">
 <h3>👥 Selecionar Paciente</h3>
@@ -576,7 +573,7 @@ function iniciarApp(){
 document.getElementById("loginWrapper").style.display="none";
 app.style.display="block";
 
-tituloTurno.innerText=
+tituloTurno.innerText =
 `Rotinas - Manhã | ${user.nome_completo} (${user.cargo})`;
 
 if(user.hierarquia===1){
@@ -585,12 +582,74 @@ carregarAdminUsuarios();
 carregarAdminCargos();
 }
 
+const hoje=new Date().toISOString().split("T")[0];
+document.getElementById("histInicio").value=hoje;
+document.getElementById("histFim").value=hoje;
+
+/* RESTAURADO */
+carregarDashboard();
+carregarPacientes();
+carregarColaboradores();
 carregarRotinas("manhã");
 carregarRankingCriticos();
-carregarColaboradores();
 carregarGraficoInstitucional();
+carregarHistorico();
 }
 
+/* =====================================================
+   ADMIN – CARREGAR PACIENTES
+===================================================== */
+async function carregarPacientes(){
+
+const {data}=await db
+.from("pacientes")
+.select("id,nome_completo")
+.order("nome_completo");
+
+let select=document.getElementById("selectPaciente");
+
+if(!data || data.length===0){
+select.innerHTML=`<option>Nenhum paciente cadastrado</option>`;
+return;
+}
+
+let html=`<option value="">Selecione um paciente...</option>`;
+
+data.forEach(p=>{
+html+=`<option value="${p.id}">${p.nome_completo}</option>`;
+});
+
+select.innerHTML=html;
+}
+   
+/* =====================================================
+   ADMIN – CARREGAR COLABORADORES
+===================================================== */
+async function carregarColaboradores(){
+
+const {data}=await db
+.from("vw_usuarios")
+.select("nome_completo,cargo,ativo")
+.order("hierarquia");
+
+let html="";
+
+if(!data || data.length===0){
+html="<p>Nenhum usuário cadastrado.</p>";
+}
+
+data?.forEach(u=>{
+html+=`
+<div class="item-colaborador">
+${u.nome_completo} 
+- <strong>${u.cargo||"Sem cargo"}</strong>
+${u.ativo ? "" : " (Inativo)"}
+</div>`;
+});
+
+document.getElementById("listaColaboradores").innerHTML=html;
+}
+   
 /* =====================================================
    ADMIN – CARREGAR USUÁRIOS
 ===================================================== */
@@ -775,6 +834,7 @@ carregarUsuariosLogin();
 </script>
 </body>
 </html>
+
 
 
 
