@@ -89,7 +89,23 @@ font-size:24px;
 font-weight:bold;
 color:#2c3e50;
 }
-  
+
+.painel-bloco{
+background:#fff;
+padding:15px;
+margin:20px 0;
+border-radius:12px;
+box-shadow:0 3px 10px rgba(0,0,0,.08);
+}
+
+.item-paciente, .item-colaborador{
+padding:6px 0;
+border-bottom:1px solid #eee;
+}
+
+.status-pendente{color:#e74c3c;font-weight:bold;}
+.status-concluida{color:#2ecc71;font-weight:bold;}
+
 </style>
 </head>
 
@@ -118,6 +134,24 @@ color:#2c3e50;
 <span id="dashPacientes">0</span>
 </div>
 
+<!-- LISTA PACIENTES -->
+<div class="painel-bloco">
+<h3>👥 Pacientes</h3>
+<div id="listaPacientes"></div>
+</div>
+
+<!-- LISTA COLABORADORES -->
+<div class="painel-bloco">
+<h3>🧑‍⚕️ Colaboradores</h3>
+<div id="listaColaboradores"></div>
+</div>
+
+<!-- GRÁFICO GERAL -->
+<div class="painel-bloco">
+<h3>📈 Gráfico Geral Institucional</h3>
+<canvas id="graficoInstitucional"></canvas>
+</div>
+  
 <div class="card-dash">
 <h4>🚨 Críticos</h4>
 <span id="dashCriticos">0</span>
@@ -225,8 +259,10 @@ carregarRotinas("manhã");
 carregarHistorico();
 carregarRankingCriticos();
 carregarDashboard();
+carregarPacientes();
+carregarColaboradores();
+carregarGraficoInstitucional();
 }
-
 /* =====================================================
    004 – DASHBOARD EXECUTIVO
 ===================================================== */
@@ -330,6 +366,89 @@ html+=`
 }
 document.getElementById("rankingBox").innerHTML=html;
 }
+
+/* =====================================================
+   00 – CARREGAR PACIENTES
+===================================================== */
+async function carregarPacientes(){
+
+const {data}=await db
+.from("pacientes")
+.select("id,nome_completo")
+.order("nome_completo");
+
+if(!data) return;
+
+let html="";
+
+data.forEach(p=>{
+html+=`
+<div class="item-paciente">
+<a href="#" onclick="verPaciente('${p.id}')">
+${p.nome_completo}
+</a>
+</div>`;
+});
+
+document.getElementById("listaPacientes").innerHTML=html;
+}
+async function carregarColaboradores(){
+
+const {data}=await db
+.from("vw_usuarios")
+.select("email,nivel")
+.order("email");
+
+if(!data) return;
+
+let html="";
+
+data.forEach(u=>{
+html+=`
+<div class="item-colaborador">
+${u.email} - <strong>${u.nivel}</strong>
+</div>`;
+});
+
+document.getElementById("listaColaboradores").innerHTML=html;
+}
+let graficoInstitucional=null;
+
+async function carregarGraficoInstitucional(){
+
+const {data}=await db.rpc("rotina_completa_por_turno",{
+p_empresa_id:EMPRESA_ID,
+p_turno:"manhã"
+});
+
+if(!data) return;
+
+let concluidas=0;
+let pendentes=0;
+let atrasadas=0;
+
+data.forEach(r=>{
+if(r.status==="concluida")concluidas++;
+else if(r.status==="pendente")pendentes++;
+else atrasadas++;
+});
+
+const ctx=document.getElementById("graficoInstitucional").getContext("2d");
+
+if(graficoInstitucional)graficoInstitucional.destroy();
+
+graficoInstitucional=new Chart(ctx,{
+type:"bar",
+data:{
+labels:["Concluídas","Pendentes","Atrasadas"],
+datasets:[{
+data:[concluidas,pendentes,atrasadas],
+backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
+}]
+}
+});
+}
+
 /* =====================================================
    008 – HISTÓRICO GERAL OPERACIONAL POR TURNO
 ===================================================== */
@@ -356,8 +475,11 @@ if(!turnos[r.turno][r.paciente_nome]){
 turnos[r.turno][r.paciente_nome]=[];
 }
 let statusLetra =
-r.status==="pendente"?"(P)":
-r.status==="concluida"?"(C)":"( )";
+r.status==="pendente"
+? `<span class="status-pendente">(P)</span>`
+: r.status==="concluida"
+? `<span class="status-concluida">(C)</span>`
+: "( )";
 
 turnos[r.turno][r.paciente_nome].push(
 `${r.titulo} ${statusLetra}`
@@ -438,6 +560,7 @@ doc.save(`${nome}.pdf`);
 </script>
 </body>
 </html>
+
 
 
 
