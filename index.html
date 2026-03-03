@@ -83,7 +83,6 @@ let user=null,nivel=null,grafico=null,graficoProf=null;
 /* ================================
    CONTROLE DE PERFIS
 ================================ */
-
 function isAdmin(){
   return nivel === "admin";
 }
@@ -102,6 +101,25 @@ function isExecucao(){
 function isVisualizacao(){
   return nivel === "visualizador";
 }
+/* 020 – DASHBOARD POR PERFIL */
+function carregarDashboard(){
+
+  if(isAdmin()){
+    dashboardAdmin();
+  }
+  else if(isSupervisor()){
+    dashboardSupervisor();
+  }
+  else if(isSaude()){
+    dashboardSaude();
+  }
+  else if(isExecucao()){
+    dashboardExecucao();
+  }
+  else if(isVisualizacao()){
+    dashboardVisualizacao();
+  }
+}   
 /* 007 – LOGIN */
 async function login(){
 const email=emailInput.value.trim();
@@ -128,11 +146,33 @@ if(data.session){user=data.session.user;await carregarNivel();iniciarApp();}
 
 /* 010 – INICIAR */
 function iniciarApp(){
-loginBox.style.display="none";
-app.style.display="block";
-carregarRotinas("manha");
+  loginBox.style.display="none";
+  app.style.display="block";
+  carregarDashboard();
 }
-
+function dashboardAdmin(){
+  carregarRotinas("manha");
+  ceoBox.style.display="none";
+}
+function dashboardSupervisor(){
+  carregarRotinas("manha");
+}
+function dashboardSaude(){
+  carregarRotinas("manha");
+  // futuramente pode mostrar prontuário
+}
+function dashboardExecucao(){
+  carregarRotinas("manha");
+}
+function dashboardVisualizacao(){
+  carregarRotinas("manha");
+  document.querySelectorAll(".btn-executar").forEach(b=>{
+    b.disabled=true;
+    b.classList.remove("btn-executar");
+    b.classList.add("btn-disabled");
+    b.innerText="Visualização";
+  });
+}   
 /* 011 – GRAFICO TURNO */
 function atualizarGrafico(c,p,a){
 const ctx=graficoTurno.getContext("2d");
@@ -237,4 +277,5 @@ function toggleCEO(){
 
 </body>
 </html>
+
 
