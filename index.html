@@ -476,23 +476,28 @@ const {data,error}=await db
 
 if(error || !data) return;
 
-let html=`<option value="">Selecione...</option>`;
+let html = `<option value="">Selecione...</option>`;
 
-data.forEach(u=>{
+data.forEach(u => {
+
 if(!u.ativo) return;
 if(!u.nome_completo) return;
 
-html+=`
-<option value="${u.id}" 
+html += `
+<option 
+value="${u.id}" 
 data-email="${u.email}"
 data-cargo="${u.cargo}"
 data-hierarquia="${u.hierarquia}">
 ${u.nome_completo}
 </option>`;
+
 });
 
-usuarioSelect.innerHTML=html;
+usuarioSelect.innerHTML = html;
 }
+
+   
 usuarioSelect.addEventListener("change",function(){
 let selected=this.options[this.selectedIndex];
 
@@ -510,7 +515,7 @@ usuarioInfo.innerHTML=
 ===================================================== */
 async function login(){
 
-let selected=usuarioSelect.options[usuarioSelect.selectedIndex];
+let selected = usuarioSelect.options[usuarioSelect.selectedIndex];
 
 if(!selected.value){
 alert("Selecione um usuário.");
@@ -524,9 +529,9 @@ alert("Digite a senha.");
 return;
 }
 
-const {data,error}=await db.auth.signInWithPassword({
-email:email,
-password:senhaInput.value
+const {data,error} = await db.auth.signInWithPassword({
+email: email,
+password: senhaInput.value
 });
 
 if(error){
@@ -534,26 +539,19 @@ alert("Senha incorreta.");
 return;
 }
 
-const {data:perfil,error:erroPerfil}=await db
+const {data:perfil} = await db
 .from("vw_usuarios")
 .select("*")
-.eq("id",data.user.id)
+.eq("id", data.user.id)
 .single();
 
-if(erroPerfil || !perfil){
-alert("Perfil não encontrado.");
-await db.auth.signOut();
-return;
-}
-
-if(perfil.ativo === false){
+if(!perfil || perfil.ativo === false){
 alert("Usuário inativo.");
 await db.auth.signOut();
 return;
 }
 
 user = perfil;
-
 iniciarApp();
 }
 
@@ -760,6 +758,7 @@ carregarUsuariosLogin();
 </script>
 </body>
 </html>
+
 
 
 
