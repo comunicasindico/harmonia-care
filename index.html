@@ -132,18 +132,26 @@ let user=null,nivel=null,grafico=null,appReady=false;
 let pacienteAtual=null;
 
 /* LOGIN */
-async function login(){
+
+
+  async function login(){
 const email=document.getElementById("emailInput").value;
 const senha=document.getElementById("senhaInput").value;
 
 const {data,error}=await db.auth.signInWithPassword({email,password:senha});
-if(error){alert("Login inválido");return;}
+
+if(error){
+console.log("Erro real:", error);
+alert(error.message);
+return;
+}
 
 user=data.user;
 await carregarNivel();
 iniciarApp();
 }
 
+  
 async function carregarNivel(){
 const {data}=await db.from("perfis")
 .select("nivel")
@@ -397,3 +405,4 @@ carregarRotinas("manha");
 
 </body>
 </html>
+
