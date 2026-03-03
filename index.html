@@ -159,7 +159,8 @@ margin-top:5px;
 
   </div>
 </div>
-  
+
+<!-- APP PRINCIPAL -->
 <div id="app" style="display:none">
 
 <h1>
@@ -168,41 +169,15 @@ margin-top:5px;
 <button onclick="logout()" class="btn-disabled">Sair</button>
 </div>
 </h1>
-<!-- DASHBOARD EXECUTIVO -->
+
+<!-- ================= DASHBOARD EXECUTIVO ================= -->
 <div class="dashboard-executivo">
+
 <div class="card-dash">
 <h4>👥 Pacientes</h4>
 <span id="dashPacientes">0</span>
 </div>
 
-<!-- SELEÇÃO DE PACIENTE -->
-<div class="painel-bloco">
-<h3>👥 Selecionar Paciente</h3>
-
-<select id="selectPaciente" style="width:100%;padding:8px;border-radius:6px;">
-<option value="">Selecione um paciente...</option>
-</select>
-
-<button onclick="abrirPacienteSelecionado()" 
-class="btn-executar" 
-style="margin-top:10px;width:100%;">
-Abrir Histórico
-</button>
-
-</div>
-
-<!-- LISTA COLABORADORES -->
-<div class="painel-bloco">
-<h3>🧑‍⚕️ Colaboradores</h3>
-<div id="listaColaboradores"></div>
-</div>
-
-<!-- GRÁFICO GERAL -->
-<div class="painel-bloco">
-<h3>📈 Gráfico Geral Institucional</h3>
-<canvas id="graficoInstitucional"></canvas>
-</div>
-  
 <div class="card-dash">
 <h4>🚨 Críticos</h4>
 <span id="dashCriticos">0</span>
@@ -227,13 +202,47 @@ Abrir Histórico
 <h4>💊 Medicações Hoje</h4>
 <span id="dashMedicacoes">0</span>
 </div>
+
 </div>
+<!-- ================= FIM DASHBOARD ================= -->
+
+
+<!-- ================= BLOCO DE GESTÃO ================= -->
 <div class="layout-hospital">
 
 <!-- COLUNA ESQUERDA -->
 <div class="col-esquerda">
+
 <h3>🏥 Ranking Críticos</h3>
 <div id="rankingBox"></div>
+
+<!-- SELEÇÃO DE PACIENTE -->
+<div class="painel-bloco">
+<h3>👥 Selecionar Paciente</h3>
+
+<select id="selectPaciente" style="width:100%;padding:8px;border-radius:6px;">
+<option value="">Selecione um paciente...</option>
+</select>
+
+<button onclick="abrirPacienteSelecionado()" 
+class="btn-executar" 
+style="margin-top:10px;width:100%;">
+Abrir Histórico
+</button>
+</div>
+
+<!-- LISTA COLABORADORES -->
+<div class="painel-bloco">
+<h3>🧑‍⚕️ Colaboradores</h3>
+<div id="listaColaboradores"></div>
+</div>
+
+<!-- GRÁFICO GERAL -->
+<div class="painel-bloco">
+<h3>📈 Gráfico Geral Institucional</h3>
+<canvas id="graficoInstitucional"></canvas>
+</div>
+
 </div>
 
 <!-- COLUNA CENTRAL -->
@@ -251,6 +260,8 @@ Abrir Histórico
 </div>
 
 </div>
+<!-- ================= FIM BLOCO GESTÃO ================= -->
+
 
 <hr style="margin:40px 0">
 
@@ -346,7 +357,7 @@ iniciarApp();
    003 – INICIAR APP
 ===================================================== */
 function iniciarApp(){
-loginBox.style.display="none";
+document.getElementById("loginWrapper").style.display="none";
 app.style.display="block";
 
 const hoje=new Date().toISOString().split("T")[0];
@@ -670,6 +681,7 @@ carregarUsuariosLogin();
 </script>
 </body>
 </html>
+
 
 
 
