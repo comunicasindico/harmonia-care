@@ -61,7 +61,35 @@ position:relative;
 top:0;
 }
 }
+.dashboard-executivo{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+gap:15px;
+margin:20px 0;
+}
 
+.card-dash{
+background:#fff;
+padding:15px;
+border-radius:12px;
+box-shadow:0 3px 10px rgba(0,0,0,.08);
+text-align:center;
+}
+
+.card-dash h4{
+margin:0;
+font-size:14px;
+color:#555;
+}
+
+.card-dash span{
+display:block;
+margin-top:8px;
+font-size:24px;
+font-weight:bold;
+color:#2c3e50;
+}
+  
 </style>
 </head>
 
@@ -83,7 +111,38 @@ top:0;
 <button onclick="logout()" class="btn-disabled">Sair</button>
 </div>
 </h1>
+<!-- DASHBOARD EXECUTIVO -->
+<div class="dashboard-executivo">
+<div class="card-dash">
+<h4>👥 Pacientes</h4>
+<span id="dashPacientes">0</span>
+</div>
 
+<div class="card-dash">
+<h4>🚨 Críticos</h4>
+<span id="dashCriticos">0</span>
+</div>
+
+<div class="card-dash">
+<h4>⏳ Atrasos</h4>
+<span id="dashAtrasos">0</span>
+</div>
+
+<div class="card-dash">
+<h4>✅ Concluídas</h4>
+<span id="dashConcluidas">0</span>
+</div>
+
+<div class="card-dash">
+<h4>📊 Execução %</h4>
+<span id="dashPercentual">0%</span>
+</div>
+
+<div class="card-dash">
+<h4>💊 Medicações Hoje</h4>
+<span id="dashMedicacoes">0</span>
+</div>
+</div>
 <div class="layout-hospital">
 
 <!-- COLUNA ESQUERDA -->
@@ -119,15 +178,24 @@ top:0;
 <div id="ceoBox" style="display:none"></div>
 
 </div>
+
 <script>
 
+/* =====================================================
+   001 – CONFIG
+===================================================== */
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 
-let user=null,grafico=null,graficoPaciente=null;
+let user=null;
+let grafico=null;
+let graficoPaciente=null;
 
+/* =====================================================
+   002 – LOGIN / LOGOUT
+===================================================== */
 async function login(){
 const {data,error}=await db.auth.signInWithPassword({
 email:emailInput.value.trim(),
@@ -137,13 +205,71 @@ user=data.user;
 iniciarApp();
 }
 
-async function logout(){await db.auth.signOut();location.reload();}
+async function logout(){
+await db.auth.signOut();
+location.reload();
+}
 
-/* ROTINAS */
+/* =====================================================
+   003 – INICIAR APP
+===================================================== */
+function iniciarApp(){
+loginBox.style.display="none";
+app.style.display="block";
+
+const hoje=new Date().toISOString().split("T")[0];
+histInicio.value=hoje;
+histFim.value=hoje;
+
+carregarRotinas("manhã");
+carregarHistorico();
+carregarRankingCriticos();
+carregarDashboard();
+}
+
+/* =====================================================
+   004 – DASHBOARD EXECUTIVO
+===================================================== */
+async function carregarDashboard(){
+
+const {data}=await db.rpc("rotina_completa_por_turno",{
+p_empresa_id:EMPRESA_ID,
+p_turno:"manhã"
+});
+
+if(!data)return;
+
+let pacientes=new Set();
+let criticos=0;
+let atrasos=0;
+let concluidas=0;
+let total=data.length;
+
+data.forEach(r=>{
+pacientes.add(r.paciente_id);
+if(r.risco==="critico"||r.risco==="alto")criticos++;
+if(r.status==="atrasado")atrasos++;
+if(r.status==="concluida")concluidas++;
+});
+
+let percentual=total?Math.round((concluidas/total)*100):0;
+
+document.getElementById("dashPacientes").innerText=pacientes.size;
+document.getElementById("dashCriticos").innerText=criticos;
+document.getElementById("dashAtrasos").innerText=atrasos;
+document.getElementById("dashConcluidas").innerText=concluidas;
+document.getElementById("dashPercentual").innerText=percentual+"%";
+document.getElementById("dashMedicacoes").innerText=total;
+}
+
+/* =====================================================
+   005 – ROTINAS
+===================================================== */
 async function carregarRotinas(turno){
-bannerCritico.style.display="none";
+
 tituloTurno.innerText=`Rotinas - ${turno}`;
 const {data}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:turno});
+
 lista.innerHTML="";
 let c=0,p=0,a=0;
 
@@ -164,46 +290,33 @@ Paciente: <a href="#" onclick="verPaciente('${r.paciente_id}')">${r.paciente_nom
 });
 }
 
-/* VISÃO INDIVIDUAL */
-async function verPaciente(id){
+/* =====================================================
+   006 – EXECUTAR (ATUALIZA TUDO)
+===================================================== */
+async function executar(id,turno){
 
-const {data}=await db.from("paciente_prontuario").select("*").eq("paciente_id",id);
-if(!data||data.length===0)return;
-
-const {data:scoreData}=await db.rpc("calcular_score_clinico",{paciente_uuid:id});
-let score=scoreData||0;
-
-const {data:classificacao}=await db.rpc("classificar_risco",{score});
-let risco=classificacao||"baixo";
-
-let cor=risco==="critico"?"risco-alto":risco==="alto"?"risco-alto":risco==="medio"?"risco-medio":"risco-baixo";
-
-ceoBox.style.display="block";
-ceoBox.innerHTML=`
-<h2>${data[0].nome_completo}</h2>
-<p>Score: ${score}</p>
-<p>Risco: <span class="${cor}">${risco.toUpperCase()}</span></p>
-<button onclick="gerarPDF('${data[0].nome_completo}',${score})" class="btn-pdf">Gerar PDF</button>
-<h3>Histórico</h3>
-<div id="linhaTempo"></div>`;
-
-let linha=document.getElementById("linhaTempo");
-linha.innerHTML="";
-data.forEach(r=>{
-linha.innerHTML+=`
-<div class="timeline-item">
-${r.data_referencia} - ${r.nome_medicamento||"-"} - ${r.status}
-</div>`;
+await db.rpc("executar_rotina",{
+p_rotina_id:id,
+p_usuario_id:user.id
 });
+
+await carregarRotinas(turno);
+await carregarRankingCriticos();
+await carregarDashboard();
 }
 
-/* RANKING */
+/* =====================================================
+   007 – RANKING CRÍTICOS
+===================================================== */
 async function carregarRankingCriticos(){
+
 const {data}=await db.from("ranking_pacientes_criticos")
 .select("*")
 .limit(10);
+
 let html="";
-if(!data || data.length===0){
+
+if(!data||data.length===0){
 html="<p>Nenhum paciente crítico.</p>";
 }else{
 data.forEach((p,i)=>{
@@ -220,13 +333,19 @@ Atrasos: ${p.total_atrasos}
 </div>`;
 });
 }
+
 document.getElementById("rankingBox").innerHTML=html;
 }
 
-/* HISTÓRICO GERAL */
+/* =====================================================
+   008 – HISTÓRICO GERAL
+===================================================== */
 async function carregarHistorico(){
+
 const {data}=await db.from("historico_completo").select("*");
+
 historicoLista.innerHTML="";
+
 data?.forEach(r=>{
 historicoLista.innerHTML+=`
 <div class="timeline-item">
@@ -235,18 +354,50 @@ ${r.data} - ${r.paciente_nome} - ${r.status}
 });
 }
 
-function iniciarApp(){
-loginBox.style.display="none";
-app.style.display="block";
-const hoje=new Date().toISOString().split("T")[0];
-histInicio.value=hoje;
-histFim.value=hoje;
-carregarRotinas("manhã");
-carregarHistorico();
-carregarRankingCriticos();
+/* =====================================================
+   009 – VISÃO INDIVIDUAL PACIENTE
+===================================================== */
+async function verPaciente(id){
+
+const {data}=await db.from("paciente_prontuario")
+.select("*")
+.eq("paciente_id",id);
+
+if(!data||data.length===0)return;
+
+const {data:scoreData}=await db.rpc("calcular_score_clinico",{paciente_uuid:id});
+let score=scoreData||0;
+
+const {data:classificacao}=await db.rpc("classificar_risco",{score});
+let risco=classificacao||"baixo";
+
+let cor=risco==="critico"?"risco-alto":
+risco==="alto"?"risco-alto":
+risco==="medio"?"risco-medio":"risco-baixo";
+
+ceoBox.style.display="block";
+ceoBox.innerHTML=`
+<h2>${data[0].nome_completo}</h2>
+<p>Score Clínico: ${score}</p>
+<p>Risco: <span class="${cor}">${risco.toUpperCase()}</span></p>
+<button onclick="gerarPDF('${data[0].nome_completo}',${score})" class="btn-pdf">Gerar PDF</button>
+<h3>Histórico</h3>
+<div id="linhaTempo"></div>`;
+
+let linha=document.getElementById("linhaTempo");
+linha.innerHTML="";
+
+data.forEach(r=>{
+linha.innerHTML+=`
+<div class="timeline-item">
+${r.data_referencia} - ${r.nome_medicamento||"-"} - ${r.status}
+</div>`;
+});
 }
-  
-/* PDF */
+
+/* =====================================================
+   010 – GERAR PDF
+===================================================== */
 function gerarPDF(nome,score){
 const {jsPDF}=window.jspdf;
 const doc=new jsPDF();
@@ -255,8 +406,10 @@ doc.text(`Score Clínico: ${score}`,20,30);
 doc.save(`${nome}.pdf`);
 }
 
+
 </script>
 </body>
 </html>
+
 
 
