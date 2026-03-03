@@ -331,7 +331,34 @@ button{
 <button onclick="logout()" class="btn-disabled">Sair</button>
 </div>
 </h1>
+<!-- =========================
+   ADMIN - GESTÃO DE USUÁRIOS
+========================= -->
+<div id="adminUsuarios" class="painel-bloco" style="display:none;">
+<h3>👥 Gestão de Usuários</h3>
 
+<button onclick="criarNovoUsuario()" 
+class="btn-executar" 
+style="margin-bottom:15px;">
+➕ Novo Usuário
+</button>
+   
+<select id="adminSelectUsuario"></select>
+
+<input type="text" id="adminNome" placeholder="Nome completo">
+
+<select id="adminCargo"></select>
+
+<label style="margin-top:10px;display:flex;align-items:center;gap:6px;">
+<input type="checkbox" id="adminAtivo"> Usuário ativo
+</label>
+
+<div style="margin-top:15px;display:flex;gap:10px;">
+<button onclick="salvarUsuario()" class="btn-executar">Salvar</button>
+<button onclick="excluirUsuario()" class="btn-disabled">Excluir</button>
+</div>
+
+</div>
 <!-- ================= DASHBOARD EXECUTIVO ================= -->
 <div class="dashboard-executivo">
 
@@ -456,298 +483,288 @@ let user=null;
 let graficoInstitucional=null;
 
 /* =====================================================
-   002 – ELEMENTOS DOM
+   ELEMENTOS
 ===================================================== */
-const usuarioSelect = document.getElementById("usuarioSelect");
-const senhaInput = document.getElementById("senhaInput");
-const usuarioInfo = document.getElementById("usuarioInfo");
-const app = document.getElementById("app");
-const tituloTurno = document.getElementById("tituloTurno");
+const usuarioSelect=document.getElementById("usuarioSelect");
+const senhaInput=document.getElementById("senhaInput");
+const usuarioInfo=document.getElementById("usuarioInfo");
+const app=document.getElementById("app");
+const tituloTurno=document.getElementById("tituloTurno");
 
 /* =====================================================
-   003 – CARREGAR USUÁRIOS
+   LOGOUT
+===================================================== */
+async function logout(){
+await db.auth.signOut();
+location.reload();
+}
+
+/* =====================================================
+   CARREGAR LOGIN
 ===================================================== */
 async function carregarUsuariosLogin(){
 
-const {data,error}=await db
+const {data}=await db
 .from("vw_usuarios")
 .select("*")
-.order("nome_completo");
+.order("hierarquia");
 
-if(error || !data) return;
+let html=`<option value="">Selecione...</option>`;
 
-let html = `<option value="">Selecione...</option>`;
+data?.forEach(u=>{
+if(!u.ativo || !u.nome_completo) return;
 
-data.forEach(u => {
-
-if(!u.ativo) return;
-if(!u.nome_completo) return;
-
-html += `
-<option 
-value="${u.id}" 
+html+=`
+<option value="${u.id}"
 data-email="${u.email}"
 data-cargo="${u.cargo}"
 data-hierarquia="${u.hierarquia}">
 ${u.nome_completo}
 </option>`;
-
 });
 
-usuarioSelect.innerHTML = html;
+usuarioSelect.innerHTML=html;
 }
 
-   
 usuarioSelect.addEventListener("change",function(){
 let selected=this.options[this.selectedIndex];
-
 if(!selected.value){
 usuarioInfo.innerHTML="";
 return;
 }
-
-usuarioInfo.innerHTML=
-`Cargo: ${selected.getAttribute("data-cargo")}`;
+usuarioInfo.innerHTML=`Cargo: ${selected.dataset.cargo}`;
 });
 
 /* =====================================================
-   004 – LOGIN
+   LOGIN
 ===================================================== */
 async function login(){
 
-let selected = usuarioSelect.options[usuarioSelect.selectedIndex];
+let selected=usuarioSelect.options[usuarioSelect.selectedIndex];
+if(!selected.value) return alert("Selecione usuário.");
 
-if(!selected.value){
-alert("Selecione um usuário.");
-return;
-}
+let email=selected.dataset.email;
+if(!senhaInput.value) return alert("Digite senha.");
 
-let email = selected.getAttribute("data-email");
-
-if(!senhaInput.value){
-alert("Digite a senha.");
-return;
-}
-
-const {data,error} = await db.auth.signInWithPassword({
-email: email,
-password: senhaInput.value
+const {data,error}=await db.auth.signInWithPassword({
+email:email,
+password:senhaInput.value
 });
 
-if(error){
-alert("Senha incorreta.");
-return;
-}
+if(error) return alert("Senha incorreta.");
 
-const {data:perfil} = await db
+const {data:perfil}=await db
 .from("vw_usuarios")
 .select("*")
-.eq("id", data.user.id)
+.eq("id",data.user.id)
 .single();
 
-if(!perfil || perfil.ativo === false){
-alert("Usuário inativo.");
+if(!perfil || !perfil.ativo){
 await db.auth.signOut();
-return;
+return alert("Usuário inativo.");
 }
 
-user = perfil;
+user=perfil;
 iniciarApp();
 }
 
 /* =====================================================
-   005 – INICIAR APP
+   INICIAR APP
 ===================================================== */
 function iniciarApp(){
 
 document.getElementById("loginWrapper").style.display="none";
 app.style.display="block";
 
-tituloTurno.innerText =
+tituloTurno.innerText=
 `Rotinas - Manhã | ${user.nome_completo} (${user.cargo})`;
 
-if(user.hierarquia > 6){
-const rankingContainer = document.querySelector(".ranking-container");
-if(rankingContainer) rankingContainer.style.display="none";
+if(user.hierarquia===1){
+document.getElementById("adminUsuarios").style.display="block";
+carregarAdminUsuarios();
+carregarAdminCargos();
 }
-
-if(user.hierarquia > 2){
-const gestaoUsuarios = document.getElementById("gestaoUsuarios");
-if(gestaoUsuarios) gestaoUsuarios.style.display="none";
-}
-
-const hoje=new Date().toISOString().split("T")[0];
-document.getElementById("histInicio").value=hoje;
-document.getElementById("histFim").value=hoje;
 
 carregarRotinas("manhã");
-carregarHistorico();
 carregarRankingCriticos();
-carregarDashboard();
-carregarPacientes();
 carregarColaboradores();
 carregarGraficoInstitucional();
 }
 
 /* =====================================================
-   006 – ROTINAS
+   ADMIN – CARREGAR USUÁRIOS
 ===================================================== */
-async function carregarRotinas(turno){
+async function carregarAdminUsuarios(){
 
-tituloTurno.innerText=`Rotinas - ${turno} | ${user.nome_completo}`;
+const {data}=await db
+.from("vw_usuarios")
+.select("*")
+.order("hierarquia");
 
-const {data}=await db.rpc("rotina_completa_por_turno",{
-p_empresa_id:EMPRESA_ID,
-p_turno:turno
+let select=document.getElementById("adminSelectUsuario");
+let html=`<option value="">Selecione usuário...</option>`;
+
+data?.forEach(u=>{
+html+=`<option value="${u.id}">${u.nome_completo}</option>`;
 });
 
-const lista=document.getElementById("lista");
-lista.innerHTML="";
+select.innerHTML=html;
 
-data?.forEach(r=>{
+select.onchange=async function(){
 
-lista.innerHTML+=`
-<div class="rotina ${r.status}">
-<div>
-<strong>${r.horario_execucao||"--:--"}</strong>
-${r.titulo}<br>
-Paciente: 
-<a href="#" onclick="verPaciente('${r.paciente_id}')">
-${r.paciente_nome}
-</a>
-</div>
-<button class="btn-executar" 
-onclick="executar('${r.id}','${turno}')">
-Executar
-</button>
-</div>`;
+if(!this.value) return;
 
-});
+const {data:usuario}=await db
+.from("vw_usuarios")
+.select("*")
+.eq("id",this.value)
+.single();
+
+document.getElementById("adminNome").value=usuario.nome_completo;
+document.getElementById("adminAtivo").checked=usuario.ativo;
+
+carregarAdminCargos(usuario.cargo);
+};
 }
 
 /* =====================================================
-   007 – EXECUTAR
+   ADMIN – CARREGAR CARGOS
+===================================================== */
+async function carregarAdminCargos(cargoAtual=null){
+
+const {data}=await db
+.from("cargos_hospitalares")
+.select("*")
+.order("hierarquia");
+
+let select=document.getElementById("adminCargo");
+let html="";
+
+data?.forEach(c=>{
+html+=`
+<option value="${c.id}" ${cargoAtual===c.nome?"selected":""}>
+${c.nome}
+</option>`;
+});
+
+select.innerHTML=html;
+}
+
+/* =====================================================
+   ADMIN – SALVAR
+===================================================== */
+async function salvarUsuario(){
+
+if(user.hierarquia!==1)
+return alert("Somente Diretor pode editar.");
+
+let id=document.getElementById("adminSelectUsuario").value;
+if(!id) return alert("Selecione usuário.");
+
+let nome=document.getElementById("adminNome").value;
+let cargoId=document.getElementById("adminCargo").value;
+let ativo=document.getElementById("adminAtivo").checked;
+
+/* impedir alterar superior */
+const {data:alvo}=await db
+.from("vw_usuarios")
+.select("hierarquia")
+.eq("id",id)
+.single();
+
+if(alvo.hierarquia < user.hierarquia)
+return alert("Você não pode editar superior.");
+
+await db
+.from("usuarios")
+.update({
+nome_completo:nome,
+cargo_id:cargoId,
+ativo:ativo
+})
+.eq("id",id);
+
+alert("Atualizado com sucesso.");
+carregarAdminUsuarios();
+carregarUsuariosLogin();
+}
+
+/* =====================================================
+   ADMIN – EXCLUIR
+===================================================== */
+async function excluirUsuario(){
+
+if(user.hierarquia!==1)
+return alert("Somente Diretor pode excluir.");
+
+let id=document.getElementById("adminSelectUsuario").value;
+if(!id) return alert("Selecione usuário.");
+
+const {data:alvo}=await db
+.from("vw_usuarios")
+.select("*")
+.eq("id",id)
+.single();
+
+/* impedir excluir diretor */
+if(alvo.hierarquia===1)
+return alert("Diretor não pode ser excluído.");
+
+if(!confirm("Confirma exclusão?")) return;
+
+await db.from("usuarios").delete().eq("id",id);
+
+alert("Excluído.");
+carregarAdminUsuarios();
+carregarUsuariosLogin();
+}
+
+/* =====================================================
+   ADMIN – CRIAR NOVO
+===================================================== */
+async function criarNovoUsuario(){
+
+if(user.hierarquia!==1)
+return alert("Somente Diretor pode criar.");
+
+let email=prompt("Email do novo usuário:");
+let senha=prompt("Senha inicial:");
+let nome=prompt("Nome completo:");
+
+if(!email||!senha||!nome) return;
+
+const {data,error}=await db.auth.admin.createUser({
+email:email,
+password:senha,
+email_confirm:true
+});
+
+if(error) return alert(error.message);
+
+await db.from("usuarios").insert({
+id:data.user.id,
+nome_completo:nome,
+ativo:true
+});
+
+alert("Usuário criado.");
+carregarAdminUsuarios();
+}
+
+/* =====================================================
+   EXECUTAR ROTINA
 ===================================================== */
 async function executar(id,turno){
 
-if(user.hierarquia > 8){
-alert("Sem permissão para executar.");
-return;
-}
+if(user.hierarquia>8)
+return alert("Sem permissão.");
 
 await db.rpc("executar_rotina",{
 p_rotina_id:id,
 p_usuario_id:user.id
 });
 
-await carregarRotinas(turno);
-await carregarRankingCriticos();
-await carregarDashboard();
-}
-
-/* =====================================================
-   008 – RANKING
-===================================================== */
-async function carregarRankingCriticos(){
-
-const {data}=await db
-.from("ranking_pacientes_criticos")
-.select("*")
-.order("score_clinico",{ascending:false})
-.limit(10);
-
-const rankingBox=document.getElementById("rankingBox");
-
-if(!data || data.length===0){
-rankingBox.innerHTML="<p>Nenhum paciente crítico.</p>";
-return;
-}
-
-let html=`<table class="ranking-table">
-<thead>
-<tr>
-<th>#</th>
-<th>Nome</th>
-<th>Score</th>
-<th>Atrasos</th>
-</tr>
-</thead><tbody>`;
-
-data.forEach((p,i)=>{
-html+=`
-<tr>
-<td>${i+1}</td>
-<td>${p.nome_completo}</td>
-<td>${p.score_clinico}</td>
-<td>${p.total_atrasos}</td>
-</tr>`;
-});
-
-html+=`</tbody></table>`;
-
-rankingBox.innerHTML=html;
-}
-
-/* =====================================================
-   009 – COLABORADORES
-===================================================== */
-async function carregarColaboradores(){
-
-const {data}=await db
-.from("vw_usuarios")
-.select("nome_completo,cargo")
-.order("hierarquia");
-
-let html="";
-
-data?.forEach(u=>{
-html+=`
-<div class="item-colaborador">
-${u.nome_completo} - <strong>${u.cargo}</strong>
-</div>`;
-});
-
-document.getElementById("listaColaboradores").innerHTML=html;
-}
-
-/* =====================================================
-   010 – GRÁFICO
-===================================================== */
-async function carregarGraficoInstitucional(){
-
-const {data}=await db.rpc("rotina_completa_por_turno",{
-p_empresa_id:EMPRESA_ID,
-p_turno:"manhã"
-});
-
-if(!data) return;
-
-let concluidas=0;
-let pendentes=0;
-let atrasadas=0;
-
-data.forEach(r=>{
-if(r.status==="concluida")concluidas++;
-else if(r.status==="pendente")pendentes++;
-else atrasadas++;
-});
-
-const ctx=document.getElementById("graficoInstitucional");
-
-if(!ctx) return;
-
-if(graficoInstitucional) graficoInstitucional.destroy();
-
-graficoInstitucional=new Chart(ctx,{
-type:"bar",
-data:{
-labels:["Concluídas","Pendentes","Atrasadas"],
-datasets:[{
-data:[concluidas,pendentes,atrasadas],
-backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
-}]
-}
-});
+carregarRotinas(turno);
 }
 
 /* =====================================================
@@ -758,6 +775,7 @@ carregarUsuariosLogin();
 </script>
 </body>
 </html>
+
 
 
 
