@@ -49,10 +49,7 @@ h1{
 
 .pendente{ border-left:6px solid #e74c3c; }
 .concluida{ border-left:6px solid #2ecc71; }
-
-.atrasada{
-  border-left:6px solid #f39c12;
-}
+.atrasada{ border-left:6px solid #f39c12; }
 
 button{
   padding:8px 14px;
@@ -71,6 +68,14 @@ canvas{
   margin:20px auto;
   display:block;
 }
+
+#ceoBox{
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  margin-bottom:20px;
+  box-shadow:0 3px 10px rgba(0,0,0,.08);
+}
 </style>
 </head>
 
@@ -87,7 +92,22 @@ canvas{
 
 <h1>
 <span id="tituloTurno">Rotinas - Turno Manhã</span>
+<button onclick="toggleCEO()" class="btn-executar">Painel CEO</button>
 </h1>
+
+<div id="ceoBox" style="display:none">
+
+<h3>Vincular Profissional aos Pacientes</h3>
+
+<select id="profissionalSelect" style="width:100%;margin-bottom:10px"></select>
+
+<div id="pacientesVinculo"></div>
+
+<button onclick="salvarVinculo()" class="btn-executar" style="margin-top:10px">
+Salvar Vinculação
+</button>
+
+</div>
 
 <div class="turnos">
   <button onclick="carregarRotinas('manha')">Turno Manhã</button>
@@ -104,26 +124,40 @@ canvas{
 
 /* CONFIG */
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
-const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
+const SUPABASE_KEY="SUA_CHAVE_AQUI";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 
-let user=null,grafico=null,appReady=false;
+let user=null,nivel=null,grafico=null,appReady=false;
+let pacienteAtual=null;
 
 /* LOGIN */
 async function login(){
 const email=document.getElementById("emailInput").value;
 const senha=document.getElementById("senhaInput").value;
+
 const {data,error}=await db.auth.signInWithPassword({email,password:senha});
 if(error){alert("Login inválido");return;}
+
 user=data.user;
+await carregarNivel();
 iniciarApp();
 }
 
+async function carregarNivel(){
+const {data}=await db.from("perfis")
+.select("nivel")
+.eq("usuario_id",user.id)
+.single();
+
+nivel=data?.nivel||null;
+}
+
 /* AUTO SESSION */
-db.auth.getSession().then(({data})=>{
+db.auth.getSession().then(async({data})=>{
 if(data.session){
 user=data.session.user;
+await carregarNivel();
 iniciarApp();
 }
 });
@@ -149,7 +183,7 @@ datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]
 });
 }
 
-/* ROTINAS POR TURNO */
+/* ROTINAS */
 async function carregarRotinas(turnoSelecionado){
 if(!appReady) return;
 
@@ -161,23 +195,34 @@ p_empresa_id:EMPRESA_ID,
 p_turno:turnoSelecionado
 });
 
-if(error){ console.error(error); return; }
+if(error){console.error(error);return;}
+if(!data){return;}
 
-if(!data || data.length===0){
-document.getElementById("lista").innerHTML="<p>Nenhuma rotina encontrada.</p>";
-return;
+let listaFiltrada=data;
+
+/* FILTRO POR PROFISSIONAL */
+if(nivel==="cuidador"||nivel==="enfermeiro"){
+const {data:vinculos}=await db
+.from("profissionais_pacientes")
+.select("paciente_id")
+.eq("profissional_id",user.id)
+.eq("ativo",true);
+
+const permitidos=vinculos?.map(v=>v.paciente_id)||[];
+
+listaFiltrada=data.filter(r=>permitidos.includes(r.paciente_id));
 }
 
 const lista=document.getElementById("lista");
 lista.innerHTML="";
 
-let c=data.filter(r=>r.status==="concluida").length;
-let p=data.filter(r=>r.status==="pendente").length;
-let a=data.filter(r=>r.status==="atrasado").length;
+let c=listaFiltrada.filter(r=>r.status==="concluida").length;
+let p=listaFiltrada.filter(r=>r.status==="pendente").length;
+let a=listaFiltrada.filter(r=>r.status==="atrasado").length;
 
 atualizarGrafico(c,p,a);
 
-data.forEach(r=>{
+listaFiltrada.forEach(r=>{
 let classe="rotina ";
 if(r.status==="concluida")classe+="concluida";
 else if(r.status==="atrasado")classe+="atrasada";
@@ -209,86 +254,146 @@ lista.appendChild(div);
 
 /* EXECUTAR */
 async function executar(id,turno){
-if(!user){alert("Usuário não autenticado");return;}
-
 await db.rpc("executar_rotina",{
 p_rotina_id:id,
 p_usuario_id:user.id
 });
-
 carregarRotinas(turno);
 }
 
-  let pacienteAtual = null;
+/* CEO */
+function toggleCEO(){
+const box=document.getElementById("ceoBox");
+box.style.display=box.style.display==="none"?"block":"none";
 
+if(box.style.display==="block"){
+carregarProfissionais();
+carregarPacientesVinculo();
+}
+}
+
+async function carregarProfissionais(){
+const {data}=await db.from("perfis")
+.select("usuario_id,nivel")
+.in("nivel",["cuidador","enfermeiro"]);
+
+const select=document.getElementById("profissionalSelect");
+select.innerHTML="<option value=''>Selecione profissional</option>";
+
+data?.forEach(p=>{
+select.innerHTML+=`<option value="${p.usuario_id}">
+${p.nivel} - ${p.usuario_id}
+</option>`;
+});
+}
+
+async function carregarPacientesVinculo(){
+const {data}=await db.from("pacientes")
+.select("id,nome_completo")
+.order("nome_completo");
+
+const box=document.getElementById("pacientesVinculo");
+box.innerHTML="";
+
+data?.forEach(p=>{
+box.innerHTML+=`
+<div>
+<label>
+<input type="checkbox" value="${p.id}">
+${p.nome_completo}
+</label>
+</div>`;
+});
+}
+
+async function salvarVinculo(){
+const profissional=document.getElementById("profissionalSelect").value;
+if(!profissional)return alert("Selecione profissional");
+
+const checks=document.querySelectorAll("#pacientesVinculo input:checked");
+
+await db.from("profissionais_pacientes")
+.delete()
+.eq("profissional_id",profissional)
+.eq("empresa_id",EMPRESA_ID);
+
+for(const c of checks){
+await db.from("profissionais_pacientes").insert({
+empresa_id:EMPRESA_ID,
+profissional_id:profissional,
+paciente_id:c.value,
+ativo:true
+});
+}
+
+alert("Vinculação salva.");
+}
+
+/* FICHA */
 async function abrirFicha(id){
-  pacienteAtual = id;
+pacienteAtual=id;
 
-  const {data,error} = await db
-    .from("pacientes")
-    .select("*")
-    .eq("id", id)
-    .single();
+const {data}=await db.from("pacientes")
+.select("*")
+.eq("id",id)
+.single();
 
-  if(error) return;
+document.getElementById("f_nome").value=data.nome_completo||"";
+document.getElementById("f_cpf").value=data.cpf||"";
+document.getElementById("f_alergias").value=data.alergias||"";
+document.getElementById("f_medicamentos").value=data.medicamentos||"";
+document.getElementById("f_obs").value=data.observacoes||"";
 
-  document.getElementById("f_nome").value = data.nome_completo || "";
-  document.getElementById("f_cpf").value = data.cpf || "";
-  document.getElementById("f_alergias").value = data.alergias || "";
-  document.getElementById("f_medicamentos").value = data.medicamentos || "";
-  document.getElementById("f_obs").value = data.observacoes || "";
-
-  document.getElementById("modalFicha").style.display="flex";
+document.getElementById("modalFicha").style.display="flex";
 }
 
 function fecharFicha(){
-  document.getElementById("modalFicha").style.display="none";
+document.getElementById("modalFicha").style.display="none";
 }
 
 async function salvarFicha(){
-  if(!pacienteAtual) return;
+await db.from("pacientes").update({
+nome_completo:document.getElementById("f_nome").value,
+cpf:document.getElementById("f_cpf").value,
+alergias:document.getElementById("f_alergias").value,
+medicamentos:document.getElementById("f_medicamentos").value,
+observacoes:document.getElementById("f_obs").value
+}).eq("id",pacienteAtual);
 
-  await db.from("pacientes").update({
-    nome_completo: document.getElementById("f_nome").value,
-    cpf: document.getElementById("f_cpf").value,
-    alergias: document.getElementById("f_alergias").value,
-    medicamentos: document.getElementById("f_medicamentos").value,
-    observacoes: document.getElementById("f_obs").value
-  }).eq("id", pacienteAtual);
-
-  fecharFicha();
-  carregarRotinas("manha");
+fecharFicha();
+carregarRotinas("manha");
 }
-  
+
 </script>
 
-  <div id="modalFicha" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); align-items:center; justify-content:center; z-index:999;">
-  <div style="background:#fff; width:90%; max-width:600px; padding:25px; border-radius:12px; max-height:85vh; overflow:auto;">
-    
-    <h2>Ficha do Paciente</h2>
+<!-- MODAL FICHA -->
+<div id="modalFicha" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); align-items:center; justify-content:center; z-index:999;">
+<div style="background:#fff; width:90%; max-width:600px; padding:25px; border-radius:12px; max-height:85vh; overflow:auto;">
 
-    <label>Nome</label>
-    <input id="f_nome" style="width:100%; margin-bottom:10px">
+<h2>Ficha do Paciente</h2>
 
-    <label>CPF</label>
-    <input id="f_cpf" style="width:100%; margin-bottom:10px">
+<label>Nome</label>
+<input id="f_nome" style="width:100%; margin-bottom:10px">
 
-    <label>Alergias</label>
-    <textarea id="f_alergias" style="width:100%; margin-bottom:10px"></textarea>
+<label>CPF</label>
+<input id="f_cpf" style="width:100%; margin-bottom:10px">
 
-    <label>Medicamentos</label>
-    <textarea id="f_medicamentos" style="width:100%; margin-bottom:10px"></textarea>
+<label>Alergias</label>
+<textarea id="f_alergias" style="width:100%; margin-bottom:10px"></textarea>
 
-    <label>Observações</label>
-    <textarea id="f_obs" style="width:100%; margin-bottom:10px"></textarea>
+<label>Medicamentos</label>
+<textarea id="f_medicamentos" style="width:100%; margin-bottom:10px"></textarea>
 
-    <div style="display:flex; gap:10px; margin-top:15px;">
-      <button onclick="salvarFicha()" class="btn-executar">Salvar</button>
-      <button onclick="fecharFicha()" class="btn-disabled">Fechar</button>
-    </div>
+<label>Observações</label>
+<textarea id="f_obs" style="width:100%; margin-bottom:10px"></textarea>
 
-  </div>
+<div style="display:flex; gap:10px; margin-top:15px;">
+<button onclick="salvarFicha()" class="btn-executar">Salvar</button>
+<button onclick="fecharFicha()" class="btn-disabled">Fechar</button>
 </div>
+
+</div>
+</div>
+
 </body>
 </html>
-
