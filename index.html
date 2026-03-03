@@ -283,13 +283,34 @@ alert("Removido!");
 carregarUsuarios();
 }
 
-/* 016 – PACIENTES */
+/* ================================
+   016 – PACIENTES (CORRIGIDO)
+================================ */
 async function carregarPacientes(){
-const {data}=await db.from("pacientes").select("id,nome").order("nome");
-let html="<h3>Selecionar Paciente</h3><select onchange='verPaciente(this.value)'><option value=''>Escolha...</option>";
-data?.forEach(p=>html+=`<option value="${p.id}">${p.nome}</option>`);
-html+="</select><div id='detalhePaciente'></div>";
-ceoConteudo.innerHTML=html;
+const { data, error } = await db
+  .from("pacientes")
+  .select("id,nome")
+  .eq("empresa_id", EMPRESA_ID)
+  .order("nome", { ascending: true });
+if(error){
+  console.error(error);
+  alert("Erro ao carregar pacientes.");
+  return;
+}
+if(!data || data.length === 0){
+  ceoConteudo.innerHTML = "<p>Nenhum paciente encontrado.</p>";
+  return;
+}
+let html = `
+<h3>Selecionar Paciente</h3>
+<select id="pacienteSelect" onchange="verPaciente(this.value)" style="padding:8px;width:300px">
+<option value="">Escolha...</option>
+`;
+data.forEach(p=>{
+  html += `<option value="${p.id}">${p.nome}</option>`;
+});
+html += "</select><div id='detalhePaciente' style='margin-top:20px'></div>";
+ceoConteudo.innerHTML = html;
 }
 
 async function verPaciente(id){
@@ -309,3 +330,4 @@ ceoConteudo.innerHTML=html;
 </script>
 </body>
 </html>
+
