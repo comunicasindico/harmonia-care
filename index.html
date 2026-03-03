@@ -191,7 +191,10 @@ div.innerHTML=`
 <strong>${r.horario_execucao ?? '--:--'}</strong>
 ${r.titulo}
 <br>
-<small>${r.paciente_nome}</small>
+<small style="cursor:pointer;color:#3498db"
+onclick="abrirFicha('${r.paciente_id}')">
+${r.paciente_nome}
+</small>
 </div>
 ${
 r.status==="concluida"
@@ -216,6 +219,76 @@ p_usuario_id:user.id
 carregarRotinas(turno);
 }
 
+  let pacienteAtual = null;
+
+async function abrirFicha(id){
+  pacienteAtual = id;
+
+  const {data,error} = await db
+    .from("pacientes")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if(error) return;
+
+  document.getElementById("f_nome").value = data.nome_completo || "";
+  document.getElementById("f_cpf").value = data.cpf || "";
+  document.getElementById("f_alergias").value = data.alergias || "";
+  document.getElementById("f_medicamentos").value = data.medicamentos || "";
+  document.getElementById("f_obs").value = data.observacoes || "";
+
+  document.getElementById("modalFicha").style.display="flex";
+}
+
+function fecharFicha(){
+  document.getElementById("modalFicha").style.display="none";
+}
+
+async function salvarFicha(){
+  if(!pacienteAtual) return;
+
+  await db.from("pacientes").update({
+    nome_completo: document.getElementById("f_nome").value,
+    cpf: document.getElementById("f_cpf").value,
+    alergias: document.getElementById("f_alergias").value,
+    medicamentos: document.getElementById("f_medicamentos").value,
+    observacoes: document.getElementById("f_obs").value
+  }).eq("id", pacienteAtual);
+
+  fecharFicha();
+  carregarRotinas("manha");
+}
+  
 </script>
+
+  <div id="modalFicha" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); align-items:center; justify-content:center; z-index:999;">
+  <div style="background:#fff; width:90%; max-width:600px; padding:25px; border-radius:12px; max-height:85vh; overflow:auto;">
+    
+    <h2>Ficha do Paciente</h2>
+
+    <label>Nome</label>
+    <input id="f_nome" style="width:100%; margin-bottom:10px">
+
+    <label>CPF</label>
+    <input id="f_cpf" style="width:100%; margin-bottom:10px">
+
+    <label>Alergias</label>
+    <textarea id="f_alergias" style="width:100%; margin-bottom:10px"></textarea>
+
+    <label>Medicamentos</label>
+    <textarea id="f_medicamentos" style="width:100%; margin-bottom:10px"></textarea>
+
+    <label>Observações</label>
+    <textarea id="f_obs" style="width:100%; margin-bottom:10px"></textarea>
+
+    <div style="display:flex; gap:10px; margin-top:15px;">
+      <button onclick="salvarFicha()" class="btn-executar">Salvar</button>
+      <button onclick="fecharFicha()" class="btn-disabled">Fechar</button>
+    </div>
+
+  </div>
+</div>
 </body>
 </html>
+
