@@ -181,9 +181,19 @@ historicoLista.innerHTML=html;
 
 async function carregarHistoricoRotinas(){
 
+/* Se não escolher data, usa hoje */
+let dataSelecionada = document.getElementById("histInicio").value;
+
+if(!dataSelecionada){
+dataSelecionada = new Date().toISOString().split("T")[0];
+document.getElementById("histInicio").value = dataSelecionada;
+}
+
+/* Buscar apenas aquele dia */
 const { data, error } = await db
 .from("historico_rotinas")
 .select("paciente_nome,titulo,status,data")
+.eq("data", dataSelecionada)
 .order("paciente_nome",{ascending:true});
 
 if(error){
@@ -191,7 +201,7 @@ console.error(error);
 return;
 }
 
-/* Estrutura padrão das rotinas */
+/* Rotinas padrão */
 const rotinasPadrao = [
 "Banho",
 "Troca de Fraldas",
@@ -211,20 +221,22 @@ if(!pacientes[r.paciente_nome]){
 pacientes[r.paciente_nome] = {};
 }
 
-/* Normaliza título */
 let titulo = r.titulo.trim();
 
-/* Se não for padrão, vira "Outros" */
 if(!rotinasPadrao.includes(titulo)){
 titulo = "Outros";
 }
 
-pacientes[r.paciente_nome][titulo] = r.status === "concluida" ? "✔" : "✖";
+pacientes[r.paciente_nome][titulo] =
+r.status === "concluida"
+? "<span style='color:#2ecc71;font-weight:bold;'>✔</span>"
+: "<span style='color:#e74c3c;font-weight:bold;'>✖</span>";
 
 });
 
 /* Montar tabela */
 let html = `
+<h3>Rotinas do Dia: ${dataSelecionada}</h3>
 <table class="ranking-table">
 <thead>
 <tr>
@@ -265,7 +277,6 @@ html += `
 html += "</tbody></table>";
 
 document.getElementById("historicoLista").innerHTML = html;
-
 }
 
 async function carregarHistoricoClinico(){
@@ -351,4 +362,5 @@ carregarUsuariosLogin();
 </script>
 </body>
 </html>
+
 
