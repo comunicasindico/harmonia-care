@@ -18,19 +18,17 @@ html, body{
   background:#f4f6f9;
 }
 
-#app{ padding:20px; box-sizing:border-box; }
+#app{ padding:20px; }
 
 h1{
   display:flex;
   justify-content:space-between;
   align-items:center;
   flex-wrap:wrap;
-  font-size:28px;
-  margin-bottom:10px;
 }
 
 .turnos{
-  margin-bottom:20px;
+  margin:20px 0;
   display:flex;
   gap:10px;
   flex-wrap:wrap;
@@ -92,43 +90,34 @@ canvas{
 
 <h1>
 <span id="tituloTurno">Rotinas - Turno Manhã</span>
+<div>
 <button onclick="toggleCEO()" class="btn-executar">Painel CEO</button>
+<button onclick="logout()" class="btn-disabled">Sair</button>
+</div>
 </h1>
 
-<div id="ceoBox" style="display:none">
-
-<h3>Vincular Profissional aos Pacientes</h3>
-
-<select id="profissionalSelect" style="width:100%;margin-bottom:10px"></select>
-
-<div id="pacientesVinculo"></div>
-
-<button onclick="salvarVinculo()" class="btn-executar" style="margin-top:10px">
-Salvar Vinculação
-</button>
-
-</div>
+<div id="ceoBox" style="display:none"></div>
 
 <div class="turnos">
-  <button onclick="carregarRotinas('manha')">Turno Manhã</button>
-  <button onclick="carregarRotinas('tarde')">Turno Tarde</button>
-  <button onclick="carregarRotinas('noite')">Turno Noite</button>
+<button onclick="carregarRotinas('manha')">Turno Manhã</button>
+<button onclick="carregarRotinas('tarde')">Turno Tarde</button>
+<button onclick="carregarRotinas('noite')">Turno Noite</button>
 </div>
 
 <canvas id="graficoTurno"></canvas>
 <div id="lista"></div>
-<!-- HISTÓRICO COMPLETO -->
+
 <hr style="margin:40px 0">
 
 <h2>Histórico Completo</h2>
 
 <input type="date" id="histInicio">
 <input type="date" id="histFim">
-<button onclick="carregarHistorico()" class="btn-executar">
-Filtrar
-</button>
+<button onclick="carregarHistorico()" class="btn-executar">Filtrar</button>
 
+<canvas id="graficoProfissional"></canvas>
 <div id="historicoLista"></div>
+
 </div>
 
 <script>
@@ -136,48 +125,38 @@ Filtrar
 /* CONFIG */
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
+
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 
-let user=null,nivel=null,grafico=null,appReady=false;
-let pacienteAtual=null;
+let user=null,nivel=null,grafico=null,graficoProf=null;
 
 /* LOGIN */
 async function login(){
-  const email = document.getElementById("emailInput").value.trim();
-  const senha = document.getElementById("senhaInput").value;
-  if(!email || !senha){
-    alert("Informe email e senha.");
-    return;
-  }
-  const { data, error } = await db.auth.signInWithPassword({
-    email: email,
-    password: senha
-  });
-  if(error){
-    console.error("Erro no login:", error);
-    alert(error.message);
-    return;
-  }
-  if(!data?.user){
-    alert("Usuário não encontrado.");
-    return;
-  }
-  user = data.user;
-  await carregarNivel();
-  iniciarApp();
+const email=document.getElementById("emailInput").value.trim();
+const senha=document.getElementById("senhaInput").value;
+
+const {data,error}=await db.auth.signInWithPassword({email,password:senha});
+if(error){alert(error.message);return;}
+
+user=data.user;
+await carregarNivel();
+iniciarApp();
 }
-  
+
+async function logout(){
+await db.auth.signOut();
+location.reload();
+}
+
 async function carregarNivel(){
 const {data}=await db.from("perfis")
 .select("nivel")
 .eq("usuario_id",user.id)
 .single();
-
 nivel=data?.nivel||null;
 }
 
-/* AUTO SESSION */
 db.auth.getSession().then(async({data})=>{
 if(data.session){
 user=data.session.user;
@@ -186,15 +165,13 @@ iniciarApp();
 }
 });
 
-/* INICIAR */
 function iniciarApp(){
 document.getElementById("loginBox").style.display="none";
 document.getElementById("app").style.display="block";
-appReady=true;
 carregarRotinas("manha");
 }
 
-/* GRÁFICO */
+/* GRÁFICO TURNO */
 function atualizarGrafico(c,p,a){
 const ctx=document.getElementById("graficoTurno").getContext("2d");
 if(grafico)grafico.destroy();
@@ -202,81 +179,52 @@ grafico=new Chart(ctx,{
 type:"doughnut",
 data:{
 labels:["Concluídas","Pendentes","Atrasadas"],
-datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]
+datasets:[{data:[c,p,a],
+backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]
 }
 });
 }
 
 /* ROTINAS */
-async function carregarRotinas(turnoSelecionado){
-if(!appReady) return;
+async function carregarRotinas(turno){
+document.getElementById("tituloTurno").innerText=
+`Rotinas - Turno ${turno}`;
 
-document.getElementById("tituloTurno").innerText =
-`Rotinas - Turno ${turnoSelecionado.charAt(0).toUpperCase()+turnoSelecionado.slice(1)}`;
-
-const {data,error} = await db.rpc("rotina_completa_por_turno",{
+const {data,error}=await db.rpc("rotina_completa_por_turno",{
 p_empresa_id:EMPRESA_ID,
-p_turno:turnoSelecionado
+p_turno:turno
 });
 
 if(error){console.error(error);return;}
-if(!data){return;}
-
-let listaFiltrada=data;
-
-/* FILTRO POR PROFISSIONAL */
-if(nivel==="cuidador"||nivel==="enfermeiro"){
-const {data:vinculos}=await db
-.from("profissionais_pacientes")
-.select("paciente_id")
-.eq("profissional_id",user.id)
-.eq("ativo",true);
-
-const permitidos=vinculos?.map(v=>v.paciente_id)||[];
-
-listaFiltrada=data.filter(r=>permitidos.includes(r.paciente_id));
-}
 
 const lista=document.getElementById("lista");
 lista.innerHTML="";
 
-let c=listaFiltrada.filter(r=>r.status==="concluida").length;
-let p=listaFiltrada.filter(r=>r.status==="pendente").length;
-let a=listaFiltrada.filter(r=>r.status==="atrasado").length;
-
+let c=data.filter(r=>r.status==="concluida").length;
+let p=data.filter(r=>r.status==="pendente").length;
+let a=data.filter(r=>r.status==="atrasado").length;
 atualizarGrafico(c,p,a);
 
-listaFiltrada.forEach(r=>{
-let classe="rotina ";
-if(r.status==="concluida")classe+="concluida";
-else if(r.status==="atrasado")classe+="atrasada";
-else classe+="pendente";
+data.forEach(r=>{
+let classe="rotina "+r.status;
 
-let div=document.createElement("div");
-div.className=classe;
-
-div.innerHTML=`
+lista.innerHTML+=`
+<div class="${classe}">
 <div>
-<strong>${r.horario_execucao ?? '--:--'}</strong>
-${r.titulo}
-<br>
-<small style="cursor:pointer;color:#3498db"
-onclick="abrirFicha('${r.paciente_id}')">
-${r.paciente_nome}
-</small>
+<strong>${r.horario_execucao ?? "--:--"}</strong>
+${r.titulo}<br>
+Paciente: ${r.paciente_nome}<br>
+<small>Profissional: ${r.profissional_nome || "—"}</small>
 </div>
 ${
 r.status==="concluida"
 ? `<button class="btn-disabled">Concluída</button>`
-: `<button class="btn-executar" onclick="executar('${r.id}','${turnoSelecionado}')">Executar</button>`
+: `<button class="btn-executar" onclick="executar('${r.id}','${turno}')">Executar</button>`
 }
-`;
-
-lista.appendChild(div);
+</div>`;
 });
 }
 
-/* EXECUTAR */
 async function executar(id,turno){
 await db.rpc("executar_rotina",{
 p_rotina_id:id,
@@ -285,182 +233,74 @@ p_usuario_id:user.id
 carregarRotinas(turno);
 }
 
-/* CEO */
-function toggleCEO(){
-  if(nivel !== "ceo"){
-    alert("Acesso restrito ao CEO.");
-    return;
-  }
-  const box=document.getElementById("ceoBox");
-  box.style.display=box.style.display==="none"?"block":"none";
-  if(box.style.display==="block"){
-    carregarProfissionais();
-    carregarPacientesVinculo();
-  }
-}
-
-async function carregarProfissionais(){
-const {data}=await db.from("perfis")
-.select("usuario_id,nivel")
-.in("nivel",["cuidador","enfermeiro"]);
-
-const select=document.getElementById("profissionalSelect");
-select.innerHTML="<option value=''>Selecione profissional</option>";
-
-data?.forEach(p=>{
-select.innerHTML+=`<option value="${p.usuario_id}">
-${p.nivel} - ${p.usuario_id}
-</option>`;
-});
-}
-
-async function carregarPacientesVinculo(){
-const {data}=await db.from("pacientes")
-.select("id,nome_completo")
-.order("nome_completo");
-
-const box=document.getElementById("pacientesVinculo");
-box.innerHTML="";
-
-data?.forEach(p=>{
-box.innerHTML+=`
-<div>
-<label>
-<input type="checkbox" value="${p.id}">
-${p.nome_completo}
-</label>
-</div>`;
-});
-}
-
-async function salvarVinculo(){
-const profissional=document.getElementById("profissionalSelect").value;
-if(!profissional)return alert("Selecione profissional");
-
-const checks=document.querySelectorAll("#pacientesVinculo input:checked");
-
-await db.from("profissionais_pacientes")
-.delete()
-.eq("profissional_id",profissional)
-.eq("empresa_id",EMPRESA_ID);
-
-for(const c of checks){
-await db.from("profissionais_pacientes").insert({
-empresa_id:EMPRESA_ID,
-profissional_id:profissional,
-paciente_id:c.value,
-ativo:true
-});
-}
-
-alert("Vinculação salva.");
-}
-
-/* FICHA */
-async function abrirFicha(id){
-pacienteAtual=id;
-
-const {data}=await db.from("pacientes")
-.select("*")
-.eq("id",id)
-.single();
-
-document.getElementById("f_nome").value=data.nome_completo||"";
-document.getElementById("f_cpf").value=data.cpf||"";
-document.getElementById("f_alergias").value=data.alergias||"";
-document.getElementById("f_medicamentos").value=data.medicamentos||"";
-document.getElementById("f_obs").value=data.observacoes||"";
-
-document.getElementById("modalFicha").style.display="flex";
-}
-
-function fecharFicha(){
-document.getElementById("modalFicha").style.display="none";
-}
-
-async function salvarFicha(){
-await db.from("pacientes").update({
-nome_completo:document.getElementById("f_nome").value,
-cpf:document.getElementById("f_cpf").value,
-alergias:document.getElementById("f_alergias").value,
-medicamentos:document.getElementById("f_medicamentos").value,
-observacoes:document.getElementById("f_obs").value
-}).eq("id",pacienteAtual);
-
-fecharFicha();
-carregarRotinas("manha");
-}
-
+/* HISTÓRICO */
 async function carregarHistorico(){
 
-  const inicio=document.getElementById("histInicio").value;
-  const fim=document.getElementById("histFim").value;
+let inicio=document.getElementById("histInicio").value;
+let fim=document.getElementById("histFim").value;
 
-  let query=db.from("historico_completo").select("*");
+let query=db.from("historico_completo").select("*");
 
-  if(inicio) query=query.gte("data",inicio);
-  if(fim) query=query.lte("data",fim);
+if(inicio) query=query.gte("data",inicio);
+if(fim) query=query.lte("data",fim);
 
-  const {data,error}=await query;
+const {data,error}=await query;
+if(error){console.error(error);return;}
 
-  if(error){
-    console.error(error);
-    return;
-  }
+const box=document.getElementById("historicoLista");
+box.innerHTML="";
 
-  const box=document.getElementById("historicoLista");
-  box.innerHTML="";
-
-  if(!data || data.length===0){
-    box.innerHTML="<p>Nenhum histórico encontrado.</p>";
-    return;
-  }
-
-  data.forEach(r=>{
-    box.innerHTML+=`
-      <div class="rotina ${r.status}">
-        <div>
-          <strong>${r.data}</strong><br>
-          ${r.paciente_nome}<br>
-          Profissional: ${r.profissional_nome || "—"}
-        </div>
-      </div>`;
-  });
+if(!data||data.length===0){
+box.innerHTML="<p>Nenhum histórico encontrado.</p>";
+return;
 }
-  
+
+let contagem={};
+
+data.forEach(r=>{
+const nome=r.profissional_nome||"Não identificado";
+contagem[nome]=(contagem[nome]||0)+1;
+
+box.innerHTML+=`
+<div class="rotina ${r.status}">
+<div>
+<strong>${r.data}</strong><br>
+${r.paciente_nome}<br>
+Profissional: ${nome}
+</div>
+</div>`;
+});
+
+gerarGraficoProfissional(contagem);
+}
+
+function gerarGraficoProfissional(dados){
+
+const ctx=document.getElementById("graficoProfissional").getContext("2d");
+if(graficoProf)graficoProf.destroy();
+
+graficoProf=new Chart(ctx,{
+type:"bar",
+data:{
+labels:Object.keys(dados),
+datasets:[{
+label:"Total Executado",
+data:Object.values(dados),
+backgroundColor:"#3498db"
+}]
+}
+});
+}
+
+/* CEO */
+function toggleCEO(){
+if(nivel!=="ceo"){alert("Acesso restrito.");return;}
+const box=document.getElementById("ceoBox");
+box.style.display=box.style.display==="none"?"block":"none";
+box.innerHTML="<h3>Painel CEO Ativo</h3>";
+}
+
 </script>
-
-<!-- MODAL FICHA -->
-<div id="modalFicha" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); align-items:center; justify-content:center; z-index:999;">
-<div style="background:#fff; width:90%; max-width:600px; padding:25px; border-radius:12px; max-height:85vh; overflow:auto;">
-
-<h2>Ficha do Paciente</h2>
-
-<label>Nome</label>
-<input id="f_nome" style="width:100%; margin-bottom:10px">
-
-<label>CPF</label>
-<input id="f_cpf" style="width:100%; margin-bottom:10px">
-
-<label>Alergias</label>
-<textarea id="f_alergias" style="width:100%; margin-bottom:10px"></textarea>
-
-<label>Medicamentos</label>
-<textarea id="f_medicamentos" style="width:100%; margin-bottom:10px"></textarea>
-
-<label>Observações</label>
-<textarea id="f_obs" style="width:100%; margin-bottom:10px"></textarea>
-
-<div style="display:flex; gap:10px; margin-top:15px;">
-<button onclick="salvarFicha()" class="btn-executar">Salvar</button>
-<button onclick="fecharFicha()" class="btn-disabled">Fechar</button>
-</div>
-
-</div>
-</div>
 
 </body>
 </html>
-
-
-
