@@ -480,22 +480,20 @@ let html=`<option value="">Selecione...</option>`;
 
 data.forEach(u=>{
 if(!u.ativo) return;
-if(!u.nome_completo || !u.cargo) return;
+if(!u.nome_completo) return;
 
 html+=`
 <option value="${u.id}" 
 data-email="${u.email}"
 data-cargo="${u.cargo}"
 data-hierarquia="${u.hierarquia}">
-${u.nome_completo} (${u.cargo})
+${u.nome_completo}
 </option>`;
 });
 
 usuarioSelect.innerHTML=html;
 }
-
 usuarioSelect.addEventListener("change",function(){
-
 let selected=this.options[this.selectedIndex];
 
 if(!selected.value){
@@ -762,6 +760,7 @@ carregarUsuariosLogin();
 </script>
 </body>
 </html>
+
 
 
 
