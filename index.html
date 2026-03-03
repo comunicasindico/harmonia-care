@@ -30,6 +30,38 @@ button{padding:8px 14px;border:0;border-radius:6px;font-weight:bold;cursor:point
 canvas{width:100%!important;max-width:600px;margin:20px auto;display:block}
 #ceoBox{background:#fff;padding:20px;border-radius:12px;margin-bottom:20px;box-shadow:0 3px 10px rgba(0,0,0,.08)}
 .banner-alerta{position:fixed;top:0;left:0;width:100%;background:#c0392b;color:#fff;padding:12px;text-align:center;font-weight:bold;z-index:999;display:none;}
+
+.layout-hospital{
+display:grid;
+grid-template-columns:300px 1fr;
+gap:20px;
+align-items:start;
+}
+
+.col-esquerda{
+background:#fff;
+padding:15px;
+border-radius:12px;
+box-shadow:0 3px 10px rgba(0,0,0,.08);
+position:sticky;
+top:70px;
+height:fit-content;
+}
+
+.col-centro{
+min-height:400px;
+}
+
+@media(max-width:1024px){
+.layout-hospital{
+grid-template-columns:1fr;
+}
+.col-esquerda{
+position:relative;
+top:0;
+}
+}
+
 </style>
 </head>
 
@@ -43,20 +75,25 @@ canvas{width:100%!important;max-width:600px;margin:20px auto;display:block}
 <input id="senhaInput" type="password" placeholder="Senha">
 <button onclick="login()" class="btn-executar" style="width:100%">Entrar</button>
 </div>
-
 <div id="app" style="display:none">
 
 <h1>
-<span id="tituloTurno">Rotinas - Turno Manhã</span>
+<span id="tituloTurno">Rotinas - Manhã</span>
 <div style="display:flex;gap:10px;">
-<button onclick="carregarRankingCriticos()" class="btn-executar">
-Ver Ranking
-</button>
 <button onclick="logout()" class="btn-disabled">Sair</button>
 </div>
 </h1>
 
-<div id="ceoBox" style="display:none"></div>
+<div class="layout-hospital">
+
+<!-- COLUNA ESQUERDA -->
+<div class="col-esquerda">
+<h3>🏥 Ranking Críticos</h3>
+<div id="rankingBox"></div>
+</div>
+
+<!-- COLUNA CENTRAL -->
+<div class="col-centro">
 
 <div class="turnos">
 <button onclick="carregarRotinas('manhã')">Manhã</button>
@@ -67,6 +104,10 @@ Ver Ranking
 <canvas id="graficoTurno"></canvas>
 <div id="lista"></div>
 
+</div>
+
+</div>
+
 <hr style="margin:40px 0">
 
 <h2>Histórico Geral</h2>
@@ -75,8 +116,9 @@ Ver Ranking
 <button onclick="carregarHistorico()" class="btn-executar">Filtrar</button>
 <div id="historicoLista"></div>
 
-</div>
+<div id="ceoBox" style="display:none"></div>
 
+</div>
 <script>
 
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
@@ -162,9 +204,9 @@ async function carregarRankingCriticos(){
 const {data}=await db.from("ranking_pacientes_criticos")
 .select("*")
 .limit(10);
-let html="<h2>🏥 Ranking Pacientes Críticos</h2>";
+let html="";
 if(!data || data.length===0){
-html+="<p>Nenhum paciente encontrado.</p>";
+html="<p>Nenhum paciente crítico.</p>";
 }else{
 data.forEach((p,i)=>{
 html+=`
@@ -174,15 +216,13 @@ html+=`
 Score: ${p.score_clinico}<br>
 Atrasos: ${p.total_atrasos}
 </div>
-<div>
-<button onclick="verPaciente('${p.id}')" class="btn-executar">Ver Paciente</button>
+<div style="margin-top:10px;">
+<button onclick="verPaciente('${p.id}')" class="btn-executar" style="width:100%">Ver</button>
 </div>
 </div>`;
 });
 }
-/* 🔹 Agora ele NÃO substitui o painel inteiro */
-ceoBox.style.display="block";
-ceoBox.innerHTML = html;
+rankingBox.innerHTML=html;
 }
 
 /* HISTÓRICO GERAL */
@@ -197,6 +237,17 @@ ${r.data} - ${r.paciente_nome} - ${r.status}
 });
 }
 
+function iniciarApp(){
+loginBox.style.display="none";
+app.style.display="block";
+const hoje=new Date().toISOString().split("T")[0];
+histInicio.value=hoje;
+histFim.value=hoje;
+carregarRotinas("manhã");
+carregarHistorico();
+carregarRankingCriticos();
+}
+  
 /* PDF */
 function gerarPDF(nome,score){
 const {jsPDF}=window.jspdf;
