@@ -205,14 +205,12 @@ grafico=new Chart(ctx,{type:"doughnut",data:{labels:["Concluídas","Pendentes","
 }
 
 /* ITEM JS 7 – ROTINAS AGRUPADAS POR PACIENTE */
-async function carregarRotinas(){
+async function carregarRotinas(turnoSelecionado){
   if(!appReady) return;
-
-  const TURNO_NOME = "manha";
 
   const {data,error} = await db.rpc("rotina_completa_por_turno",{
     p_empresa_id:EMPRESA_ID,
-    p_turno:TURNO_NOME
+    p_turno:turnoselecionado
   });
 
   if(error){
@@ -295,7 +293,7 @@ document.getElementById("lista").appendChild(div);
 /* ITEM JS 9 – EXECUTAR MED */
 async function executarMedicacao(id){
 await db.rpc("executar_medicacao",{p_execucao_id:id,p_usuario_id:user.id});
-carregarRotinas();
+carregarRotinas("manha");
 carregarMedicacoes();
 }
 
@@ -436,6 +434,7 @@ ${d.profissional?`<br><small>Profissional: ${d.profissional}</small>`:''}
 </script>
 </body>
 </html>
+
 
 
 
