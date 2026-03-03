@@ -283,41 +283,123 @@ document.getElementById("ceoConteudo").innerHTML=html;
    PROFISSIONAIS
 ================================ */
 async function carregarUsuarios(){
-  const { data: usuarios } = await db
+
+  const { data } = await db
     .from("perfis")
-    .select(`
-      usuario_id,
-      nivel,
-      auth.users (
-        email
-      )
-    `);
-  let html = "<h3>Usuários e Níveis</h3>";
-  html += `
-    <table style="width:100%;border-collapse:collapse;">
+    .select("usuario_id,nivel");
+
+  let html = `
+    <h3>Usuários</h3>
+    <button onclick="formNovoUsuario()" class="btn-executar" style="margin-bottom:15px">+ Novo Usuário</button>
+    <table style="width:100%;border-collapse:collapse">
       <tr style="background:#eee">
-        <th style="padding:8px;text-align:left">Email</th>
-        <th style="padding:8px;text-align:left">Nível</th>
-        <th style="padding:8px;text-align:left">Alterar</th>
+        <th style="padding:8px">Usuário ID</th>
+        <th style="padding:8px">Nível</th>
+        <th style="padding:8px">Ações</th>
       </tr>
   `;
-  usuarios?.forEach(u=>{
+
+  data?.forEach(u=>{
     html += `
       <tr>
-        <td style="padding:8px">${u.users?.email || "-"}</td>
+        <td style="padding:8px">${u.usuario_id}</td>
         <td style="padding:8px">${u.nivel}</td>
         <td style="padding:8px">
-          <select onchange="alterarNivel('${u.usuario_id}', this.value)">
-            ${gerarOptions(u.nivel)}
-          </select>
+          <button onclick="formEditarUsuario('${u.usuario_id}','${u.nivel}')" class="btn-executar">Editar</button>
+          <button onclick="excluirUsuario('${u.usuario_id}')" style="background:#e74c3c;color:white;border:0;padding:6px 10px;border-radius:4px">Excluir</button>
         </td>
       </tr>
     `;
   });
+
   html += "</table>";
+
   document.getElementById("ceoConteudo").innerHTML = html;
 }
 
+   function formNovoUsuario(){
+  document.getElementById("ceoConteudo").innerHTML = `
+    <h3>Novo Usuário</h3>
+    <input id="novoEmail" placeholder="Email" style="display:block;margin:10px 0;padding:8px;width:250px">
+    <input id="novaSenha" type="password" placeholder="Senha" style="display:block;margin:10px 0;padding:8px;width:250px">
+    <select id="novoNivel" style="display:block;margin:10px 0;padding:8px;width:250px">
+      ${gerarOptions()}
+    </select>
+    <button onclick="criarUsuario()" class="btn-executar">Salvar</button>
+    <button onclick="carregarUsuarios()" class="btn-disabled">Cancelar</button>
+  `;
+}
+   async function criarUsuario(){
+
+  const email = document.getElementById("novoEmail").value;
+  const senha = document.getElementById("novaSenha").value;
+  const nivel = document.getElementById("novoNivel").value;
+
+  const { data, error } = await db.auth.signUp({
+    email: email,
+    password: senha
+  });
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  await db.from("perfis").insert({
+    usuario_id: data.user.id,
+    nivel: nivel
+  });
+
+  alert("Usuário criado com sucesso!");
+  carregarUsuarios();
+}
+   function formEditarUsuario(usuarioId, nivelAtual){
+  document.getElementById("ceoConteudo").innerHTML = `
+    <h3>Editar Usuário</h3>
+    <p><strong>ID:</strong> ${usuarioId}</p>
+    <select id="editarNivel" style="display:block;margin:10px 0;padding:8px;width:250px">
+      ${gerarOptions(nivelAtual)}
+    </select>
+    <button onclick="salvarEdicao('${usuarioId}')" class="btn-executar">Salvar</button>
+    <button onclick="carregarUsuarios()" class="btn-disabled">Cancelar</button>
+  `;
+}
+
+   async function salvarEdicao(usuarioId){
+  const novoNivel = document.getElementById("editarNivel").value;
+
+  const { error } = await db
+    .from("perfis")
+    .update({ nivel: novoNivel })
+    .eq("usuario_id", usuarioId);
+
+  if(error){
+    alert("Erro ao atualizar.");
+    return;
+  }
+
+  alert("Atualizado com sucesso!");
+  carregarUsuarios();
+}
+
+   async function excluirUsuario(usuarioId){
+
+  if(!confirm("Deseja realmente excluir este usuário?")) return;
+
+  const { error } = await db
+    .from("perfis")
+    .delete()
+    .eq("usuario_id", usuarioId);
+
+  if(error){
+    alert("Erro ao excluir.");
+    return;
+  }
+
+  alert("Usuário removido!");
+  carregarUsuarios();
+}
+   
 /* ================================
    GERAR OPTIONS DE NÍVEL
 ================================ */
@@ -335,6 +417,20 @@ const niveis=[
 return niveis.map(n=>`<option value="${n}" ${n===nivelAtual?"selected":""}>${n}</option>`).join("");
 }
 
+   function gerarOptions(nivelAtual=""){
+  const niveis=[
+    "admin",
+    "supervisor",
+    "colaborador",
+    "enfermeiro",
+    "medico",
+    "fisioterapeuta",
+    "cuidador",
+    "visualizador"
+  ];
+  return niveis.map(n=>`<option value="${n}" ${n===nivelAtual?"selected":""}>${n}</option>`).join("");
+}
+   
 /* ================================
    ALTERAR NÍVEL
 ================================ */
@@ -354,6 +450,7 @@ alert("Nível atualizado com sucesso!");
 
 </body>
 </html>
+
 
 
 
