@@ -28,6 +28,54 @@ button{padding:8px 14px;border:0;border-radius:6px;font-weight:bold;cursor:point
 .grafico-box{height:320px}
 #graficoInstitucional{height:260px !important}
 @media(max-width:1024px){.layout-hospital{grid-template-columns:1fr}}
+/* ================= LOGIN CENTRALIZADO MODERNO ================= */
+
+#loginWrapper{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#1f4e79,#2980b9);
+}
+
+#loginBox{
+width:420px;
+background:#ffffff;
+padding:45px;
+border-radius:18px;
+box-shadow:0 20px 40px rgba(0,0,0,.25);
+display:flex;
+flex-direction:column;
+text-align:center;
+}
+
+#loginBox h2{
+font-size:28px;
+margin-bottom:25px;
+color:#2c3e50;
+}
+
+#loginBox select,
+#loginBox input{
+padding:14px;
+border-radius:10px;
+border:1px solid #ccc;
+margin-top:10px;
+font-size:16px;
+}
+
+#loginBox button{
+margin-top:25px;
+padding:14px;
+font-size:18px;
+border-radius:10px;
+transition:0.3s;
+}
+
+#loginBox button:hover{
+transform:scale(1.03);
+box-shadow:0 5px 15px rgba(0,0,0,.2);
+}
 </style>
 </head>
 
@@ -362,5 +410,6 @@ carregarUsuariosLogin();
 </script>
 </body>
 </html>
+
 
 
