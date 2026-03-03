@@ -117,7 +117,18 @@ Salvar Vinculação
 
 <canvas id="graficoTurno"></canvas>
 <div id="lista"></div>
+<!-- HISTÓRICO COMPLETO -->
+<hr style="margin:40px 0">
 
+<h2>Histórico Completo</h2>
+
+<input type="date" id="histInicio">
+<input type="date" id="histFim">
+<button onclick="carregarHistorico()" class="btn-executar">
+Filtrar
+</button>
+
+<div id="historicoLista"></div>
 </div>
 
 <script>
@@ -276,13 +287,16 @@ carregarRotinas(turno);
 
 /* CEO */
 function toggleCEO(){
-const box=document.getElementById("ceoBox");
-box.style.display=box.style.display==="none"?"block":"none";
-
-if(box.style.display==="block"){
-carregarProfissionais();
-carregarPacientesVinculo();
-}
+  if(nivel !== "ceo"){
+    alert("Acesso restrito ao CEO.");
+    return;
+  }
+  const box=document.getElementById("ceoBox");
+  box.style.display=box.style.display==="none"?"block":"none";
+  if(box.style.display==="block"){
+    carregarProfissionais();
+    carregarPacientesVinculo();
+  }
 }
 
 async function carregarProfissionais(){
@@ -377,6 +391,43 @@ fecharFicha();
 carregarRotinas("manha");
 }
 
+async function carregarHistorico(){
+
+  const inicio=document.getElementById("histInicio").value;
+  const fim=document.getElementById("histFim").value;
+
+  let query=db.from("historico_completo").select("*");
+
+  if(inicio) query=query.gte("data",inicio);
+  if(fim) query=query.lte("data",fim);
+
+  const {data,error}=await query;
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  const box=document.getElementById("historicoLista");
+  box.innerHTML="";
+
+  if(!data || data.length===0){
+    box.innerHTML="<p>Nenhum histórico encontrado.</p>";
+    return;
+  }
+
+  data.forEach(r=>{
+    box.innerHTML+=`
+      <div class="rotina ${r.status}">
+        <div>
+          <strong>${r.data}</strong><br>
+          ${r.paciente_nome}<br>
+          Profissional: ${r.profissional_nome || "—"}
+        </div>
+      </div>`;
+  });
+}
+  
 </script>
 
 <!-- MODAL FICHA -->
@@ -410,5 +461,6 @@ carregarRotinas("manha");
 
 </body>
 </html>
+
 
 
