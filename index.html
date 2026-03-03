@@ -242,7 +242,7 @@ await carregarHistoricoPaciente(id);
 async function carregarHistoricoPaciente(pacienteId){
 
 const { data, error } = await db
-.from("historico_rotinas")
+.from("vw_historico_geral")
 .select("*")
 .eq("empresa_id", EMPRESA_ID)
 .eq("paciente_id", pacienteId)
@@ -452,7 +452,7 @@ let inicio = document.getElementById("histInicio").value;
 let fim = document.getElementById("histFim").value;
 
 let query = db
-.from("historico_rotinas") // <-- NOME CORRETO
+.from("vw_historico_geral") // <-- NOME CORRETO
 .select("*")
 .order("data",{ascending:false});
 
@@ -488,6 +488,7 @@ carregarUsuariosLogin();
 
 </body>
 </html>
+
 
 
 
