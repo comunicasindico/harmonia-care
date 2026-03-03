@@ -218,6 +218,58 @@ Profissional: ${r.profissional_nome||"Não identificado"}
 });
 }
 
+   async function carregarPacientes(){
+
+const {data,error} = await db
+.from("pacientes")
+.select("id,nome")
+.eq("empresa_id",EMPRESA_ID)
+.order("nome",{ascending:true});
+
+if(error){
+console.error(error);
+alert("Erro ao carregar pacientes");
+return;
+}
+
+const select = document.getElementById("pacienteSelect");
+select.innerHTML = `<option value="">Escolha...</option>`;
+
+data?.forEach(p=>{
+select.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
+});
+
+}
+   async function carregarUsuarios(){
+
+const {data,error} = await db
+.from("perfis")
+.select(`
+usuario_id,
+nivel,
+usuarios:auth.users(email)
+`);
+
+if(error){
+console.error(error);
+alert("Erro ao carregar usuários");
+return;
+}
+
+const container = document.getElementById("ceoConteudo");
+container.innerHTML = "<h3>Usuários</h3>";
+
+data?.forEach(u=>{
+container.innerHTML += `
+<div class="rotina">
+<div>
+<strong>${u.usuarios?.email || "Sem email"}</strong><br>
+Nível: ${u.nivel}
+</div>
+</div>`;
+});
+
+}
 /* ================================
    PAINEL ADMIN
 ================================ */
@@ -455,6 +507,7 @@ alert("Nível atualizado com sucesso!");
 
 </body>
 </html>
+
 
 
 
