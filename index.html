@@ -448,37 +448,53 @@ ticks:{precision:0}
   
 async function carregarHistorico(){
 
-let inicio = document.getElementById("histInicio").value;
-let fim = document.getElementById("histFim").value;
-
-let query = db
-.from("vw_historico_geral") // <-- NOME CORRETO
+const { data, error } = await db
+.from("vw_historico_geral")
 .select("*")
-.order("data",{ascending:false});
-
-if(inicio) query = query.gte("data",inicio);
-if(fim) query = query.lte("data",fim);
-
-const { data, error } = await query;
+.order("nome_completo",{ascending:true});
 
 if(error){
-console.error(error);
+console.error("Erro no histórico:", error);
 return;
 }
 
-let html = "";
+let html = `
+<table class="ranking-table">
+<thead>
+<tr>
+<th>Nome</th>
+<th>Idade</th>
+<th>HAS</th>
+<th>DM</th>
+<th>D.A</th>
+<th>Cardio</th>
+<th>Acamado</th>
+<th>Dieta</th>
+<th>Pressão</th>
+<th>Outros</th>
+</tr>
+</thead>
+<tbody>
+`;
 
-data?.forEach(h=>{
+data?.forEach(p=>{
 html += `
-<div class="timeline-item">
-<strong>${h.data}</strong> - 
-${h.paciente_nome} - 
-${h.titulo} 
-<span class="status-${h.status}">
-(${h.status})
-</span>
-</div>`;
+<tr>
+<td>${p.nome_completo ?? "-"}</td>
+<td>${p.idade ?? "-"}</td>
+<td>${p.has ? "✔" : ""}</td>
+<td>${p.dm ? "✔" : ""}</td>
+<td>${p.da ? "✔" : ""}</td>
+<td>${p.cardiopatia ? "✔" : ""}</td>
+<td>${p.acamado ? "✔" : ""}</td>
+<td>${p.dieta ?? ""}</td>
+<td>${p.pressao_arterial ?? ""}</td>
+<td>${p.outros ?? ""}</td>
+</tr>
+`;
 });
+
+html += "</tbody></table>";
 
 document.getElementById("historicoLista").innerHTML = html;
 }
@@ -488,6 +504,7 @@ carregarUsuariosLogin();
 
 </body>
 </html>
+
 
 
 
