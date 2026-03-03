@@ -7,8 +7,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2c3e50">
 
 <style>
 html, body{
@@ -20,10 +18,7 @@ html, body{
   background:#f4f6f9;
 }
 
-#app{
-  padding:20px;
-  box-sizing:border-box;
-}
+#app{ padding:20px; box-sizing:border-box; }
 
 h1{
   display:flex;
@@ -31,7 +26,14 @@ h1{
   align-items:center;
   flex-wrap:wrap;
   font-size:28px;
+  margin-bottom:10px;
+}
+
+.turnos{
   margin-bottom:20px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
 }
 
 .rotina{
@@ -43,21 +45,13 @@ h1{
   justify-content:space-between;
   align-items:center;
   box-shadow:0 3px 10px rgba(0,0,0,.08);
-  font-size:16px;
 }
 
 .pendente{ border-left:6px solid #e74c3c; }
 .concluida{ border-left:6px solid #2ecc71; }
 
-@keyframes piscarAlerta{
-  0%{background:#ffe5e5;}
-  50%{background:#ff0000;color:#fff;}
-  100%{background:#ffe5e5;}
-}
-
 .atrasada{
-  animation:piscarAlerta 1s infinite;
-  border-left:8px solid #c0392b;
+  border-left:6px solid #f39c12;
 }
 
 button{
@@ -70,9 +64,6 @@ button{
 
 .btn-executar{background:#3498db;color:#fff;}
 .btn-disabled{background:#bdc3c7;}
-.btn-logout{background:#e74c3c;color:#fff;}
-.btn-historico{background:#2c3e50;color:#fff;}
-.btn-ceo{background:#8e44ad;color:#fff;}
 
 canvas{
   width:100% !important;
@@ -80,18 +71,7 @@ canvas{
   margin:20px auto;
   display:block;
 }
-
-@media(max-width:768px){
-  .rotina{
-    flex-direction:column;
-    align-items:flex-start;
-    gap:10px;
-  }
-  button{ width:100%; }
-}
 </style>
-
-
 </head>
 
 <body>
@@ -106,348 +86,136 @@ canvas{
 <div id="app" style="display:none">
 
 <h1>
-<span>Rotinas - Turno Manhã</span>
-<div>
-
-  <button onclick="toggleTodos()" class="btn-historico">Todos Idosos</button>
-  <div id="todosBox" style="display:none;margin-top:30px">
-<h2>Todos os Idosos e Medicações</h2>
-<div id="todosLista"></div>
-</div>
-  
-  <button onclick="togglePaciente()" class="btn-historico">Paciente</button>
-<div id="pacienteBox" style="display:none;margin-top:30px">
-<h2>Visão por Paciente</h2>
-<select id="pacienteSelect"></select>
-<canvas id="graficoPaciente"></canvas>
-<div id="pacienteLista"></div>
-</div>
-
-  <button onclick="toggleHistorico()" class="btn-historico">Histórico</button>
-<button onclick="toggleCEO()" class="btn-ceo">CEO</button>
-<button onclick="logout()" class="btn-logout">Sair</button>
-</div>
+<span id="tituloTurno">Rotinas - Turno Manhã</span>
 </h1>
 
-  </h1>
-<div class="dashboard-grid">
-  <canvas id="graficoTurno"></canvas>
-  <div id="lista"></div>
+<div class="turnos">
+  <button onclick="carregarRotinas('manha')">Turno Manhã</button>
+  <button onclick="carregarRotinas('tarde')">Turno Tarde</button>
+  <button onclick="carregarRotinas('noite')">Turno Noite</button>
 </div>
-<!-- 🚨 BANNER GLOBAL DE ATRASO -->
-<div id="bannerAtraso" style="display:none;background:#c0392b;color:#fff;padding:12px;font-weight:bold;text-align:center;border-radius:8px;margin-bottom:15px;"></div>
-<!-- 📊 PAINEL EXECUTIVO -->
-<div id="painelCEO" style="display:none;background:#fff;padding:15px;border-radius:10px;margin-bottom:15px;box-shadow:0 2px 6px rgba(0,0,0,.1);"></div>
-<div id="painel" style="margin-bottom:20px;font-weight:bold"></div>
 
 <canvas id="graficoTurno"></canvas>
 <div id="lista"></div>
-
-<div id="historicoBox">
-<h2>Histórico</h2>
-<div id="historicoLista"></div>
-</div>
-
-<div id="ceoBox">
-<h2>Dashboard Executivo</h2>
-<canvas id="graficoCEO"></canvas>
-<div id="ceoLista"></div>
-</div>
 
 </div>
 
 <script>
 
-/* ITEM JS 1 – CONFIG */
+/* CONFIG */
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
-const TURNO_ID="b0efcb02-29a3-41e3-bcb3-0f17ab00a000";
-let user=null,nivel=null,grafico=null,graficoCEO=null,appReady=false;
 
-/* ITEM JS 1.1 – SW AUTO UPDATE */
-if("serviceWorker"in navigator){
-navigator.serviceWorker.getRegistrations().then(regs=>{regs.forEach(r=>r.update())});
-navigator.serviceWorker.addEventListener("controllerchange",()=>{window.location.reload()});
-}
+let user=null,grafico=null,appReady=false;
 
-/* ITEM JS 2 – LOGIN */
+/* LOGIN */
 async function login(){
 const email=document.getElementById("emailInput").value;
 const senha=document.getElementById("senhaInput").value;
 const {data,error}=await db.auth.signInWithPassword({email,password:senha});
 if(error){alert("Login inválido");return;}
-user=data.user;await carregarNivel();iniciarApp();
+user=data.user;
+iniciarApp();
 }
 
-/* ITEM JS 3 – NÍVEL */
-async function carregarNivel(){
-if(!user)return;
-const {data}=await db.from("perfis").select("nivel").eq("usuario_id",user.id).maybeSingle();
-nivel=data?.nivel||null;
+/* AUTO SESSION */
+db.auth.getSession().then(({data})=>{
+if(data.session){
+user=data.session.user;
+iniciarApp();
 }
-
-/* ITEM JS 4 – AUTO SESSION */
-db.auth.getSession().then(async({data})=>{
-if(data.session){user=data.session.user;await carregarNivel();iniciarApp();}
 });
 
-/* ITEM JS 5 – INICIAR */
-function iniciarApp(){document.getElementById("loginBox").style.display="none";document.getElementById("app").style.display="block";
-                      appReady=true;carregarRotinas();carregarCEO();}
+/* INICIAR */
+function iniciarApp(){
+document.getElementById("loginBox").style.display="none";
+document.getElementById("app").style.display="block";
+appReady=true;
+carregarRotinas("manha");
+}
 
-/* ITEM JS 6 – GRÁFICO TURNOS */
+/* GRÁFICO */
 function atualizarGrafico(c,p,a){
 const ctx=document.getElementById("graficoTurno").getContext("2d");
 if(grafico)grafico.destroy();
-grafico=new Chart(ctx,{type:"doughnut",data:{labels:["Concluídas","Pendentes","Atrasadas"],datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]}})
-}
-
-/* ITEM JS 7 – ROTINAS AGRUPADAS POR PACIENTE */
-async function carregarRotinas(turnoSelecionado){
-  if(!appReady) return;
-
-  const {data,error} = await db.rpc("rotina_completa_por_turno",{
-    p_empresa_id:EMPRESA_ID,
-    p_turno:turnoselecionado
-  });
-
-  if(error){
-    console.error(error);
-    return;
-  }
-
-  if(!data || data.length === 0){
-    document.getElementById("lista").innerHTML = "<p>Nenhuma rotina encontrada.</p>";
-    return;
-  }
-
-  const lista = document.getElementById("lista");
-  lista.innerHTML = "";
-
-  let total = data.length;
-  let c = data.filter(r=>r.status==="concluida").length;
-  let p = data.filter(r=>r.status==="pendente").length;
-  let a = data.filter(r=>r.status==="atrasado").length;
-
-  atualizarGrafico(c,p,a);
-
-  data.forEach(r=>{
-
-    let classe="rotina ";
-    if(r.status==="concluida") classe+="concluida";
-    else if(r.status==="atrasado") classe+="atrasada";
-    else classe+="pendente";
-
-    let div=document.createElement("div");
-    div.className=classe;
-
-    div.innerHTML=`
-      <div>
-        <strong>${r.horario_execucao ?? '--:--'}</strong> 
-        ${r.titulo} 
-        <br>
-        <small>${r.paciente_nome}</small>
-      </div>
-      ${
-        r.status==="concluida"
-        ? `<button class="btn-disabled">Concluída</button>`
-        : `<button class="btn-executar" onclick="executar('${r.id}')">Executar</button>`
-      }
-    `;
-
-    lista.appendChild(div);
-  });
-}
-
-/* ITEM JS CEO */
-async function carregarCEO(){
-const {data,error} = await db.from("dashboard_executivo").select("*").single();
-
-if(error || !data) return;
-
-document.getElementById("painelCEO").style.display="block";
-
-document.getElementById("painelCEO").innerHTML=`
-<strong>Total Idosos:</strong> ${data.total_idosos} |
-<strong>Concluídas:</strong> ${data.concluidas} |
-<strong>Pendentes:</strong> ${data.pendentes} |
-<strong>Atrasadas:</strong> ${data.atrasadas} |
-<strong>Aderência:</strong> ${data.aderencia||0}%
-`;
-}
-/* ITEM JS 8 – MEDICAÇÕES */
-async function carregarMedicacoes(){
-const {data}=await db.from("medicacoes_execucao").select("id,horario_previsto,status,pacientes(nome_completo),medicacoes(nome_medicacao)");
-if(!data)return;
-data.forEach(m=>{
-let div=document.createElement("div");
-let atraso=(m.status==="pendente"&&new Date().toLocaleTimeString()>m.horario_previsto);
-div.className=`rotina ${m.status==="concluida"?"concluida":(atraso?"atrasada piscar":"pendente")}`;
-div.innerHTML=`<div><strong>${m.horario_previsto}</strong> - ${m.pacientes?.nome_completo} - ${m.medicacoes?.nome_medicacao}</div>${m.status==="concluida"?`<button class="btn-disabled">Aplicado</button>`:`<button class="btn-executar" onclick="executarMedicacao('${m.id}')">Aplicar</button>`}`
-document.getElementById("lista").appendChild(div);
-});
-}
-
-/* ITEM JS 9 – EXECUTAR MED */
-async function executarMedicacao(id){
-await db.rpc("executar_medicacao",{p_execucao_id:id,p_usuario_id:user.id});
-carregarRotinas("manha");
-carregarMedicacoes();
-}
-
-/* ITEM JS 10 – CEO */
-function toggleCEO(){
-const box=document.getElementById("ceoBox");
-box.style.display=box.style.display==="none"?"block":"none";
-if(box.style.display==="block")carregarCEO();
-}
-async function carregarCEO(){
-const {data}=await db.from("dashboard_ceo").select("*");
-if(!data)return;
-let total=data.length;
-let c=data.filter(d=>d.status==="concluida").length;
-let p=data.filter(d=>d.status==="pendente").length;
-let ctx=document.getElementById("graficoCEO").getContext("2d");
-if(graficoCEO)graficoCEO.destroy();
-graficoCEO=new Chart(ctx,{type:"bar",data:{labels:["Concluídas","Pendentes"],datasets:[{data:[c,p],backgroundColor:["#2ecc71","#e74c3c"]}]}})
-document.getElementById("ceoLista").innerHTML=`Total geral:${total} | Concluídas:${c} | Pendentes:${p}`;
-}
-
-/* ITEM JS 11 – HISTÓRICO */
-function toggleHistorico(){
-const box=document.getElementById("historicoBox");
-box.style.display=box.style.display==="none"?"block":"none";
-}
-
-/* ITEM JS 12 – EXECUTAR ROTINA */
-async function executar(id){
-  if(!user){
-    alert("Usuário não autenticado");
-    return;
-  }
-  await db.rpc("executar_rotina",{
-    p_rotina_id:id,
-    p_usuario_id:user.id
-  });
-  carregarRotinas();
-}
-  
-/* ITEM JS 13 – LOGOUT */
-async function logout(){await db.auth.signOut();location.reload();}
-
-/* ITEM JS 14 – CARREGAR LISTA PACIENTES */
-async function carregarPacientes(){
-const {data}=await db.from("pacientes").select("id,nome_completo").order("nome_completo");
-if(!data)return;
-const select=document.getElementById("pacienteSelect");
-select.innerHTML="<option value=''>Selecione...</option>";
-
-data.forEach(p=>{
-select.innerHTML+=`<option value="${p.id}">${p.nome_completo}</option>`;
-});
-}
-
-/* ITEM JS 15 – TOGGLE PACIENTE */
-function togglePaciente(){
-const box=document.getElementById("pacienteBox");
-box.style.display=box.style.display==="none"?"block":"none";
-if(box.style.display==="block"){carregarPacientes();}
-}
-
-/* ITEM JS 16 – EVENTO SELECT */
-document.addEventListener("change",function(e){
-if(e.target.id==="pacienteSelect"){
-carregarPacienteDetalhado(e.target.value);
-}
-});
-
-/* ITEM JS 17 – CARREGAR DETALHE */
-async function carregarPacienteDetalhado(id){
-if(!id)return;
-const {data}=await db.from("paciente_detalhado").select("*").eq("paciente_id",id);
-if(!data)return;
-
-let total=data.length;
-let c=data.filter(d=>d.status==="concluida").length;
-let p=data.filter(d=>d.status==="pendente").length;
-
-const ctx=document.getElementById("graficoPaciente").getContext("2d");
-if(window.graficoPaciente)window.graficoPaciente.destroy();
-window.graficoPaciente=new Chart(ctx,{
+grafico=new Chart(ctx,{
 type:"doughnut",
-data:{labels:["Concluídas","Pendentes"],datasets:[{data:[c,p],backgroundColor:["#2ecc71","#e74c3c"]}]}
-});
-
-const lista=document.getElementById("pacienteLista");
-lista.innerHTML="";
-data.forEach(d=>{
-let atraso=(d.status==="pendente"&&new Date().toLocaleTimeString()>d.horario_previsto);
-lista.innerHTML+=`
-<div class="rotina ${d.status==="concluida"?"concluida":(atraso?"atrasada piscar":"pendente")}">
-<div>
-<strong>${d.horario_previsto}</strong> - ${d.nome_medicacao}
-${d.profissional?`<br><small>Por: ${d.profissional}</small>`:''}
-</div>
-</div>`;
+data:{
+labels:["Concluídas","Pendentes","Atrasadas"],
+datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]
+}
 });
 }
 
-  /* ITEM JS – LISTAR TODOS */
-function toggleTodos(){
-const box=document.getElementById("todosBox");
-box.style.display=box.style.display==="none"?"block":"none";
-if(box.style.display==="block")carregarTodos();
+/* ROTINAS POR TURNO */
+async function carregarRotinas(turnoSelecionado){
+if(!appReady) return;
+
+document.getElementById("tituloTurno").innerText =
+`Rotinas - Turno ${turnoSelecionado.charAt(0).toUpperCase()+turnoSelecionado.slice(1)}`;
+
+const {data,error} = await db.rpc("rotina_completa_por_turno",{
+p_empresa_id:EMPRESA_ID,
+p_turno:turnoSelecionado
+});
+
+if(error){ console.error(error); return; }
+
+if(!data || data.length===0){
+document.getElementById("lista").innerHTML="<p>Nenhuma rotina encontrada.</p>";
+return;
 }
 
-async function carregarTodos(){
-const {data}=await db.from("idosos_medicacoes_completo").select("*");
-if(!data)return;
-
-const lista=document.getElementById("todosLista");
+const lista=document.getElementById("lista");
 lista.innerHTML="";
 
-let atual="";
+let c=data.filter(r=>r.status==="concluida").length;
+let p=data.filter(r=>r.status==="pendente").length;
+let a=data.filter(r=>r.status==="atrasado").length;
 
-data.forEach(d=>{
+atualizarGrafico(c,p,a);
 
-if(d.idoso!==atual){
-atual=d.idoso;
-lista.innerHTML+=`<h3 style="margin-top:25px;color:#2c3e50">${d.idoso}</h3>`;
-}
+data.forEach(r=>{
+let classe="rotina ";
+if(r.status==="concluida")classe+="concluida";
+else if(r.status==="atrasado")classe+="atrasada";
+else classe+="pendente";
 
-let atraso=(d.status==="pendente"&&new Date().toLocaleTimeString()>d.horario_previsto);
+let div=document.createElement("div");
+div.className=classe;
 
-lista.innerHTML+=`
-<div class="rotina ${d.status==="concluida"?"concluida":(atraso?"atrasada piscar":"pendente")}">
+div.innerHTML=`
 <div>
-<strong>${d.horario_previsto||"--:--"}</strong> - 
-${d.nome_medicacao||"Sem medicação"} 
-${d.dosagem?`(${d.dosagem})`:''}
-${d.profissional?`<br><small>Profissional: ${d.profissional}</small>`:''}
+<strong>${r.horario_execucao ?? '--:--'}</strong>
+${r.titulo}
+<br>
+<small>${r.paciente_nome}</small>
 </div>
-</div>`;
+${
+r.status==="concluida"
+? `<button class="btn-disabled">Concluída</button>`
+: `<button class="btn-executar" onclick="executar('${r.id}','${turnoSelecionado}')">Executar</button>`
+}
+`;
+
+lista.appendChild(div);
 });
 }
-  
+
+/* EXECUTAR */
+async function executar(id,turno){
+if(!user){alert("Usuário não autenticado");return;}
+
+await db.rpc("executar_rotina",{
+p_rotina_id:id,
+p_usuario_id:user.id
+});
+
+carregarRotinas(turno);
+}
+
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
