@@ -287,42 +287,55 @@ carregarUsuarios();
    016 – PACIENTES FORMATADOS
 ================================ */
 async function carregarPacientes(){
+
 const { data, error } = await db
   .from("pacientes")
-  .select("id,nome")
+  .select("id,nome_completo")
   .eq("empresa_id", EMPRESA_ID)
-  .order("nome", { ascending: true });
+  .order("nome_completo", { ascending: true });
+
 if(error){
   console.error(error);
   alert("Erro ao carregar pacientes.");
   return;
 }
+
 if(!data || data.length === 0){
   ceoConteudo.innerHTML = "<p>Nenhum paciente encontrado.</p>";
   return;
 }
+
 /* 🔹 Função para formatar nome */
 function formatarNome(nome){
   return nome
     .toLowerCase()
     .split(" ")
     .filter(p => p.trim() !== "")
-    .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+    .map(p => {
+      if(["da","de","do","dos","das"].includes(p)) return p;
+      return p.charAt(0).toUpperCase() + p.slice(1);
+    })
     .join(" ");
 }
-/* 🔹 Ordena já formatado corretamente */
+
+/* 🔹 Ordena corretamente pelo nome completo */
 data.sort((a,b)=>{
-  return formatarNome(a.nome).localeCompare(formatarNome(b.nome));
+  return formatarNome(a.nome_completo)
+    .localeCompare(formatarNome(b.nome_completo));
 });
+
 let html = `
 <h3>Selecionar Paciente</h3>
 <select id="pacienteSelect" onchange="verPaciente(this.value)" style="padding:8px;width:300px">
 <option value="">Escolha...</option>
 `;
+
 data.forEach(p=>{
-  html += `<option value="${p.id}">${formatarNome(p.nome)}</option>`;
+  html += `<option value="${p.id}">${formatarNome(p.nome_completo)}</option>`;
 });
+
 html += "</select><div id='detalhePaciente' style='margin-top:20px'></div>";
+
 ceoConteudo.innerHTML = html;
 }
 
@@ -337,5 +350,6 @@ ceoConteudo.innerHTML=html;
 </script>
 </body>
 </html>
+
 
 
