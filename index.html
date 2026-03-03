@@ -43,7 +43,7 @@ canvas{width:100%!important;max-width:600px;margin:20px auto;display:block}
 <h1>
 <span id="tituloTurno">Rotinas - Turno Manhã</span>
 <div style="display:flex;gap:10px;">
-<button onclick="toggleCEO()" class="btn-executar">Painel CEO</button>
+<button onclick="toggleCEO()" class="btn-executar">Painel Admin</button>
 <button onclick="logout()" class="btn-disabled">Sair</button>
 </div>
 </h1>
@@ -51,7 +51,7 @@ canvas{width:100%!important;max-width:600px;margin:20px auto;display:block}
 <div id="ceoBox" style="display:none"></div>
 
 <div class="turnos">
-<button onclick="carregarRotinas('manha')">Turno Manhã</button>
+<button onclick="carregarRotinas('manhã')">Turno Manhã</button>
 <button onclick="carregarRotinas('tarde')">Turno Tarde</button>
 <button onclick="carregarRotinas('noite')">Turno Noite</button>
 </div>
@@ -277,5 +277,6 @@ function toggleCEO(){
 
 </body>
 </html>
+
 
 
