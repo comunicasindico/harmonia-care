@@ -24,6 +24,9 @@ button{padding:8px 14px;border:0;border-radius:6px;font-weight:bold;cursor:point
 .btn-disabled{background:#bdc3c7}
 canvas{width:100%!important;max-width:600px;margin:20px auto;display:block}
 #ceoBox{background:#fff;padding:20px;border-radius:12px;margin-bottom:20px;box-shadow:0 3px 10px rgba(0,0,0,.08)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left}
+th{background:#eee}
 </style>
 </head>
 
@@ -43,7 +46,7 @@ canvas{width:100%!important;max-width:600px;margin:20px auto;display:block}
 <h1>
 <span id="tituloTurno">Rotinas - Turno Manhã</span>
 <div style="display:flex;gap:10px;">
-<button onclick="toggleCEO()" class="btn-executar">Painel Admin</button>
+<button onclick="toggleAdmin()" class="btn-executar">Painel Admin</button>
 <button onclick="logout()" class="btn-disabled">Sair</button>
 </div>
 </h1>
@@ -70,30 +73,28 @@ canvas{width:100%!important;max-width:600px;margin:20px auto;display:block}
 
 </div>
 
-<!-- 005 – SCRIPT -->
 <script>
 
-/* 006 – CONFIG */
+/* 005 – CONFIG */
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 
 let user=null,nivel=null,grafico=null,graficoProf=null;
-/* ================================
-   CONTROLE DE PERFIS
-================================ */
+
+/* 006 – CONTROLE PERFIS */
 function isGestao(){return["admin","supervisor"].includes(nivel);}
 function isSaude(){return["medico","enfermeiro","fisioterapeuta"].includes(nivel);}
 function isExecucao(){return["cuidador","colaborador"].includes(nivel);}
 function isVisualizacao(){return nivel==="visualizador";}
-/* ================================
-   LOGIN
-================================ */
+
+/* 007 – LOGIN */
 async function login(){
-const email=emailInput.value.trim();
-const senha=senhaInput.value;
-const {data,error}=await db.auth.signInWithPassword({email,password:senha});
+const {data,error}=await db.auth.signInWithPassword({
+email:emailInput.value.trim(),
+password:senhaInput.value
+});
 if(error){alert(error.message);return;}
 user=data.user;
 await carregarNivel();
@@ -104,22 +105,17 @@ async function logout(){
 await db.auth.signOut();
 location.reload();
 }
-/* ================================
-   PERFIL
-================================ */
+
+/* 008 – PERFIL */
 async function carregarNivel(){
-const {data,error}=await db.from("perfis")
+const {data}=await db.from("perfis")
 .select("nivel")
 .eq("usuario_id",user.id)
 .maybeSingle();
-if(error){console.error(error);nivel=null;return;}
 nivel=data?.nivel||null;
-console.log("Perfil:",nivel);
 }
 
-/* ================================
-   AUTO SESSION
-================================ */
+/* 009 – AUTO SESSION */
 db.auth.getSession().then(async({data})=>{
 if(data.session){
 user=data.session.user;
@@ -128,46 +124,32 @@ iniciarApp();
 }
 });
 
-/* ================================
-   INICIAR APP
-================================ */
+/* 010 – INICIAR */
 function iniciarApp(){
 loginBox.style.display="none";
 app.style.display="block";
-
-const hoje = new Date().toISOString().split("T")[0];
-histInicio.value = hoje;
-histFim.value = hoje;
-
-carregarRotinas("manha");
-carregarHistorico(); // 👈 carrega automaticamente
+const hoje=new Date().toISOString().split("T")[0];
+histInicio.value=hoje;
+histFim.value=hoje;
+carregarRotinas("manhã");
+carregarHistorico();
 }
-/* ================================
-   ROTINAS
-================================ */
+
+/* 011 – ROTINAS */
 async function carregarRotinas(turno){
 tituloTurno.innerText=`Rotinas - Turno ${turno}`;
-const {data,error}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:turno});
-if(error){console.error(error);return;}
+const {data}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:turno});
 lista.innerHTML="";
 let c=0,p=0,a=0;
-
 data?.forEach(r=>{
 if(r.status==="concluida")c++;
 else if(r.status==="pendente")p++;
 else a++;
-
-let botao="";
-if(r.status==="concluida"){
-botao=`<button class="btn-disabled">Concluída</button>`;
-}
-else if(isGestao()||isSaude()||isExecucao()){
-botao=`<button class="btn-executar" onclick="executar('${r.id}','${turno}')">Executar</button>`;
-}
-else{
-botao=`<button class="btn-disabled">Sem Permissão</button>`;
-}
-
+let botao=r.status==="concluida"
+?`<button class="btn-disabled">Concluída</button>`
+:(isGestao()||isSaude()||isExecucao())
+?`<button class="btn-executar" onclick="executar('${r.id}','${turno}')">Executar</button>`
+:`<button class="btn-disabled">Sem Permissão</button>`;
 lista.innerHTML+=`
 <div class="rotina ${r.status}">
 <div>
@@ -179,7 +161,6 @@ Paciente: ${r.paciente_nome}<br>
 ${botao}
 </div>`;
 });
-
 atualizarGrafico(c,p,a);
 }
 
@@ -188,18 +169,18 @@ await db.rpc("executar_rotina",{p_rotina_id:id,p_usuario_id:user.id});
 carregarRotinas(turno);
 }
 
-/* ================================
-   GRAFICO
-================================ */
+/* 012 – GRAFICO */
 function atualizarGrafico(c,p,a){
 const ctx=graficoTurno.getContext("2d");
 if(grafico)grafico.destroy();
-grafico=new Chart(ctx,{type:"doughnut",data:{labels:["Concluídas","Pendentes","Atrasadas"],datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]}})
+grafico=new Chart(ctx,{
+type:"doughnut",
+data:{labels:["Concluídas","Pendentes","Atrasadas"],
+datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]}
+});
 }
 
-/* ================================
-   HISTÓRICO
-================================ */
+/* 013 – HISTÓRICO */
 async function carregarHistorico(){
 let query=db.from("historico_completo").select("*");
 if(histInicio.value)query=query.gte("data",histInicio.value);
@@ -218,66 +199,9 @@ Profissional: ${r.profissional_nome||"Não identificado"}
 });
 }
 
-   async function carregarPacientes(){
-
-const {data,error} = await db
-.from("pacientes")
-.select("id,nome")
-.eq("empresa_id",EMPRESA_ID)
-.order("nome",{ascending:true});
-
-if(error){
-console.error(error);
-alert("Erro ao carregar pacientes");
-return;
-}
-
-const select = document.getElementById("pacienteSelect");
-select.innerHTML = `<option value="">Escolha...</option>`;
-
-data?.forEach(p=>{
-select.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
-});
-
-}
-   async function carregarUsuarios(){
-
-const {data,error} = await db
-.from("perfis")
-.select(`
-usuario_id,
-nivel,
-usuarios:auth.users(email)
-`);
-
-if(error){
-console.error(error);
-alert("Erro ao carregar usuários");
-return;
-}
-
-const container = document.getElementById("ceoConteudo");
-container.innerHTML = "<h3>Usuários</h3>";
-
-data?.forEach(u=>{
-container.innerHTML += `
-<div class="rotina">
-<div>
-<strong>${u.usuarios?.email || "Sem email"}</strong><br>
-Nível: ${u.nivel}
-</div>
-</div>`;
-});
-
-}
-/* ================================
-   PAINEL ADMIN
-================================ */
-function toggleCEO(){
-if(!isGestao()){
-alert("Acesso restrito à gestão.");
-return;
-}
+/* 014 – PAINEL ADMIN */
+function toggleAdmin(){
+if(!isGestao()){alert("Acesso restrito à gestão.");return;}
 ceoBox.style.display=ceoBox.style.display==="none"?"block":"none";
 if(ceoBox.style.display==="block"){
 ceoBox.innerHTML=`
@@ -291,228 +215,97 @@ ceoBox.innerHTML=`
 }
 }
 
-/* ================================
-   PACIENTES
-================================ */
+/* 015 – USUÁRIOS */
+async function carregarUsuarios(){
+const {data}=await db.from("vw_usuarios").select("*");
+let html=`<h3>Usuários</h3>
+<button onclick="formNovoUsuario()" class="btn-executar" style="margin-bottom:10px">+ Novo Usuário</button>
+<table>
+<tr><th>Email</th><th>Nível</th><th>Ações</th></tr>`;
+data?.forEach(u=>{
+html+=`<tr>
+<td>${u.email}</td>
+<td>${u.nivel}</td>
+<td>
+<button onclick="formEditarUsuario('${u.usuario_id}','${u.nivel}')" class="btn-executar">Editar</button>
+<button onclick="excluirUsuario('${u.usuario_id}')" style="background:#e74c3c;color:#fff;border:0;padding:6px 10px;border-radius:4px">Excluir</button>
+</td>
+</tr>`;
+});
+html+="</table>";
+ceoConteudo.innerHTML=html;
+}
+
+function gerarOptions(nivelAtual=""){
+const niveis=["admin","supervisor","colaborador","enfermeiro","medico","fisioterapeuta","cuidador","visualizador"];
+return niveis.map(n=>`<option value="${n}" ${n===nivelAtual?"selected":""}>${n}</option>`).join("");
+}
+
+function formNovoUsuario(){
+ceoConteudo.innerHTML=`
+<h3>Novo Usuário</h3>
+<input id="novoEmail" placeholder="Email"><br><br>
+<input id="novaSenha" type="password" placeholder="Senha"><br><br>
+<select id="novoNivel">${gerarOptions()}</select><br><br>
+<button onclick="criarUsuario()" class="btn-executar">Salvar</button>
+<button onclick="carregarUsuarios()" class="btn-disabled">Cancelar</button>`;
+}
+
+async function criarUsuario(){
+const {data,error}=await db.auth.signUp({
+email:novoEmail.value,
+password:novaSenha.value
+});
+if(error){alert(error.message);return;}
+await db.from("perfis").insert({usuario_id:data.user.id,nivel:novoNivel.value});
+alert("Usuário criado!");
+carregarUsuarios();
+}
+
+function formEditarUsuario(id,nivelAtual){
+ceoConteudo.innerHTML=`
+<h3>Editar Usuário</h3>
+<select id="editarNivel">${gerarOptions(nivelAtual)}</select><br><br>
+<button onclick="salvarEdicao('${id}')" class="btn-executar">Salvar</button>
+<button onclick="carregarUsuarios()" class="btn-disabled">Cancelar</button>`;
+}
+
+async function salvarEdicao(id){
+await db.from("perfis").update({nivel:editarNivel.value}).eq("usuario_id",id);
+alert("Atualizado!");
+carregarUsuarios();
+}
+
+async function excluirUsuario(id){
+if(!confirm("Excluir usuário?"))return;
+await db.from("perfis").delete().eq("usuario_id",id);
+alert("Removido!");
+carregarUsuarios();
+}
+
+/* 016 – PACIENTES */
 async function carregarPacientes(){
 const {data}=await db.from("pacientes").select("id,nome").order("nome");
-let html="<h3>Selecionar Paciente</h3>";
-html+="<select onchange='verPaciente(this.value)' style='padding:6px;width:300px'>";
-html+="<option value=''>Escolha...</option>";
-data?.forEach(p=>{
-html+=`<option value="${p.id}">${p.nome}</option>`;
-});
+let html="<h3>Selecionar Paciente</h3><select onchange='verPaciente(this.value)'><option value=''>Escolha...</option>";
+data?.forEach(p=>html+=`<option value="${p.id}">${p.nome}</option>`);
 html+="</select><div id='detalhePaciente'></div>";
-document.getElementById("ceoConteudo").innerHTML=html;
+ceoConteudo.innerHTML=html;
 }
 
 async function verPaciente(id){
 if(!id)return;
 const {data:paciente}=await db.from("pacientes").select("*").eq("id",id).single();
-const {data:rotinas}=await db.from("rotina_modelos").select("*").eq("paciente_id",id);
-const {data:exec}=await db.from("rotina_execucao").select("*").eq("paciente_id",id).order("data_execucao",{ascending:false});
-
-let html=`<h2>${paciente.nome}</h2>`;
-html+=`<p><strong>Nascimento:</strong> ${paciente.data_nascimento||"-"}</p>`;
-html+="<h3>Rotinas</h3>";
-rotinas?.forEach(r=>{
-html+=`<div class="rotina"><div>${r.titulo} - ${r.turno} - ${r.horario||"--:--"}</div></div>`;
-});
-html+="<h3>Histórico</h3>";
-exec?.forEach(e=>{
-html+=`<div class="rotina"><div>${e.data_execucao} - ${e.status}</div></div>`;
-});
-document.getElementById("detalhePaciente").innerHTML=html;
+ceoConteudo.innerHTML+=`<h2>${paciente.nome}</h2>`;
 }
 
-/* ================================
-   MODELOS DE ROTINA
-================================ */
+/* 017 – ROTINAS MODELO */
 async function carregarRotinasModelos(){
 const {data}=await db.from("rotina_modelos").select("*").order("titulo");
 let html="<h3>Modelos de Rotina</h3>";
-data?.forEach(r=>{
-html+=`<div class="rotina"><div>${r.titulo} - ${r.turno}</div></div>`;
-});
-document.getElementById("ceoConteudo").innerHTML=html;
-}
-/* ================================
-   PROFISSIONAIS
-================================ */
-async function carregarUsuarios(){
-
-  const { data } = await db
-    .from("perfis")
-    .select("usuario_id,nivel");
-
-  let html = `
-    <h3>Usuários</h3>
-    <button onclick="formNovoUsuario()" class="btn-executar" style="margin-bottom:15px">+ Novo Usuário</button>
-    <table style="width:100%;border-collapse:collapse">
-      <tr style="background:#eee">
-        <th style="padding:8px">Usuário ID</th>
-        <th style="padding:8px">Nível</th>
-        <th style="padding:8px">Ações</th>
-      </tr>
-  `;
-
-  data?.forEach(u=>{
-    html += `
-      <tr>
-        <td style="padding:8px">${u.usuario_id}</td>
-        <td style="padding:8px">${u.nivel}</td>
-        <td style="padding:8px">
-          <button onclick="formEditarUsuario('${u.usuario_id}','${u.nivel}')" class="btn-executar">Editar</button>
-          <button onclick="excluirUsuario('${u.usuario_id}')" style="background:#e74c3c;color:white;border:0;padding:6px 10px;border-radius:4px">Excluir</button>
-        </td>
-      </tr>
-    `;
-  });
-
-  html += "</table>";
-
-  document.getElementById("ceoConteudo").innerHTML = html;
+data?.forEach(r=>html+=`<div class="rotina"><div>${r.titulo} - ${r.turno}</div></div>`);
+ceoConteudo.innerHTML=html;
 }
 
-   function formNovoUsuario(){
-  document.getElementById("ceoConteudo").innerHTML = `
-    <h3>Novo Usuário</h3>
-    <input id="novoEmail" placeholder="Email" style="display:block;margin:10px 0;padding:8px;width:250px">
-    <input id="novaSenha" type="password" placeholder="Senha" style="display:block;margin:10px 0;padding:8px;width:250px">
-    <select id="novoNivel" style="display:block;margin:10px 0;padding:8px;width:250px">
-      ${gerarOptions()}
-    </select>
-    <button onclick="criarUsuario()" class="btn-executar">Salvar</button>
-    <button onclick="carregarUsuarios()" class="btn-disabled">Cancelar</button>
-  `;
-}
-   async function criarUsuario(){
-
-  const email = document.getElementById("novoEmail").value;
-  const senha = document.getElementById("novaSenha").value;
-  const nivel = document.getElementById("novoNivel").value;
-
-  const { data, error } = await db.auth.signUp({
-    email: email,
-    password: senha
-  });
-
-  if(error){
-    alert(error.message);
-    return;
-  }
-
-  await db.from("perfis").insert({
-    usuario_id: data.user.id,
-    nivel: nivel
-  });
-
-  alert("Usuário criado com sucesso!");
-  carregarUsuarios();
-}
-   function formEditarUsuario(usuarioId, nivelAtual){
-  document.getElementById("ceoConteudo").innerHTML = `
-    <h3>Editar Usuário</h3>
-    <p><strong>ID:</strong> ${usuarioId}</p>
-    <select id="editarNivel" style="display:block;margin:10px 0;padding:8px;width:250px">
-      ${gerarOptions(nivelAtual)}
-    </select>
-    <button onclick="salvarEdicao('${usuarioId}')" class="btn-executar">Salvar</button>
-    <button onclick="carregarUsuarios()" class="btn-disabled">Cancelar</button>
-  `;
-}
-
-   async function salvarEdicao(usuarioId){
-  const novoNivel = document.getElementById("editarNivel").value;
-
-  const { error } = await db
-    .from("perfis")
-    .update({ nivel: novoNivel })
-    .eq("usuario_id", usuarioId);
-
-  if(error){
-    alert("Erro ao atualizar.");
-    return;
-  }
-
-  alert("Atualizado com sucesso!");
-  carregarUsuarios();
-}
-
-   async function excluirUsuario(usuarioId){
-
-  if(!confirm("Deseja realmente excluir este usuário?")) return;
-
-  const { error } = await db
-    .from("perfis")
-    .delete()
-    .eq("usuario_id", usuarioId);
-
-  if(error){
-    alert("Erro ao excluir.");
-    return;
-  }
-
-  alert("Usuário removido!");
-  carregarUsuarios();
-}
-   
-/* ================================
-   GERAR OPTIONS DE NÍVEL
-================================ */
-function gerarOptions(nivelAtual){
-const niveis=[
-"admin",
-"supervisor",
-"colaborador",
-"enfermeiro",
-"medico",
-"fisioterapeuta",
-"cuidador",
-"visualizador"
-];
-return niveis.map(n=>`<option value="${n}" ${n===nivelAtual?"selected":""}>${n}</option>`).join("");
-}
-
-   function gerarOptions(nivelAtual=""){
-  const niveis=[
-    "admin",
-    "supervisor",
-    "colaborador",
-    "enfermeiro",
-    "medico",
-    "fisioterapeuta",
-    "cuidador",
-    "visualizador"
-  ];
-  return niveis.map(n=>`<option value="${n}" ${n===nivelAtual?"selected":""}>${n}</option>`).join("");
-}
-   
-/* ================================
-   ALTERAR NÍVEL
-================================ */
-async function alterarNivel(usuarioId,novoNivel){
-const {error}=await db
-.from("perfis")
-.update({nivel:novoNivel})
-.eq("usuario_id",usuarioId);
-if(error){
-alert("Erro ao alterar nível");
-console.error(error);
-return;
-}
-alert("Nível atualizado com sucesso!");
-}
 </script>
-
 </body>
 </html>
-
-
-
-
-
-
-
-
-
