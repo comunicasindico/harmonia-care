@@ -198,31 +198,22 @@ const { data, error } = await db
 .eq("empresa_id", EMPRESA_ID)
 .order("nome_completo",{ascending:true});
 
-let select = document.getElementById("selectPaciente");
+const select = document.getElementById("selectPaciente");
 
 if(error){
-select.innerHTML=`<option>Erro ao carregar</option>`;
-return;
-}
-
-if(!data || data.length===0){
-select.innerHTML=`<option>Nenhum paciente cadastrado</option>`;
+console.error(error);
+select.innerHTML = `<option>Erro ao carregar</option>`;
 return;
 }
 
 let html = `<option value="">Selecione um paciente...</option>`;
 
-data.forEach(p=>{
-if(!p.nome_completo) return;
+data?.forEach(p=>{
 html += `<option value="${p.id}">${p.nome_completo}</option>`;
 });
 
 select.innerHTML = html;
-
-/* 🔥 força atualização visual */
-select.value = "";
 }
-
 function abrirPacienteSelecionado(){
 
 let id = document.getElementById("selectPaciente").value;
@@ -236,30 +227,64 @@ window.open("?paciente="+id,"_self");
 }
 
 async function carregarColaboradores(){
-const {data}=await db.from("vw_usuarios").select("nome_completo,cargo").order("hierarquia");
-let html="";
+
+const { data, error } = await db
+.from("vw_usuarios")
+.select("nome_completo,cargo,ativo")
+.eq("empresa_id", EMPRESA_ID)
+.order("hierarquia",{ascending:true});
+
+if(error){
+console.error(error);
+return;
+}
+
+let html = "";
+
 data?.forEach(u=>{
-html+=`<div class="item-colaborador">${u.nome_completo} - <strong>${u.cargo||""}</strong></div>`;
+html += `
+<div class="item-colaborador">
+${u.nome_completo} 
+- <strong>${u.cargo || "Sem cargo"}</strong>
+${u.ativo ? "" : " (Inativo)"}
+</div>`;
 });
-document.getElementById("listaColaboradores").innerHTML=html;
+
+document.getElementById("listaColaboradores").innerHTML = html;
 }
 
 async function carregarDashboard(){
-const {data}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:"manhã"});
-if(!data)return;
-let pacientes=new Set(),criticos=0,atrasos=0,concluidas=0,total=data.length;
+
+const { data, error } = await db
+.rpc("rotina_completa_por_turno",{
+p_empresa_id:EMPRESA_ID,
+p_turno:"manhã"
+});
+
+if(error || !data) return;
+
+let pacientes = new Set();
+let criticos = 0;
+let atrasos = 0;
+let concluidas = 0;
+
 data.forEach(r=>{
 pacientes.add(r.paciente_id);
-if(r.risco==="critico")criticos++;
-if(r.status==="atrasado")atrasos++;
-if(r.status==="concluida")concluidas++;
+if(r.risco === "critico") criticos++;
+if(r.status === "atrasado") atrasos++;
+if(r.status === "concluida") concluidas++;
 });
-dashPacientes.innerText=pacientes.size;
-dashCriticos.innerText=criticos;
-dashAtrasos.innerText=atrasos;
-dashConcluidas.innerText=concluidas;
-dashPercentual.innerText=total?Math.round((concluidas/total)*100)+"%":"0%";
-dashMedicacoes.innerText=total;
+
+document.getElementById("dashPacientes").innerText = pacientes.size;
+document.getElementById("dashCriticos").innerText = criticos;
+document.getElementById("dashAtrasos").innerText = atrasos;
+document.getElementById("dashConcluidas").innerText = concluidas;
+
+let total = data.length;
+document.getElementById("dashPercentual").innerText =
+total ? Math.round((concluidas/total)*100)+"%" : "0%";
+
+document.getElementById("dashMedicacoes").innerText = total;
 }
 
 async function carregarRotinas(turno){
@@ -281,13 +306,44 @@ carregarRankingCriticos();
 }
 
 async function carregarRankingCriticos(){
-const {data}=await db.from("ranking_pacientes_criticos").select("*").order("score_clinico",{ascending:false}).limit(10);
-let html=`<table class="ranking-table"><thead><tr><th>#</th><th>Nome</th><th>Score</th><th>Atrasos</th></tr></thead><tbody>`;
+
+const { data, error } = await db
+.from("ranking_pacientes_criticos")
+.select("*")
+.eq("empresa_id", EMPRESA_ID)
+.order("score_clinico",{ascending:false})
+.limit(10);
+
+if(error){
+console.error(error);
+return;
+}
+
+let html = `
+<table class="ranking-table">
+<thead>
+<tr>
+<th>#</th>
+<th>Nome</th>
+<th>Score</th>
+<th>Atrasos</th>
+</tr>
+</thead>
+<tbody>`;
+
 data?.forEach((p,i)=>{
-html+=`<tr><td>${i+1}</td><td>${p.nome_completo}</td><td>${p.score_clinico}</td><td>${p.total_atrasos}</td></tr>`;
+html += `
+<tr>
+<td>${i+1}</td>
+<td>${p.nome_completo}</td>
+<td>${p.score_clinico}</td>
+<td>${p.total_atrasos}</td>
+</tr>`;
 });
-html+="</tbody></table>";
-rankingBox.innerHTML=html;
+
+html += `</tbody></table>`;
+
+document.getElementById("rankingBox").innerHTML = html;
 }
 
 async function carregarGraficoInstitucional(){
@@ -329,17 +385,42 @@ maintainAspectRatio:false
 });
 }
   
-
 async function carregarHistorico(){
-let query=db.from("historico_completo").select("*");
-if(histInicio.value)query=query.gte("data",histInicio.value);
-if(histFim.value)query=query.lte("data",histFim.value);
-const {data}=await query;
-let html="";
-data?.forEach(r=>{
-html+=`<div>${r.data} - ${r.paciente_nome} - ${r.titulo} (${r.status})</div>`;
+
+let inicio = document.getElementById("histInicio").value;
+let fim = document.getElementById("histFim").value;
+
+let query = db
+.from("historico_rotinas")
+.select("*")
+.eq("empresa_id", EMPRESA_ID)
+.order("data",{ascending:false});
+
+if(inicio) query = query.gte("data",inicio);
+if(fim) query = query.lte("data",fim);
+
+const { data, error } = await query;
+
+if(error){
+console.error(error);
+return;
+}
+
+let html = "";
+
+data?.forEach(h=>{
+html += `
+<div class="timeline-item">
+<strong>${h.data}</strong> - 
+${h.paciente_nome} - 
+${h.titulo} 
+<span class="status-${h.status}">
+(${h.status})
+</span>
+</div>`;
 });
-historicoLista.innerHTML=html;
+
+document.getElementById("historicoLista").innerHTML = html;
 }
 
 carregarUsuariosLogin();
@@ -347,6 +428,7 @@ carregarUsuariosLogin();
 
 </body>
 </html>
+
 
 
 
