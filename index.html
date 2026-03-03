@@ -134,9 +134,14 @@ iniciarApp();
 function iniciarApp(){
 loginBox.style.display="none";
 app.style.display="block";
-carregarRotinas("manha");
-}
 
+const hoje = new Date().toISOString().split("T")[0];
+histInicio.value = hoje;
+histFim.value = hoje;
+
+carregarRotinas("manha");
+carregarHistorico(); // 👈 carrega automaticamente
+}
 /* ================================
    ROTINAS
 ================================ */
@@ -450,6 +455,7 @@ alert("Nível atualizado com sucesso!");
 
 </body>
 </html>
+
 
 
 
