@@ -325,10 +325,17 @@ box.style.display=box.style.display==="none"?"block":"none";
 
 /* ITEM JS 12 – EXECUTAR ROTINA */
 async function executar(id){
-await db.rpc("executar_rotina",{p_rotina_id:id,p_usuario_id:user.id});
-carregarRotinas();
+  if(!user){
+    alert("Usuário não autenticado");
+    return;
+  }
+  await db.rpc("executar_rotina",{
+    p_rotina_id:id,
+    p_usuario_id:user.id
+  });
+  carregarRotinas();
 }
-
+  
 /* ITEM JS 13 – LOGOUT */
 async function logout(){await db.auth.signOut();location.reload();}
 
@@ -429,6 +436,7 @@ ${d.profissional?`<br><small>Profissional: ${d.profissional}</small>`:''}
 </script>
 </body>
 </html>
+
 
 
 
