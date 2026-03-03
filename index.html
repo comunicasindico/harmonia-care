@@ -80,6 +80,28 @@ const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 let user=null,nivel=null,grafico=null,graficoProf=null;
 
+/* ================================
+   CONTROLE DE PERFIS
+================================ */
+
+function isAdmin(){
+  return nivel === "admin";
+}
+function isSupervisor(){
+  return nivel === "supervisor";
+}
+function isGestao(){
+  return ["admin","supervisor"].includes(nivel);
+}
+function isSaude(){
+  return ["medico","enfermeiro","fisioterapeuta"].includes(nivel);
+}
+function isExecucao(){
+  return ["cuidador","colaborador"].includes(nivel);
+}
+function isVisualizacao(){
+  return nivel === "visualizador";
+}
 /* 007 – LOGIN */
 async function login(){
 const email=emailInput.value.trim();
@@ -120,14 +142,44 @@ grafico=new Chart(ctx,{type:"doughnut",data:{labels:["Concluídas","Pendentes","
 
 /* 012 – CARREGAR ROTINAS */
 async function carregarRotinas(turno){
-tituloTurno.innerText=`Rotinas - Turno ${turno}`;
-const {data,error}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:turno});
-if(error){console.error(error);return;}
-lista.innerHTML="";
-let c=0,p=0,a=0;
-data.forEach(r=>{if(r.status==="concluida")c++;else if(r.status==="pendente")p++;else a++;
-lista.innerHTML+=`<div class="rotina ${r.status}"><div><strong>${r.horario_execucao||"--:--"}</strong>${r.titulo}<br>Paciente: ${r.paciente_nome}<br><small>Profissional: ${r.profissional_nome||"—"}</small></div>${r.status==="concluida"?`<button class="btn-disabled">Concluída</button>`:`<button class="btn-executar" onclick="executar('${r.id}','${turno}')">Executar</button>`}</div>`});
-atualizarGrafico(c,p,a);
+  tituloTurno.innerText = `Rotinas - Turno ${turno}`;
+  const {data,error} = await db.rpc("rotina_completa_por_turno",{
+    p_empresa_id: EMPRESA_ID,
+    p_turno: turno
+  });
+  if(error){
+    console.error(error);
+    return;
+  }
+  lista.innerHTML = "";
+  let c=0,p=0,a=0;
+  data.forEach(r=>{
+    if(r.status==="concluida") c++;
+    else if(r.status==="pendente") p++;
+    else a++;
+    let botao = "";
+    if(r.status==="concluida"){
+      botao = `<button class="btn-disabled">Concluída</button>`;
+    }
+    else if(isGestao() || isSaude() || isExecucao()){
+      botao = `<button class="btn-executar" onclick="executar('${r.id}','${turno}')">Executar</button>`;
+    }
+    else{
+      botao = `<button class="btn-disabled">Sem Permissão</button>`;
+    }
+    lista.innerHTML += `
+      <div class="rotina ${r.status}">
+        <div>
+          <strong>${r.horario_execucao || "--:--"}</strong>
+          ${r.titulo}<br>
+          Paciente: ${r.paciente_nome}<br>
+          <small>Profissional: ${r.profissional_nome || "—"}</small>
+        </div>
+        ${botao}
+      </div>
+    `;
+  });
+  atualizarGrafico(c,p,a);
 }
 
 /* 013 – EXECUTAR */
@@ -159,16 +211,30 @@ if(graficoProf)graficoProf.destroy();
 graficoProf=new Chart(ctx,{type:"bar",data:{labels:Object.keys(dados),datasets:[{label:"Total Executado",data:Object.values(dados),backgroundColor:"#3498db"}]}})
 }
 
-/* 016 – CEO */
+/* 016 – PAINEL ADMINISTRATIVO */
 function toggleCEO(){
-if(nivel!=="ceo"){alert("Acesso restrito ao CEO.");return;}
-ceoBox.style.display=ceoBox.style.display==="none"?"block":"none";
-if(ceoBox.style.display==="block"){
-ceoBox.innerHTML=`<h2>Painel Administrativo</h2><div style="display:flex;gap:10px;"><button onclick="carregarPacientes()" class="btn-executar">Pacientes</button><button onclick="carregarProfissionais()" class="btn-executar">Profissionais</button><button onclick="carregarRotinasModelos()" class="btn-executar">Rotinas</button></div><div id="ceoConteudo"></div>`;
-}
-}
 
+  if(!isGestao()){
+    alert("Acesso restrito à gestão.");
+    return;
+  }
+  const ceoBox = document.getElementById("ceoBox");
+  ceoBox.style.display = ceoBox.style.display === "none" ? "block" : "none";
+  if(ceoBox.style.display === "block"){
+    ceoBox.innerHTML = `
+      <h2>Painel Administrativo</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button onclick="carregarPacientes()" class="btn-executar">Pacientes</button>
+        <button onclick="carregarProfissionais()" class="btn-executar">Profissionais</button>
+        <button onclick="carregarRotinasModelos()" class="btn-executar">Rotinas</button>
+      </div>
+      <div id="ceoConteudo"></div>
+    `;
+  }
+}
+  
 </script>
 
 </body>
 </html>
+
