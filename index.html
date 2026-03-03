@@ -294,20 +294,25 @@ let graficoPaciente=null;
 ===================================================== */
 async function carregarUsuariosLogin(){
 
-const {data}=await db
+const {data,error}=await db
 .from("vw_usuarios")
-.select("id,email,nivel")
-.order("email");
+.select("id,nome_completo,email,ativo,cargo,hierarquia")
+.order("nome_completo");
 
-if(!data) return;
+if(error || !data) return;
 
 let html=`<option value="">Selecione...</option>`;
 
 data.forEach(u=>{
-html+=`<option value="${u.email}" 
-data-nivel="${u.nivel}">
-${u.email}
+if(u.ativo){
+html+=`
+<option value="${u.email}" 
+data-id="${u.id}"
+data-cargo="${u.cargo}"
+data-hierarquia="${u.hierarquia}">
+${u.nome_completo} (${u.cargo})
 </option>`;
+}
 });
 
 usuarioSelect.innerHTML=html;
@@ -323,8 +328,7 @@ return;
 }
 
 usuarioInfo.innerHTML=
-`Perfil: ${selected.getAttribute("data-nivel").toUpperCase()}`;
-
+`Cargo: ${selected.getAttribute("data-cargo")}`;
 });
 
 /* =====================================================
@@ -349,17 +353,39 @@ alert("Senha incorreta.");
 return;
 }
 
-user=data.user;
-iniciarApp();
+/* Buscar perfil completo */
+const {data:perfil,error:erroPerfil}=await db
+.from("vw_usuarios")
+.select("*")
+.eq("id",data.user.id)
+.single();
+
+if(erroPerfil || !perfil){
+alert("Perfil não encontrado.");
+await db.auth.signOut();
+return;
 }
 
+if(perfil.ativo === false){
+alert("Usuário inativo.");
+await db.auth.signOut();
+return;
+}
+
+/* Guardar usuário completo */
+user = perfil;
+
+iniciarApp();
+}
 /* =====================================================
    003 – INICIAR APP
 ===================================================== */
 function iniciarApp(){
 document.getElementById("loginWrapper").style.display="none";
 app.style.display="block";
-
+tituloTurno.innerText = 
+`Rotinas - Manhã | ${user.nome_completo} (${user.cargo})`;
+  
 const hoje=new Date().toISOString().split("T")[0];
 histInicio.value=hoje;
 histFim.value=hoje;
@@ -439,7 +465,10 @@ Paciente: <a href="#" onclick="verPaciente('${r.paciente_id}')">${r.paciente_nom
    006 – EXECUTAR (ATUALIZA TUDO)
 ===================================================== */
 async function executar(id,turno){
-
+if(user.hierarquia >= 6){
+alert("Perfil sem permissão para executar rotinas.");
+return;
+}
 await db.rpc("executar_rotina",{
 p_rotina_id:id,
 p_usuario_id:user.id
@@ -681,6 +710,7 @@ carregarUsuariosLogin();
 </script>
 </body>
 </html>
+
 
 
 
