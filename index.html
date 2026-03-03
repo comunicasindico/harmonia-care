@@ -106,6 +106,33 @@ border-bottom:1px solid #eee;
 .status-pendente{color:#e74c3c;font-weight:bold;}
 .status-concluida{color:#2ecc71;font-weight:bold;}
 
+#loginWrapper{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:#f4f6f9;
+}
+
+#loginBox{
+width:350px;
+background:#fff;
+padding:30px;
+border-radius:14px;
+box-shadow:0 10px 25px rgba(0,0,0,.15);
+display:flex;
+flex-direction:column;
+}
+
+#loginBox select,
+#loginBox input{
+padding:10px;
+border-radius:6px;
+border:1px solid #ccc;
+margin-top:5px;
+}
+
+
 </style>
 </head>
 
@@ -113,12 +140,26 @@ border-bottom:1px solid #eee;
 
 <div id="bannerCritico" class="banner-alerta"></div>
 
-<div id="loginBox">
-<h2>Login</h2>
-<input id="emailInput" placeholder="Email">
-<input id="senhaInput" type="password" placeholder="Senha">
-<button onclick="login()" class="btn-executar" style="width:100%">Entrar</button>
+<!-- LOGIN CENTRALIZADO -->
+<div id="loginWrapper">
+  <div id="loginBox">
+
+    <h2>🔐 Harmonia Care</h2>
+
+    <label>Selecione o usuário</label>
+    <select id="usuarioSelect"></select>
+
+    <div id="usuarioInfo" style="margin-top:10px;font-weight:bold;"></div>
+
+    <input id="senhaInput" type="password" placeholder="Senha" style="margin-top:15px;">
+
+    <button onclick="login()" class="btn-executar" style="width:100%;margin-top:15px;">
+      Entrar
+    </button>
+
+  </div>
 </div>
+  
 <div id="app" style="display:none">
 
 <h1>
@@ -238,20 +279,67 @@ let grafico=null;
 let graficoPaciente=null;
 
 /* =====================================================
-   002 – LOGIN / LOGOUT
+   001 – CARREGAR USUÁRIOS PARA LOGIN
 ===================================================== */
-async function login(){
-const {data,error}=await db.auth.signInWithPassword({
-email:emailInput.value.trim(),
-password:senhaInput.value});
-if(error){alert(error.message);return;}
-user=data.user;
-iniciarApp();
+async function carregarUsuariosLogin(){
+
+const {data}=await db
+.from("vw_usuarios")
+.select("id,email,nivel")
+.order("email");
+
+if(!data) return;
+
+let html=`<option value="">Selecione...</option>`;
+
+data.forEach(u=>{
+html+=`<option value="${u.email}" 
+data-nivel="${u.nivel}">
+${u.email}
+</option>`;
+});
+
+usuarioSelect.innerHTML=html;
 }
 
-async function logout(){
-await db.auth.signOut();
-location.reload();
+usuarioSelect.addEventListener("change",function(){
+
+let selected=this.options[this.selectedIndex];
+
+if(!selected.value){
+usuarioInfo.innerHTML="";
+return;
+}
+
+usuarioInfo.innerHTML=
+`Perfil: ${selected.getAttribute("data-nivel").toUpperCase()}`;
+
+});
+
+/* =====================================================
+   002 – LOGIN POR LISTA SUSPENSA
+===================================================== */
+async function login(){
+
+let email=usuarioSelect.value;
+
+if(!email){
+alert("Selecione um usuário.");
+return;
+}
+
+const {data,error}=await db.auth.signInWithPassword({
+email:email,
+password:senhaInput.value
+});
+
+if(error){
+alert("Senha incorreta.");
+return;
+}
+
+user=data.user;
+iniciarApp();
 }
 
 /* =====================================================
@@ -577,10 +665,12 @@ doc.text(`Score Clínico: ${score}`,20,30);
 doc.save(`${nome}.pdf`);
 }
 
+carregarUsuariosLogin();
 
 </script>
 </body>
 </html>
+
 
 
 
