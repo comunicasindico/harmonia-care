@@ -227,7 +227,7 @@ ceoBox.innerHTML=`
 <h2>Painel Administrativo</h2>
 <div style="display:flex;gap:10px;flex-wrap:wrap;">
 <button onclick="carregarPacientes()" class="btn-executar">Pacientes</button>
-<button onclick="carregarProfissionais()" class="btn-executar">Profissionais</button>
+<button onclick="carregarUsuarios()" class="btn-executar">Usuários</button>
 <button onclick="carregarRotinasModelos()" class="btn-executar">Rotinas</button>
 </div>
 <div id="ceoConteudo" style="margin-top:20px;"></div>`;
@@ -271,15 +271,41 @@ document.getElementById("detalhePaciente").innerHTML=html;
 /* ================================
    PROFISSIONAIS
 ================================ */
-async function carregarProfissionais(){
-const {data}=await db.from("profissionais").select("*").order("nome");
-let html="<h3>Profissionais</h3>";
-data?.forEach(p=>{
-html+=`<div class="rotina"><div>${p.nome} - ${p.cargo||""}</div></div>`;
-});
-document.getElementById("ceoConteudo").innerHTML=html;
+async function carregarUsuarios(){
+  const { data: usuarios } = await db
+    .from("perfis")
+    .select(`
+      usuario_id,
+      nivel,
+      auth.users (
+        email
+      )
+    `);
+  let html = "<h3>Usuários e Níveis</h3>";
+  html += `
+    <table style="width:100%;border-collapse:collapse;">
+      <tr style="background:#eee">
+        <th style="padding:8px;text-align:left">Email</th>
+        <th style="padding:8px;text-align:left">Nível</th>
+        <th style="padding:8px;text-align:left">Alterar</th>
+      </tr>
+  `;
+  usuarios?.forEach(u=>{
+    html += `
+      <tr>
+        <td style="padding:8px">${u.users?.email || "-"}</td>
+        <td style="padding:8px">${u.nivel}</td>
+        <td style="padding:8px">
+          <select onchange="alterarNivel('${u.usuario_id}', this.value)">
+            ${gerarOptions(u.nivel)}
+          </select>
+        </td>
+      </tr>
+    `;
+  });
+  html += "</table>";
+  document.getElementById("ceoConteudo").innerHTML = html;
 }
-
 /* ================================
    MODELOS DE ROTINA
 ================================ */
@@ -291,11 +317,43 @@ html+=`<div class="rotina"><div>${r.titulo} - ${r.turno}</div></div>`;
 });
 document.getElementById("ceoConteudo").innerHTML=html;
 }
+/* ================================
+   GERAR OPTIONS DE NÍVEL
+================================ */
+function gerarOptions(nivelAtual){
+const niveis=[
+"admin",
+"supervisor",
+"colaborador",
+"enfermeiro",
+"medico",
+"fisioterapeuta",
+"cuidador",
+"visualizador"
+];
+return niveis.map(n=>`<option value="${n}" ${n===nivelAtual?"selected":""}>${n}</option>`).join("");
+}
 
+/* ================================
+   ALTERAR NÍVEL
+================================ */
+async function alterarNivel(usuarioId,novoNivel){
+const {error}=await db
+.from("perfis")
+.update({nivel:novoNivel})
+.eq("usuario_id",usuarioId);
+if(error){
+alert("Erro ao alterar nível");
+console.error(error);
+return;
+}
+alert("Nível atualizado com sucesso!");
+}
 </script>
 
 </body>
 </html>
+
 
 
 
