@@ -5,150 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Harmonia Care - Turno</title>
 
+<!-- 001 – LIBS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<!-- 002 – CSS -->
 <style>
-html, body{
-  margin:0;
-  padding:0;
-  width:100%;
-  min-height:100%;
-  font-family:Arial;
-  background:#f4f6f9;
-}
-
-#app{ padding:20px; }
-
-h1{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-}
-
-.turnos{
-  margin:20px 0;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-.rotina{
-  background:#fff;
-  padding:18px;
-  border-radius:12px;
-  margin-bottom:14px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  box-shadow:0 3px 10px rgba(0,0,0,.08);
-}
-
-.pendente{ border-left:6px solid #e74c3c; }
-.concluida{ border-left:6px solid #2ecc71; }
-.atrasada{ border-left:6px solid #f39c12; }
-
-button{
-  padding:8px 14px;
-  border:0;
-  border-radius:6px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-.btn-executar{background:#3498db;color:#fff;}
-.btn-disabled{background:#bdc3c7;}
-
-canvas{
-  width:100% !important;
-  max-width:600px;
-  margin:20px auto;
-  display:block;
-}
-
-#ceoBox{
-  background:#fff;
-  padding:20px;
-  border-radius:12px;
-  margin-bottom:20px;
-  box-shadow:0 3px 10px rgba(0,0,0,.08);
-}
-
-async function carregarPacientes(){
-
-  const {data}=await db.from("pacientes").select("*").order("nome_completo");
-
-  const box=document.getElementById("ceoConteudo");
-
-  box.innerHTML=`
-    <h3>Cadastro de Pacientes</h3>
-
-    <button onclick="novoPaciente()" class="btn-executar">Novo Paciente</button>
-
-    <div id="listaPacientes"></div>
-  `;
-
-  const lista=document.getElementById("listaPacientes");
-  lista.innerHTML="";
-
-  data?.forEach(p=>{
-    lista.innerHTML+=`
-      <div class="rotina">
-        <div>${p.nome_completo}</div>
-        <div>
-          <button onclick="editarPaciente('${p.id}')" class="btn-executar">Editar</button>
-          <button onclick="excluirPaciente('${p.id}')" class="btn-disabled">Excluir</button>
-        </div>
-      </div>
-    `;
-  });
-
-}
-
-  async function carregarProfissionais(){
-
-  const {data}=await db.from("profissionais").select("*").order("nome_completo");
-
-  const box=document.getElementById("ceoConteudo");
-
-  box.innerHTML=`
-    <h3>Cadastro de Profissionais</h3>
-
-    <button onclick="novoProfissional()" class="btn-executar">Novo Profissional</button>
-
-    <div id="listaProfissionais"></div>
-  `;
-
-  const lista=document.getElementById("listaProfissionais");
-  lista.innerHTML="";
-
-  data?.forEach(p=>{
-    lista.innerHTML+=`
-      <div class="rotina">
-        <div>${p.nome_completo} - ${p.funcao}</div>
-        <div>
-          <button onclick="editarProfissional('${p.id}')" class="btn-executar">Editar</button>
-          <button onclick="excluirProfissional('${p.id}')" class="btn-disabled">Excluir</button>
-        </div>
-      </div>
-    `;
-  });
-
-}
-
-  async function carregarRotinasModelos(){const {data}=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).order("turno");const box=document.getElementById("ceoConteudo");box.innerHTML=`<h3>Rotinas Modelo</h3><button onclick="novaRotinaModelo()" class="btn-executar">Nova Rotina</button><div id="listaRotinasModelo"></div>`;const lista=document.getElementById("listaRotinasModelo");lista.innerHTML="";data?.forEach(r=>{lista.innerHTML+=`<div class="rotina"><div><strong>${r.titulo}</strong><br>Tipo: ${r.tipo}<br>Turno: ${r.turno}<br>Horário: ${r.horario_previsto||"--:--"}</div><div><button onclick="editarRotinaModelo('${r.id}')" class="btn-executar">Editar</button><button onclick="excluirRotinaModelo('${r.id}')" class="btn-disabled">Excluir</button></div></div>`});}
-  function novaRotinaModelo(){document.getElementById("ceoConteudo").innerHTML=`<h3>Nova Rotina</h3><input id="rm_titulo" placeholder="Título" style="width:100%;margin-bottom:10px"><input id="rm_tipo" placeholder="Tipo (Higiene, Medicação, Alimentação...)" style="width:100%;margin-bottom:10px"><select id="rm_turno" style="width:100%;margin-bottom:10px"><option value="manha">Manhã</option><option value="tarde">Tarde</option><option value="noite">Noite</option></select><input type="time" id="rm_horario" style="width:100%;margin-bottom:10px"><button onclick="salvarNovaRotinaModelo()" class="btn-executar">Salvar</button>`;}
-  async function salvarNovaRotinaModelo(){await db.from("rotina_modelos").insert({empresa_id:EMPRESA_ID,titulo:document.getElementById("rm_titulo").value,tipo:document.getElementById("rm_tipo").value,turno:document.getElementById("rm_turno").value,horario_previsto:document.getElementById("rm_horario").value});carregarRotinasModelos();}
-  async function editarRotinaModelo(id){const {data}=await db.from("rotina_modelos").select("*").eq("id",id).single();document.getElementById("ceoConteudo").innerHTML=`<h3>Editar Rotina</h3><input id="rm_titulo" value="${data.titulo}" style="width:100%;margin-bottom:10px"><input id="rm_tipo" value="${data.tipo}" style="width:100%;margin-bottom:10px"><select id="rm_turno" style="width:100%;margin-bottom:10px"><option value="manha" ${data.turno==="manha"?"selected":""}>Manhã</option><option value="tarde" ${data.turno==="tarde"?"selected":""}>Tarde</option><option value="noite" ${data.turno==="noite"?"selected":""}>Noite</option></select><input type="time" id="rm_horario" value="${data.horario_previsto||""}" style="width:100%;margin-bottom:10px"><button onclick="salvarEdicaoRotinaModelo('${id}')" class="btn-executar">Atualizar</button>`;}                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-  async function salvarEdicaoRotinaModelo(id){await db.from("rotina_modelos").update({titulo:document.getElementById("rm_titulo").value,tipo:document.getElementById("rm_tipo").value,turno:document.getElementById("rm_turno").value,horario_previsto:document.getElementById("rm_horario").value}).eq("id",id);carregarRotinasModelos();}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
-  async function excluirRotinaModelo(id){if(!confirm("Deseja excluir esta rotina?"))return;await db.from("rotina_modelos").delete().eq("id",id);carregarRotinasModelos();}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+html,body{margin:0;padding:0;width:100%;min-height:100%;font-family:Arial;background:#f4f6f9}
+#app{padding:20px}
+h1{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.turnos{margin:20px 0;display:flex;gap:10px;flex-wrap:wrap}
+.rotina{background:#fff;padding:18px;border-radius:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 3px 10px rgba(0,0,0,.08)}
+.pendente{border-left:6px solid #e74c3c}
+.concluida{border-left:6px solid #2ecc71}
+.atrasada{border-left:6px solid #f39c12}
+button{padding:8px 14px;border:0;border-radius:6px;font-weight:bold;cursor:pointer}
+.btn-executar{background:#3498db;color:#fff}
+.btn-disabled{background:#bdc3c7}
+canvas{width:100%!important;max-width:600px;margin:20px auto;display:block}
+#ceoBox{background:#fff;padding:20px;border-radius:12px;margin-bottom:20px;box-shadow:0 3px 10px rgba(0,0,0,.08)}
 </style>
 </head>
 
 <body>
 
+<!-- 003 – LOGIN -->
 <div id="loginBox">
 <h2>Login</h2>
 <input id="emailInput" placeholder="Email">
@@ -156,21 +37,15 @@ async function carregarPacientes(){
 <button onclick="login()" class="btn-executar" style="width:100%">Entrar</button>
 </div>
 
+<!-- 004 – APP -->
 <div id="app" style="display:none">
 
 <h1>
 <span id="tituloTurno">Rotinas - Turno Manhã</span>
-
-<div style="display:flex; gap:10px; flex-wrap:wrap;">
-  <button onclick="toggleCEO()" class="btn-executar">
-    Painel CEO
-  </button>
-
-  <button onclick="logout()" class="btn-disabled">
-    Sair
-  </button>
+<div style="display:flex;gap:10px;">
+<button onclick="toggleCEO()" class="btn-executar">Painel CEO</button>
+<button onclick="logout()" class="btn-disabled">Sair</button>
 </div>
-
 </h1>
 
 <div id="ceoBox" style="display:none"></div>
@@ -187,213 +62,113 @@ async function carregarPacientes(){
 <hr style="margin:40px 0">
 
 <h2>Histórico Completo</h2>
-
 <input type="date" id="histInicio">
 <input type="date" id="histFim">
 <button onclick="carregarHistorico()" class="btn-executar">Filtrar</button>
-
 <canvas id="graficoProfissional"></canvas>
 <div id="historicoLista"></div>
 
 </div>
 
+<!-- 005 – SCRIPT -->
 <script>
 
-/* CONFIG */
+/* 006 – CONFIG */
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
-
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
-
 let user=null,nivel=null,grafico=null,graficoProf=null;
 
-/* LOGIN */
+/* 007 – LOGIN */
 async function login(){
-const email=document.getElementById("emailInput").value.trim();
-const senha=document.getElementById("senhaInput").value;
-
+const email=emailInput.value.trim();
+const senha=senhaInput.value;
 const {data,error}=await db.auth.signInWithPassword({email,password:senha});
 if(error){alert(error.message);return;}
-
 user=data.user;
 await carregarNivel();
 iniciarApp();
 }
 
-async function logout(){
-await db.auth.signOut();
-location.reload();
-}
+async function logout(){await db.auth.signOut();location.reload();}
 
+/* 008 – PERFIL */
 async function carregarNivel(){
-const {data}=await db.from("perfis")
-.select("nivel")
-.eq("usuario_id",user.id)
-.single();
+const {data}=await db.from("perfis").select("nivel").eq("usuario_id",user.id).single();
 nivel=data?.nivel||null;
 }
 
+/* 009 – AUTO SESSION */
 db.auth.getSession().then(async({data})=>{
-if(data.session){
-user=data.session.user;
-await carregarNivel();
-iniciarApp();
-}
+if(data.session){user=data.session.user;await carregarNivel();iniciarApp();}
 });
 
+/* 010 – INICIAR */
 function iniciarApp(){
-document.getElementById("loginBox").style.display="none";
-document.getElementById("app").style.display="block";
+loginBox.style.display="none";
+app.style.display="block";
 carregarRotinas("manha");
 }
 
-/* GRÁFICO TURNO */
+/* 011 – GRAFICO TURNO */
 function atualizarGrafico(c,p,a){
-const ctx=document.getElementById("graficoTurno").getContext("2d");
+const ctx=graficoTurno.getContext("2d");
 if(grafico)grafico.destroy();
-grafico=new Chart(ctx,{
-type:"doughnut",
-data:{
-labels:["Concluídas","Pendentes","Atrasadas"],
-datasets:[{data:[c,p,a],
-backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]
-}
-});
+grafico=new Chart(ctx,{type:"doughnut",data:{labels:["Concluídas","Pendentes","Atrasadas"],datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]}})
 }
 
-/* ROTINAS */
+/* 012 – CARREGAR ROTINAS */
 async function carregarRotinas(turno){
-document.getElementById("tituloTurno").innerText=
-`Rotinas - Turno ${turno}`;
-
-const {data,error}=await db.rpc("rotina_completa_por_turno",{
-p_empresa_id:EMPRESA_ID,
-p_turno:turno
-});
-
+tituloTurno.innerText=`Rotinas - Turno ${turno}`;
+const {data,error}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:turno});
 if(error){console.error(error);return;}
-
-const lista=document.getElementById("lista");
 lista.innerHTML="";
-
-let c=data.filter(r=>r.status==="concluida").length;
-let p=data.filter(r=>r.status==="pendente").length;
-let a=data.filter(r=>r.status==="atrasado").length;
+let c=0,p=0,a=0;
+data.forEach(r=>{if(r.status==="concluida")c++;else if(r.status==="pendente")p++;else a++;
+lista.innerHTML+=`<div class="rotina ${r.status}"><div><strong>${r.horario_execucao||"--:--"}</strong>${r.titulo}<br>Paciente: ${r.paciente_nome}<br><small>Profissional: ${r.profissional_nome||"—"}</small></div>${r.status==="concluida"?`<button class="btn-disabled">Concluída</button>`:`<button class="btn-executar" onclick="executar('${r.id}','${turno}')">Executar</button>`}</div>`});
 atualizarGrafico(c,p,a);
-
-data.forEach(r=>{
-let classe="rotina "+r.status;
-
-lista.innerHTML+=`
-<div class="${classe}">
-<div>
-<strong>${r.horario_execucao ?? "--:--"}</strong>
-${r.titulo}<br>
-Paciente: ${r.paciente_nome}<br>
-<small>Profissional: ${r.profissional_nome || "—"}</small>
-</div>
-${
-r.status==="concluida"
-? `<button class="btn-disabled">Concluída</button>`
-: `<button class="btn-executar" onclick="executar('${r.id}','${turno}')">Executar</button>`
-}
-</div>`;
-});
 }
 
+/* 013 – EXECUTAR */
 async function executar(id,turno){
-await db.rpc("executar_rotina",{
-p_rotina_id:id,
-p_usuario_id:user.id
-});
+await db.rpc("executar_rotina",{p_rotina_id:id,p_usuario_id:user.id});
 carregarRotinas(turno);
 }
 
-/* HISTÓRICO */
+/* 014 – HISTÓRICO */
 async function carregarHistorico(){
-
-let inicio=document.getElementById("histInicio").value;
-let fim=document.getElementById("histFim").value;
-
 let query=db.from("historico_completo").select("*");
-
-if(inicio) query=query.gte("data",inicio);
-if(fim) query=query.lte("data",fim);
-
-const {data,error}=await query;
-if(error){console.error(error);return;}
-
-const box=document.getElementById("historicoLista");
-box.innerHTML="";
-
-if(!data||data.length===0){
-box.innerHTML="<p>Nenhum histórico encontrado.</p>";
-return;
-}
-
+if(histInicio.value)query=query.gte("data",histInicio.value);
+if(histFim.value)query=query.lte("data",histFim.value);
+const {data}=await query;
+historicoLista.innerHTML="";
 let contagem={};
-
-data.forEach(r=>{
+data?.forEach(r=>{
 const nome=r.profissional_nome||"Não identificado";
 contagem[nome]=(contagem[nome]||0)+1;
-
-box.innerHTML+=`
-<div class="rotina ${r.status}">
-<div>
-<strong>${r.data}</strong><br>
-${r.paciente_nome}<br>
-Profissional: ${nome}
-</div>
-</div>`;
+historicoLista.innerHTML+=`<div class="rotina ${r.status}"><div><strong>${r.data}</strong><br>${r.paciente_nome}<br>Profissional: ${nome}</div></div>`;
 });
-
 gerarGraficoProfissional(contagem);
 }
 
+/* 015 – GRAFICO PROFISSIONAL */
 function gerarGraficoProfissional(dados){
-
-const ctx=document.getElementById("graficoProfissional").getContext("2d");
+const ctx=graficoProfissional.getContext("2d");
 if(graficoProf)graficoProf.destroy();
-
-graficoProf=new Chart(ctx,{
-type:"bar",
-data:{
-labels:Object.keys(dados),
-datasets:[{
-label:"Total Executado",
-data:Object.values(dados),
-backgroundColor:"#3498db"
-}]
-}
-});
+graficoProf=new Chart(ctx,{type:"bar",data:{labels:Object.keys(dados),datasets:[{label:"Total Executado",data:Object.values(dados),backgroundColor:"#3498db"}]}})
 }
 
-/* CEO */
+/* 016 – CEO */
 function toggleCEO(){
-
-  if(nivel !== "ceo"){
-    alert("Acesso restrito ao CEO.");
-    return;
-  }
-  const box=document.getElementById("ceoBox");
-  box.style.display = box.style.display==="none" ? "block" : "none";
-  if(box.style.display==="block"){
-    box.innerHTML=`
-      <h2>Painel Administrativo</h2>
-      <div style="display:flex; gap:10px; margin-bottom:20px;">
-        <button onclick="carregarPacientes()" class="btn-executar">Pacientes</button>
-        <button onclick="carregarProfissionais()" class="btn-executar">Profissionais</button>
-        <button onclick="carregarRotinasModelos()" class="btn-executar">Rotinas</button>
-      </div>
-      <div id="ceoConteudo"></div>
-    `;
-  }
+if(nivel!=="ceo"){alert("Acesso restrito ao CEO.");return;}
+ceoBox.style.display=ceoBox.style.display==="none"?"block":"none";
+if(ceoBox.style.display==="block"){
+ceoBox.innerHTML=`<h2>Painel Administrativo</h2><div style="display:flex;gap:10px;"><button onclick="carregarPacientes()" class="btn-executar">Pacientes</button><button onclick="carregarProfissionais()" class="btn-executar">Profissionais</button><button onclick="carregarRotinasModelos()" class="btn-executar">Rotinas</button></div><div id="ceoConteudo"></div>`;
+}
 }
 
 </script>
 
 </body>
 </html>
-
-
