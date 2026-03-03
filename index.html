@@ -78,49 +78,18 @@ const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
-let user=null,nivel=null,grafico=null,graficoProf=null;
 
+let user=null,nivel=null,grafico=null,graficoProf=null;
 /* ================================
    CONTROLE DE PERFIS
 ================================ */
-function isAdmin(){
-  return nivel === "admin";
-}
-function isSupervisor(){
-  return nivel === "supervisor";
-}
-function isGestao(){
-  return ["admin","supervisor"].includes(nivel);
-}
-function isSaude(){
-  return ["medico","enfermeiro","fisioterapeuta"].includes(nivel);
-}
-function isExecucao(){
-  return ["cuidador","colaborador"].includes(nivel);
-}
-function isVisualizacao(){
-  return nivel === "visualizador";
-}
-/* 020 – DASHBOARD POR PERFIL */
-function carregarDashboard(){
-
-  if(isAdmin()){
-    dashboardAdmin();
-  }
-  else if(isSupervisor()){
-    dashboardSupervisor();
-  }
-  else if(isSaude()){
-    dashboardSaude();
-  }
-  else if(isExecucao()){
-    dashboardExecucao();
-  }
-  else if(isVisualizacao()){
-    dashboardVisualizacao();
-  }
-}   
-/* 007 – LOGIN */
+function isGestao(){return["admin","supervisor"].includes(nivel);}
+function isSaude(){return["medico","enfermeiro","fisioterapeuta"].includes(nivel);}
+function isExecucao(){return["cuidador","colaborador"].includes(nivel);}
+function isVisualizacao(){return nivel==="visualizador";}
+/* ================================
+   LOGIN
+================================ */
 async function login(){
 const email=emailInput.value.trim();
 const senha=senhaInput.value;
@@ -131,152 +100,203 @@ await carregarNivel();
 iniciarApp();
 }
 
-async function logout(){await db.auth.signOut();location.reload();}
-
-/* 008 – PERFIL */
+async function logout(){
+await db.auth.signOut();
+location.reload();
+}
+/* ================================
+   PERFIL
+================================ */
 async function carregarNivel(){
-const {data}=await db.from("perfis").select("nivel").eq("usuario_id",user.id).single();
+const {data,error}=await db.from("perfis")
+.select("nivel")
+.eq("usuario_id",user.id)
+.maybeSingle();
+if(error){console.error(error);nivel=null;return;}
 nivel=data?.nivel||null;
+console.log("Perfil:",nivel);
 }
 
-/* 009 – AUTO SESSION */
+/* ================================
+   AUTO SESSION
+================================ */
 db.auth.getSession().then(async({data})=>{
-if(data.session){user=data.session.user;await carregarNivel();iniciarApp();}
+if(data.session){
+user=data.session.user;
+await carregarNivel();
+iniciarApp();
+}
 });
 
-/* 010 – INICIAR */
+/* ================================
+   INICIAR APP
+================================ */
 function iniciarApp(){
-  loginBox.style.display="none";
-  app.style.display="block";
-  carregarDashboard();
+loginBox.style.display="none";
+app.style.display="block";
+carregarRotinas("manha");
 }
-function dashboardAdmin(){
-  carregarRotinas("manha");
-  ceoBox.style.display="none";
+
+/* ================================
+   ROTINAS
+================================ */
+async function carregarRotinas(turno){
+tituloTurno.innerText=`Rotinas - Turno ${turno}`;
+const {data,error}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:turno});
+if(error){console.error(error);return;}
+lista.innerHTML="";
+let c=0,p=0,a=0;
+
+data?.forEach(r=>{
+if(r.status==="concluida")c++;
+else if(r.status==="pendente")p++;
+else a++;
+
+let botao="";
+if(r.status==="concluida"){
+botao=`<button class="btn-disabled">Concluída</button>`;
 }
-function dashboardSupervisor(){
-  carregarRotinas("manha");
+else if(isGestao()||isSaude()||isExecucao()){
+botao=`<button class="btn-executar" onclick="executar('${r.id}','${turno}')">Executar</button>`;
 }
-function dashboardSaude(){
-  carregarRotinas("manha");
-  // futuramente pode mostrar prontuário
+else{
+botao=`<button class="btn-disabled">Sem Permissão</button>`;
 }
-function dashboardExecucao(){
-  carregarRotinas("manha");
+
+lista.innerHTML+=`
+<div class="rotina ${r.status}">
+<div>
+<strong>${r.horario_execucao||"--:--"}</strong>
+${r.titulo}<br>
+Paciente: ${r.paciente_nome}<br>
+<small>Profissional: ${r.profissional_nome||"—"}</small>
+</div>
+${botao}
+</div>`;
+});
+
+atualizarGrafico(c,p,a);
 }
-function dashboardVisualizacao(){
-  carregarRotinas("manha");
-  document.querySelectorAll(".btn-executar").forEach(b=>{
-    b.disabled=true;
-    b.classList.remove("btn-executar");
-    b.classList.add("btn-disabled");
-    b.innerText="Visualização";
-  });
-}   
-/* 011 – GRAFICO TURNO */
+
+async function executar(id,turno){
+await db.rpc("executar_rotina",{p_rotina_id:id,p_usuario_id:user.id});
+carregarRotinas(turno);
+}
+
+/* ================================
+   GRAFICO
+================================ */
 function atualizarGrafico(c,p,a){
 const ctx=graficoTurno.getContext("2d");
 if(grafico)grafico.destroy();
 grafico=new Chart(ctx,{type:"doughnut",data:{labels:["Concluídas","Pendentes","Atrasadas"],datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]}})
 }
 
-/* 012 – CARREGAR ROTINAS */
-async function carregarRotinas(turno){
-  tituloTurno.innerText = `Rotinas - Turno ${turno}`;
-  const {data,error} = await db.rpc("rotina_completa_por_turno",{
-    p_empresa_id: EMPRESA_ID,
-    p_turno: turno
-  });
-  if(error){
-    console.error(error);
-    return;
-  }
-  lista.innerHTML = "";
-  let c=0,p=0,a=0;
-  data.forEach(r=>{
-    if(r.status==="concluida") c++;
-    else if(r.status==="pendente") p++;
-    else a++;
-    let botao = "";
-    if(r.status==="concluida"){
-      botao = `<button class="btn-disabled">Concluída</button>`;
-    }
-    else if(isGestao() || isSaude() || isExecucao()){
-      botao = `<button class="btn-executar" onclick="executar('${r.id}','${turno}')">Executar</button>`;
-    }
-    else{
-      botao = `<button class="btn-disabled">Sem Permissão</button>`;
-    }
-    lista.innerHTML += `
-      <div class="rotina ${r.status}">
-        <div>
-          <strong>${r.horario_execucao || "--:--"}</strong>
-          ${r.titulo}<br>
-          Paciente: ${r.paciente_nome}<br>
-          <small>Profissional: ${r.profissional_nome || "—"}</small>
-        </div>
-        ${botao}
-      </div>
-    `;
-  });
-  atualizarGrafico(c,p,a);
-}
-
-/* 013 – EXECUTAR */
-async function executar(id,turno){
-await db.rpc("executar_rotina",{p_rotina_id:id,p_usuario_id:user.id});
-carregarRotinas(turno);
-}
-
-/* 014 – HISTÓRICO */
+/* ================================
+   HISTÓRICO
+================================ */
 async function carregarHistorico(){
 let query=db.from("historico_completo").select("*");
 if(histInicio.value)query=query.gte("data",histInicio.value);
 if(histFim.value)query=query.lte("data",histFim.value);
 const {data}=await query;
 historicoLista.innerHTML="";
-let contagem={};
 data?.forEach(r=>{
-const nome=r.profissional_nome||"Não identificado";
-contagem[nome]=(contagem[nome]||0)+1;
-historicoLista.innerHTML+=`<div class="rotina ${r.status}"><div><strong>${r.data}</strong><br>${r.paciente_nome}<br>Profissional: ${nome}</div></div>`;
+historicoLista.innerHTML+=`
+<div class="rotina ${r.status}">
+<div>
+<strong>${r.data}</strong><br>
+${r.paciente_nome}<br>
+Profissional: ${r.profissional_nome||"Não identificado"}
+</div>
+</div>`;
 });
-gerarGraficoProfissional(contagem);
 }
 
-/* 015 – GRAFICO PROFISSIONAL */
-function gerarGraficoProfissional(dados){
-const ctx=graficoProfissional.getContext("2d");
-if(graficoProf)graficoProf.destroy();
-graficoProf=new Chart(ctx,{type:"bar",data:{labels:Object.keys(dados),datasets:[{label:"Total Executado",data:Object.values(dados),backgroundColor:"#3498db"}]}})
-}
-
-/* 016 – PAINEL ADMINISTRATIVO */
+/* ================================
+   PAINEL ADMIN
+================================ */
 function toggleCEO(){
-
-  if(!isGestao()){
-    alert("Acesso restrito à gestão.");
-    return;
-  }
-  const ceoBox = document.getElementById("ceoBox");
-  ceoBox.style.display = ceoBox.style.display === "none" ? "block" : "none";
-  if(ceoBox.style.display === "block"){
-    ceoBox.innerHTML = `
-      <h2>Painel Administrativo</h2>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button onclick="carregarPacientes()" class="btn-executar">Pacientes</button>
-        <button onclick="carregarProfissionais()" class="btn-executar">Profissionais</button>
-        <button onclick="carregarRotinasModelos()" class="btn-executar">Rotinas</button>
-      </div>
-      <div id="ceoConteudo"></div>
-    `;
-  }
+if(!isGestao()){
+alert("Acesso restrito à gestão.");
+return;
 }
-  
+ceoBox.style.display=ceoBox.style.display==="none"?"block":"none";
+if(ceoBox.style.display==="block"){
+ceoBox.innerHTML=`
+<h2>Painel Administrativo</h2>
+<div style="display:flex;gap:10px;flex-wrap:wrap;">
+<button onclick="carregarPacientes()" class="btn-executar">Pacientes</button>
+<button onclick="carregarProfissionais()" class="btn-executar">Profissionais</button>
+<button onclick="carregarRotinasModelos()" class="btn-executar">Rotinas</button>
+</div>
+<div id="ceoConteudo" style="margin-top:20px;"></div>`;
+}
+}
+
+/* ================================
+   PACIENTES
+================================ */
+async function carregarPacientes(){
+const {data}=await db.from("pacientes").select("id,nome").order("nome");
+let html="<h3>Selecionar Paciente</h3>";
+html+="<select onchange='verPaciente(this.value)' style='padding:6px;width:300px'>";
+html+="<option value=''>Escolha...</option>";
+data?.forEach(p=>{
+html+=`<option value="${p.id}">${p.nome}</option>`;
+});
+html+="</select><div id='detalhePaciente'></div>";
+document.getElementById("ceoConteudo").innerHTML=html;
+}
+
+async function verPaciente(id){
+if(!id)return;
+const {data:paciente}=await db.from("pacientes").select("*").eq("id",id).single();
+const {data:rotinas}=await db.from("rotina_modelos").select("*").eq("paciente_id",id);
+const {data:exec}=await db.from("rotina_execucao").select("*").eq("paciente_id",id).order("data_execucao",{ascending:false});
+
+let html=`<h2>${paciente.nome}</h2>`;
+html+=`<p><strong>Nascimento:</strong> ${paciente.data_nascimento||"-"}</p>`;
+html+="<h3>Rotinas</h3>";
+rotinas?.forEach(r=>{
+html+=`<div class="rotina"><div>${r.titulo} - ${r.turno} - ${r.horario||"--:--"}</div></div>`;
+});
+html+="<h3>Histórico</h3>";
+exec?.forEach(e=>{
+html+=`<div class="rotina"><div>${e.data_execucao} - ${e.status}</div></div>`;
+});
+document.getElementById("detalhePaciente").innerHTML=html;
+}
+
+/* ================================
+   PROFISSIONAIS
+================================ */
+async function carregarProfissionais(){
+const {data}=await db.from("profissionais").select("*").order("nome");
+let html="<h3>Profissionais</h3>";
+data?.forEach(p=>{
+html+=`<div class="rotina"><div>${p.nome} - ${p.cargo||""}</div></div>`;
+});
+document.getElementById("ceoConteudo").innerHTML=html;
+}
+
+/* ================================
+   MODELOS DE ROTINA
+================================ */
+async function carregarRotinasModelos(){
+const {data}=await db.from("rotina_modelos").select("*").order("titulo");
+let html="<h3>Modelos de Rotina</h3>";
+data?.forEach(r=>{
+html+=`<div class="rotina"><div>${r.titulo} - ${r.turno}</div></div>`;
+});
+document.getElementById("ceoConteudo").innerHTML=html;
+}
+
 </script>
 
 </body>
 </html>
+
 
 
 
