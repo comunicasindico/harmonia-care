@@ -90,10 +90,17 @@ canvas{
 
 <h1>
 <span id="tituloTurno">Rotinas - Turno Manhã</span>
-<div>
-<button onclick="toggleCEO()" class="btn-executar">Painel CEO</button>
-<button onclick="logout()" class="btn-disabled">Sair</button>
+
+<div style="display:flex; gap:10px; flex-wrap:wrap;">
+  <button onclick="toggleCEO()" class="btn-executar">
+    Painel CEO
+  </button>
+
+  <button onclick="logout()" class="btn-disabled">
+    Sair
+  </button>
 </div>
+
 </h1>
 
 <div id="ceoBox" style="display:none"></div>
@@ -304,3 +311,4 @@ box.innerHTML="<h3>Painel CEO Ativo</h3>";
 
 </body>
 </html>
+
