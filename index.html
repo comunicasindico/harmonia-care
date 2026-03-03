@@ -7,7 +7,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf"></script>
 
 <style>
 html,body{margin:0;padding:0;width:100%;min-height:100%;font-family:Arial;background:#f4f6f9}
@@ -292,16 +291,44 @@ rankingBox.innerHTML=html;
 }
 
 async function carregarGraficoInstitucional(){
-const {data}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:"manhã"});
-if(!data)return;
-let c=0,p=0,a=0;
-data.forEach(r=>{if(r.status==="concluida")c++;else if(r.status==="pendente")p++;else a++;});
-if(graficoInstitucional)graficoInstitucional.destroy();
-graficoInstitucional=new Chart(graficoInstitucional=document.getElementById("graficoInstitucional"),{
+
+const {data}=await db.rpc("rotina_completa_por_turno",{
+p_empresa_id:EMPRESA_ID,
+p_turno:"manhã"
+});
+
+if(!data || !document.getElementById("graficoInstitucional")) return;
+
+let concluidas=0;
+let pendentes=0;
+let atrasadas=0;
+
+data.forEach(r=>{
+if(r.status==="concluida") concluidas++;
+else if(r.status==="pendente") pendentes++;
+else atrasadas++;
+});
+
+const ctx=document.getElementById("graficoInstitucional").getContext("2d");
+
+if(graficoInstitucional) graficoInstitucional.destroy();
+
+graficoInstitucional=new Chart(ctx,{
 type:"bar",
-data:{labels:["Concluídas","Pendentes","Atrasadas"],datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]}
+data:{
+labels:["Concluídas","Pendentes","Atrasadas"],
+datasets:[{
+data:[concluidas,pendentes,atrasadas],
+backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
+}]
+},
+options:{
+responsive:true,
+maintainAspectRatio:false
+}
 });
 }
+  
 
 async function carregarHistorico(){
 let query=db.from("historico_completo").select("*");
@@ -320,4 +347,5 @@ carregarUsuariosLogin();
 
 </body>
 </html>
+
 
