@@ -180,17 +180,92 @@ historicoLista.innerHTML=html;
 }
 
 async function carregarHistoricoRotinas(){
-let inicio=histInicio.value;
-let fim=histFim.value;
-let query=db.from("historico_rotinas").select("*").order("data",{ascending:false});
-if(inicio)query=query.gte("data",inicio);
-if(fim)query=query.lte("data",fim);
-const {data}=await query;
-let html="";
-data?.forEach(h=>{
-html+=`<div class="timeline-item"><strong>${h.data}</strong> - ${h.paciente_nome} - ${h.titulo} (${h.status})</div>`;
+
+const { data, error } = await db
+.from("historico_rotinas")
+.select("paciente_nome,titulo,status,data")
+.order("paciente_nome",{ascending:true});
+
+if(error){
+console.error(error);
+return;
+}
+
+/* Estrutura padrão das rotinas */
+const rotinasPadrao = [
+"Banho",
+"Troca de Fraldas",
+"Tomar Água",
+"Almoço",
+"Lanche",
+"Jantar",
+"Troca de Fraldas (Noite)"
+];
+
+/* Organizar por paciente */
+let pacientes = {};
+
+data?.forEach(r=>{
+
+if(!pacientes[r.paciente_nome]){
+pacientes[r.paciente_nome] = {};
+}
+
+/* Normaliza título */
+let titulo = r.titulo.trim();
+
+/* Se não for padrão, vira "Outros" */
+if(!rotinasPadrao.includes(titulo)){
+titulo = "Outros";
+}
+
+pacientes[r.paciente_nome][titulo] = r.status === "concluida" ? "✔" : "✖";
+
 });
-historicoLista.innerHTML=html;
+
+/* Montar tabela */
+let html = `
+<table class="ranking-table">
+<thead>
+<tr>
+<th>Paciente</th>
+<th>Banho</th>
+<th>Fraldas</th>
+<th>Água</th>
+<th>Almoço</th>
+<th>Lanche</th>
+<th>Jantar</th>
+<th>Fraldas Noite</th>
+<th>Outros</th>
+</tr>
+</thead>
+<tbody>
+`;
+
+Object.keys(pacientes).forEach(nome=>{
+
+let p = pacientes[nome];
+
+html += `
+<tr>
+<td>${nome}</td>
+<td>${p["Banho"] || ""}</td>
+<td>${p["Troca de Fraldas"] || ""}</td>
+<td>${p["Tomar Água"] || ""}</td>
+<td>${p["Almoço"] || ""}</td>
+<td>${p["Lanche"] || ""}</td>
+<td>${p["Jantar"] || ""}</td>
+<td>${p["Troca de Fraldas (Noite)"] || ""}</td>
+<td>${p["Outros"] || ""}</td>
+</tr>
+`;
+
+});
+
+html += "</tbody></table>";
+
+document.getElementById("historicoLista").innerHTML = html;
+
 }
 
 async function carregarHistoricoClinico(){
@@ -276,3 +351,4 @@ carregarUsuariosLogin();
 </script>
 </body>
 </html>
+
