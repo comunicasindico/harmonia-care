@@ -132,7 +132,64 @@ border:1px solid #ccc;
 margin-top:5px;
 }
 
+/* ===========================
+   RANKING EXECUTIVO
+=========================== */
 
+.ranking-container{
+display:grid;
+grid-template-columns: 1fr 1fr;
+gap:20px;
+margin-bottom:25px;
+}
+
+.ranking-box,
+.grafico-box{
+background:#fff;
+padding:18px;
+border-radius:12px;
+box-shadow:0 3px 10px rgba(0,0,0,.08);
+}
+
+.ranking-box h3,
+.grafico-box h3{
+margin-top:0;
+font-size:16px;
+color:#2c3e50;
+}
+
+/* Tabela Ranking */
+
+.ranking-table{
+width:100%;
+border-collapse:collapse;
+font-size:14px;
+}
+
+.ranking-table th,
+.ranking-table td{
+padding:8px 10px;
+border-bottom:1px solid #eee;
+text-align:left;
+}
+
+.ranking-table th{
+background:#f4f6f9;
+font-weight:bold;
+}
+
+.ranking-table td:nth-child(1),
+.ranking-table td:nth-child(3),
+.ranking-table td:nth-child(4){
+text-align:center;
+font-weight:bold;
+}
+
+@media(max-width:1024px){
+.ranking-container{
+grid-template-columns:1fr;
+}
+}
 </style>
 </head>
 
@@ -213,7 +270,7 @@ margin-top:5px;
 <!-- COLUNA ESQUERDA -->
 <div class="col-esquerda">
 
-<h3>🏥 Ranking Críticos</h3>
+<h3>🏥 Ranking Crítico</h3>
 <div id="rankingBox"></div>
 
 <!-- SELEÇÃO DE PACIENTE -->
@@ -237,17 +294,23 @@ Abrir Histórico
 <div id="listaColaboradores"></div>
 </div>
 
-<!-- GRÁFICO GERAL -->
-<div class="painel-bloco">
-<h3>📈 Gráfico Geral Institucional</h3>
-<canvas id="graficoInstitucional"></canvas>
-</div>
-
 </div>
 
 <!-- COLUNA CENTRAL -->
 <div class="col-centro">
+<div class="ranking-container">
 
+  <div class="ranking-box">
+    <h3>🏥 Ranking Crítico</h3>
+    <div id="rankingBox"></div>
+  </div>
+
+  <div class="grafico-box">
+    <h3>📊 Indicador Institucional</h3>
+    <canvas id="graficoInstitucional"></canvas>
+  </div>
+
+</div>
 <div class="turnos">
 <button onclick="carregarRotinas('manhã')">Manhã</button>
 <button onclick="carregarRotinas('tarde')">Tarde</button>
@@ -483,26 +546,44 @@ await carregarDashboard();
    007 – RANKING CRÍTICOS (FORMATO EXECUTIVO SIMPLES)
 ===================================================== */
 async function carregarRankingCriticos(){
+
 const {data}=await db
 .from("ranking_pacientes_criticos")
 .select("*")
 .order("score_clinico",{ascending:false})
 .limit(10);
-let html="";
+
 if(!data || data.length===0){
-html="<p>Nenhum paciente crítico.</p>";
-}else{
+rankingBox.innerHTML="<p>Nenhum paciente crítico.</p>";
+return;
+}
+
+let html=`
+<table class="ranking-table">
+<thead>
+<tr>
+<th>#</th>
+<th>Nome</th>
+<th>Score</th>
+<th>Atrasos</th>
+</tr>
+</thead>
+<tbody>
+`;
 
 data.forEach((p,i)=>{
 html+=`
-<div style="margin-bottom:8px;">
-<strong>#${i+1} - ${p.nome_completo}</strong>
-&nbsp;&nbsp;Score: <strong>${p.score_clinico}</strong>
-&nbsp;&nbsp;Atrasos: <strong>${p.total_atrasos}</strong>
-</div>`;
+<tr>
+<td>${i+1}</td>
+<td>${p.nome_completo}</td>
+<td>${p.score_clinico}</td>
+<td>${p.total_atrasos}</td>
+</tr>`;
 });
-}
-document.getElementById("rankingBox").innerHTML=html;
+
+html+=`</tbody></table>`;
+
+rankingBox.innerHTML=html;
 }
 
 /* =====================================================
@@ -710,6 +791,7 @@ carregarUsuariosLogin();
 </script>
 </body>
 </html>
+
 
 
 
