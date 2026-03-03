@@ -266,8 +266,7 @@ async function carregarColaboradores(){
 const { data, error } = await db
 .from("vw_usuarios")
 .select("nome_completo,cargo,ativo")
-.eq("empresa_id", EMPRESA_ID)
-.order("hierarquia",{ascending:true});
+.order("hierarquia");
 
 if(error){
 console.error(error);
@@ -345,7 +344,6 @@ async function carregarRankingCriticos(){
 const { data, error } = await db
 .from("ranking_pacientes_criticos")
 .select("*")
-.eq("empresa_id", EMPRESA_ID)
 .order("score_clinico",{ascending:false})
 .limit(10);
 
@@ -386,8 +384,7 @@ async function carregarGraficoInstitucional(){
 const canvas = document.getElementById("graficoInstitucional");
 if(!canvas) return;
 
-canvas.style.height = "250px";
-canvas.style.maxHeight = "250px";
+canvas.style.height="250px";
 
 const {data,error} = await db.rpc("rotina_completa_por_turno",{
 p_empresa_id:EMPRESA_ID,
@@ -411,6 +408,7 @@ type:"bar",
 data:{
 labels:["Concluídas","Pendentes","Atrasadas"],
 datasets:[{
+label:"Rotinas",
 data:[c,p,a],
 backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
 }]
@@ -420,7 +418,6 @@ responsive:true,
 maintainAspectRatio:false
 }
 });
-
 }
   
 async function carregarHistorico(){
@@ -429,9 +426,8 @@ let inicio = document.getElementById("histInicio").value;
 let fim = document.getElementById("histFim").value;
 
 let query = db
-.from("historico_rotinas")
+.from("historico_rotinas") // <-- NOME CORRETO
 .select("*")
-.eq("empresa_id", EMPRESA_ID)
 .order("data",{ascending:false});
 
 if(inicio) query = query.gte("data",inicio);
@@ -466,6 +462,7 @@ carregarUsuariosLogin();
 
 </body>
 </html>
+
 
 
 
