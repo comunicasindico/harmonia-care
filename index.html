@@ -134,9 +134,7 @@ email:emailInput.value.trim(),
 password:senhaInput.value});
 if(error){alert(error.message);return;}
 user=data.user;
-loginBox.style.display="none";
-app.style.display="block";
-carregarRotinas("manhã");
+iniciarApp();
 }
 
 async function logout(){await db.auth.signOut();location.reload();}
@@ -222,7 +220,7 @@ Atrasos: ${p.total_atrasos}
 </div>`;
 });
 }
-rankingBox.innerHTML=html;
+document.getElementById("rankingBox").innerHTML=html;
 }
 
 /* HISTÓRICO GERAL */
@@ -260,4 +258,5 @@ doc.save(`${nome}.pdf`);
 </script>
 </body>
 </html>
+
 
