@@ -8,6 +8,7 @@
 <!-- 001 – LIBS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf"></script>
 
 <!-- 002 – CSS -->
 <style>
@@ -15,24 +16,45 @@ html,body{margin:0;padding:0;width:100%;min-height:100%;font-family:Arial;backgr
 #app{padding:20px}
 h1{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
 .turnos{margin:20px 0;display:flex;gap:10px;flex-wrap:wrap}
+
 .rotina{background:#fff;padding:18px;border-radius:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 3px 10px rgba(0,0,0,.08)}
 .pendente{border-left:6px solid #e74c3c}
 .concluida{border-left:6px solid #2ecc71}
 .atrasada{border-left:6px solid #f39c12}
+
+.critico{background:#ffdddd!important;border-left:8px solid #c0392b}
+
+.timeline-item{background:#fff;padding:12px;margin-bottom:8px;border-left:4px solid #3498db;border-radius:6px}
+
+.risco-baixo{color:#2ecc71;font-weight:bold}
+.risco-medio{color:#f39c12;font-weight:bold}
+.risco-alto{color:#e74c3c;font-weight:bold}
+
 button{padding:8px 14px;border:0;border-radius:6px;font-weight:bold;cursor:pointer}
 .btn-executar{background:#3498db;color:#fff}
 .btn-disabled{background:#bdc3c7}
+.btn-pdf{background:#8e44ad;color:#fff}
+
 canvas{width:100%!important;max-width:600px;margin:20px auto;display:block}
+
 #ceoBox{background:#fff;padding:20px;border-radius:12px;margin-bottom:20px;box-shadow:0 3px 10px rgba(0,0,0,.08)}
-table{width:100%;border-collapse:collapse}
-th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left}
-th{background:#eee}
+
+.banner-alerta{
+position:fixed;top:0;left:0;width:100%;
+background:#c0392b;color:#fff;
+padding:12px;text-align:center;
+font-weight:bold;z-index:999;
+display:none;
+}
+
 </style>
 </head>
 
 <body>
 
-<!-- 003 – LOGIN -->
+<div id="bannerCritico" class="banner-alerta"></div>
+
+<!-- LOGIN -->
 <div id="loginBox">
 <h2>Login</h2>
 <input id="emailInput" placeholder="Email">
@@ -40,7 +62,6 @@ th{background:#eee}
 <button onclick="login()" class="btn-executar" style="width:100%">Entrar</button>
 </div>
 
-<!-- 004 – APP -->
 <div id="app" style="display:none">
 
 <h1>
@@ -75,56 +96,36 @@ th{background:#eee}
 
 <script>
 
-/* 005 – CONFIG */
+/* CONFIG */
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 
-let user=null,nivel=null,grafico=null,graficoProf=null;
+let user=null,nivel=null,grafico=null,graficoPaciente=null;
 
-/* 006 – CONTROLE PERFIS */
-function isGestao(){return["admin","supervisor"].includes(nivel);}
-function isSaude(){return["medico","enfermeiro","fisioterapeuta"].includes(nivel);}
-function isExecucao(){return["cuidador","colaborador"].includes(nivel);}
-function isVisualizacao(){return nivel==="visualizador";}
-
-/* 007 – LOGIN */
+/* LOGIN */
 async function login(){
 const {data,error}=await db.auth.signInWithPassword({
 email:emailInput.value.trim(),
-password:senhaInput.value
-});
+password:senhaInput.value});
 if(error){alert(error.message);return;}
 user=data.user;
 await carregarNivel();
-iniciarApp();
-}
+iniciarApp();}
 
-async function logout(){
-await db.auth.signOut();
-location.reload();
-}
+async function logout(){await db.auth.signOut();location.reload();}
 
-/* 008 – PERFIL */
+/* PERFIL */
 async function carregarNivel(){
-const {data}=await db.from("perfis")
-.select("nivel")
-.eq("usuario_id",user.id)
-.maybeSingle();
-nivel=data?.nivel||null;
-}
+const {data}=await db.from("perfis").select("nivel").eq("usuario_id",user.id).maybeSingle();
+nivel=data?.nivel||null;}
 
-/* 009 – AUTO SESSION */
+/* AUTO SESSION */
 db.auth.getSession().then(async({data})=>{
-if(data.session){
-user=data.session.user;
-await carregarNivel();
-iniciarApp();
-}
-});
+if(data.session){user=data.session.user;await carregarNivel();iniciarApp();}});
 
-/* 010 – INICIAR */
+/* INICIAR */
 function iniciarApp(){
 loginBox.style.display="none";
 app.style.display="block";
@@ -132,55 +133,53 @@ const hoje=new Date().toISOString().split("T")[0];
 histInicio.value=hoje;
 histFim.value=hoje;
 carregarRotinas("manhã");
-carregarHistorico();
-}
+carregarHistorico();}
 
-/* 011 – ROTINAS */
+/* ROTINAS */
 async function carregarRotinas(turno){
 tituloTurno.innerText=`Rotinas - Turno ${turno}`;
 const {data}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:turno});
 lista.innerHTML="";
 let c=0,p=0,a=0;
+
 data?.forEach(r=>{
 if(r.status==="concluida")c++;
 else if(r.status==="pendente")p++;
 else a++;
-let botao=r.status==="concluida"
-?`<button class="btn-disabled">Concluída</button>`
-:(isGestao()||isSaude()||isExecucao())
-?`<button class="btn-executar" onclick="executar('${r.id}','${turno}')">Executar</button>`
-:`<button class="btn-disabled">Sem Permissão</button>`;
+
+if(r.risco==="alto" && r.status==="atrasado"){
+bannerCritico.style.display="block";
+bannerCritico.innerText=`🚨 ALERTA CRÍTICO: ${r.paciente_nome} está com medicação atrasada!`;
+}
+
 lista.innerHTML+=`
-<div class="rotina ${r.status}">
+<div class="rotina ${r.status} ${r.risco==='alto'?'critico':''}">
 <div>
 <strong>${r.horario_execucao||"--:--"}</strong>
 ${r.titulo}<br>
-Paciente: ${r.paciente_nome}<br>
+Paciente: <a href="#" onclick="verPaciente('${r.paciente_id}')">${r.paciente_nome}</a><br>
 <small>Profissional: ${r.profissional_nome||"—"}</small>
 </div>
-${botao}
+<button class="btn-executar" onclick="executar('${r.id}','${turno}')">Executar</button>
 </div>`;
 });
-atualizarGrafico(c,p,a);
-}
+atualizarGrafico(c,p,a);}
 
+/* EXECUTAR */
 async function executar(id,turno){
 await db.rpc("executar_rotina",{p_rotina_id:id,p_usuario_id:user.id});
-carregarRotinas(turno);
-}
+carregarRotinas(turno);}
 
-/* 012 – GRAFICO */
+/* GRÁFICO TURNO */
 function atualizarGrafico(c,p,a){
 const ctx=graficoTurno.getContext("2d");
 if(grafico)grafico.destroy();
 grafico=new Chart(ctx,{
 type:"doughnut",
 data:{labels:["Concluídas","Pendentes","Atrasadas"],
-datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]}
-});
-}
+datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]}});}
 
-/* 013 – HISTÓRICO */
+/* HISTÓRICO */
 async function carregarHistorico(){
 let query=db.from("historico_completo").select("*");
 if(histInicio.value)query=query.gte("data",histInicio.value);
@@ -189,167 +188,53 @@ const {data}=await query;
 historicoLista.innerHTML="";
 data?.forEach(r=>{
 historicoLista.innerHTML+=`
-<div class="rotina ${r.status}">
-<div>
+<div class="timeline-item">
 <strong>${r.data}</strong><br>
 ${r.paciente_nome}<br>
-Profissional: ${r.profissional_nome||"Não identificado"}
-</div>
+Status: ${r.status}
+</div>`;});}
+
+/* VISÃO INDIVIDUAL */
+async function verPaciente(id){
+const {data}=await db.from("paciente_prontuario").select("*").eq("paciente_id",id);
+if(!data||data.length===0)return;
+
+let risco=data[0].grau_risco||"baixo";
+let cor=risco==="alto"?"risco-alto":risco==="medio"?"risco-medio":"risco-baixo";
+
+ceoBox.style.display="block";
+ceoBox.innerHTML=`
+<h2>${data[0].nome_completo}</h2>
+<p>Risco: <span class="${cor}">${risco.toUpperCase()}</span></p>
+<button onclick="gerarPDF('${data[0].nome_completo}')" class="btn-pdf">Gerar PDF</button>
+<canvas id="graficoPaciente"></canvas>
+<div id="linhaTempo"></div>`;
+
+let c=0,p=0,a=0;
+data.forEach(r=>{
+if(r.status==="concluida")c++;
+else if(r.status==="pendente")p++;
+else a++;
+document.getElementById("linhaTempo").innerHTML+=`
+<div class="timeline-item">
+${r.data_referencia} - ${r.nome_medicamento||"-"} - ${r.status}
 </div>`;
 });
-}
 
-/* 014 – PAINEL ADMIN */
-function toggleAdmin(){
-if(!isGestao()){alert("Acesso restrito à gestão.");return;}
-ceoBox.style.display=ceoBox.style.display==="none"?"block":"none";
-if(ceoBox.style.display==="block"){
-ceoBox.innerHTML=`
-<h2>Painel Administrativo</h2>
-<div style="display:flex;gap:10px;flex-wrap:wrap;">
-<button onclick="carregarPacientes()" class="btn-executar">Pacientes</button>
-<button onclick="carregarUsuarios()" class="btn-executar">Usuários</button>
-<button onclick="carregarRotinasModelos()" class="btn-executar">Rotinas</button>
-</div>
-<div id="ceoConteudo" style="margin-top:20px;"></div>`;
-}
-}
+const ctx=document.getElementById("graficoPaciente").getContext("2d");
+if(graficoPaciente)graficoPaciente.destroy();
+graficoPaciente=new Chart(ctx,{
+type:"bar",
+data:{labels:["Concluídas","Pendentes","Atrasadas"],
+datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]}});}
 
-/* 015 – USUÁRIOS */
-async function carregarUsuarios(){
-const {data}=await db.from("vw_usuarios").select("*");
-let html=`<h3>Usuários</h3>
-<button onclick="formNovoUsuario()" class="btn-executar" style="margin-bottom:10px">+ Novo Usuário</button>
-<table>
-<tr><th>Email</th><th>Nível</th><th>Ações</th></tr>`;
-data?.forEach(u=>{
-html+=`<tr>
-<td>${u.email}</td>
-<td>${u.nivel}</td>
-<td>
-<button onclick="formEditarUsuario('${u.usuario_id}','${u.nivel}')" class="btn-executar">Editar</button>
-<button onclick="excluirUsuario('${u.usuario_id}')" style="background:#e74c3c;color:#fff;border:0;padding:6px 10px;border-radius:4px">Excluir</button>
-</td>
-</tr>`;
-});
-html+="</table>";
-ceoConteudo.innerHTML=html;
-}
-
-function gerarOptions(nivelAtual=""){
-const niveis=["admin","supervisor","colaborador","enfermeiro","medico","fisioterapeuta","cuidador","visualizador"];
-return niveis.map(n=>`<option value="${n}" ${n===nivelAtual?"selected":""}>${n}</option>`).join("");
-}
-
-function formNovoUsuario(){
-ceoConteudo.innerHTML=`
-<h3>Novo Usuário</h3>
-<input id="novoEmail" placeholder="Email"><br><br>
-<input id="novaSenha" type="password" placeholder="Senha"><br><br>
-<select id="novoNivel">${gerarOptions()}</select><br><br>
-<button onclick="criarUsuario()" class="btn-executar">Salvar</button>
-<button onclick="carregarUsuarios()" class="btn-disabled">Cancelar</button>`;
-}
-
-async function criarUsuario(){
-const {data,error}=await db.auth.signUp({
-email:novoEmail.value,
-password:novaSenha.value
-});
-if(error){alert(error.message);return;}
-await db.from("perfis").insert({usuario_id:data.user.id,nivel:novoNivel.value});
-alert("Usuário criado!");
-carregarUsuarios();
-}
-
-function formEditarUsuario(id,nivelAtual){
-ceoConteudo.innerHTML=`
-<h3>Editar Usuário</h3>
-<select id="editarNivel">${gerarOptions(nivelAtual)}</select><br><br>
-<button onclick="salvarEdicao('${id}')" class="btn-executar">Salvar</button>
-<button onclick="carregarUsuarios()" class="btn-disabled">Cancelar</button>`;
-}
-
-async function salvarEdicao(id){
-await db.from("perfis").update({nivel:editarNivel.value}).eq("usuario_id",id);
-alert("Atualizado!");
-carregarUsuarios();
-}
-
-async function excluirUsuario(id){
-if(!confirm("Excluir usuário?"))return;
-await db.from("perfis").delete().eq("usuario_id",id);
-alert("Removido!");
-carregarUsuarios();
-}
-
-/* ================================
-   016 – PACIENTES FORMATADOS
-================================ */
-async function carregarPacientes(){
-
-const { data, error } = await db
-  .from("pacientes")
-  .select("id,nome_completo")
-  .eq("empresa_id", EMPRESA_ID)
-  .order("nome_completo", { ascending: true });
-
-if(error){
-  console.error(error);
-  alert("Erro ao carregar pacientes.");
-  return;
-}
-
-if(!data || data.length === 0){
-  ceoConteudo.innerHTML = "<p>Nenhum paciente encontrado.</p>";
-  return;
-}
-
-/* 🔹 Função para formatar nome */
-function formatarNome(nome){
-  return nome
-    .toLowerCase()
-    .split(" ")
-    .filter(p => p.trim() !== "")
-    .map(p => {
-      if(["da","de","do","dos","das"].includes(p)) return p;
-      return p.charAt(0).toUpperCase() + p.slice(1);
-    })
-    .join(" ");
-}
-
-/* 🔹 Ordena corretamente pelo nome completo */
-data.sort((a,b)=>{
-  return formatarNome(a.nome_completo)
-    .localeCompare(formatarNome(b.nome_completo));
-});
-
-let html = `
-<h3>Selecionar Paciente</h3>
-<select id="pacienteSelect" onchange="verPaciente(this.value)" style="padding:8px;width:300px">
-<option value="">Escolha...</option>
-`;
-
-data.forEach(p=>{
-  html += `<option value="${p.id}">${formatarNome(p.nome_completo)}</option>`;
-});
-
-html += "</select><div id='detalhePaciente' style='margin-top:20px'></div>";
-
-ceoConteudo.innerHTML = html;
-}
-
-/* 017 – ROTINAS MODELO */
-async function carregarRotinasModelos(){
-const {data}=await db.from("rotina_modelos").select("*").order("titulo");
-let html="<h3>Modelos de Rotina</h3>";
-data?.forEach(r=>html+=`<div class="rotina"><div>${r.titulo} - ${r.turno}</div></div>`);
-ceoConteudo.innerHTML=html;
-}
+/* PDF */
+function gerarPDF(nome){
+const {jsPDF}=window.jspdf;
+const doc=new jsPDF();
+doc.text(`Prontuário - ${nome}`,20,20);
+doc.save(`${nome}.pdf`);}
 
 </script>
 </body>
 </html>
-
-
-
