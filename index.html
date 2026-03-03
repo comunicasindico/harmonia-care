@@ -269,6 +269,17 @@ document.getElementById("detalhePaciente").innerHTML=html;
 }
 
 /* ================================
+   MODELOS DE ROTINA
+================================ */
+async function carregarRotinasModelos(){
+const {data}=await db.from("rotina_modelos").select("*").order("titulo");
+let html="<h3>Modelos de Rotina</h3>";
+data?.forEach(r=>{
+html+=`<div class="rotina"><div>${r.titulo} - ${r.turno}</div></div>`;
+});
+document.getElementById("ceoConteudo").innerHTML=html;
+}
+/* ================================
    PROFISSIONAIS
 ================================ */
 async function carregarUsuarios(){
@@ -306,17 +317,7 @@ async function carregarUsuarios(){
   html += "</table>";
   document.getElementById("ceoConteudo").innerHTML = html;
 }
-/* ================================
-   MODELOS DE ROTINA
-================================ */
-async function carregarRotinasModelos(){
-const {data}=await db.from("rotina_modelos").select("*").order("titulo");
-let html="<h3>Modelos de Rotina</h3>";
-data?.forEach(r=>{
-html+=`<div class="rotina"><div>${r.titulo} - ${r.turno}</div></div>`;
-});
-document.getElementById("ceoConteudo").innerHTML=html;
-}
+
 /* ================================
    GERAR OPTIONS DE NÍVEL
 ================================ */
@@ -353,6 +354,7 @@ alert("Nível atualizado com sucesso!");
 
 </body>
 </html>
+
 
 
 
