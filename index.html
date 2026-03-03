@@ -124,7 +124,7 @@ Salvar Vinculação
 
 /* CONFIG */
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
-const SUPABASE_KEY="SUA_CHAVE_AQUI";
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 
@@ -132,25 +132,30 @@ let user=null,nivel=null,grafico=null,appReady=false;
 let pacienteAtual=null;
 
 /* LOGIN */
-
-
-  async function login(){
-const email=document.getElementById("emailInput").value;
-const senha=document.getElementById("senhaInput").value;
-
-const {data,error}=await db.auth.signInWithPassword({email,password:senha});
-
-if(error){
-console.log("Erro real:", error);
-alert(error.message);
-return;
+async function login(){
+  const email = document.getElementById("emailInput").value.trim();
+  const senha = document.getElementById("senhaInput").value;
+  if(!email || !senha){
+    alert("Informe email e senha.");
+    return;
+  }
+  const { data, error } = await db.auth.signInWithPassword({
+    email: email,
+    password: senha
+  });
+  if(error){
+    console.error("Erro no login:", error);
+    alert(error.message);
+    return;
+  }
+  if(!data?.user){
+    alert("Usuário não encontrado.");
+    return;
+  }
+  user = data.user;
+  await carregarNivel();
+  iniciarApp();
 }
-
-user=data.user;
-await carregarNivel();
-iniciarApp();
-}
-
   
 async function carregarNivel(){
 const {data}=await db.from("perfis")
@@ -405,4 +410,5 @@ carregarRotinas("manha");
 
 </body>
 </html>
+
 
