@@ -206,22 +206,61 @@ grafico=new Chart(ctx,{type:"doughnut",data:{labels:["Concluídas","Pendentes","
 
 /* ITEM JS 7 – ROTINAS AGRUPADAS POR PACIENTE */
 async function carregarRotinas(){
-if(!appReady) return;
+  if(!appReady) return;
 
-console.log("Entrou na função carregarRotinas");
+  const TURNO_NOME = "manha";
 
-const TURNO_NOME = "manha";
+  const {data,error} = await db.rpc("rotina_completa_por_turno",{
+    p_empresa_id:EMPRESA_ID,
+    p_turno:TURNO_NOME
+  });
 
-const {data,error} = await db.rpc("rotina_completa_por_turno",{
-  p_empresa_id:EMPRESA_ID,
-  p_turno:TURNO_NOME
-});
+  if(error){
+    console.error(error);
+    return;
+  }
 
-console.log("Erro:", error);
-console.log("Data completa:", data);
+  if(!data || data.length === 0){
+    document.getElementById("lista").innerHTML = "<p>Nenhuma rotina encontrada.</p>";
+    return;
+  }
 
-if(error){ return; }
-if(!data) return;
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
+
+  let total = data.length;
+  let c = data.filter(r=>r.status==="concluida").length;
+  let p = data.filter(r=>r.status==="pendente").length;
+  let a = data.filter(r=>r.status==="atrasado").length;
+
+  atualizarGrafico(c,p,a);
+
+  data.forEach(r=>{
+
+    let classe="rotina ";
+    if(r.status==="concluida") classe+="concluida";
+    else if(r.status==="atrasado") classe+="atrasada";
+    else classe+="pendente";
+
+    let div=document.createElement("div");
+    div.className=classe;
+
+    div.innerHTML=`
+      <div>
+        <strong>${r.horario_execucao ?? '--:--'}</strong> 
+        ${r.titulo} 
+        <br>
+        <small>${r.paciente_nome}</small>
+      </div>
+      ${
+        r.status==="concluida"
+        ? `<button class="btn-disabled">Concluída</button>`
+        : `<button class="btn-executar" onclick="executar('${r.id}')">Executar</button>`
+      }
+    `;
+
+    lista.appendChild(div);
+  });
 }
 
 /* ITEM JS CEO */
@@ -390,6 +429,7 @@ ${d.profissional?`<br><small>Profissional: ${d.profissional}</small>`:''}
 </script>
 </body>
 </html>
+
 
 
 
