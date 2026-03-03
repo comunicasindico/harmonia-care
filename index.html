@@ -192,11 +192,48 @@ carregarHistorico();
 }
 
 async function carregarPacientes(){
-const {data}=await db.from("pacientes").select("id,nome_completo").order("nome_completo");
-let select=document.getElementById("selectPaciente");
-let html=`<option value="">Selecione um paciente...</option>`;
-data?.forEach(p=>{html+=`<option value="${p.id}">${p.nome_completo}</option>`;});
-select.innerHTML=html;
+
+const { data, error } = await db
+.from("pacientes")
+.select("id,nome_completo")
+.eq("empresa_id", EMPRESA_ID)
+.order("nome_completo",{ascending:true});
+
+let select = document.getElementById("selectPaciente");
+
+if(error){
+select.innerHTML=`<option>Erro ao carregar</option>`;
+return;
+}
+
+if(!data || data.length===0){
+select.innerHTML=`<option>Nenhum paciente cadastrado</option>`;
+return;
+}
+
+let html = `<option value="">Selecione um paciente...</option>`;
+
+data.forEach(p=>{
+if(!p.nome_completo) return;
+html += `<option value="${p.id}">${p.nome_completo}</option>`;
+});
+
+select.innerHTML = html;
+
+/* 🔥 força atualização visual */
+select.value = "";
+}
+
+function abrirPacienteSelecionado(){
+
+let id = document.getElementById("selectPaciente").value;
+
+if(!id){
+alert("Selecione um paciente.");
+return;
+}
+
+window.open("?paciente="+id,"_self");
 }
 
 async function carregarColaboradores(){
@@ -283,3 +320,4 @@ carregarUsuariosLogin();
 
 </body>
 </html>
+
