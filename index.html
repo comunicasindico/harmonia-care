@@ -48,6 +48,15 @@ button{padding:8px 14px;border:0;border-radius:6px;font-weight:bold;cursor:point
 #loginBox{width:350px;background:#fff;padding:30px;border-radius:14px;box-shadow:0 10px 25px rgba(0,0,0,.15);display:flex;flex-direction:column}
 #loginBox select,#loginBox input{padding:10px;border-radius:6px;border:1px solid #ccc;margin-top:5px}
 @media(max-width:1024px){.layout-hospital{grid-template-columns:1fr}.col-esquerda{position:relative;top:0}.ranking-container{grid-template-columns:1fr}}
+.grafico-box{
+height:320px;
+position:relative;
+}
+
+#graficoInstitucional{
+height:260px !important;
+max-height:260px !important;
+}
 </style>
 </head>
 <body>
@@ -384,7 +393,11 @@ async function carregarGraficoInstitucional(){
 const canvas = document.getElementById("graficoInstitucional");
 if(!canvas) return;
 
-canvas.style.height="250px";
+/* Evita recriação infinita */
+if(graficoInstitucional){
+graficoInstitucional.destroy();
+graficoInstitucional = null;
+}
 
 const {data,error} = await db.rpc("rotina_completa_por_turno",{
 p_empresa_id:EMPRESA_ID,
@@ -393,31 +406,44 @@ p_turno:"manhã"
 
 if(error || !data) return;
 
-let c=0,p=0,a=0;
+let concluidas = 0;
+let pendentes = 0;
+let atrasadas = 0;
 
 data.forEach(r=>{
-if(r.status==="concluida") c++;
-else if(r.status==="pendente") p++;
-else a++;
+if(r.status === "concluida") concluidas++;
+else if(r.status === "pendente") pendentes++;
+else atrasadas++;
 });
 
-if(graficoInstitucional) graficoInstitucional.destroy();
-
-graficoInstitucional=new Chart(canvas,{
+/* Cria apenas uma vez */
+graficoInstitucional = new Chart(canvas.getContext("2d"),{
 type:"bar",
 data:{
 labels:["Concluídas","Pendentes","Atrasadas"],
 datasets:[{
 label:"Rotinas",
-data:[c,p,a],
-backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
+data:[concluidas,pendentes,atrasadas],
+backgroundColor:["#2ecc71","#e74c3c","#f39c12"],
+borderRadius:6
 }]
 },
 options:{
 responsive:true,
-maintainAspectRatio:false
+maintainAspectRatio:false,
+animation:false,
+plugins:{
+legend:{display:false}
+},
+scales:{
+y:{
+beginAtZero:true,
+ticks:{precision:0}
+}
+}
 }
 });
+
 }
   
 async function carregarHistorico(){
@@ -462,6 +488,7 @@ carregarUsuariosLogin();
 
 </body>
 </html>
+
 
 
 
