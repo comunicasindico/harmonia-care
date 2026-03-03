@@ -134,10 +134,20 @@ border-bottom:1px solid #eee;
 <span id="dashPacientes">0</span>
 </div>
 
-<!-- LISTA PACIENTES -->
+<!-- SELEÇÃO DE PACIENTE -->
 <div class="painel-bloco">
-<h3>👥 Pacientes</h3>
-<div id="listaPacientes"></div>
+<h3>👥 Selecionar Paciente</h3>
+
+<select id="selectPaciente" style="width:100%;padding:8px;border-radius:6px;">
+<option value="">Selecione um paciente...</option>
+</select>
+
+<button onclick="abrirPacienteSelecionado()" 
+class="btn-executar" 
+style="margin-top:10px;width:100%;">
+Abrir Histórico
+</button>
+
 </div>
 
 <!-- LISTA COLABORADORES -->
@@ -368,7 +378,7 @@ document.getElementById("rankingBox").innerHTML=html;
 }
 
 /* =====================================================
-   00 – CARREGAR PACIENTES
+   005 – CARREGAR PACIENTES EM LISTA SUSPENSA
 ===================================================== */
 async function carregarPacientes(){
 
@@ -379,18 +389,29 @@ const {data}=await db
 
 if(!data) return;
 
-let html="";
+let select=document.getElementById("selectPaciente");
+
+let html=`<option value="">Selecione um paciente...</option>`;
 
 data.forEach(p=>{
-html+=`
-<div class="item-paciente">
-<a href="#" onclick="verPaciente('${p.id}')">
-${p.nome_completo}
-</a>
-</div>`;
+html+=`<option value="${p.id}">${p.nome_completo}</option>`;
 });
 
-document.getElementById("listaPacientes").innerHTML=html;
+select.innerHTML=html;
+}
+/* =====================================================
+   006 – ABRIR PACIENTE SELECIONADO
+===================================================== */
+function abrirPacienteSelecionado(){
+
+let id=document.getElementById("selectPaciente").value;
+
+if(!id){
+alert("Selecione um paciente.");
+return;
+}
+
+verPaciente(id);
 }
 async function carregarColaboradores(){
 
@@ -560,6 +581,7 @@ doc.save(`${nome}.pdf`);
 </script>
 </body>
 </html>
+
 
 
 
