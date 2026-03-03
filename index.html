@@ -10,450 +10,111 @@
 <script src="https://cdn.jsdelivr.net/npm/jspdf"></script>
 
 <style>
-
-/* =====================================================
-   001 — RESET / BASE GLOBAL
-===================================================== */
-
-html,body{
-  margin:0;
-  padding:0;
-  width:100%;
-  min-height:100%;
-  font-family:Arial;
-  background:#f4f6f9;
-}
-
+html,body{margin:0;padding:0;width:100%;min-height:100%;font-family:Arial;background:#f4f6f9}
 #app{padding:20px}
-
-h1{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-}
-
-canvas{
-  width:100%!important;
-  max-width:600px;
-  margin:20px auto;
-  display:block;
-}
-
-button{
-  padding:8px 14px;
-  border:0;
-  border-radius:6px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
+h1{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+canvas{width:100%!important;max-width:600px;margin:20px auto;display:block}
+button{padding:8px 14px;border:0;border-radius:6px;font-weight:bold;cursor:pointer}
 .btn-executar{background:#3498db;color:#fff}
 .btn-disabled{background:#bdc3c7}
 .btn-pdf{background:#8e44ad;color:#fff}
-
-.banner-alerta{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  background:#c0392b;
-  color:#fff;
-  padding:12px;
-  text-align:center;
-  font-weight:bold;
-  z-index:999;
-  display:none;
-}
-
-/* =====================================================
-   002 — LAYOUT PRINCIPAL
-===================================================== */
-
-.layout-hospital{
-  display:grid;
-  grid-template-columns:300px 1fr;
-  gap:20px;
-  align-items:start;
-}
-
-.col-esquerda{
-  background:#fff;
-  padding:15px;
-  border-radius:12px;
-  box-shadow:0 3px 10px rgba(0,0,0,.08);
-  position:sticky;
-  top:70px;
-  height:fit-content;
-}
-
-.col-centro{
-  min-height:400px;
-}
-
-/* =====================================================
-   003 — ROTINAS E STATUS
-===================================================== */
-
-.turnos{
-  margin:20px 0;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-.rotina{
-  background:#fff;
-  padding:18px;
-  border-radius:12px;
-  margin-bottom:14px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  box-shadow:0 3px 10px rgba(0,0,0,.08);
-}
-
+.banner-alerta{position:fixed;top:0;left:0;width:100%;background:#c0392b;color:#fff;padding:12px;text-align:center;font-weight:bold;z-index:999;display:none}
+.layout-hospital{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
+.col-esquerda{background:#fff;padding:15px;border-radius:12px;box-shadow:0 3px 10px rgba(0,0,0,.08);position:sticky;top:70px;height:fit-content}
+.col-centro{min-height:400px}
+.turnos{margin:20px 0;display:flex;gap:10px;flex-wrap:wrap}
+.rotina{background:#fff;padding:18px;border-radius:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 3px 10px rgba(0,0,0,.08)}
 .pendente{border-left:6px solid #e74c3c}
 .concluida{border-left:6px solid #2ecc71}
 .atrasada{border-left:6px solid #f39c12}
-.critico{background:#ffdddd!important;border-left:8px solid #c0392b}
-
-.timeline-item{
-  background:#fff;
-  padding:12px;
-  margin-bottom:8px;
-  border-left:4px solid #3498db;
-  border-radius:6px;
-}
-
+.timeline-item{background:#fff;padding:12px;margin-bottom:8px;border-left:4px solid #3498db;border-radius:6px}
 .risco-baixo{color:#2ecc71;font-weight:bold}
 .risco-medio{color:#f39c12;font-weight:bold}
 .risco-alto{color:#e74c3c;font-weight:bold}
-
 .status-pendente{color:#e74c3c;font-weight:bold}
 .status-concluida{color:#2ecc71;font-weight:bold}
-
-/* =====================================================
-   004 — DASHBOARD EXECUTIVO
-===================================================== */
-
-.dashboard-executivo{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-  gap:15px;
-  margin:20px 0;
-}
-
-.card-dash{
-  background:#fff;
-  padding:15px;
-  border-radius:12px;
-  box-shadow:0 3px 10px rgba(0,0,0,.08);
-  text-align:center;
-}
-
-.card-dash h4{
-  margin:0;
-  font-size:14px;
-  color:#555;
-}
-
-.card-dash span{
-  display:block;
-  margin-top:8px;
-  font-size:24px;
-  font-weight:bold;
-  color:#2c3e50;
-}
-
-/* =====================================================
-   005 — PAINÉIS
-===================================================== */
-
-.painel-bloco{
-  background:#fff;
-  padding:15px;
-  margin:20px 0;
-  border-radius:12px;
-  box-shadow:0 3px 10px rgba(0,0,0,.08);
-}
-
-.item-paciente,
-.item-colaborador{
-  padding:6px 0;
-  border-bottom:1px solid #eee;
-}
-
-#ceoBox{
-  background:#fff;
-  padding:20px;
-  border-radius:12px;
-  margin-bottom:20px;
-  box-shadow:0 3px 10px rgba(0,0,0,.08);
-}
-
-/* =====================================================
-   006 — RANKING EXECUTIVO
-===================================================== */
-
-.ranking-container{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
-  margin-bottom:25px;
-}
-
-.ranking-box,
-.grafico-box{
-  background:#fff;
-  padding:18px;
-  border-radius:12px;
-  box-shadow:0 3px 10px rgba(0,0,0,.08);
-}
-
-.ranking-box h3,
-.grafico-box h3{
-  margin-top:0;
-  font-size:16px;
-  color:#2c3e50;
-}
-
-.ranking-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:14px;
-}
-
-.ranking-table th,
-.ranking-table td{
-  padding:8px 10px;
-  border-bottom:1px solid #eee;
-  text-align:left;
-}
-
-.ranking-table th{
-  background:#f4f6f9;
-  font-weight:bold;
-}
-
-.ranking-table td:nth-child(1),
-.ranking-table td:nth-child(3),
-.ranking-table td:nth-child(4){
-  text-align:center;
-  font-weight:bold;
-}
-
-/* =====================================================
-   007 — LOGIN
-===================================================== */
-
-#loginWrapper{
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:#f4f6f9;
-}
-
-#loginBox{
-  width:350px;
-  background:#fff;
-  padding:30px;
-  border-radius:14px;
-  box-shadow:0 10px 25px rgba(0,0,0,.15);
-  display:flex;
-  flex-direction:column;
-}
-
-#loginBox select,
-#loginBox input{
-  padding:10px;
-  border-radius:6px;
-  border:1px solid #ccc;
-  margin-top:5px;
-}
-
-/* =====================================================
-   008 — RESPONSIVIDADE
-===================================================== */
-
-@media(max-width:1024px){
-
-  .layout-hospital{
-    grid-template-columns:1fr;
-  }
-
-  .col-esquerda{
-    position:relative;
-    top:0;
-  }
-
-  .ranking-container{
-    grid-template-columns:1fr;
-  }
-}
-
+.dashboard-executivo{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin:20px 0}
+.card-dash{background:#fff;padding:15px;border-radius:12px;box-shadow:0 3px 10px rgba(0,0,0,.08);text-align:center}
+.card-dash h4{margin:0;font-size:14px;color:#555}
+.card-dash span{display:block;margin-top:8px;font-size:24px;font-weight:bold;color:#2c3e50}
+.painel-bloco{background:#fff;padding:15px;margin:20px 0;border-radius:12px;box-shadow:0 3px 10px rgba(0,0,0,.08)}
+.item-colaborador{padding:6px 0;border-bottom:1px solid #eee}
+.ranking-container{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:25px}
+.ranking-box,.grafico-box{background:#fff;padding:18px;border-radius:12px;box-shadow:0 3px 10px rgba(0,0,0,.08)}
+.ranking-table{width:100%;border-collapse:collapse;font-size:14px}
+.ranking-table th,.ranking-table td{padding:8px 10px;border-bottom:1px solid #eee;text-align:left}
+.ranking-table th{background:#f4f6f9;font-weight:bold}
+.ranking-table td:nth-child(1),.ranking-table td:nth-child(3),.ranking-table td:nth-child(4){text-align:center;font-weight:bold}
+#loginWrapper{height:100vh;display:flex;justify-content:center;align-items:center;background:#f4f6f9}
+#loginBox{width:350px;background:#fff;padding:30px;border-radius:14px;box-shadow:0 10px 25px rgba(0,0,0,.15);display:flex;flex-direction:column}
+#loginBox select,#loginBox input{padding:10px;border-radius:6px;border:1px solid #ccc;margin-top:5px}
+@media(max-width:1024px){.layout-hospital{grid-template-columns:1fr}.col-esquerda{position:relative;top:0}.ranking-container{grid-template-columns:1fr}}
 </style>
-
-   
 </head>
-
 <body>
 
-<div id="bannerCritico" class="banner-alerta"></div>
-
-<!-- LOGIN CENTRALIZADO -->
 <div id="loginWrapper">
   <div id="loginBox">
-
     <h2>🔐 Harmonia Care</h2>
-
     <label>Selecione o usuário</label>
     <select id="usuarioSelect"></select>
-
     <div id="usuarioInfo" style="margin-top:10px;font-weight:bold;"></div>
-
     <input id="senhaInput" type="password" placeholder="Senha" style="margin-top:15px;">
-
-    <button onclick="login()" class="btn-executar" style="width:100%;margin-top:15px;">
-      Entrar
-    </button>
-
+    <button onclick="login()" class="btn-executar" style="width:100%;margin-top:15px;">Entrar</button>
   </div>
 </div>
 
-<!-- APP PRINCIPAL -->
 <div id="app" style="display:none">
 
 <h1>
-<span id="tituloTurno">Rotinas - Manhã</span>
-<div style="display:flex;gap:10px;">
-<button onclick="logout()" class="btn-disabled">Sair</button>
-</div>
+<span id="tituloTurno">Rotinas</span>
+<div><button onclick="logout()" class="btn-disabled">Sair</button></div>
 </h1>
-<!-- =========================
-   ADMIN - GESTÃO DE USUÁRIOS
-========================= -->
-<div id="adminUsuarios" class="painel-bloco" style="display:none;">
-<h3>👥 Gestão de Usuários</h3>
 
-<button onclick="criarNovoUsuario()" 
-class="btn-executar" 
-style="margin-bottom:15px;">
-➕ Novo Usuário
-</button>
-   
-<select id="adminSelectUsuario"></select>
-
-<input type="text" id="adminNome" placeholder="Nome completo">
-
-<select id="adminCargo"></select>
-
-<label style="margin-top:10px;display:flex;align-items:center;gap:6px;">
-<input type="checkbox" id="adminAtivo"> Usuário ativo
-</label>
-
-<div style="margin-top:15px;display:flex;gap:10px;">
-<button onclick="salvarUsuario()" class="btn-executar">Salvar</button>
-<button onclick="excluirUsuario()" class="btn-disabled">Excluir</button>
-</div>
-
-</div>
-<!-- ================= DASHBOARD EXECUTIVO ================= -->
 <div class="dashboard-executivo">
-
-<div class="card-dash">
-<h4>👥 Pacientes</h4>
-<span id="dashPacientes">0</span>
+<div class="card-dash"><h4>👥 Pacientes</h4><span id="dashPacientes">0</span></div>
+<div class="card-dash"><h4>🚨 Críticos</h4><span id="dashCriticos">0</span></div>
+<div class="card-dash"><h4>⏳ Atrasos</h4><span id="dashAtrasos">0</span></div>
+<div class="card-dash"><h4>✅ Concluídas</h4><span id="dashConcluidas">0</span></div>
+<div class="card-dash"><h4>📊 Execução %</h4><span id="dashPercentual">0%</span></div>
+<div class="card-dash"><h4>💊 Medicações Hoje</h4><span id="dashMedicacoes">0</span></div>
 </div>
 
-<div class="card-dash">
-<h4>🚨 Críticos</h4>
-<span id="dashCriticos">0</span>
-</div>
-
-<div class="card-dash">
-<h4>⏳ Atrasos</h4>
-<span id="dashAtrasos">0</span>
-</div>
-
-<div class="card-dash">
-<h4>✅ Concluídas</h4>
-<span id="dashConcluidas">0</span>
-</div>
-
-<div class="card-dash">
-<h4>📊 Execução %</h4>
-<span id="dashPercentual">0%</span>
-</div>
-
-<div class="card-dash">
-<h4>💊 Medicações Hoje</h4>
-<span id="dashMedicacoes">0</span>
-</div>
-
-</div>
-<!-- ================= FIM DASHBOARD ================= -->
-
-
-<!-- ================= BLOCO DE GESTÃO ================= -->
 <div class="layout-hospital">
-
-<!-- COLUNA ESQUERDA -->
 <div class="col-esquerda">
-
-<!-- SELEÇÃO DE PACIENTE -->
 <div class="painel-bloco">
 <h3>👥 Selecionar Paciente</h3>
-
-<select id="selectPaciente" style="width:100%;padding:8px;border-radius:6px;">
-<option value="">Selecione um paciente...</option>
-</select>
-
-<button onclick="abrirPacienteSelecionado()" 
-class="btn-executar" 
-style="margin-top:10px;width:100%;">
-Abrir Histórico
-</button>
+<select id="selectPaciente" style="width:100%;padding:8px;border-radius:6px;"></select>
+<button onclick="abrirPacienteSelecionado()" class="btn-executar" style="margin-top:10px;width:100%;">Abrir Histórico</button>
 </div>
 
-<!-- LISTA COLABORADORES -->
 <div class="painel-bloco">
 <h3>🧑‍⚕️ Colaboradores</h3>
 <div id="listaColaboradores"></div>
 </div>
-
 </div>
 
-<!-- COLUNA CENTRAL -->
 <div class="col-centro">
 <div class="ranking-container">
-
-  <div class="ranking-box">
-    <h3>🏥 Ranking Crítico</h3>
-    <div id="rankingBox"></div>
-  </div>
-
-  <div class="grafico-box">
-    <h3>📊 Indicador Institucional</h3>
-    <canvas id="graficoInstitucional"></canvas>
-  </div>
-
+<div class="ranking-box">
+<h3>🏥 Ranking Crítico</h3>
+<div id="rankingBox"></div>
 </div>
+<div class="grafico-box">
+<h3>📊 Indicador Institucional</h3>
+<canvas id="graficoInstitucional"></canvas>
+</div>
+</div>
+
 <div class="turnos">
 <button onclick="carregarRotinas('manhã')">Manhã</button>
 <button onclick="carregarRotinas('tarde')">Tarde</button>
 <button onclick="carregarRotinas('noite')">Noite</button>
 </div>
 
-<canvas id="graficoTurno"></canvas>
 <div id="lista"></div>
-
 </div>
-
 </div>
-<!-- ================= FIM BLOCO GESTÃO ================= -->
-
 
 <hr style="margin:40px 0">
 
@@ -468,9 +129,6 @@ Abrir Histórico
 </div>
 
 <script>
-/* =====================================================
-   001 – CONFIG
-===================================================== */
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -479,114 +137,51 @@ const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 let user=null;
 let graficoInstitucional=null;
 
-/* =====================================================
-   ELEMENTOS
-===================================================== */
 const usuarioSelect=document.getElementById("usuarioSelect");
 const senhaInput=document.getElementById("senhaInput");
 const usuarioInfo=document.getElementById("usuarioInfo");
 const app=document.getElementById("app");
 const tituloTurno=document.getElementById("tituloTurno");
 
-/* =====================================================
-   LOGOUT
-===================================================== */
 async function logout(){
 await db.auth.signOut();
-location.reload();
+app.style.display="none";
+document.getElementById("loginWrapper").style.display="flex";
 }
 
-/* =====================================================
-   CARREGAR LOGIN
-===================================================== */
 async function carregarUsuariosLogin(){
-
-const {data}=await db
-.from("vw_usuarios")
-.select("*")
-.order("hierarquia");
-
+const {data}=await db.from("vw_usuarios").select("*").order("hierarquia");
 let html=`<option value="">Selecione...</option>`;
-
 data?.forEach(u=>{
-if(!u.ativo || !u.nome_completo) return;
-
-html+=`
-<option value="${u.id}"
-data-email="${u.email}"
-data-cargo="${u.cargo}"
-data-hierarquia="${u.hierarquia}">
-${u.nome_completo}
-</option>`;
+if(!u.ativo||!u.nome_completo)return;
+html+=`<option value="${u.id}" data-email="${u.email}" data-cargo="${u.cargo}">${u.nome_completo}</option>`;
 });
-
 usuarioSelect.innerHTML=html;
 }
-
 usuarioSelect.addEventListener("change",function(){
-let selected=this.options[this.selectedIndex];
-if(!selected.value){
-usuarioInfo.innerHTML="";
-return;
-}
-usuarioInfo.innerHTML=`Cargo: ${selected.dataset.cargo}`;
+let s=this.options[this.selectedIndex];
+usuarioInfo.innerHTML=s.value?`Cargo: ${s.dataset.cargo}`:"";
 });
 
-/* =====================================================
-   LOGIN
-===================================================== */
 async function login(){
-
-let selected=usuarioSelect.options[usuarioSelect.selectedIndex];
-if(!selected.value) return alert("Selecione usuário.");
-
-let email=selected.dataset.email;
-if(!senhaInput.value) return alert("Digite senha.");
-
-const {data,error}=await db.auth.signInWithPassword({
-email:email,
-password:senhaInput.value
-});
-
-if(error) return alert("Senha incorreta.");
-
-const {data:perfil}=await db
-.from("vw_usuarios")
-.select("*")
-.eq("id",data.user.id)
-.single();
-
-if(!perfil || !perfil.ativo){
-await db.auth.signOut();
-return alert("Usuário inativo.");
-}
-
+let s=usuarioSelect.options[usuarioSelect.selectedIndex];
+if(!s.value)return alert("Selecione usuário.");
+if(!senhaInput.value)return alert("Digite senha.");
+const {data,error}=await db.auth.signInWithPassword({email:s.dataset.email,password:senhaInput.value});
+if(error)return alert("Senha incorreta.");
+const {data:perfil}=await db.from("vw_usuarios").select("*").eq("id",data.user.id).single();
+if(!perfil)return;
 user=perfil;
 iniciarApp();
 }
 
-/* =====================================================
-   INICIAR APP
-===================================================== */
 function iniciarApp(){
-
 document.getElementById("loginWrapper").style.display="none";
 app.style.display="block";
-
-tituloTurno.innerText =
-`Rotinas - Manhã | ${user.nome_completo} (${user.cargo})`;
-
-if(user.hierarquia===1){
-document.getElementById("adminUsuarios").style.display="block";
-carregarAdminUsuarios();
-carregarAdminCargos();
-}
-
+tituloTurno.innerText=`Rotinas - Manhã | ${user.nome_completo} (${user.cargo})`;
 const hoje=new Date().toISOString().split("T")[0];
-document.getElementById("histInicio").value=hoje;
-document.getElementById("histFim").value=hoje;
-
-/* RESTAURADO */
+histInicio.value=hoje;
+histFim.value=hoje;
 carregarDashboard();
 carregarPacientes();
 carregarColaboradores();
@@ -596,256 +191,95 @@ carregarGraficoInstitucional();
 carregarHistorico();
 }
 
-/* =====================================================
-   ADMIN – CARREGAR PACIENTES
-===================================================== */
 async function carregarPacientes(){
-
-const {data}=await db
-.from("pacientes")
-.select("id,nome_completo")
-.order("nome_completo");
-
+const {data}=await db.from("pacientes").select("id,nome_completo").order("nome_completo");
 let select=document.getElementById("selectPaciente");
-
-if(!data || data.length===0){
-select.innerHTML=`<option>Nenhum paciente cadastrado</option>`;
-return;
-}
-
 let html=`<option value="">Selecione um paciente...</option>`;
-
-data.forEach(p=>{
-html+=`<option value="${p.id}">${p.nome_completo}</option>`;
-});
-
+data?.forEach(p=>{html+=`<option value="${p.id}">${p.nome_completo}</option>`;});
 select.innerHTML=html;
 }
-   
-/* =====================================================
-   ADMIN – CARREGAR COLABORADORES
-===================================================== */
+
 async function carregarColaboradores(){
-
-const {data}=await db
-.from("vw_usuarios")
-.select("nome_completo,cargo,ativo")
-.order("hierarquia");
-
+const {data}=await db.from("vw_usuarios").select("nome_completo,cargo").order("hierarquia");
 let html="";
-
-if(!data || data.length===0){
-html="<p>Nenhum usuário cadastrado.</p>";
-}
-
 data?.forEach(u=>{
-html+=`
-<div class="item-colaborador">
-${u.nome_completo} 
-- <strong>${u.cargo||"Sem cargo"}</strong>
-${u.ativo ? "" : " (Inativo)"}
-</div>`;
+html+=`<div class="item-colaborador">${u.nome_completo} - <strong>${u.cargo||""}</strong></div>`;
 });
-
 document.getElementById("listaColaboradores").innerHTML=html;
 }
-   
-/* =====================================================
-   ADMIN – CARREGAR USUÁRIOS
-===================================================== */
-async function carregarAdminUsuarios(){
 
-const {data}=await db
-.from("vw_usuarios")
-.select("*")
-.order("hierarquia");
-
-let select=document.getElementById("adminSelectUsuario");
-let html=`<option value="">Selecione usuário...</option>`;
-
-data?.forEach(u=>{
-html+=`<option value="${u.id}">${u.nome_completo}</option>`;
+async function carregarDashboard(){
+const {data}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:"manhã"});
+if(!data)return;
+let pacientes=new Set(),criticos=0,atrasos=0,concluidas=0,total=data.length;
+data.forEach(r=>{
+pacientes.add(r.paciente_id);
+if(r.risco==="critico")criticos++;
+if(r.status==="atrasado")atrasos++;
+if(r.status==="concluida")concluidas++;
 });
-
-select.innerHTML=html;
-
-select.onchange=async function(){
-
-if(!this.value) return;
-
-const {data:usuario}=await db
-.from("vw_usuarios")
-.select("*")
-.eq("id",this.value)
-.single();
-
-document.getElementById("adminNome").value=usuario.nome_completo;
-document.getElementById("adminAtivo").checked=usuario.ativo;
-
-carregarAdminCargos(usuario.cargo);
-};
+dashPacientes.innerText=pacientes.size;
+dashCriticos.innerText=criticos;
+dashAtrasos.innerText=atrasos;
+dashConcluidas.innerText=concluidas;
+dashPercentual.innerText=total?Math.round((concluidas/total)*100)+"%":"0%";
+dashMedicacoes.innerText=total;
 }
 
-/* =====================================================
-   ADMIN – CARREGAR CARGOS
-===================================================== */
-async function carregarAdminCargos(cargoAtual=null){
-
-const {data}=await db
-.from("cargos_hospitalares")
-.select("*")
-.order("hierarquia");
-
-let select=document.getElementById("adminCargo");
-let html="";
-
-data?.forEach(c=>{
-html+=`
-<option value="${c.id}" ${cargoAtual===c.nome?"selected":""}>
-${c.nome}
-</option>`;
+async function carregarRotinas(turno){
+const {data}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:turno});
+lista.innerHTML="";
+data?.forEach(r=>{
+lista.innerHTML+=`<div class="rotina ${r.status}">
+<div><strong>${r.horario_execucao||"--:--"}</strong> ${r.titulo}<br>Paciente: ${r.paciente_nome}</div>
+<button class="btn-executar" onclick="executar('${r.id}','${turno}')">Executar</button>
+</div>`;
 });
-
-select.innerHTML=html;
 }
 
-/* =====================================================
-   ADMIN – SALVAR
-===================================================== */
-async function salvarUsuario(){
-
-if(user.hierarquia!==1)
-return alert("Somente Diretor pode editar.");
-
-let id=document.getElementById("adminSelectUsuario").value;
-if(!id) return alert("Selecione usuário.");
-
-let nome=document.getElementById("adminNome").value;
-let cargoId=document.getElementById("adminCargo").value;
-let ativo=document.getElementById("adminAtivo").checked;
-
-/* impedir alterar superior */
-const {data:alvo}=await db
-.from("vw_usuarios")
-.select("hierarquia")
-.eq("id",id)
-.single();
-
-if(alvo.hierarquia < user.hierarquia)
-return alert("Você não pode editar superior.");
-
-await db
-.from("usuarios")
-.update({
-nome_completo:nome,
-cargo_id:cargoId,
-ativo:ativo
-})
-.eq("id",id);
-
-alert("Atualizado com sucesso.");
-carregarAdminUsuarios();
-carregarUsuariosLogin();
-}
-
-/* =====================================================
-   ADMIN – EXCLUIR
-===================================================== */
-async function excluirUsuario(){
-
-if(user.hierarquia!==1)
-return alert("Somente Diretor pode excluir.");
-
-let id=document.getElementById("adminSelectUsuario").value;
-if(!id) return alert("Selecione usuário.");
-
-const {data:alvo}=await db
-.from("vw_usuarios")
-.select("*")
-.eq("id",id)
-.single();
-
-/* impedir excluir diretor */
-if(alvo.hierarquia===1)
-return alert("Diretor não pode ser excluído.");
-
-if(!confirm("Confirma exclusão?")) return;
-
-await db.from("usuarios").delete().eq("id",id);
-
-alert("Excluído.");
-carregarAdminUsuarios();
-carregarUsuariosLogin();
-}
-
-/* =====================================================
-   ADMIN – CRIAR NOVO
-===================================================== */
-async function criarNovoUsuario(){
-
-if(user.hierarquia!==1)
-return alert("Somente Diretor pode criar.");
-
-let email=prompt("Email do novo usuário:");
-let senha=prompt("Senha inicial:");
-let nome=prompt("Nome completo:");
-
-if(!email||!senha||!nome) return;
-
-const {data,error}=await db.auth.admin.createUser({
-email:email,
-password:senha,
-email_confirm:true
-});
-
-if(error) return alert(error.message);
-
-await db.from("usuarios").insert({
-id:data.user.id,
-nome_completo:nome,
-ativo:true
-});
-
-alert("Usuário criado.");
-carregarAdminUsuarios();
-}
-
-/* =====================================================
-   EXECUTAR ROTINA
-===================================================== */
 async function executar(id,turno){
-
-if(user.hierarquia>8)
-return alert("Sem permissão.");
-
-await db.rpc("executar_rotina",{
-p_rotina_id:id,
-p_usuario_id:user.id
-});
-
+await db.rpc("executar_rotina",{p_rotina_id:id,p_usuario_id:user.id});
 carregarRotinas(turno);
+carregarDashboard();
+carregarRankingCriticos();
 }
 
-/* =====================================================
-   INIT
-===================================================== */
-carregarUsuariosLogin();
+async function carregarRankingCriticos(){
+const {data}=await db.from("ranking_pacientes_criticos").select("*").order("score_clinico",{ascending:false}).limit(10);
+let html=`<table class="ranking-table"><thead><tr><th>#</th><th>Nome</th><th>Score</th><th>Atrasos</th></tr></thead><tbody>`;
+data?.forEach((p,i)=>{
+html+=`<tr><td>${i+1}</td><td>${p.nome_completo}</td><td>${p.score_clinico}</td><td>${p.total_atrasos}</td></tr>`;
+});
+html+="</tbody></table>";
+rankingBox.innerHTML=html;
+}
 
+async function carregarGraficoInstitucional(){
+const {data}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:"manhã"});
+if(!data)return;
+let c=0,p=0,a=0;
+data.forEach(r=>{if(r.status==="concluida")c++;else if(r.status==="pendente")p++;else a++;});
+if(graficoInstitucional)graficoInstitucional.destroy();
+graficoInstitucional=new Chart(graficoInstitucional=document.getElementById("graficoInstitucional"),{
+type:"bar",
+data:{labels:["Concluídas","Pendentes","Atrasadas"],datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]}
+});
+}
+
+async function carregarHistorico(){
+let query=db.from("historico_completo").select("*");
+if(histInicio.value)query=query.gte("data",histInicio.value);
+if(histFim.value)query=query.lte("data",histFim.value);
+const {data}=await query;
+let html="";
+data?.forEach(r=>{
+html+=`<div>${r.data} - ${r.paciente_nome} - ${r.titulo} (${r.status})</div>`;
+});
+historicoLista.innerHTML=html;
+}
+
+carregarUsuariosLogin();
 </script>
+
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
