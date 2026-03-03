@@ -194,40 +194,76 @@ ${r.paciente_nome}<br>
 Status: ${r.status}
 </div>`;});}
 
-/* VISÃO INDIVIDUAL */
+/* VISÃO INDIVIDUAL – SCORE CLÍNICO REAL */
 async function verPaciente(id){
+
+/* 1 – Buscar prontuário */
 const {data}=await db.from("paciente_prontuario").select("*").eq("paciente_id",id);
 if(!data||data.length===0)return;
 
-let risco=data[0].grau_risco||"baixo";
-let cor=risco==="alto"?"risco-alto":risco==="medio"?"risco-medio":"risco-baixo";
+/* 2 – Calcular score clínico real */
+const {data:scoreData}=await db.rpc("calcular_score_clinico",{paciente_uuid:id});
+let score=scoreData||0;
 
+/* 3 – Classificar risco */
+const {data:classificacao}=await db.rpc("classificar_risco",{score});
+let risco=classificacao||"baixo";
+
+/* 4 – Cor visual */
+let cor=risco==="critico"?"risco-alto":
+        risco==="alto"?"risco-alto":
+        risco==="medio"?"risco-medio":
+        "risco-baixo";
+
+/* 5 – Alerta crítico */
+if(risco==="critico"){
+bannerCritico.style.display="block";
+bannerCritico.innerText=`🚨 PACIENTE CRÍTICO: ${data[0].nome_completo} | Score: ${score}`;
+}else{
+bannerCritico.style.display="none";
+}
+
+/* 6 – Renderizar tela */
 ceoBox.style.display="block";
 ceoBox.innerHTML=`
 <h2>${data[0].nome_completo}</h2>
-<p>Risco: <span class="${cor}">${risco.toUpperCase()}</span></p>
+<p>Score Clínico: <strong>${score}</strong></p>
+<p>Classificação: <span class="${cor}">${risco.toUpperCase()}</span></p>
 <button onclick="gerarPDF('${data[0].nome_completo}')" class="btn-pdf">Gerar PDF</button>
 <canvas id="graficoPaciente"></canvas>
-<div id="linhaTempo"></div>`;
+<div id="linhaTempo" style="margin-top:20px"></div>`;
 
+/* 7 – Estatísticas */
 let c=0,p=0,a=0;
+let linhaTempo=document.getElementById("linhaTempo");
+linhaTempo.innerHTML="";
+
 data.forEach(r=>{
 if(r.status==="concluida")c++;
 else if(r.status==="pendente")p++;
-else a++;
-document.getElementById("linhaTempo").innerHTML+=`
+else if(r.status==="atrasado")a++;
+
+linhaTempo.innerHTML+=`
 <div class="timeline-item">
 ${r.data_referencia} - ${r.nome_medicamento||"-"} - ${r.status}
 </div>`;
 });
 
+/* 8 – Gráfico individual */
 const ctx=document.getElementById("graficoPaciente").getContext("2d");
 if(graficoPaciente)graficoPaciente.destroy();
+
 graficoPaciente=new Chart(ctx,{
 type:"bar",
-data:{labels:["Concluídas","Pendentes","Atrasadas"],
-datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]}});}
-
+data:{
+labels:["Concluídas","Pendentes","Atrasadas"],
+datasets:[{
+data:[c,p,a],
+backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
+}]
+}
+});
+}
 /* PDF */
 function gerarPDF(nome){
 const {jsPDF}=window.jspdf;
@@ -238,3 +274,4 @@ doc.save(`${nome}.pdf`);}
 </script>
 </body>
 </html>
+
