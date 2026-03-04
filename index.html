@@ -387,8 +387,6 @@ carregarGrafico();
 carregarHistoricoRotinas();
 /* ================= LOGIN ================= */
 
-const SENHA_PADRAO = "12345678"; // altere para sua senha real
-
 async function login(){
 
   const email = document.getElementById("loginEmail").value;
@@ -435,7 +433,7 @@ async function login(){
   
 function logout(){
 
-  localStorage.removeItem("HARMONIA_SESSION");
+  localStorage.removeItem("HC_USER");
 
   document.getElementById("app").style.display="none";
   document.getElementById("loginWrapper").style.display="flex";
@@ -444,15 +442,6 @@ function logout(){
 /* Verifica sessão ao abrir */
 window.onload = function(){
 
-  if(localStorage.getItem("HARMONIA_SESSION")==="ativa"){
-    document.getElementById("loginWrapper").style.display="none";
-    document.getElementById("app").style.display="block";
-  }
-
-};
-
-  window.onload = function(){
-
   const user = localStorage.getItem("HC_USER");
 
   if(user){
@@ -460,6 +449,16 @@ window.onload = function(){
     document.getElementById("app").style.display="block";
 
     aplicarPermissoes(JSON.parse(user).cargo);
+
+    // Só carrega sistema se estiver logado
+    carregarPacientes();
+    carregarColaboradores();
+    carregarGrafico();
+    carregarHistoricoRotinas();
+
+  } else {
+    document.getElementById("loginWrapper").style.display="flex";
+    document.getElementById("app").style.display="none";
   }
 
 };
@@ -469,6 +468,7 @@ window.onload = function(){
 
 </body>
 </html>
+
 
 
 
