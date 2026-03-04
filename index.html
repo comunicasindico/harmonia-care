@@ -108,52 +108,59 @@ height:100%!important;
 </div>
 
 <script>
-
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
+const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 
 let dadosAtuais=[];
 let graficoInstitucional=null;
-
-/* LOGOUT */
-async function logout(){
-await db.auth.signOut();
-alert("Logout realizado.");
-}
 
 /* DATA PADRÃO */
 const hoje=new Date().toISOString().split("T")[0];
 histInicio.value=hoje;
 histFim.value=hoje;
 
-/* PACIENTES */
+/* ================= PACIENTES ================= */
 async function carregarPacientes(){
-const {data}=await db.from("pacientes")
+
+const {data,error}=await db
+.from("pacientes")
 .select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
 .order("nome_completo");
 
+if(error){console.log(error);return;}
+
 let html=`<option value="todos">Todos os pacientes</option>`;
-data?.forEach(p=>html+=`<option value="${p.id}">${p.nome_completo}</option>`);
+data?.forEach(p=>{
+html+=`<option value="${p.id}">${p.nome_completo}</option>`;
+});
+
 selectPaciente.innerHTML=html;
 }
 
-/* COLABORADORES */
+/* ================= COLABORADORES ================= */
 async function carregarColaboradores(){
-const {data}=await db.from("vw_usuarios")
+
+const {data,error}=await db
+.from("vw_usuarios")
 .select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
 .order("nome_completo");
 
+if(error){console.log(error);return;}
+
 let html=`<option value="todos">Todos os colaboradores</option>`;
-data?.forEach(c=>html+=`<option value="${c.id}">${c.nome_completo}</option>`);
+data?.forEach(c=>{
+html+=`<option value="${c.id}">${c.nome_completo}</option>`;
+});
+
 selectColaborador.innerHTML=html;
 }
 
-/* HISTÓRICO ROTINAS */
+/* ================= HISTÓRICO ROTINAS ================= */
 async function carregarHistoricoRotinas(){
 
 let inicio=histInicio.value;
@@ -176,35 +183,39 @@ if(paciente!=="todos"){
 query=query.eq("paciente_id",paciente);
 }
 
-const {data}=await query.order("data",{ascending:false});
+const {data,error}=await query.order("data",{ascending:false});
+
+if(error){console.log(error);return;}
 
 dadosAtuais=data||[];
-
 renderizarLista(dadosAtuais);
 }
 
-/* HISTÓRICO CLÍNICO */
+/* ================= HISTÓRICO CLÍNICO ================= */
 async function carregarHistoricoClinico(){
 
-const {data}=await db.from("vw_historico_geral")
+const {data,error}=await db
+.from("vw_historico_geral")
 .select("*")
 .eq("empresa_id",EMPRESA_ID)
 .order("nome_completo");
 
-let html="<table width='100%'><tr><th>Nome</th><th>Idade</th><th>HAS</th><th>DM</th><th>D.A</th><th>Cardio</th><th>Acamado</th><th>Dieta</th><th>Pressão</th><th>Outros</th></tr>";
+if(error){console.log(error);return;}
+
+let html="<table width='100%' border='0'><tr><th>Nome</th><th>Idade</th><th>HAS</th><th>DM</th><th>D.A</th><th>Cardio</th><th>Acamado</th><th>Dieta Especial</th><th>Outras Comorbidades</th><th>Grau Risco</th></tr>";
 
 data?.forEach(p=>{
 html+=`<tr>
 <td>${p.nome_completo}</td>
-<td>${p.idade||""}</td>
+<td>${p.idade || ""}</td>
 <td>${p.has?"✔":""}</td>
 <td>${p.dm?"✔":""}</td>
 <td>${p.da?"✔":""}</td>
 <td>${p.cardiopatia?"✔":""}</td>
 <td>${p.acamado?"✔":""}</td>
-<td>${p.dieta||""}</td>
-<td>${p.pressao_arterial||""}</td>
-<td>${p.outros||""}</td>
+<td>${p.dieta_especial||""}</td>
+<td>${p.outras_comorbidades||""}</td>
+<td>${p.grau_risco||""}</td>
 </tr>`;
 });
 
@@ -213,7 +224,7 @@ html+="</table>";
 historicoLista.innerHTML=html;
 }
 
-/* RENDER */
+/* ================= RENDER ================= */
 function renderizarLista(lista){
 
 if(!lista.length){
@@ -240,32 +251,36 @@ ${r.rotina_modelos?.titulo}
 historicoLista.innerHTML=html;
 }
 
-/* BUSCA */
+/* ================= BUSCA ================= */
 function filtrarBusca(){
 let termo=buscaDinamica.value.toLowerCase();
 let filtrado=dadosAtuais.filter(r=>
-(r.pacientes?.nome_completo||"").toLowerCase().includes(termo)||
+(r.pacientes?.nome_completo||"").toLowerCase().includes(termo) ||
 (r.rotina_modelos?.titulo||"").toLowerCase().includes(termo)
 );
 renderizarLista(filtrado);
 }
 
-/* PDF */
+/* ================= PDF ================= */
 function exportarPDF(){
 if(!dadosAtuais.length){alert("Sem dados.");return;}
+
 const { jsPDF } = window.jspdf;
 const doc=new jsPDF();
 doc.text("Relatório Harmonia Care",20,20);
+
 let y=30;
+
 dadosAtuais.forEach(r=>{
 doc.text(`${r.data} - ${r.pacientes?.nome_completo} - ${r.rotina_modelos?.titulo} (${r.status})`,20,y);
 y+=8;
 if(y>270){doc.addPage();y=20;}
 });
+
 doc.save("relatorio.pdf");
 }
 
-/* GRÁFICO */
+/* ================= GRÁFICO ================= */
 async function carregarGrafico(){
 
 if(graficoInstitucional){
@@ -273,9 +288,12 @@ graficoInstitucional.destroy();
 graficoInstitucional=null;
 }
 
-const {data}=await db.from("rotina_execucao")
+const {data,error}=await db
+.from("rotina_execucao")
 .select("status")
 .eq("empresa_id",EMPRESA_ID);
+
+if(error){console.log(error);return;}
 
 let c=0,p=0,a=0;
 
@@ -316,3 +334,4 @@ carregarHistoricoRotinas();
 
 </body>
 </html>
+
