@@ -353,42 +353,36 @@ document.getElementById("selectColaborador").innerHTML=html;
 /* GERAR ROTINAS DO DIA */
 async function gerarRotinasDoDia(){
 
-const hoje = new Date();
-const dataHoje = hoje.toISOString().slice(0,10);
-
-const ano = hoje.getFullYear();
-const mes = hoje.getMonth()+1;
-const dia = hoje.getDate();
+const hoje = new Date().toISOString().slice(0,10);
 
 /* BUSCAR PACIENTES */
 
-const {data:pacientes,error:e1} = await db
+const {data:pacientes,error:e1}=await db
 .from("pacientes")
 .select("id")
 .eq("empresa_id",EMPRESA_ID);
 
 if(e1){
-console.error("Erro pacientes:",e1);
-alert("Erro ao buscar pacientes.");
+console.error(e1);
+alert("Erro ao buscar pacientes");
 return;
 }
 
 if(!pacientes || pacientes.length===0){
-alert("Nenhum paciente encontrado.");
+alert("Nenhum paciente encontrado");
 return;
 }
 
-/* BUSCAR MODELOS */
+/* BUSCAR ROTINAS */
 
-const {data:modelos,error:e2} = await db
+const {data:modelos,error:e2}=await db
 .from("rotina_modelos")
-.select("id,titulo")
+.select("id")
 .eq("empresa_id",EMPRESA_ID);
-console.log("Modelos encontrados:",modelos);
 
 if(e2){
-console.error("Erro modelos:",e2);
-alert("Erro ao buscar modelos.");
+console.error(e2);
+alert("Erro ao buscar modelos");
 return;
 }
 
@@ -397,7 +391,7 @@ alert("Nenhum modelo de rotina encontrado.");
 return;
 }
 
-/* GERAR REGISTROS */
+/* GERAR LISTA */
 
 let inserts=[];
 
@@ -405,21 +399,12 @@ pacientes.forEach(p=>{
 modelos.forEach(m=>{
 
 inserts.push({
-
 empresa_id:EMPRESA_ID,
 paciente_id:p.id,
-
 modelo_id:m.id,
 rotina_modelo_id:m.id,
-
-data:dataHoje,
-
-ano:ano,
-mes:mes,
-dia:dia,
-
+data:hoje,
 status:"pendente"
-
 });
 
 });
@@ -429,18 +414,20 @@ status:"pendente"
 
 const {error}=await db
 .from("rotina_execucao")
-.insert(inserts)
-.select();
+.insert(inserts);
 
 if(error){
-console.error(error);
+console.error("Erro insert:",error);
 alert("Erro ao gerar rotinas");
 return;
 }
 
-await carregarTabelaRotinas();
-
 console.log("Rotinas criadas:",inserts.length);
+
+alert("Rotinas do dia geradas!");
+
+await carregarTabelaRotinas();
+await carregarHistoricoRotinas();
 
 }
 
@@ -1157,6 +1144,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
