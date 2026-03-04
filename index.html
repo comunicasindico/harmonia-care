@@ -131,7 +131,29 @@ padding:20px;
 border-radius:16px;
 margin-top:20px;
 }
+.tabela-rotinas{
+width:100%;
+border-collapse:collapse;
+font-size:13px;
+}
 
+.tabela-rotinas th{
+background:#f0f0f0;
+padding:8px;
+border:1px solid #ddd;
+}
+
+.tabela-rotinas td{
+padding:6px;
+text-align:center;
+border:1px solid #eee;
+}
+
+.tabela-rotinas tr:hover{
+background:#fafafa;
+}
+
+  
 </style>
 </head>
 
@@ -506,11 +528,125 @@ carregarGrafico();
 
 }
 
+/* TABELA ROTINAS */
+
+async function carregarTabelaRotinas(){
+
+const hoje = new Date().toISOString().split("T")[0];
+
+const {data,error} = await db
+.from("rotina_execucao")
+.select(`
+id,
+status,
+data,
+paciente_id,
+pacientes:paciente_id(nome_completo),
+rotina_modelos:modelo_id(titulo)
+`)
+.eq("empresa_id",EMPRESA_ID)
+.eq("data",hoje);
+
+if(error){
+console.error(error);
+return;
+}
+
+let pacientes={};
+
+data.forEach(r=>{
+
+let pid=r.paciente_id;
+
+if(!pacientes[pid]){
+pacientes[pid]={
+nome:r.pacientes?.nome_completo ?? "Paciente",
+rotinas:{}
+};
+}
+
+pacientes[pid].rotinas[r.rotina_modelos?.titulo]=r;
+
+});
+
+let html=`
+
+<h3>Rotinas do dia</h3>
+
+<table class="tabela-rotinas">
+
+<tr>
+<th>Paciente</th>
+<th>Banho</th>
+<th>Fraldas</th>
+<th>Água</th>
+<th>Café</th>
+<th>Almoço</th>
+<th>Suco</th>
+<th>Jantar</th>
+<th>Outros</th>
+</tr>
+
+`;
+
+for(let pid in pacientes){
+
+let p=pacientes[pid];
+
+html+=`<tr><td>${p.nome}</td>`;
+
+const colunas=[
+"Banho",
+"Trocar Fraldas",
+"Tomar Agua",
+"Cafe da Manha",
+"Almoco",
+"Suco",
+"Jantar",
+"Outros"
+];
+
+colunas.forEach(nome=>{
+
+let rotina=p.rotinas[nome];
+
+if(rotina){
+
+let checked = rotina.status==="concluida" ? "checked" : "";
+
+html+=`
+
+<td>
+<input type="checkbox"
+${checked}
+onchange="toggleRotina('${rotina.id}',this.checked)">
+</td>
+
+`;
+
+}else{
+
+html+=`<td>-</td>`;
+
+}
+
+});
+
+html+=`</tr>`;
+
+}
+
+html+=`</table>`;
+
+document.getElementById("historicoLista").innerHTML=html;
+
+}
+
 /* TOGGLE ROTINA */
 
 async function toggleRotina(id,checked){
 
-const user=JSON.parse(localStorage.getItem("HC_USER"));
+const user = JSON.parse(localStorage.getItem("HC_USER")) || {};
 
 let status = checked ? "concluida" : "pendente";
 
@@ -519,7 +655,7 @@ const {error}=await db
 .update({
 status:status,
 executado_por:user?.id,
-horario_execucao:new Date()
+horario_execucao:new Date().toISOString()
 })
 .eq("id",id);
 
@@ -528,8 +664,8 @@ console.log(error);
 alert("Erro ao atualizar rotina.");
 }
 
+await carregarHistoricoRotinas();
 await carregarGrafico();
-
 }
 
 
@@ -840,6 +976,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
