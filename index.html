@@ -242,9 +242,9 @@ const { data, error } = await db
 id,
 status,
 created_at,
-pacientes(nome_completo),
-rotina_modelos(titulo),
-usuarios(nome_completo)
+pacientes:paciente_id(nome_completo),
+rotina_modelos:rotina_id(titulo),
+usuarios:usuario_id(nome_completo)
 `)
 .eq("empresa_id", EMPRESA_ID)
 .order("created_at", { ascending:false });
@@ -472,4 +472,5 @@ carregarGrafico();
 
 </body>
 </html>
+
 
