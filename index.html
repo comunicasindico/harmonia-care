@@ -389,21 +389,50 @@ carregarHistoricoRotinas();
 
 const SENHA_PADRAO = "12345678"; // altere para sua senha real
 
-function login(){
+async function login(){
+
+  const email = document.getElementById("loginEmail").value;
   const senha = document.getElementById("loginSenha").value;
 
-  if(senha === SENHA_PADRAO){
+  const { data, error } = await db.rpc('verificar_login',{
+    p_email: email,
+    p_senha: senha
+  });
 
-    localStorage.setItem("HARMONIA_SESSION","ativa");
+  if(error || !data || data.length === 0){
+    alert("Usuário ou senha inválidos.");
+    return;
+  }
 
-    document.getElementById("loginWrapper").style.display="none";
-    document.getElementById("app").style.display="block";
+  const usuario = data[0];
 
-  } else {
-    alert("Senha incorreta.");
+  localStorage.setItem("HC_USER", JSON.stringify(usuario));
+
+  document.getElementById("loginWrapper").style.display="none";
+  document.getElementById("app").style.display="block";
+
+  aplicarPermissoes(usuario.cargo);
+}
+
+
+  function aplicarPermissoes(cargo){
+
+  if(cargo === "admin"){
+    return;
+  }
+
+  if(cargo === "enfermeiro"){
+    document.querySelectorAll(".btn-danger")
+      .forEach(btn => btn.style.display="none");
+  }
+
+  if(cargo === "tecnico"){
+    const botaoClinico = document.querySelector("button[onclick='carregarHistoricoClinico()']");
+    if(botaoClinico) botaoClinico.style.display="none";
   }
 }
 
+  
 function logout(){
 
   localStorage.removeItem("HARMONIA_SESSION");
@@ -421,9 +450,25 @@ window.onload = function(){
   }
 
 };
+
+  window.onload = function(){
+
+  const user = localStorage.getItem("HC_USER");
+
+  if(user){
+    document.getElementById("loginWrapper").style.display="none";
+    document.getElementById("app").style.display="block";
+
+    aplicarPermissoes(JSON.parse(user).cargo);
+  }
+
+};
+
+  
 </script>
 
 </body>
 </html>
+
 
 
