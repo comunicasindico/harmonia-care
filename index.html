@@ -6,6 +6,7 @@
 <title>Harmonia Care</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 body{margin:0;font-family:Arial;background:#f4f6f9}
 #app{padding:30px}
@@ -14,29 +15,75 @@ button{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:poin
 .btn-primary{background:#3498db;color:#fff}
 .btn-secondary{background:#555;color:#fff}
 .btn-danger{background:#e74c3c;color:#fff}
+
 .layout{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:30px}
-.box{background:#fff;padding:20px;border-radius:12px;box-shadow:0 3px 10px rgba(0,0,0,.08)}
-input,select{padding:8px;border-radius:6px;border:1px solid #ccc}
-.mapa-clinico{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;font-size:11px}
-.card-mapa{background:#fff;padding:8px 12px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.08);min-width:80px;text-align:center}
-.card-mapa b{font-size:10px;color:#666;display:block}
-.card-mapa span{font-size:16px;font-weight:bold}
-.alerta-enfermagem{display:flex;gap:6px;margin-top:4px;font-size:12px}
-.alerta-pill{padding:4px 8px;border-radius:10px;font-weight:bold}
-.alerta-normal{background:#eafaf1;color:#1e8449}
-.alerta-atencao{background:#fff3cd;color:#7d6608}
-.alerta-alto{background:#fdecea;color:#922b21}
-.tabela-clinica{width:100%;border-collapse:collapse;margin-top:10px;background:#fff}
-.tabela-clinica th{background:#2c3e50;color:#fff;padding:8px;border:1px solid #ddd}
-.tabela-clinica td{padding:6px;border:1px solid #ddd;text-align:center}
-.tabela-clinica td.nome{text-align:left;font-weight:bold}
-.tabela-clinica tr:nth-child(even){background:#f8f9fa}
-.grade-rotinas{width:100%;border-collapse:collapse;font-size:13px}
-.grade-rotinas th{background:#2c3e50;color:#fff;padding:8px;border:1px solid #ddd}
-.grade-rotinas td{border:1px solid #eee;padding:6px;text-align:center}
-.grade-rotinas td.nome{text-align:left;font-weight:bold}
-.grade-rotinas tr:nth-child(even){background:#f9f9f9}
-.grafico-wrapper{width:600px;max-width:95%;height:350px;background:#fff;padding:20px;border-radius:16px;margin-top:20px}
+
+.box{
+background:#fff;
+padding:20px;
+border-radius:12px;
+box-shadow:0 3px 10px rgba(0,0,0,.08)
+}
+
+input,select{
+padding:8px;
+border-radius:6px;
+border:1px solid #ccc
+}
+
+.grade-rotinas{
+width:100%;
+border-collapse:collapse;
+font-size:13px
+}
+
+.grade-rotinas th{
+background:#2c3e50;
+color:white;
+padding:8px;
+border:1px solid #ddd
+}
+
+.grade-rotinas td{
+border:1px solid #eee;
+padding:6px;
+text-align:center
+}
+
+.grade-rotinas td.nome{
+text-align:left;
+font-weight:bold
+}
+
+.grade-rotinas tr:nth-child(even){
+background:#f9f9f9
+}
+
+.mapa-clinico{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+margin-bottom:20px
+}
+
+.card-mapa{
+background:#fff;
+padding:8px 12px;
+border-radius:6px;
+box-shadow:0 1px 4px rgba(0,0,0,.08);
+min-width:80px;
+text-align:center
+}
+
+.grafico-wrapper{
+width:600px;
+max-width:95%;
+height:350px;
+background:#fff;
+padding:20px;
+border-radius:16px;
+margin-top:20px
+}
 </style>
 </head>
 
@@ -61,21 +108,23 @@ input,select{padding:8px;border-radius:6px;border:1px solid #ccc}
 <div id="mapaClinico"></div>
 
 <div class="layout">
+
 <div class="box">
 <h3>Selecionar Paciente</h3>
-<select id="selectPaciente" onchange="abrirProntuarioPaciente()"></select>
+<select id="selectPaciente"></select>
 </div>
+
 <div class="box">
 <h3>Selecionar Colaborador</h3>
 <select id="selectColaborador"></select>
 </div>
+
 </div>
 
-<h2>Históricos</h2>
+<h2>Painel de Enfermagem</h2>
 
 <button onclick="gerarRotinasDoDia()" class="btn-primary">Gerar Rotinas do Dia</button>
-<button onclick="carregarGradeRotinas()" class="btn-secondary">Grade de Rotinas</button>
-<button onclick="carregarHistoricoClinico()" class="btn-primary">Clínico</button>
+<button onclick="carregarPainelEnfermagem()" class="btn-secondary">Atualizar Painel</button>
 
 <div id="historicoLista" style="margin-top:20px"></div>
 
@@ -89,55 +138,115 @@ input,select{padding:8px;border-radius:6px;border:1px solid #ccc}
 
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
+
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
+
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
 let graficoInstitucional=null;
 
 /* PACIENTES */
+
 async function carregarPacientes(){
-const {data}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).order("nome_completo");
-let html=`<option value="todos">Todos</option>`;
-data?.forEach(p=>html+=`<option value="${p.id}">${p.nome_completo}</option>`);
+
+const {data}=await db
+.from("pacientes")
+.select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
+.order("nome_completo");
+
+let html="<option>Selecione</option>";
+
+data?.forEach(p=>{
+html+=`<option value="${p.id}">${p.nome_completo}</option>`;
+});
+
 document.getElementById("selectPaciente").innerHTML=html;
+
 }
 
 /* COLABORADORES */
+
 async function carregarColaboradores(){
-const {data}=await db.from("usuarios").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).order("nome_completo");
+
+const {data}=await db
+.from("usuarios")
+.select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
+.order("nome_completo");
+
 let html="";
-data?.forEach(u=>html+=`<option value="${u.id}">${u.nome_completo}</option>`);
+
+data?.forEach(u=>{
+html+=`<option value="${u.id}">${u.nome_completo}</option>`;
+});
+
 document.getElementById("selectColaborador").innerHTML=html;
+
 }
 
 /* GERAR ROTINAS */
+
 async function gerarRotinasDoDia(){
+
 const hoje=new Date().toISOString().slice(0,10);
-const {data:pacientes}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID);
-const {data:modelos}=await db.from("rotina_modelos").select("id").eq("empresa_id",EMPRESA_ID);
+
+const {data:pacientes}=await db
+.from("pacientes")
+.select("id")
+.eq("empresa_id",EMPRESA_ID);
+
+const {data:modelos}=await db
+.from("rotina_modelos")
+.select("id")
+.eq("empresa_id",EMPRESA_ID);
+
 let inserts=[];
+
 pacientes?.forEach(p=>{
 modelos?.forEach(m=>{
-inserts.push({empresa_id:EMPRESA_ID,paciente_id:p.id,modelo_id:m.id,rotina_modelo_id:m.id,data:hoje,status:"pendente"});
+inserts.push({
+empresa_id:EMPRESA_ID,
+paciente_id:p.id,
+modelo_id:m.id,
+rotina_modelo_id:m.id,
+data:hoje,
+status:"pendente"
 });
 });
-if(inserts.length>0) await db.from("rotina_execucao").insert(inserts);
-alert("Rotinas geradas");
-carregarGradeRotinas();
+});
+
+if(inserts.length>0){
+await db.from("rotina_execucao").insert(inserts);
 }
 
-/* GRADE DE ROTINAS */
-/* GRADE DE ROTINAS */
-async function carregarGradeRotinas(){
+alert("Rotinas geradas");
+
+carregarPainelEnfermagem();
+
+}
+
+/* PAINEL PROFISSIONAL */
+
+async function carregarPainelEnfermagem(){
 
 const hoje=new Date().toISOString().slice(0,10);
 
-const {data,error}=await db.from("rotina_execucao").select(`
+const {data,error}=await db
+.from("rotina_execucao")
+.select(`
 id,status,paciente_id,
 pacientes:paciente_id(nome_completo),
 rotina_modelos:modelo_id(titulo)
-`).eq("empresa_id",EMPRESA_ID).eq("data",hoje);
+`)
+.eq("empresa_id",EMPRESA_ID)
+.eq("data",hoje)
+.order("paciente_id");
 
-if(error){alert("Erro rotinas");return;}
+if(error){
+alert("Erro rotinas");
+return;
+}
 
 if(!data || data.length===0){
 document.getElementById("historicoLista").innerHTML="<p>Nenhuma rotina hoje.</p>";
@@ -146,9 +255,8 @@ return;
 
 let colunas=new Set();
 
-/* 🔧 ALTERAÇÃO 1 */
 data.forEach(r=>{
-if(r.rotina_modelos && r.rotina_modelos.titulo){
+if(r.rotina_modelos?.titulo){
 colunas.add(r.rotina_modelos.titulo);
 }
 });
@@ -162,21 +270,38 @@ data.forEach(r=>{
 let pid=r.paciente_id;
 
 if(!pacientes[pid]){
+
 pacientes[pid]={
 nome:r.pacientes?.nome_completo ?? "Paciente",
 rotinas:{}
 };
+
 }
 
-/* 🔧 ALTERAÇÃO 2 */
-if(r.rotina_modelos && r.rotina_modelos.titulo){
+if(r.rotina_modelos?.titulo){
 pacientes[pid].rotinas[r.rotina_modelos.titulo]=r;
 }
 
 });
 
-let html=`<h3>Grade de Rotinas</h3>
+let total=data.length;
+let concluidas=data.filter(r=>r.status==="concluida").length;
+let pendentes=total-concluidas;
+
+let html=`
+
+<h3>Painel de Enfermagem - ${new Date().toLocaleDateString("pt-BR")}</h3>
+
+<p>
+<b>Total:</b> ${total}
+&nbsp;&nbsp;
+<b>🟢 Concluídas:</b> ${concluidas}
+&nbsp;&nbsp;
+<b>🟡 Pendentes:</b> ${pendentes}
+</p>
+
 <table class="grade-rotinas">
+
 <tr>
 <th>Paciente</th>
 ${colunas.map(c=>`<th>${c}</th>`).join("")}
@@ -219,104 +344,160 @@ html+=`</tr>`;
 
 }
 
-html+=`</table>`;
+html+="</table>";
 
 document.getElementById("historicoLista").innerHTML=html;
 
 }
 
 /* TOGGLE */
+
 async function toggleRotina(id,checked){
+
 let status=checked?"concluida":"pendente";
-await db.from("rotina_execucao").update({status:status,horario_execucao:new Date().toISOString()}).eq("id",id);
-carregarGradeRotinas();
+
+await db
+.from("rotina_execucao")
+.update({
+status:status,
+horario_execucao:new Date().toISOString()
+})
+.eq("id",id);
+
+carregarPainelEnfermagem();
 carregarGrafico();
+
 }
 
-/* HISTORICO CLINICO */
-async function carregarHistoricoClinico(){
-const {data}=await db.from("pacientes").select(`nome_completo,data_nascimento,has,dm,da,cardiopatia,acamado,dieta_especial,outras_comorbidades,grau_risco`).eq("empresa_id",EMPRESA_ID).order("nome_completo");
-let html=`<h3>Quadro Clínico</h3><table class="tabela-clinica"><tr><th>Paciente</th><th>Idade</th><th>HAS</th><th>DM</th><th>DA</th><th>Cardio</th><th>Acamado</th><th>Dieta</th><th>Outras</th><th>Risco</th></tr>`;
-data?.forEach(p=>{
-let idade=calcularIdade(p.data_nascimento);
-let risco=p.grau_risco==1?"🟢":p.grau_risco==2?"🟡":"🔴";
-html+=`<tr><td class="nome">${p.nome_completo}</td><td>${idade}</td><td>${p.has?"✔":""}</td><td>${p.dm?"✔":""}</td><td>${p.da?"✔":""}</td><td>${p.cardiopatia?"✔":""}</td><td>${p.acamado?"✔":""}</td><td>${p.dieta_especial?"✔":""}</td><td>${p.outras_comorbidades??"-"}</td><td>${risco}</td></tr>`;
-});
-html+="</table>";
-document.getElementById("historicoLista").innerHTML=html;
-}
+/* MAPA CLINICO */
 
-/* MAPA */
 async function carregarMapaClinico(){
-const {data}=await db.from("pacientes").select("has,dm,da,cardiopatia,acamado,dieta_especial,grau_risco").eq("empresa_id",EMPRESA_ID);
-let total=data.length,has=0,dm=0,da=0,cardio=0,acamado=0,dieta=0,normal=0,atencao=0,alto=0;
-data.forEach(p=>{
-if(p.has)has++;if(p.dm)dm++;if(p.da)da++;if(p.cardiopatia)cardio++;if(p.acamado)acamado++;if(p.dieta_especial)dieta++;
-if(p.grau_risco==1)normal++;else if(p.grau_risco==2)atencao++;else alto++;
-});
-document.getElementById("mapaClinico").innerHTML=`<div class="mapa-clinico">
+
+const {data}=await db
+.from("pacientes")
+.select("has,dm,da,cardiopatia,acamado,dieta_especial,grau_risco")
+.eq("empresa_id",EMPRESA_ID);
+
+let total=data.length;
+
+document.getElementById("mapaClinico").innerHTML=`
+
+<div class="mapa-clinico">
+
 <div class="card-mapa"><b>Pacientes</b><span>${total}</span></div>
-<div class="card-mapa"><b>HAS</b><span>${has}</span></div>
-<div class="card-mapa"><b>DM</b><span>${dm}</span></div>
-<div class="card-mapa"><b>Demência</b><span>${da}</span></div>
-<div class="card-mapa"><b>Cardio</b><span>${cardio}</span></div>
-<div class="card-mapa"><b>Acamados</b><span>${acamado}</span></div>
-<div class="card-mapa"><b>Dieta</b><span>${dieta}</span></div>
-<div class="alerta-enfermagem">
-<span class="alerta-pill alerta-normal">🟢 ${normal}</span>
-<span class="alerta-pill alerta-atencao">🟡 ${atencao}</span>
-<span class="alerta-pill alerta-alto">🔴 ${alto}</span>
-</div></div>`;
+
+</div>
+
+`;
+
 }
 
 /* GRAFICO */
+
 async function carregarGrafico(){
-const {data}=await db.from("rotina_execucao").select("status").eq("empresa_id",EMPRESA_ID);
+
+const {data}=await db
+.from("rotina_execucao")
+.select("status")
+.eq("empresa_id",EMPRESA_ID);
+
 let c=0,p=0,a=0;
-data?.forEach(r=>{if(r.status==="concluida")c++;else if(r.status==="pendente")p++;else a++;});
-if(graficoInstitucional)graficoInstitucional.destroy();
-graficoInstitucional=new Chart(document.getElementById("graficoInstitucional"),{type:"bar",data:{labels:["Concluídas","Pendentes","Atrasadas"],datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]}})
+
+data?.forEach(r=>{
+if(r.status==="concluida")c++;
+else if(r.status==="pendente")p++;
+else a++;
+});
+
+if(graficoInstitucional){
+graficoInstitucional.destroy();
+}
+
+graficoInstitucional=new Chart(
+document.getElementById("graficoInstitucional"),
+{
+type:"bar",
+data:{
+labels:["Concluídas","Pendentes","Atrasadas"],
+datasets:[{
+data:[c,p,a],
+backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
+}]
+}
+}
+);
+
 }
 
 /* LOGIN */
+
 async function login(){
+
 const email=document.getElementById("loginEmail").value.trim();
 const senha=document.getElementById("loginSenha").value.trim();
-const {data}=await db.rpc('verificar_login',{p_email:email,p_senha:senha});
-if(!data || data.length===0){alert("Login inválido");return;}
-localStorage.setItem("HC_USER",JSON.stringify(data[0]));
-iniciarSistema();
+
+const {data}=await db.rpc('verificar_login',{
+p_email:email,
+p_senha:senha
+});
+
+if(!data || data.length===0){
+alert("Login inválido");
+return;
 }
 
-function logout(){localStorage.removeItem("HC_USER");location.reload();}
+localStorage.setItem("HC_USER",JSON.stringify(data[0]));
+
+iniciarSistema();
+
+}
+
+function logout(){
+localStorage.removeItem("HC_USER");
+location.reload();
+}
 
 /* START */
+
 async function iniciarSistema(){
+
 document.getElementById("loginWrapper").style.display="none";
 document.getElementById("app").style.display="block";
+
 await carregarPacientes();
 await carregarColaboradores();
 await carregarMapaClinico();
-await carregarGradeRotinas();
-await carregarGrafico();
+
+/* gerar rotinas se não existir */
+
+const hoje=new Date().toISOString().slice(0,10);
+
+const {data}=await db
+.from("rotina_execucao")
+.select("id")
+.eq("empresa_id",EMPRESA_ID)
+.eq("data",hoje)
+.limit(1);
+
+if(!data || data.length===0){
+await gerarRotinasDoDia();
 }
 
-function calcularIdade(data){
-if(!data)return "";
-const hoje=new Date();
-const nasc=new Date(data);
-let idade=hoje.getFullYear()-nasc.getFullYear();
-const m=hoje.getMonth()-nasc.getMonth();
-if(m<0||(m===0&&hoje.getDate()<nasc.getDate()))idade--;
-return idade;
+await carregarPainelEnfermagem();
+await carregarGrafico();
+
 }
 
 document.addEventListener("DOMContentLoaded",async()=>{
+
 const user=localStorage.getItem("HC_USER");
-if(user) iniciarSistema();
+
+if(user){
+await iniciarSistema();
+}
+
 });
 
 </script>
 </body>
 </html>
-
