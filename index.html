@@ -1062,12 +1062,24 @@ async function iniciarSistema(){
 document.getElementById("loginWrapper").style.display="none";
 document.getElementById("app").style.display="block";
 
-/* GERAR ROTINAS DO DIA */
+/* GERAR ROTINAS DO DIA (APENAS SE NÃO EXISTIREM) */
+const hoje = new Date().toISOString().split("T")[0];
 
+const {data:rotinasHoje} = await db
+.from("rotina_execucao")
+.select("id")
+.eq("empresa_id",EMPRESA_ID)
+.eq("data",hoje)
+.limit(1);
+if(!rotinasHoje || rotinasHoje.length === 0){
+console.log("Gerando rotinas do dia...");
 try{
 await gerarRotinasDoDia();
 }catch(e){
 console.warn("Erro gerar rotinas:",e);
+}
+}else{
+console.log("Rotinas do dia já existem.");
 }
 
 /* CARREGAR SISTEMA */
@@ -1150,6 +1162,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
