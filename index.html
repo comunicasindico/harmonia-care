@@ -161,172 +161,300 @@ height:100%!important;
 
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
+
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 
-let dadosAtuais=[];
+let user=null;
 let graficoInstitucional=null;
 
-/* LOGOUT */
-function logout(){
-alert("Logout executado.");
+const usuarioSelect=document.getElementById("usuarioSelect");
+const senhaInput=document.getElementById("senhaInput");
+const usuarioInfo=document.getElementById("usuarioInfo");
+const app=document.getElementById("app");
+const tituloTurno=document.getElementById("tituloTurno");
+
+/* ================= LOGIN ================= */
+
+async function logout(){
+await db.auth.signOut();
+app.style.display="none";
+document.getElementById("loginWrapper").style.display="flex";
 }
 
-/* DATAS PADRÃO */
-function definirDataHoje(){
+async function carregarUsuariosLogin(){
+const {data}=await db.from("vw_usuarios")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.order("hierarquia");
+
+let html=`<option value="">Selecione...</option>`;
+data?.forEach(u=>{
+if(!u.ativo)return;
+html+=`<option value="${u.id}" data-email="${u.email}" data-cargo="${u.cargo}">
+${u.nome_completo}
+</option>`;
+});
+usuarioSelect.innerHTML=html;
+}
+
+usuarioSelect.addEventListener("change",function(){
+let s=this.options[this.selectedIndex];
+usuarioInfo.innerHTML=s.value?`Cargo: ${s.dataset.cargo}`:"";
+});
+
+async function login(){
+let s=usuarioSelect.options[usuarioSelect.selectedIndex];
+if(!s.value)return alert("Selecione usuário.");
+if(!senhaInput.value)return alert("Digite senha.");
+
+const {data,error}=await db.auth.signInWithPassword({
+email:s.dataset.email,
+password:senhaInput.value
+});
+
+if(error)return alert("Senha incorreta.");
+
+const {data:perfil}=await db.from("vw_usuarios")
+.select("*")
+.eq("id",data.user.id)
+.single();
+
+if(!perfil)return;
+
+user=perfil;
+iniciarApp();
+}
+
+/* ================= INIT ================= */
+
+function iniciarApp(){
+document.getElementById("loginWrapper").style.display="none";
+app.style.display="block";
+
+tituloTurno.innerText=`Rotinas - Manhã | ${user.nome_completo}`;
+
 const hoje=new Date().toISOString().split("T")[0];
 histInicio.value=hoje;
 histFim.value=hoje;
+
+carregarDashboard();
+carregarPacientes();
+carregarColaboradores();
+carregarRotinas("manhã");
+carregarRankingCriticos();
+carregarGraficoInstitucional();
+carregarHistoricoClinico();
 }
 
-/* PACIENTES */
-async function carregarPacientes(){
-const {data}=await db.from("pacientes")
-.select("id,nome_completo")
-.eq("empresa_id",EMPRESA_ID)
-.order("nome_completo");
+/* ================= DASHBOARD ================= */
 
-let html=`<option value="todos">Todos os pacientes</option>`;
-data?.forEach(p=>html+=`<option value="${p.id}">${p.nome_completo}</option>`);
-selectPaciente.innerHTML=html;
+async function carregarDashboard(){
+
+const { data } = await db.rpc("rotina_completa_por_turno",{
+p_empresa_id:EMPRESA_ID,
+p_turno:"manhã"
+});
+
+if(!data)return;
+
+let pacientes=new Set();
+let criticos=0;
+let atrasos=0;
+let concluidas=0;
+
+data.forEach(r=>{
+pacientes.add(r.paciente_id);
+if(r.risco==="critico")criticos++;
+if(r.status==="atrasado")atrasos++;
+if(r.status==="concluida")concluidas++;
+});
+
+dashPacientes.innerText=pacientes.size;
+dashCriticos.innerText=criticos;
+dashAtrasos.innerText=atrasos;
+dashConcluidas.innerText=concluidas;
+
+dashPercentual.innerText=data.length?
+Math.round((concluidas/data.length)*100)+"%":"0%";
+
+dashMedicacoes.innerText=data.length;
 }
 
-/* COLABORADORES */
-async function carregarColaboradores(){
-const {data}=await db.from("vw_usuarios")
-.select("id,nome_completo")
-.order("nome_completo");
+/* ================= ROTINAS ================= */
 
-let html=`<option value="todos">Todos os colaboradores</option>`;
-data?.forEach(c=>html+=`<option value="${c.id}">${c.nome_completo}</option>`);
-selectColaborador.innerHTML=html;
+async function carregarRotinas(turno){
+
+const {data}=await db.rpc("rotina_completa_por_turno",{
+p_empresa_id:EMPRESA_ID,
+p_turno:turno
+});
+
+lista.innerHTML="";
+
+data?.forEach(r=>{
+lista.innerHTML+=`
+<div class="rotina ${r.status}">
+<div>
+<strong>${r.horario_execucao||"--:--"}</strong>
+${r.titulo}
+<br>Paciente: ${r.paciente_nome}
+</div>
+<button class="btn-executar"
+onclick="executar('${r.id}','${turno}')">
+Executar
+</button>
+</div>`;
+});
 }
 
-/* HISTÓRICO ROTINAS */
-async function carregarHistoricoRotinas(){
-
-let inicio = histInicio.value;
-let fim = histFim.value;
-let paciente = selectPaciente.value;
-
-let query = db.from("rotina_execucao")
-.select(`
-data,
-status,
-paciente_id,
-pacientes (nome_completo),
-rotina_modelos (titulo)
-`)
-.gte("data", inicio)
-.lte("data", fim);
-
-if(paciente!=="todos"){
-query=query.eq("paciente_id",paciente);
+async function executar(id,turno){
+await db.rpc("executar_rotina",{
+p_rotina_id:id,
+p_usuario_id:user.id
+});
+carregarRotinas(turno);
+carregarDashboard();
+carregarRankingCriticos();
 }
 
-const {data}=await query.order("data",{ascending:false});
+/* ================= HISTÓRICO CLÍNICO ================= */
 
-dadosAtuais=data||[];
-
-renderizarLista(dadosAtuais);
-}
-
-/* HISTÓRICO CLÍNICO */
 async function carregarHistoricoClinico(){
 
 const {data}=await db.from("vw_historico_geral")
 .select("*")
+.eq("empresa_id",EMPRESA_ID)
 .order("nome_completo");
 
-let html="<table width='100%' border='0' cellspacing='0'>";
-html+="<tr><th>Nome</th><th>Idade</th></tr>";
+let html=`<table class="ranking-table">
+<thead>
+<tr>
+<th>Nome</th>
+<th>Idade</th>
+<th>HAS</th>
+<th>DM</th>
+<th>D.A</th>
+<th>Cardio</th>
+<th>Acamado</th>
+<th>Dieta</th>
+<th>Pressão</th>
+<th>Outros</th>
+</tr>
+</thead><tbody>`;
 
 data?.forEach(p=>{
-html+=`<tr>
+html+=`
+<tr>
 <td>${p.nome_completo}</td>
 <td>${p.idade||""}</td>
+<td>${p.has?"✔":""}</td>
+<td>${p.dm?"✔":""}</td>
+<td>${p.da?"✔":""}</td>
+<td>${p.cardiopatia?"✔":""}</td>
+<td>${p.acamado?"✔":""}</td>
+<td>${p.dieta||""}</td>
+<td>${p.pressao_arterial||""}</td>
+<td>${p.outros||""}</td>
 </tr>`;
 });
 
-html+="</table>";
+html+="</tbody></table>";
 
 historicoLista.innerHTML=html;
 }
 
-/* RENDER */
-function renderizarLista(lista){
+/* ================= HISTÓRICO ROTINAS ================= */
 
-if(!lista.length){
-historicoLista.innerHTML="<p>Nenhuma rotina encontrada.</p>";
-return;
-}
+async function carregarHistorico(){
+
+let inicio=histInicio.value;
+let fim=histFim.value;
+
+let query=db.from("historico_rotinas")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.order("data",{ascending:false});
+
+if(inicio)query=query.gte("data",inicio);
+if(fim)query=query.lte("data",fim);
+
+const {data}=await query;
 
 let html="";
 
-lista.forEach(r=>{
-
-let classe="";
-if(r.status==="concluida") classe="status-concluida";
-else if(r.status==="pendente") classe="status-pendente";
-else classe="status-atrasado";
-
+data?.forEach(h=>{
 html+=`
-<div class="timeline-item ${classe}">
-<strong>${r.data}</strong> -
-${r.pacientes?.nome_completo} -
-${r.rotina_modelos?.titulo}
-(${r.status})
+<div class="timeline-item">
+<strong>${h.data}</strong> -
+${h.paciente_nome} -
+${h.titulo}
+<span class="status-${h.status}">
+(${h.status})
+</span>
 </div>`;
 });
 
 historicoLista.innerHTML=html;
 }
 
-/* BUSCA */
-function filtrarBusca(){
-let termo=buscaDinamica.value.toLowerCase();
-let filtrado=dadosAtuais.filter(r=>
-r.pacientes?.nome_completo.toLowerCase().includes(termo) ||
-r.rotina_modelos?.titulo.toLowerCase().includes(termo)
-);
-renderizarLista(filtrado);
-}
+/* ================= RANKING ================= */
 
-/* PDF */
-function exportarPDF(){
-if(!dadosAtuais.length){alert("Sem dados.");return;}
-const { jsPDF } = window.jspdf;
-const doc=new jsPDF();
-doc.text("Relatório Harmonia Care",20,20);
-let y=30;
-dadosAtuais.forEach(r=>{
-doc.text(`${r.data} - ${r.pacientes?.nome_completo} - ${r.rotina_modelos?.titulo} (${r.status})`,20,y);
-y+=8;
-if(y>270){doc.addPage();y=20;}
+async function carregarRankingCriticos(){
+
+const {data}=await db.from("ranking_pacientes_criticos")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.order("score_clinico",{ascending:false})
+.limit(10);
+
+let html=`<table class="ranking-table">
+<thead>
+<tr><th>#</th><th>Nome</th><th>Score</th><th>Atrasos</th></tr>
+</thead><tbody>`;
+
+data?.forEach((p,i)=>{
+html+=`
+<tr>
+<td>${i+1}</td>
+<td>${p.nome_completo}</td>
+<td>${p.score_clinico}</td>
+<td>${p.total_atrasos}</td>
+</tr>`;
 });
-doc.save("relatorio.pdf");
+
+html+="</tbody></table>";
+
+rankingBox.innerHTML=html;
 }
 
-/* GRÁFICO */
-async function carregarGrafico(){
+/* ================= GRÁFICO CORRIGIDO ================= */
+
+async function carregarGraficoInstitucional(){
+
+const {data}=await db.rpc("rotina_completa_por_turno",{
+p_empresa_id:EMPRESA_ID,
+p_turno:"manhã"
+});
+
+if(!data)return;
+
+let c=0,p=0,a=0;
+
+data.forEach(r=>{
+if(r.status==="concluida")c++;
+else if(r.status==="pendente")p++;
+else a++;
+});
 
 if(graficoInstitucional){
 graficoInstitucional.destroy();
 graficoInstitucional=null;
 }
 
-const {data}=await db.from("rotina_execucao").select("status");
+const ctx=document.getElementById("graficoInstitucional");
 
-let c=0,p=0,a=0;
-data?.forEach(r=>{
-if(r.status==="concluida") c++;
-else if(r.status==="pendente") p++;
-else a++;
-});
-
-graficoInstitucional=new Chart(
-document.getElementById("graficoInstitucional"),
-{
+graficoInstitucional=new Chart(ctx,{
 type:"bar",
 data:{
 labels:["Concluídas","Pendentes","Atrasadas"],
@@ -345,14 +473,10 @@ scales:{y:{beginAtZero:true}}
 });
 }
 
-/* INIT */
-definirDataHoje();
-carregarPacientes();
-carregarColaboradores();
-carregarGrafico();
-carregarHistoricoRotinas();
+carregarUsuariosLogin();
 
 </script>
 
 </body>
 </html>
+
