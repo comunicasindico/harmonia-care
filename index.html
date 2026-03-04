@@ -615,7 +615,7 @@ const {data,error}=await db
 .from("pacientes")
 .select(`
 nome_completo,
-idade,
+data_nascimento,
 has,
 dm,
 da,
@@ -651,13 +651,15 @@ let html=`
 <th>DA</th>
 <th>Cardiopatia</th>
 <th>Acamado</th>
-<th>Dieta Especial</th>
-<th>Outras Comorbidades</th>
-<th>Grau de Risco</th>
+<th>Dieta</th>
+<th>Outras</th>
+<th>Risco</th>
 </tr>
 `;
 
 data.forEach(p=>{
+
+let idade = calcularIdade(p.data_nascimento);
 
 let riscoCor="";
 
@@ -670,23 +672,23 @@ html+=`
 
 <td class="nome">${p.nome_completo ?? "-"}</td>
 
-<td>${p.idade ?? "-"}</td>
+<td>${idade}</td>
 
-<td>${p.has ? "✔" : ""}</td>
+<td>${p.has ? "✔":""}</td>
 
-<td>${p.dm ? "✔" : ""}</td>
+<td>${p.dm ? "✔":""}</td>
 
-<td>${p.da ? "✔" : ""}</td>
+<td>${p.da ? "✔":""}</td>
 
-<td>${p.cardiopatia ? "✔" : ""}</td>
+<td>${p.cardiopatia ? "✔":""}</td>
 
-<td>${p.acamado ? "✔" : ""}</td>
+<td>${p.acamado ? "✔":""}</td>
 
-<td>${p.dieta_especial ? "✔" : ""}</td>
+<td>${p.dieta_especial ? "✔":""}</td>
 
 <td style="text-align:left">${p.outras_comorbidades ?? "-"}</td>
 
-<td>${riscoCor} ${p.grau_risco ?? "-"}</td>
+<td>${riscoCor}</td>
 
 </tr>
 `;
@@ -961,7 +963,27 @@ campo.value = hoje;
 
 });
 
+function calcularIdade(data){
+
+if(!data) return "";
+
+const hoje = new Date();
+const nasc = new Date(data);
+
+let idade = hoje.getFullYear() - nasc.getFullYear();
+
+const m = hoje.getMonth() - nasc.getMonth();
+
+if(m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())){
+idade--;
+}
+
+return idade;
+
+}
+
 </script>
 
 </body>
 </html>
+
