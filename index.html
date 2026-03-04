@@ -536,7 +536,8 @@ status,
 data,
 created_at,
 pacientes!fk_rotina_paciente(nome_completo),
-rotina_modelos!rotina_execucao_modelo_id_fkey(titulo)
+rotina_modelos!rotina_execucao_modelo_id_fkey(titulo),
+usuarios(nome_completo)
 `)
 .eq("empresa_id", EMPRESA_ID)
 .eq("data", dataFiltro)
@@ -845,7 +846,8 @@ localStorage.setItem("HC_USER",JSON.stringify(data[0]));
 iniciarSistema();
 
 }
-
+window.login = login;
+  
 function logout(){
 localStorage.removeItem("HC_USER");
 location.reload();
@@ -857,13 +859,14 @@ document.getElementById("loginWrapper").style.display="none";
 document.getElementById("app").style.display="block";
 
 carregarPacientes();
+if(typeof carregarColaboradores === "function"){
 carregarColaboradores();
+}
 carregarMapaClinico();
 carregarHistoricoRotinas();
 carregarHistoricoClinico();
 carregarGrafico();
 carregarAuditoria();
-  
 }
 
 async function carregarAuditoria(){
@@ -948,6 +951,7 @@ campo.value = hoje;
 
 </body>
 </html>
+
 
 
 
