@@ -232,20 +232,37 @@ document.getElementById("prontuarioPaciente").innerHTML=html;
 
 }
 
+<div style="margin:15px 0;">
+<label><b>Data das Rotinas</b></label><br>
+
+<input type="date" id="dataRotina" 
+value="" 
+style="padding:8px;border-radius:6px;border:1px solid #ccc">
+
+<button class="btn-primary" onclick="carregarHistoricoRotinas()" style="margin-left:10px">
+Buscar
+</button>
+
+</div>
+  
 /* ================= HISTORICO ROTINAS ================= */
 
 async function carregarHistoricoRotinas(){
+
+const dataFiltro = document.getElementById("dataRotina")?.value;
 
 const { data, error } = await db
 .from("rotina_execucao")
 .select(`
 id,
 status,
+data,
 created_at,
 pacientes!fk_rotina_paciente(nome_completo),
 rotina_modelos!rotina_execucao_modelo_id_fkey(titulo)
 `)
 .eq("empresa_id", EMPRESA_ID)
+.eq("data", dataFiltro)
 .order("created_at", { ascending:false });
 
 if(error){
@@ -466,11 +483,24 @@ carregarHistoricoRotinas();
 carregarGrafico();
 
 }
-  
+
+document.addEventListener("DOMContentLoaded", () => {
+
+const hoje = new Date().toISOString().split("T")[0];
+
+const campo = document.getElementById("dataRotina");
+
+if(campo){
+campo.value = hoje;
+}
+
+});
+
 </script>
 
 </body>
 </html>
+
 
 
 
