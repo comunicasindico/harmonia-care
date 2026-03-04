@@ -65,17 +65,48 @@ text-align:center
 }
 
 .mapa-clinico{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-gap:15px;
-margin-bottom:20px
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+margin-bottom:15px;
+font-size:11px;
 }
 
 .card-mapa{
-background:#fff;
-padding:15px;
-border-radius:10px;
+background:#ffffff;
+padding:6px 10px;
+border-radius:6px;
+box-shadow:0 1px 4px rgba(0,0,0,.08);
+min-width:70px;
 text-align:center;
+}
+
+.card-mapa b{
+font-size:10px;
+color:#666;
+display:block;
+}
+
+.card-mapa span{
+font-size:14px;
+font-weight:bold;
+}
+
+/* CORES INTELIGENTES */
+
+.risco-normal{
+background:#eafaf1;
+border-left:4px solid #2ecc71;
+}
+
+.risco-atencao{
+background:#fff8e5;
+border-left:4px solid #f1c40f;
+}
+
+.risco-alto{
+background:#fdecea;
+border-left:4px solid #e74c3c;
 }
 
 .grafico-wrapper{
@@ -86,7 +117,36 @@ background:#fff;
 padding:20px;
 border-radius:16px;
 }
+.tabela-clinica{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+background:#fff;
+}
 
+.tabela-clinica th{
+background:#2c3e50;
+color:#fff;
+padding:8px;
+text-align:center;
+border:1px solid #ddd;
+}
+
+.tabela-clinica td{
+padding:6px;
+border:1px solid #ddd;
+text-align:center;
+}
+
+.tabela-clinica td.nome{
+text-align:left;
+font-weight:bold;
+}
+
+.tabela-clinica tr:nth-child(even){
+background:#f8f9fa;
+}
+  
 </style>
 </head>
 
@@ -334,19 +394,63 @@ const {data,error}=await db
 .eq("empresa_id",EMPRESA_ID)
 .order("nome_completo");
 
-if(error){console.log(error);return;}
+if(error){
+console.log(error);
+return;
+}
 
-let html="<table width='100%'><tr><th>Nome</th><th>HAS</th><th>DM</th><th>DA</th><th>Cardio</th><th>Acamado</th></tr>";
+if(!data || data.length===0){
+document.getElementById("historicoLista").innerHTML="<p>Nenhum registro clínico encontrado.</p>";
+return;
+}
+
+let html=`
+<h3>Quadro Clínico dos Pacientes</h3>
+
+<table class="tabela-clinica">
+
+<tr>
+<th>Paciente</th>
+<th>Idade</th>
+<th>HAS</th>
+<th>DM</th>
+<th>DA</th>
+<th>Cardiopatia</th>
+<th>Acamado</th>
+<th>Dieta</th>
+<th>Outras Comorbidades</th>
+<th>Risco</th>
+</tr>
+`;
 
 data.forEach(p=>{
-html+=`<tr>
-<td>${p.nome_completo}</td>
-<td>${p.has?"✔":""}</td>
-<td>${p.dm?"✔":""}</td>
-<td>${p.da?"✔":""}</td>
-<td>${p.cardiopatia?"✔":""}</td>
-<td>${p.acamado?"✔":""}</td>
-</tr>`;
+
+html+=`
+<tr>
+
+<td class="nome">${p.nome_completo ?? "-"}</td>
+
+<td>${p.idade ?? "-"}</td>
+
+<td>${p.has ? "✔" : ""}</td>
+
+<td>${p.dm ? "✔" : ""}</td>
+
+<td>${p.da ? "✔" : ""}</td>
+
+<td>${p.cardiopatia ? "✔" : ""}</td>
+
+<td>${p.acamado ? "✔" : ""}</td>
+
+<td>${p.dieta_especial ? "✔" : ""}</td>
+
+<td style="text-align:left">${p.outras_comorbidades ?? "-"}</td>
+
+<td>${p.grau_risco ?? "-"}</td>
+
+</tr>
+`;
+
 });
 
 html+="</table>";
@@ -359,19 +463,94 @@ document.getElementById("historicoLista").innerHTML=html;
 
 async function carregarMapaClinico(){
 
-const {data}=await db
+const {data,error}=await db
 .from("pacientes")
-.select("*")
+.select("has,dm,da,cardiopatia,acamado,dieta_especial,grau_risco")
 .eq("empresa_id",EMPRESA_ID);
 
+if(error){
+console.log(error);
+return;
+}
+
 let total=data.length;
+let has=0;
+let dm=0;
+let da=0;
+let cardio=0;
+let acamado=0;
+let dieta=0;
+
+let riscoNormal=0;
+let riscoAtencao=0;
+let riscoAlto=0;
+
+data.forEach(p=>{
+
+if(p.has) has++;
+if(p.dm) dm++;
+if(p.da) da++;
+if(p.cardiopatia) cardio++;
+if(p.acamado) acamado++;
+if(p.dieta_especial) dieta++;
+
+if(p.grau_risco==1) riscoNormal++;
+else if(p.grau_risco==2) riscoAtencao++;
+else if(p.grau_risco>=3) riscoAlto++;
+
+});
 
 let html=`
 <div class="mapa-clinico">
 
 <div class="card-mapa">
 <b>Pacientes</b>
-<h2>${total}</h2>
+<span>${total}</span>
+</div>
+
+<div class="card-mapa">
+<b>HAS</b>
+<span>${has}</span>
+</div>
+
+<div class="card-mapa">
+<b>DM</b>
+<span>${dm}</span>
+</div>
+
+<div class="card-mapa">
+<b>Demência (DA)</b>
+<span>${da}</span>
+</div>
+
+<div class="card-mapa">
+<b>Cardiopatia</b>
+<span>${cardio}</span>
+</div>
+
+<div class="card-mapa">
+<b>Acamados</b>
+<span>${acamado}</span>
+</div>
+
+<div class="card-mapa">
+<b>Dieta especial</b>
+<span>${dieta}</span>
+</div>
+
+<div class="card-mapa risco-normal">
+<b>🟢 Normal</b>
+<span>${riscoNormal}</span>
+</div>
+
+<div class="card-mapa risco-atencao">
+<b>🟡 Atenção</b>
+<span>${riscoAtencao}</span>
+</div>
+
+<div class="card-mapa risco-alto">
+<b>🔴 Alto risco</b>
+<span>${riscoAlto}</span>
 </div>
 
 </div>
@@ -502,6 +681,7 @@ campo.value = hoje;
 
 </body>
 </html>
+
 
 
 
