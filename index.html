@@ -377,12 +377,10 @@ let concluidas=data.filter(r=>r.status==="concluida").length;
 let pendentes=total-concluidas;
 
 /* DATA */
-
-let hoje = new Date().toLocaleDateString("pt-BR");
-
+let dataHoje = new Date().toLocaleDateString("pt-BR");
 let html=`
 
-<h3>Rotinas do dia ${hoje}</h3>
+<h3>Rotinas do dia ${dataHoje}</h3>
 
 <div style="margin-bottom:15px;font-size:14px">
 
@@ -812,6 +810,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
