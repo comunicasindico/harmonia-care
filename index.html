@@ -614,6 +614,7 @@ async function carregarHistoricoClinico(){
 const {data,error}=await db
 .from("pacientes")
 .select(`
+id,
 nome_completo,
 data_nascimento,
 has,
@@ -626,10 +627,11 @@ outras_comorbidades,
 grau_risco
 `)
 .eq("empresa_id",EMPRESA_ID)
-.order("nome_completo");
+.order("nome_completo",{ascending:true});
 
 if(error){
 console.log(error);
+document.getElementById("historicoLista").innerHTML="<p>Erro ao carregar dados clínicos.</p>";
 return;
 }
 
@@ -652,7 +654,7 @@ let html=`
 <th>Cardiopatia</th>
 <th>Acamado</th>
 <th>Dieta</th>
-<th>Outras</th>
+<th>Outras Comorbidades</th>
 <th>Risco</th>
 </tr>
 `;
@@ -666,13 +668,14 @@ let riscoCor="";
 if(p.grau_risco==1) riscoCor="🟢";
 else if(p.grau_risco==2) riscoCor="🟡";
 else if(p.grau_risco>=3) riscoCor="🔴";
+else riscoCor="";
 
 html+=`
 <tr>
 
 <td class="nome">${p.nome_completo ?? "-"}</td>
 
-<td>${idade}</td>
+<td>${idade || ""}</td>
 
 <td>${p.has ? "✔":""}</td>
 
@@ -986,4 +989,5 @@ return idade;
 
 </body>
 </html>
+
 
