@@ -220,9 +220,39 @@ document.getElementById("selectPaciente").innerHTML=html;
 
 }
 
+async function carregarColaboradores(){
+
+const {data,error}=await db
+.from("usuarios")
+.select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
+.order("nome_completo",{ascending:true});
+
+if(error){
+console.log("Erro colaboradores:",error);
+return;
+}
+
+if(!data){
+document.getElementById("selectColaborador").innerHTML="<option>Sem usuários</option>";
+return;
+}
+
+let html="";
+
+data.forEach(u=>{
+html+=`<option value="${u.id}">${u.nome_completo}</option>`;
+});
+
+document.getElementById("selectColaborador").innerHTML=html;
+
+}
+
 async function carregarHistoricoRotinas(){
 
 const dataFiltro = document.getElementById("dataRotina")?.value;
+
+/* CONSULTA SUPABASE CORRIGIDA */
 
 let query = db
 .from("rotina_execucao")
@@ -230,21 +260,23 @@ let query = db
 id,
 status,
 data,
+created_at,
 paciente_id,
-pacientes(nome_completo),
-rotina_modelos(titulo)
+modelo_id,
+pacientes:paciente_id(nome_completo),
+rotina_modelos:modelo_id(titulo)
 `)
 .eq("empresa_id",EMPRESA_ID)
 .order("paciente_id",{ascending:true});
 
 if(dataFiltro){
-query=query.eq("data",dataFiltro);
+query = query.eq("data",dataFiltro);
 }
 
 const {data,error}=await query;
 
 if(error){
-console.error(error);
+console.error("Erro rotinas:",error);
 alert("Erro ao carregar rotinas.");
 return;
 }
@@ -256,11 +288,11 @@ return;
 
 /* AGRUPAR POR PACIENTE */
 
-let pacientes={};
+let pacientes = {};
 
 data.forEach(r=>{
 
-let pid=r.paciente_id;
+const pid = r.paciente_id ?? "sem";
 
 if(!pacientes[pid]){
 pacientes[pid]={
@@ -275,9 +307,9 @@ pacientes[pid].rotinas.push(r);
 
 /* CONTADORES */
 
-let total=data.length;
-let concluidas=data.filter(r=>r.status==="concluida").length;
-let pendentes=total-concluidas;
+const total=data.length;
+const concluidas=data.filter(r=>r.status==="concluida").length;
+const pendentes=total-concluidas;
 
 /* HEADER */
 
@@ -295,12 +327,12 @@ let html=`
 
 /* LISTAR POR PACIENTE */
 
-for(let pid in pacientes){
+for(const pid in pacientes){
 
-let p=pacientes[pid];
+const p=pacientes[pid];
 
-let totalPaciente=p.rotinas.length;
-let concluidasPaciente=p.rotinas.filter(r=>r.status==="concluida").length;
+const totalPaciente=p.rotinas.length;
+const concluidasPaciente=p.rotinas.filter(r=>r.status==="concluida").length;
 
 html+=`
 
@@ -610,9 +642,14 @@ document.getElementById("loginWrapper").style.display="none";
 document.getElementById("app").style.display="block";
 
 carregarPacientes();
+carregarColaboradores();
 carregarMapaClinico();
+
+carregarHistoricoRotinas();
 carregarHistoricoClinico();
+
 carregarGrafico();
+carregarAuditoria();
 
 }
 
@@ -649,5 +686,6 @@ iniciarSistema();
 
 </body>
 </html>
+
 
 
