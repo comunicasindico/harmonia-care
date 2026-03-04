@@ -405,6 +405,7 @@ return;
 }
 
 let html=`
+
 <h3>Quadro Clínico dos Pacientes</h3>
 
 <table class="tabela-clinica">
@@ -417,15 +418,23 @@ let html=`
 <th>DA</th>
 <th>Cardiopatia</th>
 <th>Acamado</th>
-<th>Dieta</th>
+<th>Dieta Especial</th>
 <th>Outras Comorbidades</th>
-<th>Risco</th>
+<th>Grau de Risco</th>
 </tr>
+
 `;
 
 data.forEach(p=>{
 
+let riscoCor="";
+
+if(p.grau_risco==1) riscoCor="🟢";
+else if(p.grau_risco==2) riscoCor="🟡";
+else if(p.grau_risco>=3) riscoCor="🔴";
+
 html+=`
+
 <tr>
 
 <td class="nome">${p.nome_completo ?? "-"}</td>
@@ -446,9 +455,10 @@ html+=`
 
 <td style="text-align:left">${p.outras_comorbidades ?? "-"}</td>
 
-<td>${p.grau_risco ?? "-"}</td>
+<td>${riscoCor} ${p.grau_risco ?? "-"}</td>
 
 </tr>
+
 `;
 
 });
@@ -681,6 +691,7 @@ campo.value = hoje;
 
 </body>
 </html>
+
 
 
 
