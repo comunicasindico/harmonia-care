@@ -9,154 +9,172 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-html,body{margin:0;padding:0;width:100%;min-height:100%;font-family:Arial;background:#f4f6f9}
-#app{padding:on onclick="carregarHistor20px}
-h1{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
-canvas{width:100%!important;max-width:600px;margin:20px auto;display:block}
-button{padding:8px 14px;border:0;border-radius:6px;font-weight:bold;cursor:pointer}
-.btn-executar{background:#3498db;color:#fff}
-.btn-disabled{background:#bdc3c7}
-.btn-secundario{background:#555;color:#fff}
-.timeline-item{background:#fff;padding:12px;margin-bottom:8px;border-left:4px solid #3498db;border-radius:6px}
-.dashboard-executivo{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin:20px 0}
-.card-dash{background:#fff;padding:15px;border-radius:12px;box-shadow:0 3px 10px rgba(0,0,0,.08);text-align:center}
-.layout-hospital{display:grid;grid-template-columns:300px 1fr;gap:20px}
-.col-esquerda{background:#fff;padding:15px;border-radius:12px}
-.ranking-table{width:100%;border-collapse:collapse;font-size:14px}
-.ranking-table th,.ranking-table td{padding:8px;border-bottom:1px solid #eee}
-.ranking-table th{background:#f4f6f9}
-.grafico-box{height:320px}
-#graficoInstitucional{height:260px !important}
-@media(max-width:1024px){.layout-hospital{grid-template-columns:1fr}}
-/* ================= LOGIN CENTRALIZADO MODERNO ================= */
-/* ===== CENTRALIZAÇÃO TOTAL ===== */
-/* ===== LOGIN CENTRALIZADO REAL ===== */
-
-#loginWrapper{
-position:fixed;
-top:0;
-left:0;
-width:100vw;
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-background:linear-gradient(135deg,#eef2f8,#dbe5f4);
-z-index:9999;
+body{
+margin:0;
+font-family:Arial;
+background:#f4f6f9;
 }
 
-#loginBox{
-width:600px;
-padding:60px;
-background:white;
-border-radius:22px;
-box-shadow:0 30px 70px rgba(0,0,0,0.15);
+#app{padding:30px}
+
+h1{
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+button{
+padding:10px 16px;
+border:0;
+border-radius:8px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.btn-executar{background:#3498db;color:#fff}
+.btn-secundario{background:#555;color:#fff}
+.btn-disabled{background:#bdc3c7}
+
+/* DASHBOARD */
+.dashboard-executivo{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+gap:15px;
+margin:20px 0;
+}
+
+.card-dash{
+background:#fff;
+padding:15px;
+border-radius:12px;
+box-shadow:0 3px 10px rgba(0,0,0,.08);
 text-align:center;
 }
 
-#loginBox h2{
-font-size:44px;
-margin-bottom:35px;
+/* LAYOUT PRINCIPAL */
+.layout-hospital{
+display:grid;
+grid-template-columns:1fr 1.2fr;
+gap:40px;
+align-items:start;
 }
 
-#loginBox select,
-#loginBox input{
-width:100%;
-padding:18px;
-margin-top:20px;
-font-size:22px;
+.col-esquerda{
+background:#fff;
+padding:20px;
 border-radius:12px;
+box-shadow:0 3px 10px rgba(0,0,0,.08);
+}
+
+.select-box{
+margin-bottom:25px;
+}
+
+.select-box select{
+width:100%;
+padding:10px;
+border-radius:8px;
 border:1px solid #ccc;
 }
 
-#loginBox button{
+.ranking-table{
 width:100%;
-margin-top:30px;
-padding:18px;
-font-size:22px;
-border:none;
-border-radius:14px;
-background:#3b82f6;
-color:white;
-font-weight:600;
-cursor:pointer;
-transition:.3s;
+border-collapse:collapse;
 }
 
-#loginBox button:hover{
-background:#2563eb;
+.ranking-table th,
+.ranking-table td{
+padding:8px;
+border-bottom:1px solid #eee;
 }
-    
+
+.ranking-table th{
+background:#f4f6f9;
+text-align:left;
+}
+
+.timeline-item{
+background:#fff;
+padding:12px;
+margin-bottom:8px;
+border-left:4px solid #3498db;
+border-radius:6px;
+}
+
+.section{
+margin-top:40px;
+}
+
+.grafico-box{
+margin-top:40px;
+background:#fff;
+padding:20px;
+border-radius:12px;
+box-shadow:0 3px 10px rgba(0,0,0,.08);
+}
+
+@media(max-width:1000px){
+.layout-hospital{
+grid-template-columns:1fr;
+}
+}
 </style>
 </head>
 
 <body>
 
-<div id="loginWrapper">
-  <div id="loginBox">
-<h2>🔐 Harmonia Care</h2>
-<select id="usuarioSelect"></select>
-<div id="usuarioInfo" style="margin-top:10px;font-weight:bold;"></div>
-<input id="senhaInput" type="password" placeholder="Senha" style="margin-top:15px;">
-<button onclick="login()" class="btn-executar" style="width:100%;margin-top:15px;">Entrar</button>
-</div>
-</div>
-
-<div id="app" style="display:none">
+<div id="app">
 
 <h1>
-<span id="tituloTurno">Rotinas</span>
+<span>Harmonia Care</span>
 <button onclick="logout()" class="btn-disabled">Sair</button>
 </h1>
 
+<!-- DASHBOARD -->
 <div class="dashboard-executivo">
 <div class="card-dash"><h4>👥 Pacientes</h4><span id="dashPacientes">0</span></div>
 <div class="card-dash"><h4>🚨 Críticos</h4><span id="dashCriticos">0</span></div>
 <div class="card-dash"><h4>⏳ Atrasos</h4><span id="dashAtrasos">0</span></div>
 <div class="card-dash"><h4>✅ Concluídas</h4><span id="dashConcluidas">0</span></div>
-<div class="card-dash"><h4>📊 Execução %</h4><span id="dashPercentual">0%</span></div>
-<div class="card-dash"><h4>💊 Medicações Hoje</h4><span id="dashMedicacoes">0</span></div>
 </div>
 
+<!-- SELEÇÕES + RANKING -->
 <div class="layout-hospital">
-<div class="col-esquerda">
-<h3>👥 Selecionar Paciente</h3>
-<select id="selectPaciente" style="width:100%;padding:8px;"></select>
-<button onclick="abrirPacienteSelecionado()" class="btn-executar" style="width:100%;margin-top:10px;">Abrir Histórico</button>
 
-<h3 style="margin-top:25px;">🧑‍⚕️ Colaboradores</h3>
-<div id="listaColaboradores"></div>
+<div class="col-esquerda">
+
+<div class="select-box">
+<h3>Selecionar Paciente</h3>
+<select id="selectPaciente" onchange="filtroPaciente()"></select>
+</div>
+
+<div class="select-box">
+<h3>Selecionar Colaborador</h3>
+<select id="selectColaborador" onchange="filtroColaborador()"></select>
+</div>
+
 </div>
 
 <div>
-<h3>🏥 Ranking Crítico</h3>
+
+<h3>Ranking Crítico</h3>
 <div id="rankingBox"></div>
 
-<div class="grafico-box">
-<h3>📊 Indicador Institucional</h3>
-<canvas id="graficoInstitucional"></canvas>
 </div>
 
-<div class="turnos" style="margin-top:20px;">
-<button onclick="carregarRotinas('manhã')">Manhã</button>
-<button onclick="carregarRotinas('tarde')">Tarde</button>
-<button onclick="carregarRotinas('noite')">Noite</button>
 </div>
 
-<div id="lista"></div>
-</div>
-</div>
-
-<hr style="margin:40px 0">
+<!-- HISTÓRICOS -->
+<div class="section">
 
 <h2>Históricos</h2>
 
 <div style="display:flex;gap:10px;margin-bottom:15px;">
-<button onclick="carregarHistoricoRotinas()" class="btn-secundario">📋 Rotinas</button>
-<button onclick="carregarHistoricoClinico()" class="btn-executar">🏥 Clínico</button>
+<button onclick="carregarHistoricoRotinas()" class="btn-secundario">Rotinas</button>
+<button onclick="carregarHistoricoClinico()" class="btn-executar">Clínico</button>
 </div>
 
-<div id="filtroRotinas" style="margin-bottom:15px;">
+<div style="display:flex;gap:10px;margin-bottom:20px;">
 <input type="date" id="histInicio">
 <input type="date" id="histFim">
 <button onclick="carregarHistoricoRotinas()" class="btn-executar">Filtrar</button>
@@ -166,265 +184,186 @@ background:#2563eb;
 
 </div>
 
+<!-- GRÁFICO -->
+<div class="grafico-box">
+<h3>Indicador Institucional</h3>
+<canvas id="graficoInstitucional"></canvas>
+</div>
+
+</div>
+
 <script>
+
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 
-let user=null;
 let graficoInstitucional=null;
 
-async function logout(){
-await db.auth.signOut();
-app.style.display="none";
-loginWrapper.style.display="flex";
-}
-
-async function carregarUsuariosLogin(){
-const {data}=await db.from("vw_usuarios").select("*").order("hierarquia");
-let html=`<option value="">Selecione...</option>`;
-data?.forEach(u=>{
-if(u.ativo) html+=`<option value="${u.id}" data-email="${u.email}" data-cargo="${u.cargo}">${u.nome_completo}</option>`;
-});
-usuarioSelect.innerHTML=html;
-}
-
-usuarioSelect.onchange=function(){
-let s=this.options[this.selectedIndex];
-usuarioInfo.innerHTML=s.value?`Cargo: ${s.dataset.cargo}`:"";
-};
-
-async function login(){
-let s=usuarioSelect.options[usuarioSelect.selectedIndex];
-if(!s.value||!senhaInput.value)return alert("Preencha login.");
-const {data,error}=await db.auth.signInWithPassword({email:s.dataset.email,password:senhaInput.value});
-if(error)return alert("Senha incorreta.");
-user=data.user;
-loginWrapper.style.display="none";
-app.style.display="block";
-iniciarApp();
-}
-
-function iniciarApp(){
-carregarDashboard();
-carregarPacientes();
-carregarColaboradores();
-carregarRotinas("manhã");
-carregarRankingCriticos();
-carregarGraficoInstitucional();
-carregarHistoricoClinico();
-}
+/* ================= PACIENTES ================= */
 
 async function carregarPacientes(){
-const {data}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID);
-let html=`<option value="">Selecione...</option>`;
-data?.forEach(p=>html+=`<option value="${p.id}">${p.nome_completo}</option>`);
+const {data}=await db.from("pacientes")
+.select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
+.order("nome_completo");
+
+let html=`<option value="todos">Todos os pacientes</option>`;
+data?.forEach(p=>{
+html+=`<option value="${p.id}">${p.nome_completo}</option>`;
+});
 selectPaciente.innerHTML=html;
 }
 
-async function abrirPacienteSelecionado(){
-let id=selectPaciente.value;
-if(!id)return alert("Selecione paciente.");
-carregarHistoricoPaciente(id);
+/* ================= COLABORADORES ================= */
+
+async function carregarColaboradores(){
+const {data}=await db.from("vw_usuarios")
+.select("id,nome_completo")
+.order("nome_completo");
+
+let html=`<option value="todos">Todos os colaboradores</option>`;
+data?.forEach(c=>{
+html+=`<option value="${c.id}">${c.nome_completo}</option>`;
+});
+selectColaborador.innerHTML=html;
 }
 
-async function carregarHistoricoPaciente(id){
-const {data}=await db.from("historico_rotinas").select("*").eq("paciente_id",id).order("data",{ascending:false});
-let html="<h3>Histórico do Paciente</h3>";
-data?.forEach(h=>{
-html+=`<div class="timeline-item"><strong>${h.data}</strong> - ${h.titulo} (${h.status})</div>`;
-});
-historicoLista.innerHTML=html;
+/* ================= FILTROS ================= */
+
+function filtroPaciente(){
+carregarHistoricoRotinas();
 }
+
+function filtroColaborador(){
+carregarHistoricoRotinas();
+}
+
+/* ================= HISTÓRICO ROTINAS ================= */
 
 async function carregarHistoricoRotinas(){
 
-let inicio = document.getElementById("histInicio").value;
-let fim = document.getElementById("histFim").value;
+let inicio = histInicio.value;
+let fim = histFim.value;
+let paciente = selectPaciente.value;
 
-if(!inicio){
-inicio = new Date().toISOString().split("T")[0];
-document.getElementById("histInicio").value = inicio;
-}
-
-if(!fim){
-fim = inicio;
-document.getElementById("histFim").value = fim;
-}
-
-/* 1️⃣ Buscar todos pacientes */
-const { data: pacientes } = await db
-.from("pacientes")
-.select("id,nome_completo")
-.eq("ativo", true)
-.order("nome_completo",{ascending:true});
-
-/* 2️⃣ Buscar execuções no período */
-const { data: execucoes } = await db
-.from("rotina_execucao")
+let query = db.from("rotina_execucao")
 .select(`
-    data,
-    status,
-    pacientes ( id, nome_completo ),
-    rotina_modelos ( titulo )
+data,
+status,
+paciente_id,
+pacientes (nome_completo),
+rotina_modelos (titulo)
 `)
 .gte("data", inicio)
 .lte("data", fim);
 
-/* Mapear execuções */
-let mapa = {};
-
-execucoes?.forEach(r=>{
-if(!mapa[r.data]) mapa[r.data] = {};
-if(!mapa[r.data][r.paciente_id]) mapa[r.data][r.paciente_id] = {};
-mapa[r.data][r.paciente_id][r.rotina_modelos?.titulo] =
-r.status === "concluida" ? "✔" : "✖";
-});
-
-/* Rotinas padrão */
-const rotinas = [
-"Banho",
-"Troca de Fraldas",
-"Tomar Água",
-"Almoço",
-"Lanche",
-"Jantar",
-"Troca de Fraldas (Noite)"
-];
-
-let html = `<h3>Rotinas de ${inicio} até ${fim}</h3>`;
-
-Object.keys(mapa).forEach(dataDia=>{
-
-html += `
-<h4>${dataDia}</h4>
-<table class="ranking-table">
-<thead>
-<tr>
-<th>Paciente</th>
-${rotinas.map(r=>`<th>${r}</th>`).join("")}
-</tr>
-</thead>
-<tbody>
-`;
-
-pacientes?.forEach(p=>{
-
-let exec = mapa[dataDia]?.[p.id] || {};
-
-html += `
-<tr>
-<td>${p.nome_completo}</td>
-${rotinas.map(r=>`<td>${exec[r] || ""}</td>`).join("")}
-</tr>
-`;
-
-});
-
-html += "</tbody></table><br>";
-
-});
-
-if(!execucoes || execucoes.length === 0){
-html += "<p>Nenhuma rotina encontrada neste período.</p>";
+if(paciente !== "todos"){
+query=query.eq("paciente_id",paciente);
 }
 
-document.getElementById("historicoLista").innerHTML = html;
+const {data}=await query.order("data",{ascending:false});
+
+let html="";
+
+if(!data || data.length===0){
+historicoLista.innerHTML="<p>Nenhuma rotina encontrada.</p>";
+return;
 }
 
-
-    
-async function carregarHistoricoClinico(){
-const {data}=await db.from("vw_historico_geral").select("*").order("nome_completo");
-let html=`<table class="ranking-table"><thead>
-<tr><th>Nome</th><th>Idade</th><th>HAS</th><th>DM</th><th>D.A</th><th>Cardio</th><th>Acamado</th><th>Dieta</th><th>Pressão</th><th>Outros</th></tr>
-</thead><tbody>`;
-data?.forEach(p=>{
-html+=`<tr>
-<td>${p.nome_completo}</td>
-<td>${p.idade||""}</td>
-<td>${p.has?"✔":""}</td>
-<td>${p.dm?"✔":""}</td>
-<td>${p.da?"✔":""}</td>
-<td>${p.cardiopatia?"✔":""}</td>
-<td>${p.acamado?"✔":""}</td>
-<td>${p.dieta||""}</td>
-<td>${p.pressao_arterial||""}</td>
-<td>${p.outros||""}</td>
-</tr>`;
+data.forEach(r=>{
+html+=`
+<div class="timeline-item">
+<strong>${r.data}</strong> -
+${r.pacientes?.nome_completo} -
+${r.rotina_modelos?.titulo}
+(${r.status})
+</div>`;
 });
-html+="</tbody></table>";
+
 historicoLista.innerHTML=html;
 }
 
-async function carregarColaboradores(){
-const {data}=await db.from("vw_usuarios").select("nome_completo,cargo").order("hierarquia");
-let html="";
-data?.forEach(u=>html+=`<div class="item-colaborador">${u.nome_completo} - <strong>${u.cargo}</strong></div>`);
-listaColaboradores.innerHTML=html;
+/* ================= HISTÓRICO CLÍNICO ================= */
+
+async function carregarHistoricoClinico(){
+const {data}=await db.from("vw_historico_geral")
+.select("*")
+.order("nome_completo");
+
+let html="<table class='ranking-table'><tr><th>Nome</th><th>Idade</th></tr>";
+
+data?.forEach(p=>{
+html+=`<tr><td>${p.nome_completo}</td><td>${p.idade||""}</td></tr>`;
+});
+
+html+="</table>";
+
+historicoLista.innerHTML=html;
 }
 
-async function carregarDashboard(){
-const {data}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:"manhã"});
-let pacientes=new Set(),criticos=0,atrasos=0,concluidas=0;
-data?.forEach(r=>{
-pacientes.add(r.paciente_id);
-if(r.risco==="critico")criticos++;
-if(r.status==="atrasado")atrasos++;
-if(r.status==="concluida")concluidas++;
-});
-dashPacientes.innerText=pacientes.size;
-dashCriticos.innerText=criticos;
-dashAtrasos.innerText=atrasos;
-dashConcluidas.innerText=concluidas;
-dashPercentual.innerText=data?.length?Math.round((concluidas/data.length)*100)+"%":"0%";
-dashMedicacoes.innerText=data?.length||0;
-}
+/* ================= RANKING ================= */
 
 async function carregarRankingCriticos(){
-const {data}=await db.from("ranking_pacientes_criticos").select("*").order("score_clinico",{ascending:false}).limit(10);
-let html=`<table class="ranking-table"><thead><tr><th>#</th><th>Nome</th><th>Score</th><th>Atrasos</th></tr></thead><tbody>`;
-data?.forEach((p,i)=>html+=`<tr><td>${i+1}</td><td>${p.nome_completo}</td><td>${p.score_clinico}</td><td>${p.total_atrasos}</td></tr>`);
-html+="</tbody></table>";
+const {data}=await db.from("ranking_pacientes_criticos")
+.select("*")
+.order("score_clinico",{ascending:false})
+.limit(10);
+
+let html="<table class='ranking-table'><tr><th>#</th><th>Nome</th><th>Score</th><th>Atrasos</th></tr>";
+
+data?.forEach((p,i)=>{
+html+=`<tr>
+<td>${i+1}</td>
+<td>${p.nome_completo}</td>
+<td>${p.score_clinico}</td>
+<td>${p.total_atrasos}</td>
+</tr>`;
+});
+
+html+="</table>";
 rankingBox.innerHTML=html;
 }
 
-async function carregarRotinas(turno){
-const {data}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:turno});
-lista.innerHTML="";
-data?.forEach(r=>{
-lista.innerHTML+=`<div class="timeline-item">${r.horario_execucao||"--:--"} - ${r.rotina_modelos?.titulo} (${r.paciente_nome})</div>`;
-});
-}
+/* ================= GRÁFICO ================= */
 
-async function carregarGraficoInstitucional(){
+async function carregarGrafico(){
 if(graficoInstitucional){graficoInstitucional.destroy();}
-const {data}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:"manhã"});
+
+const {data}=await db.from("rotina_execucao")
+.select("status");
+
 let c=0,p=0,a=0;
 data?.forEach(r=>{
 if(r.status==="concluida")c++;
 else if(r.status==="pendente")p++;
 else a++;
 });
-graficoInstitucional=new Chart(document.getElementById("graficoInstitucional"),{
+
+graficoInstitucional=new Chart(
+document.getElementById("graficoInstitucional"),
+{
 type:"bar",
-data:{labels:["Concluídas","Pendentes","Atrasadas"],datasets:[{data:[c,p,a],backgroundColor:["#2ecc71","#e74c3c","#f39c12"]}]},
-options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}}}
+data:{
+labels:["Concluídas","Pendentes","Atrasadas"],
+datasets:[{
+data:[c,p,a],
+backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
+}]
+},
+options:{responsive:true,maintainAspectRatio:false}
 });
 }
 
-carregarUsuariosLogin();
+/* ================= INIT ================= */
+
+carregarPacientes();
+carregarColaboradores();
+carregarRankingCriticos();
+carregarGrafico();
+
 </script>
+
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
