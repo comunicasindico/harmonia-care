@@ -230,12 +230,12 @@ let query = db
 id,
 status,
 data,
-pacientes:paciente_id(nome_completo),
-rotina_modelos:modelo_id(titulo),
-executado_por
+paciente_id,
+pacientes(nome_completo),
+rotina_modelos(titulo)
 `)
 .eq("empresa_id",EMPRESA_ID)
-.order("data",{ascending:false});
+.order("paciente_id",{ascending:true});
 
 if(dataFiltro){
 query=query.eq("data",dataFiltro);
@@ -254,27 +254,85 @@ document.getElementById("historicoLista").innerHTML="<p>Nenhuma rotina registrad
 return;
 }
 
+/* AGRUPAR POR PACIENTE */
+
+let pacientes={};
+
+data.forEach(r=>{
+
+let pid=r.paciente_id;
+
+if(!pacientes[pid]){
+pacientes[pid]={
+nome:r.pacientes?.nome_completo ?? "Paciente",
+rotinas:[]
+};
+}
+
+pacientes[pid].rotinas.push(r);
+
+});
+
+/* CONTADORES */
+
+let total=data.length;
+let concluidas=data.filter(r=>r.status==="concluida").length;
+let pendentes=total-concluidas;
+
+/* HEADER */
+
 let html=`
+
+<div style="margin-bottom:15px;font-size:14px">
+
+<b>Total de Rotinas:</b> ${total} &nbsp;&nbsp;
+<b>✔ Concluídas:</b> ${concluidas} &nbsp;&nbsp;
+<b>⏳ Pendentes:</b> ${pendentes}
+
+</div>
+
+`;
+
+/* LISTAR POR PACIENTE */
+
+for(let pid in pacientes){
+
+let p=pacientes[pid];
+
+let totalPaciente=p.rotinas.length;
+let concluidasPaciente=p.rotinas.filter(r=>r.status==="concluida").length;
+
+html+=`
+
+<div class="box" style="margin-bottom:15px">
+
+<h3>
+${p.nome}
+<span style="font-size:12px;color:#888">
+(${concluidasPaciente}/${totalPaciente} concluídas)
+</span>
+</h3>
+
 <table class="tabela-clinica">
 
 <tr>
-<th>Paciente</th>
 <th>Rotina</th>
 <th>Status</th>
 <th>Ação</th>
 </tr>
+
 `;
 
-data.forEach(r=>{
+p.rotinas.forEach(r=>{
 
 let status="";
 let botao="";
 
 if(r.status==="concluida"){
+
 status="✔ Concluída";
-botao="";
-}
-else{
+
+}else{
 
 status="⏳ Pendente";
 
@@ -288,13 +346,10 @@ Concluir
 }
 
 html+=`
+
 <tr>
 
-<td class="nome">
-${r.pacientes?.nome_completo ?? "-"}
-</td>
-
-<td>
+<td style="text-align:left">
 ${r.rotina_modelos?.titulo ?? "-"}
 </td>
 
@@ -307,11 +362,17 @@ ${botao}
 </td>
 
 </tr>
+
 `;
 
 });
 
-html+="</table>";
+html+=`
+</table>
+</div>
+`;
+
+}
 
 document.getElementById("historicoLista").innerHTML=html;
 
@@ -340,7 +401,6 @@ carregarHistoricoRotinas();
 carregarGrafico();
 
 }
-
 /* HISTORICO CLINICO */
 
 async function carregarHistoricoClinico(){
@@ -589,4 +649,5 @@ iniciarSistema();
 
 </body>
 </html>
+
 
