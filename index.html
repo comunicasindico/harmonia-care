@@ -36,29 +36,29 @@ cursor:pointer;
 .btn-secundario{background:#555;color:#fff}
 .btn-danger{background:#e74c3c;color:#fff}
 
-/* STATUS CORES */
 .status-concluida{
 background:#e8f8f0;
 border-left:5px solid #2ecc71;
 }
+
 .status-pendente{
 background:#fdecea;
 border-left:5px solid #e74c3c;
 }
+
 .status-atrasado{
 background:#fff4e5;
 border-left:5px solid #f39c12;
 }
 
-/* LAYOUT */
-.layout-hospital{
+.layout{
 display:grid;
-grid-template-columns:1fr 1.2fr;
+grid-template-columns:1fr 1fr;
 gap:40px;
 margin-bottom:40px;
 }
 
-.col-esquerda{
+.box{
 background:#fff;
 padding:20px;
 border-radius:12px;
@@ -71,29 +71,14 @@ margin-bottom:8px;
 border-radius:6px;
 }
 
-.ranking-table{
-width:100%;
-border-collapse:collapse;
-}
-
-.ranking-table th,
-.ranking-table td{
-padding:8px;
-border-bottom:1px solid #eee;
-}
-
-.search-box{
-margin-bottom:15px;
-}
-
 .search-box input{
 width:100%;
 padding:10px;
 border-radius:8px;
 border:1px solid #ccc;
+margin-bottom:10px;
 }
 
-/* GRÁFICO */
 .grafico-container{
 margin-top:60px;
 display:flex;
@@ -112,14 +97,8 @@ box-shadow:0 4px 15px rgba(0,0,0,.08);
 }
 
 #graficoInstitucional{
-width:100% !important;
-height:100% !important;
-}
-
-@media(max-width:1000px){
-.layout-hospital{
-grid-template-columns:1fr;
-}
+width:100%!important;
+height:100%!important;
 }
 </style>
 </head>
@@ -130,24 +109,19 @@ grid-template-columns:1fr;
 
 <h1>
 <span>Harmonia Care</span>
-<button class="btn-danger">Sair</button>
+<button onclick="logout()" class="btn-danger">Sair</button>
 </h1>
 
-<div class="layout-hospital">
+<div class="layout">
 
-<div class="col-esquerda">
-
+<div class="box">
 <h3>Selecionar Paciente</h3>
 <select id="selectPaciente" onchange="carregarHistoricoRotinas()"></select>
-
-<h3 style="margin-top:25px;">Selecionar Colaborador</h3>
-<select id="selectColaborador" onchange="carregarHistoricoRotinas()"></select>
-
 </div>
 
-<div>
-<h3>Ranking Crítico</h3>
-<div id="rankingBox"></div>
+<div class="box">
+<h3>Selecionar Colaborador</h3>
+<select id="selectColaborador"></select>
 </div>
 
 </div>
@@ -174,7 +148,6 @@ grid-template-columns:1fr;
 
 <div id="historicoLista"></div>
 
-<!-- GRÁFICO FINAL CENTRALIZADO -->
 <div class="grafico-container">
 <h3>Indicador Institucional</h3>
 <div class="grafico-wrapper">
@@ -185,6 +158,7 @@ grid-template-columns:1fr;
 </div>
 
 <script>
+
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -192,6 +166,18 @@ const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 
 let dadosAtuais=[];
 let graficoInstitucional=null;
+
+/* LOGOUT */
+function logout(){
+alert("Logout executado.");
+}
+
+/* DATAS PADRÃO */
+function definirDataHoje(){
+const hoje=new Date().toISOString().split("T")[0];
+histInicio.value=hoje;
+histFim.value=hoje;
+}
 
 /* PACIENTES */
 async function carregarPacientes(){
@@ -234,7 +220,7 @@ rotina_modelos (titulo)
 .gte("data", inicio)
 .lte("data", fim);
 
-if(paciente !== "todos"){
+if(paciente!=="todos"){
 query=query.eq("paciente_id",paciente);
 }
 
@@ -245,10 +231,32 @@ dadosAtuais=data||[];
 renderizarLista(dadosAtuais);
 }
 
+/* HISTÓRICO CLÍNICO */
+async function carregarHistoricoClinico(){
+
+const {data}=await db.from("vw_historico_geral")
+.select("*")
+.order("nome_completo");
+
+let html="<table width='100%' border='0' cellspacing='0'>";
+html+="<tr><th>Nome</th><th>Idade</th></tr>";
+
+data?.forEach(p=>{
+html+=`<tr>
+<td>${p.nome_completo}</td>
+<td>${p.idade||""}</td>
+</tr>`;
+});
+
+html+="</table>";
+
+historicoLista.innerHTML=html;
+}
+
 /* RENDER */
 function renderizarLista(lista){
 
-if(!lista || lista.length===0){
+if(!lista.length){
 historicoLista.innerHTML="<p>Nenhuma rotina encontrada.</p>";
 return;
 }
@@ -256,6 +264,7 @@ return;
 let html="";
 
 lista.forEach(r=>{
+
 let classe="";
 if(r.status==="concluida") classe="status-concluida";
 else if(r.status==="pendente") classe="status-pendente";
@@ -275,21 +284,19 @@ historicoLista.innerHTML=html;
 
 /* BUSCA */
 function filtrarBusca(){
-let termo = buscaDinamica.value.toLowerCase();
-
-let filtrado = dadosAtuais.filter(r =>
+let termo=buscaDinamica.value.toLowerCase();
+let filtrado=dadosAtuais.filter(r=>
 r.pacientes?.nome_completo.toLowerCase().includes(termo) ||
 r.rotina_modelos?.titulo.toLowerCase().includes(termo)
 );
-
 renderizarLista(filtrado);
 }
 
 /* PDF */
-async function exportarPDF(){
+function exportarPDF(){
 if(!dadosAtuais.length){alert("Sem dados.");return;}
 const { jsPDF } = window.jspdf;
-const doc = new jsPDF();
+const doc=new jsPDF();
 doc.text("Relatório Harmonia Care",20,20);
 let y=30;
 dadosAtuais.forEach(r=>{
@@ -297,10 +304,10 @@ doc.text(`${r.data} - ${r.pacientes?.nome_completo} - ${r.rotina_modelos?.titulo
 y+=8;
 if(y>270){doc.addPage();y=20;}
 });
-doc.save("relatorio_harmonia.pdf");
+doc.save("relatorio.pdf");
 }
 
-/* GRÁFICO CORRIGIDO */
+/* GRÁFICO */
 async function carregarGrafico(){
 
 if(graficoInstitucional){
@@ -325,8 +332,7 @@ data:{
 labels:["Concluídas","Pendentes","Atrasadas"],
 datasets:[{
 data:[c,p,a],
-backgroundColor:["#2ecc71","#e74c3c","#f39c12"],
-borderRadius:6
+backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
 }]
 },
 options:{
@@ -340,9 +346,12 @@ scales:{y:{beginAtZero:true}}
 }
 
 /* INIT */
+definirDataHoje();
 carregarPacientes();
 carregarColaboradores();
 carregarGrafico();
+carregarHistoricoRotinas();
+
 </script>
 
 </body>
