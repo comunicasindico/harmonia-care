@@ -236,27 +236,73 @@ document.getElementById("prontuarioPaciente").innerHTML=html;
 
 async function carregarHistoricoRotinas(){
 
-const {data,error}=await db
-.from("rotinas")
-.select("*")
-.eq("empresa_id",EMPRESA_ID)
-.order("created_at",{ascending:false});
+const { data, error } = await db
+.from("rotina_execucao")
+.select(`
+id,
+status,
+created_at,
+pacientes(nome_completo),
+rotina_modelos(titulo),
+usuarios(nome_completo)
+`)
+.eq("empresa_id", EMPRESA_ID)
+.order("created_at", { ascending:false });
 
-if(error){console.log(error);return;}
+if(error){
+console.error(error);
+alert("Erro ao carregar histórico de rotinas.");
+return;
+}
 
-let html="<table width='100%'><tr><th>Paciente</th><th>Rotina</th><th>Data</th></tr>";
+if(!data || data.length===0){
+document.getElementById("historicoLista").innerHTML =
+"<p>Nenhuma rotina registrada.</p>";
+return;
+}
+
+let html = `
+<table width="100%">
+<tr>
+<th>Paciente</th>
+<th>Rotina</th>
+<th>Status</th>
+<th>Executado por</th>
+<th>Data</th>
+<th>Ação</th>
+</tr>
+`;
 
 data.forEach(r=>{
-html+=`<tr>
-<td>${r.paciente_nome ?? "-"}</td>
-<td>${r.rotina_nome ?? "-"}</td>
+
+let status="";
+let botao="";
+
+if(r.status==="concluida"){
+status="✔ Concluída";
+botao="";
+}
+else{
+status="⏳ Pendente";
+botao=`<button class="btn-primary" onclick="concluirRotina('${r.id}')">Concluir</button>`;
+}
+
+html += `
+<tr>
+<td>${r.pacientes?.nome_completo || "-"}</td>
+<td>${r.rotina_modelos?.titulo || "-"}</td>
+<td>${status}</td>
+<td>${r.usuarios?.nome_completo || "-"}</td>
 <td>${new Date(r.created_at).toLocaleString()}</td>
-</tr>`;
+<td>${botao}</td>
+</tr>
+`;
+
 });
 
-html+="</table>";
+html += "</table>";
 
-document.getElementById("historicoLista").innerHTML=html;
+document.getElementById("historicoLista").innerHTML = html;
 
 }
 
@@ -402,7 +448,28 @@ iniciarSistema();
 
 };
 
+async function concluirRotina(id){
+
+const {error} = await db
+.from("rotina_execucao")
+.update({
+status:"concluida"
+})
+.eq("id",id);
+
+if(error){
+alert("Erro ao concluir rotina.");
+console.error(error);
+return;
+}
+
+carregarHistoricoRotinas();
+carregarGrafico();
+
+}
+  
 </script>
 
 </body>
 </html>
+
