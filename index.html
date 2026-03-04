@@ -229,7 +229,6 @@ historicoLista.innerHTML=html;
 
 async function carregarHistoricoRotinas(){
 
-/* Se não escolher data, usa hoje */
 let dataSelecionada = document.getElementById("histInicio").value;
 
 if(!dataSelecionada){
@@ -237,7 +236,6 @@ dataSelecionada = new Date().toISOString().split("T")[0];
 document.getElementById("histInicio").value = dataSelecionada;
 }
 
-/* Buscar todas execuções do dia com nome do paciente */
 const { data, error } = await db
 .from("rotina_execucao")
 .select(`
@@ -256,7 +254,12 @@ console.error(error);
 return;
 }
 
-/* Rotinas padrão */
+if(!data || data.length === 0){
+document.getElementById("historicoLista").innerHTML =
+"<p>Nenhuma rotina encontrada para este dia.</p>";
+return;
+}
+
 const rotinasPadrao = [
 "Banho",
 "Troca de Fraldas",
@@ -267,13 +270,11 @@ const rotinasPadrao = [
 "Troca de Fraldas (Noite)"
 ];
 
-/* Organizar por paciente */
 let pacientes = {};
 
-data?.forEach(r=>{
+data.forEach(r=>{
 
 let nome = r.pacientes?.nome_completo;
-
 if(!nome) return;
 
 if(!pacientes[nome]){
@@ -293,7 +294,6 @@ r.status === "concluida"
 
 });
 
-/* Montar tabela */
 let html = `
 <h3>Rotinas do Dia: ${dataSelecionada}</h3>
 <table class="ranking-table">
@@ -337,7 +337,6 @@ html += "</tbody></table>";
 
 document.getElementById("historicoLista").innerHTML = html;
 }
-
 async function carregarHistoricoClinico(){
 const {data}=await db.from("vw_historico_geral").select("*").order("nome_completo");
 let html=`<table class="ranking-table"><thead>
@@ -421,6 +420,7 @@ carregarUsuariosLogin();
 </script>
 </body>
 </html>
+
 
 
 
