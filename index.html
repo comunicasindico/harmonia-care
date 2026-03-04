@@ -55,7 +55,63 @@ height:100%!important;
 
 <body>
 
-<div id="app">
+<!-- LOGIN -->
+<div id="loginWrapper" style="
+position:fixed;
+inset:0;
+background:#f4f6f9;
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:9999;
+">
+
+  <div style="
+  width:350px;
+  background:#fff;
+  padding:30px;
+  border-radius:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.15);
+  text-align:center;
+  ">
+
+    <h2>🔐 Harmonia Care</h2>
+
+    <input 
+      type="password" 
+      id="loginSenha"
+      placeholder="Digite a senha"
+      style="
+      width:100%;
+      padding:12px;
+      margin-top:20px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      "
+    >
+
+    <button 
+      onclick="login()" 
+      style="
+      margin-top:20px;
+      width:100%;
+      padding:12px;
+      border:0;
+      border-radius:8px;
+      background:#3498db;
+      color:#fff;
+      font-weight:bold;
+      cursor:pointer;
+      "
+    >
+      Entrar
+    </button>
+
+  </div>
+</div>
+
+  
+<div id="app" style="display:none;">
 
 <h1>
 <span>Harmonia Care</span>
@@ -329,9 +385,45 @@ carregarPacientes();
 carregarColaboradores();
 carregarGrafico();
 carregarHistoricoRotinas();
+/* ================= LOGIN ================= */
 
+const SENHA_PADRAO = "12345678"; // altere para sua senha real
+
+function login(){
+  const senha = document.getElementById("loginSenha").value;
+
+  if(senha === SENHA_PADRAO){
+
+    localStorage.setItem("HARMONIA_SESSION","ativa");
+
+    document.getElementById("loginWrapper").style.display="none";
+    document.getElementById("app").style.display="block";
+
+  } else {
+    alert("Senha incorreta.");
+  }
+}
+
+function logout(){
+
+  localStorage.removeItem("HARMONIA_SESSION");
+
+  document.getElementById("app").style.display="none";
+  document.getElementById("loginWrapper").style.display="flex";
+}
+
+/* Verifica sessão ao abrir */
+window.onload = function(){
+
+  if(localStorage.getItem("HARMONIA_SESSION")==="ativa"){
+    document.getElementById("loginWrapper").style.display="none";
+    document.getElementById("app").style.display="block";
+  }
+
+};
 </script>
 
 </body>
 </html>
+
 
