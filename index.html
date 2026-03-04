@@ -612,8 +612,19 @@ document.getElementById("historicoLista").innerHTML = html;
 async function carregarHistoricoClinico(){
 
 const {data,error}=await db
-.from("vw_historico_geral")
-.select("*")
+.from("pacientes")
+.select(`
+nome_completo,
+idade,
+has,
+dm,
+da,
+cardiopatia,
+acamado,
+dieta_especial,
+outras_comorbidades,
+grau_risco
+`)
 .eq("empresa_id",EMPRESA_ID)
 .order("nome_completo");
 
@@ -628,7 +639,6 @@ return;
 }
 
 let html=`
-
 <h3>Quadro Clínico dos Pacientes</h3>
 
 <table class="tabela-clinica">
@@ -645,7 +655,6 @@ let html=`
 <th>Outras Comorbidades</th>
 <th>Grau de Risco</th>
 </tr>
-
 `;
 
 data.forEach(p=>{
@@ -657,7 +666,6 @@ else if(p.grau_risco==2) riscoCor="🟡";
 else if(p.grau_risco>=3) riscoCor="🔴";
 
 html+=`
-
 <tr>
 
 <td class="nome">${p.nome_completo ?? "-"}</td>
@@ -681,7 +689,6 @@ html+=`
 <td>${riscoCor} ${p.grau_risco ?? "-"}</td>
 
 </tr>
-
 `;
 
 });
@@ -958,6 +965,7 @@ campo.value = hoje;
 
 </body>
 </html>
+
 
 
 
