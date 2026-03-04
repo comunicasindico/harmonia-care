@@ -252,20 +252,6 @@ document.getElementById("selectColaborador").innerHTML=html;
 
 }
 
-async function gerarRotinasManual(){
-
-if(!confirm("Deseja gerar as rotinas do dia para todos os pacientes?")){
-return;
-}
-
-await gerarRotinasDoDia();
-
-alert("Rotinas do dia geradas.");
-
-carregarHistoricoRotinas();
-carregarGrafico();
-
-}
 
 async function gerarRotinasDoDia(){
 
@@ -273,31 +259,30 @@ const hoje = new Date().toISOString().split("T")[0];
 
 /* PACIENTES */
 
-const {data:pacientes}=await db
+const {data:pacientes} = await db
 .from("pacientes")
 .select("id")
 .eq("empresa_id",EMPRESA_ID);
 
-/* MODELOS DE ROTINA */
+/* MODELOS */
 
-const {data:modelos}=await db
+const {data:modelos} = await db
 .from("rotina_modelos")
 .select("id");
 
-/* VERIFICAR SE JÁ EXISTE */
+/* VERIFICAR SE JÁ EXISTEM */
 
-const {data:existente}=await db
+const {data:existente} = await db
 .from("rotina_execucao")
 .select("id")
 .eq("empresa_id",EMPRESA_ID)
 .eq("data",hoje);
 
 if(existente && existente.length>0){
-console.log("Rotinas já existem para hoje.");
 return;
 }
 
-/* CRIAR ROTINAS */
+/* CRIAR */
 
 let inserts=[];
 
@@ -328,6 +313,9 @@ await db
 }
 
 }
+
+
+  
 async function carregarHistoricoRotinas(){
 
 const dataFiltro = document.getElementById("dataRotina")?.value;
@@ -796,10 +784,31 @@ await iniciarSistema();
 
 });
 
+
+async function gerarRotinasManual(){
+
+try{
+
+await gerarRotinasDoDia();
+
+alert("Rotinas do dia geradas com sucesso.");
+
+carregarHistoricoRotinas();
+
+}catch(e){
+
+console.error(e);
+alert("Erro ao gerar rotinas.");
+
+}
+
+}
+
 </script>
 
 </body>
 </html>
+
 
 
 
