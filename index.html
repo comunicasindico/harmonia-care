@@ -427,15 +427,18 @@ status:"pendente"
 
 /* INSERIR */
 
-const {error:e3}=await db
+const {error}=await db
 .from("rotina_execucao")
-.insert(inserts);
+.insert(inserts)
+.select();
 
-if(e3){
-console.error("Erro inserir rotinas:",e3);
-alert("Erro ao gerar rotinas.");
+if(error){
+console.error(error);
+alert("Erro ao gerar rotinas");
 return;
 }
+
+await carregarTabelaRotinas();
 
 console.log("Rotinas criadas:",inserts.length);
 
@@ -1029,6 +1032,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
