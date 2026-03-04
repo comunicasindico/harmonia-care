@@ -443,11 +443,6 @@ const {error}=await db
 .update(payload)
 .eq("id",id);
 
-const {error}=await db
-.from("pacientes")
-.update(payload)
-.eq("id",id);
-
 await db.from("logs_clinicos").insert({
 empresa_id:EMPRESA_ID,
 paciente_id:id,
@@ -766,6 +761,7 @@ let html=`
 <div class="card-mapa">
 <b>Dieta</b>
 <span>${dieta}</span>
+</div>
 
 <div class="alerta-enfermagem">
 
@@ -806,6 +802,10 @@ if(r.status==="concluida")c++;
 else if(r.status==="pendente")p++;
 else a++;
 });
+
+if(graficoInstitucional){
+graficoInstitucional.destroy();
+}
 
 graficoInstitucional=new Chart(
 document.getElementById("graficoInstitucional"),
@@ -948,6 +948,7 @@ campo.value = hoje;
 
 </body>
 </html>
+
 
 
 
