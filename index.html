@@ -259,40 +259,20 @@ async function gerarRotinasDoDia(){
 
 const hoje = new Date().toISOString().split("T")[0];
 
-/* BUSCAR PACIENTES */
+/* PACIENTES */
 
-const {data:pacientes,error:erroPac}=await db
+const {data:pacientes}=await db
 .from("pacientes")
 .select("id")
 .eq("empresa_id",EMPRESA_ID);
 
-if(erroPac){
-console.log("Erro pacientes:",erroPac);
-return;
-}
+/* MODELOS */
 
-if(!pacientes || pacientes.length===0){
-console.log("Nenhum paciente encontrado");
-return;
-}
-
-/* BUSCAR MODELOS */
-
-const {data:modelos,error:erroMod}=await db
+const {data:modelos}=await db
 .from("rotina_modelos")
 .select("id");
 
-if(erroMod){
-console.log("Erro modelos:",erroMod);
-return;
-}
-
-if(!modelos || modelos.length===0){
-console.log("Nenhum modelo de rotina cadastrado");
-return;
-}
-
-/* VERIFICAR SE JÁ EXISTE */
+/* VERIFICAR EXISTENTE */
 
 const {data:existente}=await db
 .from("rotina_execucao")
@@ -301,22 +281,21 @@ const {data:existente}=await db
 .eq("data",hoje);
 
 if(existente && existente.length>0){
-console.log("Rotinas já geradas hoje");
 return;
 }
 
-/* GERAR ROTINAS */
+/* GERAR */
 
 let inserts=[];
 
-pacientes.forEach(p=>{
+pacientes?.forEach(p=>{
 
-modelos.forEach(m=>{
+modelos?.forEach(m=>{
 
 inserts.push({
 empresa_id:EMPRESA_ID,
 paciente_id:p.id,
-modelo_id:m.id,
+rotina_modelo_id:m.id,
 data:hoje,
 status:"pendente",
 created_at:new Date()
@@ -328,15 +307,9 @@ created_at:new Date()
 
 /* INSERIR */
 
-const {error:erroInsert}=await db
+await db
 .from("rotina_execucao")
 .insert(inserts);
-
-if(erroInsert){
-console.log("Erro inserir rotinas:",erroInsert);
-}else{
-console.log("Rotinas geradas:",inserts.length);
-}
 
 }
 
@@ -355,7 +328,7 @@ status,
 data,
 paciente_id,
 pacientes:paciente_id(nome_completo),
-rotina_modelos:modelo_id(titulo)
+rotina_modelos:rotina_modelo_id(titulo)
 `)
 .eq("empresa_id",EMPRESA_ID)
 .order("paciente_id",{ascending:true});
@@ -832,6 +805,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
