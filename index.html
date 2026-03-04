@@ -146,7 +146,34 @@ font-weight:bold;
 .tabela-clinica tr:nth-child(even){
 background:#f8f9fa;
 }
-  
+.alerta-enfermagem{
+display:flex;
+gap:6px;
+margin-top:4px;
+font-size:11px;
+opacity:0.85;
+}
+
+.alerta-pill{
+padding:2px 6px;
+border-radius:10px;
+font-weight:bold;
+}
+
+.alerta-normal{
+background:#eafaf1;
+color:#1e8449;
+}
+
+.alerta-atencao{
+background:#fff3cd;
+color:#7d6608;
+}
+
+.alerta-alto{
+background:#fdecea;
+color:#922b21;
+}
 </style>
 </head>
 
@@ -529,12 +556,12 @@ let html=`
 </div>
 
 <div class="card-mapa">
-<b>Demência (DA)</b>
+<b>Demência</b>
 <span>${da}</span>
 </div>
 
 <div class="card-mapa">
-<b>Cardiopatia</b>
+<b>Cardio</b>
 <span>${cardio}</span>
 </div>
 
@@ -544,23 +571,23 @@ let html=`
 </div>
 
 <div class="card-mapa">
-<b>Dieta especial</b>
+<b>Dieta</b>
 <span>${dieta}</span>
-</div>
 
-<div class="card-mapa risco-normal">
-<b>🟢 Normal</b>
-<span>${riscoNormal}</span>
-</div>
+<div class="alerta-enfermagem">
 
-<div class="card-mapa risco-atencao">
-<b>🟡 Atenção</b>
-<span>${riscoAtencao}</span>
-</div>
+<span class="alerta-pill alerta-normal">
+🟢 ${riscoNormal}
+</span>
 
-<div class="card-mapa risco-alto">
-<b>🔴 Alto risco</b>
-<span>${riscoAlto}</span>
+<span class="alerta-pill alerta-atencao">
+🟡 ${riscoAtencao}
+</span>
+
+<span class="alerta-pill alerta-alto">
+🔴 ${riscoAlto}
+</span>
+
 </div>
 
 </div>
@@ -691,6 +718,7 @@ campo.value = hoje;
 
 </body>
 </html>
+
 
 
 
