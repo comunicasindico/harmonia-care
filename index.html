@@ -30,51 +30,75 @@ button{padding:8px 14px;border:0;border-radius:6px;font-weight:bold;cursor:point
 @media(max-width:1024px){.layout-hospital{grid-template-columns:1fr}}
 /* ================= LOGIN CENTRALIZADO MODERNO ================= */
 
-#loginWrapper{
+/* ===== CENTRALIZAÇÃO TOTAL ===== */
+
+body{
+margin:0;
+padding:0;
 height:100vh;
 display:flex;
 justify-content:center;
 align-items:center;
-background:linear-gradient(135deg,#1f4e79,#2980b9);
+background:linear-gradient(135deg,#f3f6fb,#dde6f5);
+font-family:system-ui,-apple-system,Segoe UI,Roboto;
+}
+
+/* ===== BOX LOGIN ===== */
+
+#loginWrapper{
+width:100%;
+display:flex;
+justify-content:center;
+align-items:center;
 }
 
 #loginBox{
-width:420px;
-background:#ffffff;
-padding:45px;
-border-radius:18px;
-box-shadow:0 20px 40px rgba(0,0,0,.25);
-display:flex;
-flex-direction:column;
+width:520px;
+padding:50px;
+background:white;
+border-radius:20px;
+box-shadow:0 25px 60px rgba(0,0,0,0.15);
 text-align:center;
 }
 
+/* ===== FONTE DOBRADA ===== */
+
 #loginBox h2{
-font-size:28px;
-margin-bottom:25px;
-color:#2c3e50;
+font-size:42px;
+margin-bottom:30px;
+}
+
+#loginBox label{
+font-size:22px;
+font-weight:600;
 }
 
 #loginBox select,
 #loginBox input{
-padding:14px;
+width:100%;
+padding:16px;
+margin-top:15px;
+font-size:22px;
 border-radius:10px;
 border:1px solid #ccc;
-margin-top:10px;
-font-size:16px;
 }
 
 #loginBox button{
+width:100%;
 margin-top:25px;
-padding:14px;
-font-size:18px;
-border-radius:10px;
+padding:18px;
+font-size:22px;
+border:none;
+border-radius:12px;
+background:#3b82f6;
+color:white;
+font-weight:bold;
+cursor:pointer;
 transition:0.3s;
 }
 
 #loginBox button:hover{
-transform:scale(1.03);
-box-shadow:0 5px 15px rgba(0,0,0,.2);
+background:#2563eb;
 }
 </style>
 </head>
@@ -407,6 +431,7 @@ carregarUsuariosLogin();
 </script>
 </body>
 </html>
+
 
 
 
