@@ -320,30 +320,53 @@ document.getElementById("selectColaborador").innerHTML=html;
 
 
 /* GERAR ROTINAS DO DIA */
-
 async function gerarRotinasDoDia(){
 
 const hoje = new Date();
+const dataHoje = hoje.toISOString().slice(0,10);
 
-const data = hoje.toISOString().slice(0,10);
 const ano = hoje.getFullYear();
 const mes = hoje.getMonth()+1;
 const dia = hoje.getDate();
 
-/* PACIENTES */
+/* BUSCAR PACIENTES */
 
-const {data:pacientes} = await db
+const {data:pacientes,error:e1} = await db
 .from("pacientes")
 .select("id")
 .eq("empresa_id",EMPRESA_ID);
 
-/* MODELOS */
+if(e1){
+console.error("Erro pacientes:",e1);
+alert("Erro ao buscar pacientes.");
+return;
+}
 
-const {data:modelos} = await db
+if(!pacientes || pacientes.length===0){
+alert("Nenhum paciente encontrado.");
+return;
+}
+
+/* BUSCAR MODELOS */
+
+const {data:modelos,error:e2} = await db
 .from("rotina_modelos")
 .select("id")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true);
+
+if(e2){
+console.error("Erro modelos:",e2);
+alert("Erro ao buscar modelos.");
+return;
+}
+
+if(!modelos || modelos.length===0){
+alert("Nenhum modelo de rotina encontrado.");
+return;
+}
+
+/* GERAR REGISTROS */
 
 let inserts=[];
 
@@ -358,7 +381,8 @@ paciente_id:p.id,
 modelo_id:m.id,
 rotina_modelo_id:m.id,
 
-data:data,
+data:dataHoje,
+
 ano:ano,
 mes:mes,
 dia:dia,
@@ -370,14 +394,19 @@ status:"pendente"
 });
 });
 
-const {error}=await db
+/* INSERIR */
+
+const {error:e3}=await db
 .from("rotina_execucao")
 .insert(inserts);
 
-if(error){
-console.error("Erro inserir rotinas:",error);
+if(e3){
+console.error("Erro inserir rotinas:",e3);
 alert("Erro ao gerar rotinas.");
+return;
 }
+
+console.log("Rotinas criadas:",inserts.length);
 
 }
 
@@ -985,6 +1014,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
