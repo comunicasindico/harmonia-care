@@ -253,26 +253,38 @@ document.getElementById("selectColaborador").innerHTML=html;
 }
 
 
+/* GERAR ROTINAS DO DIA */
+
 async function gerarRotinasDoDia(){
 
 const hoje = new Date().toISOString().split("T")[0];
 
 /* PACIENTES */
 
-const {data:pacientes} = await db
+const {data:pacientes,error:erroPac}=await db
 .from("pacientes")
 .select("id")
 .eq("empresa_id",EMPRESA_ID);
 
+if(erroPac){
+console.log("Erro pacientes",erroPac);
+return;
+}
+
 /* MODELOS */
 
-const {data:modelos} = await db
+const {data:modelos,error:erroMod}=await db
 .from("rotina_modelos")
 .select("id");
 
+if(erroMod){
+console.log("Erro modelos",erroMod);
+return;
+}
+
 /* VERIFICAR SE JÁ EXISTEM */
 
-const {data:existente} = await db
+const {data:existente}=await db
 .from("rotina_execucao")
 .select("id")
 .eq("empresa_id",EMPRESA_ID)
@@ -282,7 +294,7 @@ if(existente && existente.length>0){
 return;
 }
 
-/* CRIAR */
+/* CRIAR ROTINAS */
 
 let inserts=[];
 
@@ -291,13 +303,12 @@ pacientes.forEach(p=>{
 modelos.forEach(m=>{
 
 inserts.push({
-
 empresa_id:EMPRESA_ID,
 paciente_id:p.id,
 modelo_id:m.id,
 data:hoje,
-status:"pendente"
-
+status:"pendente",
+created_at:new Date()
 });
 
 });
@@ -306,9 +317,13 @@ status:"pendente"
 
 if(inserts.length>0){
 
-await db
+const {error}=await db
 .from("rotina_execucao")
 .insert(inserts);
+
+if(error){
+console.log("Erro inserir rotinas",error);
+}
 
 }
 
@@ -332,7 +347,7 @@ pacientes:paciente_id(nome_completo),
 rotina_modelos:modelo_id(titulo)
 `)
 .eq("empresa_id",EMPRESA_ID)
-.eq("data",hoje)
+.order("created_at",{ascending:false})
 .order("paciente_id",{ascending:true});
 
 if(error){
@@ -371,7 +386,13 @@ let total=data.length;
 let concluidas=data.filter(r=>r.status==="concluida").length;
 let pendentes=total-concluidas;
 
+/* DATA */
+
+let hoje = new Date().toLocaleDateString("pt-BR");
+
 let html=`
+
+<h3>Rotinas do dia ${hoje}</h3>
 
 <div style="margin-bottom:15px;font-size:14px">
 
@@ -801,6 +822,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
