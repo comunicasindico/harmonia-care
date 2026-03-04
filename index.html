@@ -126,42 +126,103 @@ carregarGradeRotinas();
 }
 
 /* GRADE DE ROTINAS */
+/* GRADE DE ROTINAS */
 async function carregarGradeRotinas(){
+
 const hoje=new Date().toISOString().slice(0,10);
+
 const {data,error}=await db.from("rotina_execucao").select(`
 id,status,paciente_id,
 pacientes:paciente_id(nome_completo),
 rotina_modelos:modelo_id(titulo)
 `).eq("empresa_id",EMPRESA_ID).eq("data",hoje);
+
 if(error){alert("Erro rotinas");return;}
+
 if(!data || data.length===0){
 document.getElementById("historicoLista").innerHTML="<p>Nenhuma rotina hoje.</p>";
 return;
 }
+
 let colunas=new Set();
-data.forEach(r=>{if(r.rotina_modelos?.titulo)colunas.add(r.rotina_modelos.titulo)});
-colunas=[...colunas].sort();
-let pacientes={};
+
+/* 🔧 ALTERAÇÃO 1 */
 data.forEach(r=>{
-let pid=r.paciente_id;
-if(!pacientes[pid]) pacientes[pid]={nome:r.pacientes?.nome_completo ?? "Paciente",rotinas:{}};
-pacientes[pid].rotinas[r.rotina_modelos?.titulo]=r;
-});
-let html=`<h3>Grade de Rotinas</h3><table class="grade-rotinas"><tr><th>Paciente</th>${colunas.map(c=>`<th>${c}</th>`).join("")}</tr>`;
-for(let pid in pacientes){
-let p=pacientes[pid];
-html+=`<tr><td class="nome">${p.nome}</td>`;
-colunas.forEach(c=>{
-let r=p.rotinas[c];
-if(r){
-let checked=r.status==="concluida"?"checked":"";
-html+=`<td><input type="checkbox" ${checked} onchange="toggleRotina('${r.id}',this.checked)"></td>`;
-}else html+=`<td>-</td>`;
-});
-html+="</tr>";
+if(r.rotina_modelos && r.rotina_modelos.titulo){
+colunas.add(r.rotina_modelos.titulo);
 }
-html+="</table>";
+});
+
+colunas=[...colunas].sort();
+
+let pacientes={};
+
+data.forEach(r=>{
+
+let pid=r.paciente_id;
+
+if(!pacientes[pid]){
+pacientes[pid]={
+nome:r.pacientes?.nome_completo ?? "Paciente",
+rotinas:{}
+};
+}
+
+/* 🔧 ALTERAÇÃO 2 */
+if(r.rotina_modelos && r.rotina_modelos.titulo){
+pacientes[pid].rotinas[r.rotina_modelos.titulo]=r;
+}
+
+});
+
+let html=`<h3>Grade de Rotinas</h3>
+<table class="grade-rotinas">
+<tr>
+<th>Paciente</th>
+${colunas.map(c=>`<th>${c}</th>`).join("")}
+</tr>
+`;
+
+for(let pid in pacientes){
+
+let p=pacientes[pid];
+
+html+=`<tr>
+<td class="nome">${p.nome}</td>
+`;
+
+colunas.forEach(c=>{
+
+let r=p.rotinas[c];
+
+if(r){
+
+let checked=r.status==="concluida"?"checked":"";
+
+html+=`
+<td>
+<input type="checkbox"
+${checked}
+onchange="toggleRotina('${r.id}',this.checked)">
+</td>
+`;
+
+}else{
+
+html+=`<td>-</td>`;
+
+}
+
+});
+
+html+=`</tr>`;
+
+}
+
+html+=`</table>`;
+
 document.getElementById("historicoLista").innerHTML=html;
+
 }
 
 /* TOGGLE */
@@ -258,3 +319,4 @@ if(user) iniciarSistema();
 </script>
 </body>
 </html>
+
