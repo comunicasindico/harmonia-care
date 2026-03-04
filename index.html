@@ -252,7 +252,12 @@ const { data: pacientes } = await db
 /* 2️⃣ Buscar execuções no período */
 const { data: execucoes } = await db
 .from("rotina_execucao")
-.select("paciente_id,titulo,status,data")
+.select(`
+    data,
+    status,
+    pacientes ( id, nome_completo ),
+    rotina_modelos ( titulo )
+`)
 .gte("data", inicio)
 .lte("data", fim);
 
@@ -262,7 +267,7 @@ let mapa = {};
 execucoes?.forEach(r=>{
 if(!mapa[r.data]) mapa[r.data] = {};
 if(!mapa[r.data][r.paciente_id]) mapa[r.data][r.paciente_id] = {};
-mapa[r.data][r.paciente_id][r.titulo] =
+mapa[r.data][r.paciente_id][r.rotina_modelos?.titulo] =
 r.status === "concluida" ? "✔" : "✖";
 });
 
@@ -378,7 +383,7 @@ async function carregarRotinas(turno){
 const {data}=await db.rpc("rotina_completa_por_turno",{p_empresa_id:EMPRESA_ID,p_turno:turno});
 lista.innerHTML="";
 data?.forEach(r=>{
-lista.innerHTML+=`<div class="timeline-item">${r.horario_execucao||"--:--"} - ${r.titulo} (${r.paciente_nome})</div>`;
+lista.innerHTML+=`<div class="timeline-item">${r.horario_execucao||"--:--"} - ${r.rotina_modelos?.titulo} (${r.paciente_nome})</div>`;
 });
 }
 
@@ -402,6 +407,7 @@ carregarUsuariosLogin();
 </script>
 </body>
 </html>
+
 
 
 
