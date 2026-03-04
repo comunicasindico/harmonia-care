@@ -10,7 +10,7 @@
 
 <style>
 html,body{margin:0;padding:0;width:100%;min-height:100%;font-family:Arial;background:#f4f6f9}
-#app{padding:20px}
+#app{padding:on onclick="carregarHistor20px}
 h1{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
 canvas{width:100%!important;max-width:600px;margin:20px auto;display:block}
 button{padding:8px 14px;border:0;border-radius:6px;font-weight:bold;cursor:pointer}
@@ -228,115 +228,11 @@ historicoLista.innerHTML=html;
 }
 
 async function carregarHistoricoRotinas(){
-
-let dataSelecionada = document.getElementById("histInicio").value;
-
-if(!dataSelecionada){
-dataSelecionada = new Date().toISOString().split("T")[0];
-document.getElementById("histInicio").value = dataSelecionada;
+alert("BOTÃO ROTINAS FUNCIONANDO");
 }
 
-const { data, error } = await db
-.from("rotina_execucao")
-.select(`
-    data,
-    titulo,
-    status,
-    pacientes (
-        nome_completo
-    )
-`)
-.eq("data", dataSelecionada)
-.order("pacientes(nome_completo)", { ascending: true });
 
-if(error){
-console.error(error);
-return;
-}
-
-if(!data || data.length === 0){
-document.getElementById("historicoLista").innerHTML =
-"<p>Nenhuma rotina encontrada para este dia.</p>";
-return;
-}
-
-const rotinasPadrao = [
-"Banho",
-"Troca de Fraldas",
-"Tomar Água",
-"Almoço",
-"Lanche",
-"Jantar",
-"Troca de Fraldas (Noite)"
-];
-
-let pacientes = {};
-
-data.forEach(r=>{
-
-let nome = r.pacientes?.nome_completo;
-if(!nome) return;
-
-if(!pacientes[nome]){
-pacientes[nome] = {};
-}
-
-let titulo = r.titulo?.trim();
-
-if(!rotinasPadrao.includes(titulo)){
-titulo = "Outros";
-}
-
-pacientes[nome][titulo] =
-r.status === "concluida"
-? "<span style='color:#2ecc71;font-weight:bold;'>✔</span>"
-: "<span style='color:#e74c3c;font-weight:bold;'>✖</span>";
-
-});
-
-let html = `
-<h3>Rotinas do Dia: ${dataSelecionada}</h3>
-<table class="ranking-table">
-<thead>
-<tr>
-<th>Paciente</th>
-<th>Banho</th>
-<th>Fraldas</th>
-<th>Água</th>
-<th>Almoço</th>
-<th>Lanche</th>
-<th>Jantar</th>
-<th>Fraldas Noite</th>
-<th>Outros</th>
-</tr>
-</thead>
-<tbody>
-`;
-
-Object.keys(pacientes).forEach(nome=>{
-
-let p = pacientes[nome];
-
-html += `
-<tr>
-<td>${nome}</td>
-<td>${p["Banho"] || ""}</td>
-<td>${p["Troca de Fraldas"] || ""}</td>
-<td>${p["Tomar Água"] || ""}</td>
-<td>${p["Almoço"] || ""}</td>
-<td>${p["Lanche"] || ""}</td>
-<td>${p["Jantar"] || ""}</td>
-<td>${p["Troca de Fraldas (Noite)"] || ""}</td>
-<td>${p["Outros"] || ""}</td>
-</tr>
-`;
-
-});
-
-html += "</tbody></table>";
-
-document.getElementById("historicoLista").innerHTML = html;
-}
+    
 async function carregarHistoricoClinico(){
 const {data}=await db.from("vw_historico_geral").select("*").order("nome_completo");
 let html=`<table class="ranking-table"><thead>
@@ -420,6 +316,7 @@ carregarUsuariosLogin();
 </script>
 </body>
 </html>
+
 
 
 
