@@ -76,6 +76,57 @@ height:300px;
 
 }
 
+.prontuario-card{
+background:#fff;
+padding:20px;
+border-radius:10px;
+margin-top:15px;
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
+}
+
+.prontuario-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:15px;
+margin:10px 0;
+}
+
+.alerta-risco{
+background:#e74c3c;
+color:#fff;
+padding:10px;
+border-radius:8px;
+margin:10px 0;
+font-weight:bold;
+text-align:center;
+}
+
+
+.mapa-clinico{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:15px;
+margin-bottom:20px;
+}
+
+.card-mapa{
+background:#fff;
+padding:15px;
+border-radius:10px;
+text-align:center;
+box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card-mapa h2{
+margin:5px 0;
+}
+
+.card-mapa.risco{
+background:#ffe5e5;
+border:2px solid #e74c3c;
+}
+
+  
 </style>
 
   
@@ -157,13 +208,19 @@ z-index:9999;
 <button onclick="logout()" class="btn-danger">Sair</button>
 </h1>
 
+
+carregarMapaClinico();
+
+  
 <div class="layout">
 
 <div class="box">
 <h3>Selecionar Paciente</h3>
-<select id="selectPaciente"></select>
+<select id="selectPaciente" onchange="abrirProntuarioPaciente()">
 </div>
 
+<div id="prontuarioPaciente"></div>
+  
 <div class="box">
 <h3>Selecionar Colaborador</h3>
 <select id="selectColaborador"></select>
@@ -202,6 +259,8 @@ z-index:9999;
 
 </div>
 
+<div id="mapaClinico"></div>
+  
 <script>
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
@@ -216,8 +275,16 @@ let graficoInstitucional=null;
 
 async function carregarPacientes(){
   const {data,error}=await db
-  .from("pacientes")
-  .select("id,nome_completo")
+ .from("pacientes")
+.select(`
+id,
+nome_completo,
+data_nascimento,
+comorbidades,
+alergias,
+medicacoes,
+observacoes
+`)
   .eq("empresa_id",EMPRESA_ID)
   .order("nome_completo");
 
@@ -249,35 +316,57 @@ async function carregarColaboradores(){
 }
 
 async function carregarHistoricoRotinas(){
-  const histInicio=document.getElementById("histInicio");
-  const histFim=document.getElementById("histFim");
-  const selectPaciente=document.getElementById("selectPaciente");
 
-  let inicio=histInicio.value;
-  let fim=histFim.value;
-  let paciente=selectPaciente.value;
+const { data, error } = await db
+.from("rotinas")
+.select(`
+created_at,
+pacientes(nome_completo),
+rotina_modelos(titulo),
+usuarios(nome_completo)
+`)
+.eq("empresa_id", EMPRESA_ID)
+.order("created_at", { ascending:false });
 
-  let query=db.from("rotina_execucao")
-  .select(`
-    data,
-    status,
-    paciente_id,
-    pacientes(nome_completo),
-    rotina_modelos(titulo)
-  `)
-  .eq("empresa_id",EMPRESA_ID)
-  .gte("data",inicio)
-  .lte("data",fim);
+if(error){
+console.error(error);
+alert("Erro ao carregar histórico de rotinas.");
+return;
+}
 
-  if(paciente!=="todos"){
-    query=query.eq("paciente_id",paciente);
-  }
+if(!data || data.length===0){
+document.getElementById("historicoRotinas").innerHTML =
+"<p>Nenhuma rotina registrada.</p>";
+return;
+}
 
-  const {data,error}=await query.order("data",{ascending:false});
-  if(error){console.log(error);return;}
+let html = `
+<table class="tabela">
+<tr>
+<th>Paciente</th>
+<th>Rotina</th>
+<th>Executado por</th>
+<th>Data</th>
+</tr>
+`;
 
-  dadosAtuais=data||[];
-  renderizarLista(dadosAtuais);
+data.forEach(r=>{
+
+html += `
+<tr>
+<td>${r.pacientes?.nome_completo ?? "-"}</td>
+<td>${r.rotina_modelos?.titulo ?? "-"}</td>
+<td>${r.usuarios?.nome_completo ?? "-"}</td>
+<td>${new Date(r.created_at).toLocaleString()}</td>
+</tr>
+`;
+
+});
+
+html += "</table>";
+
+document.getElementById("historicoRotinas").innerHTML = html;
+
 }
 
 async function carregarHistoricoClinico(){
@@ -301,8 +390,8 @@ async function carregarHistoricoClinico(){
     <td>${p.cardiopatia?"✔":""}</td>
     <td>${p.acamado?"✔":""}</td>
     <td>${p.dieta_especial||""}</td>
-    <td>${p.outras_comorbidades||""}</td>
-    <td>${p.grau_risco||""}</td>
+    <td>${p.outras_comorbidades ?? "—"}</td>
+    <td>${p.grau_risco ?? "—"}</td>
     </tr>`;
   });
 
@@ -310,6 +399,113 @@ async function carregarHistoricoClinico(){
   document.getElementById("historicoLista").innerHTML=html;
 }
 
+async function abrirProntuarioPaciente(){
+
+const pacienteId = document.getElementById("selectPaciente").value;
+
+if(pacienteId==="todos"){
+document.getElementById("prontuarioPaciente").innerHTML =
+"<p>Selecione um paciente.</p>";
+return;
+}
+
+const { data, error } = await db
+.from("pacientes")
+.select("*")
+.eq("id",pacienteId)
+.single();
+
+if(error){
+console.log(error);
+return;
+}
+
+/* calcular idade */
+
+let idade="";
+if(data.data_nascimento){
+let nasc=new Date(data.data_nascimento);
+let hoje=new Date();
+idade=hoje.getFullYear()-nasc.getFullYear();
+}
+
+/* risco automático */
+
+let risco="Baixo";
+let cor="#2ecc71";
+let alerta="";
+
+let fatores=0;
+
+if(data.comorbidades)fatores++;
+if(data.alergias)fatores++;
+if(data.medicacoes)fatores++;
+
+if(fatores>=2){
+risco="Médio";
+cor="#f39c12";
+}
+
+if(fatores>=3){
+risco="Alto";
+cor="#e74c3c";
+alerta="⚠ PACIENTE DE ALTO RISCO — monitoramento intensivo recomendado";
+}
+
+if(fatores>=2){
+risco="Médio";
+cor="#f39c12";
+}
+
+if(fatores>=3){
+risco="Alto";
+cor="#e74c3c";
+}
+
+/* HTML prontuário */
+
+let html=`
+
+<div class="prontuario-card">
+
+<h2>${data.nome_completo}</h2>
+${alerta ? `<div class="alerta-risco">${alerta}</div>` : ""}
+<div class="prontuario-grid">
+
+<div>
+<b>Idade</b><br>
+${idade}
+</div>
+
+<div>
+<b>Risco Clínico</b><br>
+<span style="color:${cor};font-weight:bold">${risco}</span>
+</div>
+
+</div>
+
+<hr>
+
+<h3>Comorbidades</h3>
+<p>${data.comorbidades ?? "Nenhuma registrada"}</p>
+
+<h3>Alergias</h3>
+<p>${data.alergias ?? "Nenhuma registrada"}</p>
+
+<h3>Medicações</h3>
+<p>${data.medicacoes ?? "Nenhuma registrada"}</p>
+
+<h3>Observações</h3>
+<p>${data.observacoes ?? "-"}</p>
+
+</div>
+`;
+
+document.getElementById("prontuarioPaciente").innerHTML=html;
+
+}
+
+  
 function renderizarLista(lista){
   if(!lista.length){
     document.getElementById("historicoLista").innerHTML="<p>Nenhuma rotina encontrada.</p>";
@@ -344,6 +540,85 @@ function filtrarBusca(){
   renderizarLista(filtrado);
 }
 
+async function carregarMapaClinico(){
+
+const {data,error}=await db
+.from("pacientes")
+.select("*")
+.eq("empresa_id",EMPRESA_ID);
+
+if(error){
+console.log(error);
+return;
+}
+
+let total=0;
+let hipertensos=0;
+let diabeticos=0;
+let acamados=0;
+let altoRisco=0;
+
+data?.forEach(p=>{
+
+total++;
+
+if((p.comorbidades||"").toLowerCase().includes("hipert"))
+hipertensos++;
+
+if((p.comorbidades||"").toLowerCase().includes("diab"))
+diabeticos++;
+
+if((p.observacoes||"").toLowerCase().includes("acamado"))
+acamados++;
+
+let fatores=0;
+
+if(p.comorbidades)fatores++;
+if(p.alergias)fatores++;
+if(p.medicacoes)fatores++;
+
+if(fatores>=3)altoRisco++;
+
+});
+
+let html=`
+
+<div class="mapa-clinico">
+
+<div class="card-mapa">
+<b>Total de Pacientes</b>
+<h2>${total}</h2>
+</div>
+
+<div class="card-mapa">
+<b>Hipertensos</b>
+<h2>${hipertensos}</h2>
+</div>
+
+<div class="card-mapa">
+<b>Diabéticos</b>
+<h2>${diabeticos}</h2>
+</div>
+
+<div class="card-mapa">
+<b>Acamados</b>
+<h2>${acamados}</h2>
+</div>
+
+<div class="card-mapa risco">
+<b>Alto Risco</b>
+<h2>${altoRisco}</h2>
+</div>
+
+</div>
+`;
+
+document.getElementById("mapaClinico").innerHTML=html;
+
+}
+
+
+  
 async function carregarGrafico(){
   if(graficoInstitucional){
     graficoInstitucional.destroy();
@@ -439,8 +714,9 @@ function iniciarSistema(usuario){
 
   carregarPacientes();
   carregarColaboradores();
-  carregarGrafico();
   carregarHistoricoRotinas();
+  carregarHistoricoClinico();
+  carregarGrafico();
 }
 
 /* ================= VERIFICA SESSÃO ================= */
@@ -460,6 +736,7 @@ window.onload=function(){
 
 </body>
 </html>
+
 
 
 
