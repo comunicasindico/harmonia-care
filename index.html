@@ -426,6 +426,12 @@ document.getElementById("formPaciente").innerHTML=html;
 async function salvarPaciente(id){
 const user=JSON.parse(localStorage.getItem("HC_USER"));
 
+const risco =
+document.getElementById("p_acamado").checked ? 3 :
+document.getElementById("p_cardio").checked ? 2 :
+document.getElementById("p_da").checked ? 2 :
+(document.getElementById("p_has").checked || document.getElementById("p_dm").checked) ? 1 : 1;
+
 const payload={
 nome_completo:document.getElementById("p_nome").value,
 idade:parseInt(document.getElementById("p_idade").value),
@@ -435,7 +441,8 @@ da:document.getElementById("p_da").checked,
 cardiopatia:document.getElementById("p_cardio").checked,
 acamado:document.getElementById("p_acamado").checked,
 dieta_especial:document.getElementById("p_dieta").checked,
-outras_comorbidades:document.getElementById("p_outros").value
+outras_comorbidades:document.getElementById("p_outros").value,
+grau_risco:risco
 };
 
 const {error}=await db
@@ -951,6 +958,7 @@ campo.value = hoje;
 
 </body>
 </html>
+
 
 
 
