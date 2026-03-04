@@ -576,6 +576,106 @@ document.getElementById("historicoLista").innerHTML=html;
 
 }
 
+/* ================================
+   GRADE DE ROTINAS
+================================ */
+
+async function carregarGradeRotinas(){
+
+const hoje = new Date().toISOString().split("T")[0];
+
+const {data,error}=await db
+.from("rotina_execucao")
+.select(`
+status,
+paciente_id,
+pacientes:paciente_id(nome_completo),
+rotina_modelos:modelo_id(titulo)
+`)
+.eq("empresa_id",EMPRESA_ID)
+.eq("data",hoje);
+
+if(error){
+console.error(error);
+alert("Erro ao carregar grade.");
+return;
+}
+
+if(!data || data.length===0){
+document.getElementById("historicoLista").innerHTML="<p>Nenhuma rotina encontrada.</p>";
+return;
+}
+
+let pacientes={};
+
+data.forEach(r=>{
+
+let pid=r.paciente_id;
+
+if(!pacientes[pid]){
+pacientes[pid]={
+nome:r.pacientes?.nome_completo ?? "Paciente",
+rotinas:{}
+};
+}
+
+let titulo=r.rotina_modelos?.titulo ?? "Rotina";
+
+pacientes[pid].rotinas[titulo]=r.status;
+
+});
+
+let html=`
+<h3>Grade de Rotinas</h3>
+
+<table style="width:100%;border-collapse:collapse">
+<thead>
+<tr style="background:#2c3e50;color:white">
+<th>Paciente</th>
+<th>Banho</th>
+<th>Medicação</th>
+<th>Alimentação</th>
+<th>Higiene</th>
+<th>Troca de Fralda</th>
+</tr>
+</thead>
+<tbody>
+`;
+
+function cor(status){
+
+if(status==="concluida") return "🟢";
+if(status==="pendente") return "🟡";
+return "⚪";
+
+}
+
+for(let pid in pacientes){
+
+let p=pacientes[pid];
+
+html+=`
+<tr style="border-bottom:1px solid #ddd">
+
+<td>${p.nome}</td>
+<td>${cor(p.rotinas["Banho"])}</td>
+<td>${cor(p.rotinas["Medicação"])}</td>
+<td>${cor(p.rotinas["Alimentação"])}</td>
+<td>${cor(p.rotinas["Higiene"])}</td>
+<td>${cor(p.rotinas["Troca de Fralda"])}</td>
+
+</tr>
+`;
+
+}
+
+html+=`</tbody></table>`;
+
+document.getElementById("historicoLista").innerHTML=html;
+
+}
+
+  
 async function concluirRotina(id){
 
 const user=JSON.parse(localStorage.getItem("HC_USER"));
@@ -1032,6 +1132,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
