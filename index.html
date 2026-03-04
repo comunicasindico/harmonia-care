@@ -612,7 +612,7 @@ document.getElementById("historicoLista").innerHTML = html;
 async function carregarHistoricoClinico(){
 
 const {data,error}=await db
-.from("pacientes")
+.from("pacientes_clinico")
 .select(`
 nome_completo,
 idade,
@@ -965,6 +965,7 @@ campo.value = hoje;
 
 </body>
 </html>
+
 
 
 
