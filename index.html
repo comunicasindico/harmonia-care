@@ -354,11 +354,15 @@ inserts.push({
 
 empresa_id:EMPRESA_ID,
 paciente_id:p.id,
+
 modelo_id:m.id,
+rotina_modelo_id:m.id,
+
 data:data,
 ano:ano,
 mes:mes,
 dia:dia,
+
 status:"pendente"
 
 });
@@ -366,9 +370,14 @@ status:"pendente"
 });
 });
 
-await db
+const {error}=await db
 .from("rotina_execucao")
 .insert(inserts);
+
+if(error){
+console.error("Erro inserir rotinas:",error);
+alert("Erro ao gerar rotinas.");
+}
 
 }
 
@@ -976,6 +985,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
