@@ -719,8 +719,24 @@ rotina_modelos:modelo_id(titulo)
 
 if(error){
 console.error(error);
+alert("Erro ao carregar rotinas.");
 return;
 }
+
+if(!data || data.length===0){
+document.getElementById("historicoLista").innerHTML="Nenhuma rotina encontrada.";
+return;
+}
+
+/* =========================
+   DESCOBRIR COLUNAS
+========================= */
+
+let colunas=[...new Set(data.map(r=>r.rotina_modelos?.titulo))];
+
+/* =========================
+   AGRUPAR POR PACIENTE
+========================= */
 
 let pacientes={};
 
@@ -739,15 +755,13 @@ pacientes[pid].rotinas[r.rotina_modelos?.titulo]=r;
 
 });
 
-let colunas=[
-"Banho",
-"Medicação",
-"Alimentação",
-"Higiene",
-"Troca de Fralda"
-];
+/* =========================
+   MONTAR TABELA
+========================= */
 
-let html=`<h3>Grade de Rotinas</h3>
+let html=`
+<h3>Grade de Rotinas</h3>
+
 <table class="grade-rotinas">
 
 <tr>
@@ -755,6 +769,10 @@ let html=`<h3>Grade de Rotinas</h3>
 ${colunas.map(c=>`<th>${c}</th>`).join("")}
 </tr>
 `;
+
+/* =========================
+   LINHAS
+========================= */
 
 for(let pid in pacientes){
 
@@ -1132,6 +1150,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
