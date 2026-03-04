@@ -228,7 +228,93 @@ historicoLista.innerHTML=html;
 }
 
 async function carregarHistoricoRotinas(){
-alert("BOTÃO ROTINAS FUNCIONANDO");
+
+let inicio = document.getElementById("histInicio").value;
+let fim = document.getElementById("histFim").value;
+
+if(!inicio){
+inicio = new Date().toISOString().split("T")[0];
+document.getElementById("histInicio").value = inicio;
+}
+
+if(!fim){
+fim = inicio;
+document.getElementById("histFim").value = fim;
+}
+
+/* 1️⃣ Buscar todos pacientes */
+const { data: pacientes } = await db
+.from("pacientes")
+.select("id,nome_completo")
+.eq("ativo", true)
+.order("nome_completo",{ascending:true});
+
+/* 2️⃣ Buscar execuções no período */
+const { data: execucoes } = await db
+.from("rotina_execucao")
+.select("paciente_id,titulo,status,data")
+.gte("data", inicio)
+.lte("data", fim);
+
+/* Mapear execuções */
+let mapa = {};
+
+execucoes?.forEach(r=>{
+if(!mapa[r.data]) mapa[r.data] = {};
+if(!mapa[r.data][r.paciente_id]) mapa[r.data][r.paciente_id] = {};
+mapa[r.data][r.paciente_id][r.titulo] =
+r.status === "concluida" ? "✔" : "✖";
+});
+
+/* Rotinas padrão */
+const rotinas = [
+"Banho",
+"Troca de Fraldas",
+"Tomar Água",
+"Almoço",
+"Lanche",
+"Jantar",
+"Troca de Fraldas (Noite)"
+];
+
+let html = `<h3>Rotinas de ${inicio} até ${fim}</h3>`;
+
+Object.keys(mapa).forEach(dataDia=>{
+
+html += `
+<h4>${dataDia}</h4>
+<table class="ranking-table">
+<thead>
+<tr>
+<th>Paciente</th>
+${rotinas.map(r=>`<th>${r}</th>`).join("")}
+</tr>
+</thead>
+<tbody>
+`;
+
+pacientes?.forEach(p=>{
+
+let exec = mapa[dataDia]?.[p.id] || {};
+
+html += `
+<tr>
+<td>${p.nome_completo}</td>
+${rotinas.map(r=>`<td>${exec[r] || ""}</td>`).join("")}
+</tr>
+`;
+
+});
+
+html += "</tbody></table><br>";
+
+});
+
+if(!execucoes || execucoes.length === 0){
+html += "<p>Nenhuma rotina encontrada neste período.</p>";
+}
+
+document.getElementById("historicoLista").innerHTML = html;
 }
 
 
@@ -316,6 +402,7 @@ carregarUsuariosLogin();
 </script>
 </body>
 </html>
+
 
 
 
