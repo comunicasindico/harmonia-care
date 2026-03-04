@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Harmonia Care</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -47,37 +48,20 @@ border-radius:6px;
 border:1px solid #ccc
 }
 
-.prontuario-card{
-background:#fff;
-padding:20px;
-border-radius:10px;
-margin-top:15px
-}
-
-.alerta-risco{
-background:#e74c3c;
-color:#fff;
-padding:10px;
-border-radius:8px;
-margin:10px 0;
-font-weight:bold;
-text-align:center
-}
-
 .mapa-clinico{
 display:flex;
 flex-wrap:wrap;
 gap:8px;
-margin-bottom:15px;
+margin-bottom:20px;
 font-size:11px;
 }
 
 .card-mapa{
 background:#ffffff;
-padding:6px 10px;
+padding:8px 12px;
 border-radius:6px;
 box-shadow:0 1px 4px rgba(0,0,0,.08);
-min-width:70px;
+min-width:80px;
 text-align:center;
 }
 
@@ -88,35 +72,27 @@ display:block;
 }
 
 .card-mapa span{
-font-size:14px;
+font-size:16px;
 font-weight:bold;
 }
 
-/* CORES INTELIGENTES */
-
-.risco-normal{
-background:#eafaf1;
-border-left:4px solid #2ecc71;
+.alerta-enfermagem{
+display:flex;
+gap:6px;
+margin-top:4px;
+font-size:12px;
 }
 
-.risco-atencao{
-background:#fff8e5;
-border-left:4px solid #f1c40f;
+.alerta-pill{
+padding:4px 8px;
+border-radius:10px;
+font-weight:bold;
 }
 
-.risco-alto{
-background:#fdecea;
-border-left:4px solid #e74c3c;
-}
+.alerta-normal{background:#eafaf1;color:#1e8449}
+.alerta-atencao{background:#fff3cd;color:#7d6608}
+.alerta-alto{background:#fdecea;color:#922b21}
 
-.grafico-wrapper{
-width:600px;
-max-width:95%;
-height:350px;
-background:#fff;
-padding:20px;
-border-radius:16px;
-}
 .tabela-clinica{
 width:100%;
 border-collapse:collapse;
@@ -128,7 +104,6 @@ background:#fff;
 background:#2c3e50;
 color:#fff;
 padding:8px;
-text-align:center;
 border:1px solid #ddd;
 }
 
@@ -146,60 +121,16 @@ font-weight:bold;
 .tabela-clinica tr:nth-child(even){
 background:#f8f9fa;
 }
-.alerta-enfermagem{
-display:flex;
-gap:6px;
-margin-top:4px;
-font-size:11px;
-opacity:0.85;
-}
 
-.alerta-pill{
-padding:2px 6px;
-border-radius:10px;
-font-weight:bold;
+.grafico-wrapper{
+width:600px;
+max-width:95%;
+height:350px;
+background:#fff;
+padding:20px;
+border-radius:16px;
+margin-top:20px;
 }
-
-.alerta-normal{
-background:#eafaf1;
-color:#1e8449;
-}
-
-.alerta-atencao{
-background:#fff3cd;
-color:#7d6608;
-}
-
-.alerta-alto{
-background:#fdecea;
-color:#922b21;
-}
-
-.form-paciente{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-gap:10px;
-margin-top:10px;
-}
-
-.form-paciente label{
-font-size:12px;
-color:#555;
-display:block;
-}
-
-.form-paciente input[type="text"],
-.form-paciente input[type="number"]{
-width:100%;
-padding:6px;
-}
-
-.form-botoes{
-margin-top:10px;
-display:flex;
-gap:10px;
-}
-
 
 </style>
 </head>
@@ -236,28 +167,12 @@ gap:10px;
 <select id="selectPaciente" onchange="abrirProntuarioPaciente()"></select>
 </div>
 
-<div id="prontuarioPaciente"></div>
-<div id="formPaciente" class="box" style="margin-top:15px"></div>
 <div class="box">
 <h3>Selecionar Colaborador</h3>
 <select id="selectColaborador"></select>
 </div>
 
 </div>
-
-<div style="margin:15px 0;">
-<label><b>Data das Rotinas</b></label><br>
-
-<input type="date" id="dataRotina" 
-value="" 
-style="padding:8px;border-radius:6px;border:1px solid #ccc">
-
-<button class="btn-primary" onclick="carregarHistoricoRotinas()" style="margin-left:10px">
-Buscar
-</button>
-
-</div>
-
 
 <h2>Históricos</h2>
 
@@ -270,11 +185,6 @@ Buscar
 <canvas id="graficoInstitucional"></canvas>
 </div>
 
-<div id="adminAuditoria" class="box" style="display:none;margin-top:20px">
-<h3>Auditoria do Sistema</h3>
-<div id="listaAuditoria"></div>
-</div>
-
 </div>
 
 <script>
@@ -283,27 +193,26 @@ Buscar
 
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
+
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let graficoInstitucional=null;
 
-/* ================= PACIENTES ================= */
+/* PACIENTES */
 
 async function carregarPacientes(){
 
-const {data,error}=await db
+const {data}=await db
 .from("pacientes")
 .select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
 .order("nome_completo");
 
-if(error){console.log(error);return;}
-
 let html=`<option value="todos">Todos</option>`;
 
-data.forEach(p=>{
+data?.forEach(p=>{
 html+=`<option value="${p.id}">${p.nome_completo}</option>`;
 });
 
@@ -311,310 +220,13 @@ document.getElementById("selectPaciente").innerHTML=html;
 
 }
 
-/* ================= COLABORADORES ================= */
-
-async function carregarColaboradores(){
-
-const {data,error}=await db
-.from("vw_usuarios")
-.select("id,nome_completo")
-.eq("empresa_id",EMPRESA_ID)
-.order("nome_completo");
-
-if(error){console.log(error);return;}
-
-let html="";
-
-data.forEach(c=>{
-html+=`<option value="${c.id}">${c.nome_completo}</option>`;
-});
-
-document.getElementById("selectColaborador").innerHTML=html;
-
-}
-
-/* ================= PRONTUARIO ================= */
-
-async function abrirProntuarioPaciente(){
-
-const id=document.getElementById("selectPaciente").value;
-
-if(id==="todos") return;
-
-const {data,error}=await db
-.from("pacientes")
-.select("*")
-.eq("id",id)
-.single();
-
-if(error){console.log(error);return;}
-
-let html=`
-<h3>Editar Paciente</h3>
-
-<div class="form-paciente">
-
-<div>
-<label>Nome</label>
-<input type="text" id="p_nome" value="${data.nome_completo ?? ""}">
-</div>
-
-<div>
-<label>Idade</label>
-<input type="number" id="p_idade" value="${data.idade ?? ""}" readonly>
-</div>
-
-<div>
-<label>HAS</label>
-<input type="checkbox" id="p_has" ${data.has ? "checked":""}>
-</div>
-
-<div>
-<label>DM</label>
-<input type="checkbox" id="p_dm" ${data.dm ? "checked":""}>
-</div>
-
-<div>
-<label>Demência (DA)</label>
-<input type="checkbox" id="p_da" ${data.da ? "checked":""}>
-</div>
-
-<div>
-<label>Cardiopatia</label>
-<input type="checkbox" id="p_cardio" ${data.cardiopatia ? "checked":""}>
-</div>
-
-<div>
-<label>Acamado</label>
-<input type="checkbox" id="p_acamado" ${data.acamado ? "checked":""}>
-</div>
-
-<div>
-<label>Dieta Especial</label>
-<input type="checkbox" id="p_dieta" ${data.dieta_especial ? "checked":""}>
-</div>
-
-<div style="grid-column:1 / -1">
-<label>Outras Comorbidades</label>
-<input type="text" id="p_outros" value="${data.outras_comorbidades ?? ""}">
-</div>
-
-</div>
-
-<div class="form-botoes">
-
-<button class="btn-primary" onclick="salvarPaciente('${data.id}')">
-Salvar
-</button>
-
-<button class="btn-secondary" onclick="novoPaciente()">
-Novo
-</button>
-
-<button class="btn-danger" onclick="excluirPaciente('${data.id}')">
-Excluir
-</button>
-
-</div>
-`;
-
-document.getElementById("formPaciente").innerHTML=html;
-
-}
-
-
-async function salvarPaciente(id){
-const user=JSON.parse(localStorage.getItem("HC_USER"));
-
-const risco =
-document.getElementById("p_acamado").checked ? 3 :
-document.getElementById("p_cardio").checked ? 2 :
-document.getElementById("p_da").checked ? 2 :
-(document.getElementById("p_has").checked || document.getElementById("p_dm").checked) ? 1 : 1;
-
-const payload={
-nome_completo:document.getElementById("p_nome").value,
-
-has:document.getElementById("p_has").checked,
-dm:document.getElementById("p_dm").checked,
-da:document.getElementById("p_da").checked,
-cardiopatia:document.getElementById("p_cardio").checked,
-acamado:document.getElementById("p_acamado").checked,
-dieta_especial:document.getElementById("p_dieta").checked,
-outras_comorbidades:document.getElementById("p_outros").value,
-grau_risco:risco
-};
-
-const {error}=await db
-.from("pacientes")
-.update(payload)
-.eq("id",id);
-
-await db.from("logs_clinicos").insert({
-empresa_id:EMPRESA_ID,
-paciente_id:id,
-usuario_id:user.id,
-acao:"EDITAR",
-dados_novos:payload
-});
-
-if(error){
-alert("Erro ao salvar.");
-console.log(error);
-return;
-}
-
-alert("Paciente atualizado.");
-
-carregarPacientes();
-carregarMapaClinico();
-carregarHistoricoClinico();
-
-}
-  
-
-  async function novoPaciente(){
-
-const nome=prompt("Nome do paciente");
-
-if(!nome) return;
-
-const {error}=await db
-.from("pacientes")
-.insert({
-empresa_id:EMPRESA_ID,
-nome_completo:nome
-});
-
-if(error){
-alert("Erro ao criar paciente.");
-console.log(error);
-return;
-}
-
-carregarPacientes();
-alert("Paciente criado.");
-
-}
-
-
- async function excluirPaciente(id){
-
-const user=JSON.parse(localStorage.getItem("HC_USER"));
-
-if(!user || user.perfil!=="ADMIN"){
-alert("Apenas administradores podem excluir pacientes.");
-return;
-}
-
-if(!confirm("Deseja excluir este paciente?")) return;
-
-const {error}=await db
-.from("pacientes")
-.delete()
-.eq("id",id);
-
-if(error){
-alert("Erro ao excluir.");
-console.log(error);
-return;
-}
-
-alert("Paciente removido.");
-
-carregarPacientes();
-document.getElementById("formPaciente").innerHTML="";
-
-}
-
-  
-  
-/* ================= HISTORICO ROTINAS ================= */
-
-async function carregarHistoricoRotinas(){
-
-const dataFiltro = document.getElementById("dataRotina")?.value;
-
-const { data, error } = await db
-.from("rotina_execucao")
-.select(`
-id,
-status,
-data,
-created_at,
-pacientes!fk_rotina_paciente(nome_completo),
-rotina_modelos!rotina_execucao_modelo_id_fkey(titulo),
-usuarios(nome_completo)
-`)
-.eq("empresa_id", EMPRESA_ID)
-.eq("data", dataFiltro)
-.order("created_at", { ascending:false });
-
-if(error){
-console.error(error);
-alert("Erro ao carregar histórico de rotinas.");
-return;
-}
-
-if(!data || data.length===0){
-document.getElementById("historicoLista").innerHTML =
-"<p>Nenhuma rotina registrada.</p>";
-return;
-}
-
-let html = `
-<table width="100%">
-<tr>
-<th>Paciente</th>
-<th>Rotina</th>
-<th>Status</th>
-<th>Executado por</th>
-<th>Data</th>
-<th>Ação</th>
-</tr>
-`;
-
-data.forEach(r=>{
-
-let status="";
-let botao="";
-
-if(r.status==="concluida"){
-status="✔ Concluída";
-botao="";
-}
-else{
-status="⏳ Pendente";
-botao=`<button class="btn-primary" onclick="concluirRotina('${r.id}')">Concluir</button>`;
-}
-
-html += `
-<tr>
-<td>${r.pacientes?.nome_completo || "-"}</td>
-<td>${r.rotina_modelos?.titulo || "-"}</td>
-<td>${status}</td>
-<td>${r.usuarios?.nome_completo || "-"}</td>
-<td>${new Date(r.created_at).toLocaleString()}</td>
-<td>${botao}</td>
-</tr>
-`;
-
-});
-
-html += "</table>";
-
-document.getElementById("historicoLista").innerHTML = html;
-
-}
-
-/* ================= HISTORICO CLINICO ================= */
+/* HISTORICO CLINICO */
 
 async function carregarHistoricoClinico(){
 
 const {data,error}=await db
 .from("pacientes")
 .select(`
-id,
 nome_completo,
 data_nascimento,
 has,
@@ -627,16 +239,10 @@ outras_comorbidades,
 grau_risco
 `)
 .eq("empresa_id",EMPRESA_ID)
-.order("nome_completo",{ascending:true});
+.order("nome_completo");
 
 if(error){
 console.log(error);
-document.getElementById("historicoLista").innerHTML="<p>Erro ao carregar dados clínicos.</p>";
-return;
-}
-
-if(!data || data.length===0){
-document.getElementById("historicoLista").innerHTML="<p>Nenhum registro clínico encontrado.</p>";
 return;
 }
 
@@ -651,47 +257,40 @@ let html=`
 <th>HAS</th>
 <th>DM</th>
 <th>DA</th>
-<th>Cardiopatia</th>
+<th>Cardio</th>
 <th>Acamado</th>
 <th>Dieta</th>
-<th>Outras Comorbidades</th>
+<th>Outras</th>
 <th>Risco</th>
 </tr>
 `;
 
-data.forEach(p=>{
+data?.forEach(p=>{
 
 let idade = calcularIdade(p.data_nascimento);
 
-let riscoCor="";
+let risco="";
 
-if(p.grau_risco==1) riscoCor="🟢";
-else if(p.grau_risco==2) riscoCor="🟡";
-else if(p.grau_risco>=3) riscoCor="🔴";
-else riscoCor="";
+if(p.grau_risco==1) risco="🟢";
+else if(p.grau_risco==2) risco="🟡";
+else if(p.grau_risco>=3) risco="🔴";
 
 html+=`
 <tr>
 
-<td class="nome">${p.nome_completo ?? "-"}</td>
-
-<td>${idade || ""}</td>
+<td class="nome">${p.nome_completo}</td>
+<td>${idade}</td>
 
 <td>${p.has ? "✔":""}</td>
-
 <td>${p.dm ? "✔":""}</td>
-
 <td>${p.da ? "✔":""}</td>
-
 <td>${p.cardiopatia ? "✔":""}</td>
-
 <td>${p.acamado ? "✔":""}</td>
-
 <td>${p.dieta_especial ? "✔":""}</td>
 
 <td style="text-align:left">${p.outras_comorbidades ?? "-"}</td>
 
-<td>${riscoCor}</td>
+<td>${risco}</td>
 
 </tr>
 `;
@@ -704,109 +303,62 @@ document.getElementById("historicoLista").innerHTML=html;
 
 }
 
-/* ================= MAPA CLINICO ================= */
+/* MAPA CLINICO */
 
 async function carregarMapaClinico(){
 
-const {data,error}=await db
+const {data}=await db
 .from("pacientes")
 .select("has,dm,da,cardiopatia,acamado,dieta_especial,grau_risco")
 .eq("empresa_id",EMPRESA_ID);
 
-if(error){
-console.log(error);
-return;
-}
-
 let total=data.length;
-let has=0;
-let dm=0;
-let da=0;
-let cardio=0;
-let acamado=0;
-let dieta=0;
 
-let riscoNormal=0;
-let riscoAtencao=0;
-let riscoAlto=0;
+let has=0,dm=0,da=0,cardio=0,acamado=0,dieta=0;
+let normal=0,atencao=0,alto=0;
 
 data.forEach(p=>{
 
-if(p.has) has++;
-if(p.dm) dm++;
-if(p.da) da++;
-if(p.cardiopatia) cardio++;
-if(p.acamado) acamado++;
-if(p.dieta_especial) dieta++;
+if(p.has)has++;
+if(p.dm)dm++;
+if(p.da)da++;
+if(p.cardiopatia)cardio++;
+if(p.acamado)acamado++;
+if(p.dieta_especial)dieta++;
 
-if(p.grau_risco==1) riscoNormal++;
-else if(p.grau_risco==2) riscoAtencao++;
-else if(p.grau_risco>=3) riscoAlto++;
+if(p.grau_risco==1)normal++;
+else if(p.grau_risco==2)atencao++;
+else alto++;
 
 });
 
-let html=`
+document.getElementById("mapaClinico").innerHTML=`
+
 <div class="mapa-clinico">
 
-<div class="card-mapa">
-<b>Pacientes</b>
-<span>${total}</span>
-</div>
-
-<div class="card-mapa">
-<b>HAS</b>
-<span>${has}</span>
-</div>
-
-<div class="card-mapa">
-<b>DM</b>
-<span>${dm}</span>
-</div>
-
-<div class="card-mapa">
-<b>Demência</b>
-<span>${da}</span>
-</div>
-
-<div class="card-mapa">
-<b>Cardio</b>
-<span>${cardio}</span>
-</div>
-
-<div class="card-mapa">
-<b>Acamados</b>
-<span>${acamado}</span>
-</div>
-
-<div class="card-mapa">
-<b>Dieta</b>
-<span>${dieta}</span>
-</div>
+<div class="card-mapa"><b>Pacientes</b><span>${total}</span></div>
+<div class="card-mapa"><b>HAS</b><span>${has}</span></div>
+<div class="card-mapa"><b>DM</b><span>${dm}</span></div>
+<div class="card-mapa"><b>Demência</b><span>${da}</span></div>
+<div class="card-mapa"><b>Cardio</b><span>${cardio}</span></div>
+<div class="card-mapa"><b>Acamados</b><span>${acamado}</span></div>
+<div class="card-mapa"><b>Dieta</b><span>${dieta}</span></div>
 
 <div class="alerta-enfermagem">
 
-<span class="alerta-pill alerta-normal">
-🟢 ${riscoNormal}
-</span>
-
-<span class="alerta-pill alerta-atencao">
-🟡 ${riscoAtencao}
-</span>
-
-<span class="alerta-pill alerta-alto">
-🔴 ${riscoAlto}
-</span>
+<span class="alerta-pill alerta-normal">🟢 ${normal}</span>
+<span class="alerta-pill alerta-atencao">🟡 ${atencao}</span>
+<span class="alerta-pill alerta-alto">🔴 ${alto}</span>
 
 </div>
 
 </div>
+
 `;
-
-document.getElementById("mapaClinico").innerHTML=html;
 
 }
 
-/* ================= GRAFICO ================= */
+/* GRAFICO */
 
 async function carregarGrafico(){
 
@@ -817,7 +369,7 @@ const {data}=await db
 
 let c=0,p=0,a=0;
 
-data.forEach(r=>{
+data?.forEach(r=>{
 if(r.status==="concluida")c++;
 else if(r.status==="pendente")p++;
 else a++;
@@ -843,7 +395,7 @@ backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
 
 }
 
-/* ================= LOGIN ================= */
+/* LOGIN */
 
 async function login(){
 
@@ -865,8 +417,7 @@ localStorage.setItem("HC_USER",JSON.stringify(data[0]));
 iniciarSistema();
 
 }
-window.login = login;
-  
+
 function logout(){
 localStorage.removeItem("HC_USER");
 location.reload();
@@ -878,93 +429,11 @@ document.getElementById("loginWrapper").style.display="none";
 document.getElementById("app").style.display="block";
 
 carregarPacientes();
-if(typeof carregarColaboradores === "function"){
-carregarColaboradores();
-}
 carregarMapaClinico();
-carregarHistoricoRotinas();
 carregarHistoricoClinico();
 carregarGrafico();
-carregarAuditoria();
-}
-
-async function carregarAuditoria(){
-
-const user=JSON.parse(localStorage.getItem("HC_USER"));
-
-if(!user || user.perfil!=="ADMIN") return;
-
-document.getElementById("adminAuditoria").style.display="block";
-
-const {data,error}=await db
-.from("logs_clinicos")
-.select("*")
-.eq("empresa_id",EMPRESA_ID)
-.order("created_at",{ascending:false})
-.limit(20);
-
-if(error){console.log(error);return;}
-
-let html="<table width='100%'><tr><th>Data</th><th>Ação</th></tr>";
-
-data.forEach(l=>{
-
-html+=`
-<tr>
-<td>${new Date(l.created_at).toLocaleString()}</td>
-<td>${l.acao}</td>
-</tr>
-`;
-
-});
-
-html+="</table>";
-
-document.getElementById("listaAuditoria").innerHTML=html;
 
 }
-  
-window.onload=function(){
-
-const user=localStorage.getItem("HC_USER");
-
-if(user){
-iniciarSistema();
-}
-
-};
-
-async function concluirRotina(id){
-
-const {error} = await db
-.from("rotina_execucao")
-.update({
-status:"concluida"
-})
-.eq("id",id);
-
-if(error){
-alert("Erro ao concluir rotina.");
-console.error(error);
-return;
-}
-
-carregarHistoricoRotinas();
-carregarGrafico();
-
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-
-const hoje = new Date().toISOString().split("T")[0];
-
-const campo = document.getElementById("dataRotina");
-
-if(campo){
-campo.value = hoje;
-}
-
-});
 
 function calcularIdade(data){
 
@@ -985,9 +454,17 @@ return idade;
 
 }
 
+window.onload=function(){
+
+const user=localStorage.getItem("HC_USER");
+
+if(user){
+iniciarSistema();
+}
+
+}
+
 </script>
 
 </body>
 </html>
-
-
