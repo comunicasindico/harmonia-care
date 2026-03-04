@@ -700,11 +700,11 @@ carregarGrafico();
 
 }
 
-/* TABELA ROTINAS */
 async function carregarTabelaRotinas(){
 
 const hoje = new Date().toISOString().split("T")[0];
 
+/* buscar rotinas */
 const {data,error}=await db
 .from("rotina_execucao")
 .select(`
@@ -719,25 +719,26 @@ rotina_modelos:modelo_id(titulo)
 
 if(error){
 console.error(error);
-alert("Erro ao carregar rotinas.");
 return;
 }
 
 if(!data || data.length===0){
-document.getElementById("historicoLista").innerHTML="Nenhuma rotina encontrada.";
+document.getElementById("historicoLista").innerHTML="<p>Nenhuma rotina encontrada.</p>";
 return;
 }
 
-/* =========================
-   DESCOBRIR COLUNAS
-========================= */
+/* descobrir todas as rotinas existentes */
+let colunas=new Set();
 
-let colunas=[...new Set(data.map(r=>r.rotina_modelos?.titulo))];
+data.forEach(r=>{
+if(r.rotina_modelos?.titulo){
+colunas.add(r.rotina_modelos.titulo);
+}
+});
 
-/* =========================
-   AGRUPAR POR PACIENTE
-========================= */
+colunas=[...colunas].sort();
 
+/* agrupar pacientes */
 let pacientes={};
 
 data.forEach(r=>{
@@ -751,17 +752,15 @@ rotinas:{}
 };
 }
 
-pacientes[pid].rotinas[r.rotina_modelos?.titulo]=r;
+let titulo=r.rotina_modelos?.titulo;
+
+pacientes[pid].rotinas[titulo]=r;
 
 });
 
-/* =========================
-   MONTAR TABELA
-========================= */
+/* montar tabela */
 
-let html=`
-<h3>Grade de Rotinas</h3>
-
+let html=`<h3>Grade de Rotinas</h3>
 <table class="grade-rotinas">
 
 <tr>
@@ -769,10 +768,6 @@ let html=`
 ${colunas.map(c=>`<th>${c}</th>`).join("")}
 </tr>
 `;
-
-/* =========================
-   LINHAS
-========================= */
 
 for(let pid in pacientes){
 
@@ -1162,6 +1157,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
