@@ -353,7 +353,7 @@ const {data:modelos,error:e2} = await db
 .from("rotina_modelos")
 .select("id")
 .eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true);
+console.log("Modelos encontrados:",modelos);
 
 if(e2){
 console.error("Erro modelos:",e2);
@@ -1014,6 +1014,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
