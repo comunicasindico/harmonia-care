@@ -224,6 +224,50 @@ document.getElementById("selectPaciente").innerHTML=html;
 
 }
 
+/* ABRIR PRONTUARIO PACIENTE */
+
+async function abrirProntuarioPaciente(){
+
+const pacienteId = document.getElementById("selectPaciente").value;
+
+if(pacienteId==="todos"){
+return;
+}
+
+const {data,error}=await db
+.from("pacientes")
+.select("*")
+.eq("id",pacienteId)
+.single();
+
+if(error){
+console.log(error);
+return;
+}
+
+let idade = calcularIdade(data.data_nascimento);
+
+document.getElementById("historicoLista").innerHTML=`
+
+<div class="box">
+
+<h3>${data.nome_completo}</h3>
+
+<p><b>Idade:</b> ${idade}</p>
+<p><b>HAS:</b> ${data.has ? "Sim":"Não"}</p>
+<p><b>DM:</b> ${data.dm ? "Sim":"Não"}</p>
+<p><b>Demência:</b> ${data.da ? "Sim":"Não"}</p>
+<p><b>Cardiopatia:</b> ${data.cardiopatia ? "Sim":"Não"}</p>
+<p><b>Acamado:</b> ${data.acamado ? "Sim":"Não"}</p>
+<p><b>Dieta Especial:</b> ${data.dieta_especial ? "Sim":"Não"}</p>
+
+</div>
+
+`;
+
+}
+
+
 async function carregarColaboradores(){
 
 const {data,error}=await db
@@ -257,67 +301,52 @@ document.getElementById("selectColaborador").innerHTML=html;
 
 async function gerarRotinasDoDia(){
 
-const hoje = new Date().toISOString().split("T")[0];
+const hoje = new Date();
+
+const data = hoje.toISOString().slice(0,10);
+const ano = hoje.getFullYear();
+const mes = hoje.getMonth()+1;
+const dia = hoje.getDate();
 
 /* PACIENTES */
 
-const {data:pacientes}=await db
+const {data:pacientes} = await db
 .from("pacientes")
 .select("id")
 .eq("empresa_id",EMPRESA_ID);
 
 /* MODELOS */
 
-const {data:modelos}=await db
+const {data:modelos} = await db
 .from("rotina_modelos")
 .select("id")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true);
 
-if(!modelos || modelos.length===0){
-console.log("Nenhum modelo de rotina encontrado");
-return;
-}
-
-/* VERIFICAR EXISTENTE */
-
-const {data:existente}=await db
-.from("rotina_execucao")
-.select("id")
-.eq("empresa_id",EMPRESA_ID)
-.eq("data",hoje);
-
-if(existente && existente.length>0){
-return;
-}
-
-/* GERAR */
-
 let inserts=[];
 
-pacientes?.forEach(p=>{
-modelos?.forEach(m=>{
+pacientes.forEach(p=>{
+modelos.forEach(m=>{
+
 inserts.push({
+
 empresa_id:EMPRESA_ID,
 paciente_id:p.id,
 modelo_id:m.id,
-data:hoje,
+data:data,
+ano:ano,
+mes:mes,
+dia:dia,
 status:"pendente"
+
 });
+
 });
 });
 
-/* INSERIR */
-
-const {error}=await db
+await db
 .from("rotina_execucao")
 .insert(inserts);
-
-if(error){
-console.log("Erro inserir rotinas:",error);
-}else{
-console.log("Rotinas geradas:",inserts.length);
-}
 
 }
 
@@ -335,9 +364,10 @@ status,
 data,
 paciente_id,
 pacientes:paciente_id(nome_completo),
-rotina_modelos:rotina_modelo_id(titulo)
+rotina_modelos:modelo_id(titulo)
 `)
 .eq("empresa_id",EMPRESA_ID)
+.eq("data",hoje)
 .order("paciente_id",{ascending:true});
 
 if(error){
@@ -810,6 +840,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
