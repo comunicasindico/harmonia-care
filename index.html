@@ -7,18 +7,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 
 body{margin:0;font-family:Arial;background:#f4f6f9}
 #app{padding:30px}
 
-h1{
-display:flex;
-justify-content:space-between;
-align-items:center
-}
+h1{display:flex;justify-content:space-between}
 
 button{
 padding:10px 16px;
@@ -46,48 +41,17 @@ border-radius:12px;
 box-shadow:0 3px 10px rgba(0,0,0,.08)
 }
 
-.timeline-item{
-padding:12px;
-margin-bottom:8px;
-border-radius:6px
-}
-
-.status-concluida{
-background:#e8f8f0;
-border-left:5px solid #2ecc71
-}
-
-.status-pendente{
-background:#fdecea;
-border-left:5px solid #e74c3c
-}
-
-.status-atrasado{
-background:#fff4e5;
-border-left:5px solid #f39c12
-}
-
 input,select{
 padding:8px;
 border-radius:6px;
 border:1px solid #ccc
 }
 
-/* ===== PRONTUÁRIO ===== */
-
 .prontuario-card{
 background:#fff;
 padding:20px;
 border-radius:10px;
-margin-top:15px;
-box-shadow:0 3px 10px rgba(0,0,0,0.1)
-}
-
-.prontuario-grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:15px;
-margin:10px 0
+margin-top:15px
 }
 
 .alerta-risco{
@@ -100,11 +64,9 @@ font-weight:bold;
 text-align:center
 }
 
-/* ===== MAPA CLÍNICO ===== */
-
 .mapa-clinico{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
 gap:15px;
 margin-bottom:20px
 }
@@ -114,21 +76,6 @@ background:#fff;
 padding:15px;
 border-radius:10px;
 text-align:center;
-box-shadow:0 2px 8px rgba(0,0,0,0.1)
-}
-
-.card-mapa.risco{
-background:#ffe5e5;
-border:2px solid #e74c3c
-}
-
-/* ===== GRÁFICO ===== */
-
-.grafico-container{
-margin-top:40px;
-display:flex;
-flex-direction:column;
-align-items:center
 }
 
 .grafico-wrapper{
@@ -138,26 +85,6 @@ height:350px;
 background:#fff;
 padding:20px;
 border-radius:16px;
-box-shadow:0 4px 15px rgba(0,0,0,.08)
-}
-
-#graficoInstitucional{
-width:100%!important;
-height:100%!important
-}
-
-/* ===== MOBILE ===== */
-
-@media(max-width:768px){
-
-.layout{
-grid-template-columns:1fr
-}
-
-button{
-width:100%
-}
-
 }
 
 </style>
@@ -165,24 +92,19 @@ width:100%
 
 <body>
 
-<!-- LOGIN -->
+<div id="loginWrapper" style="position:fixed;inset:0;background:#f4f6f9;display:flex;justify-content:center;align-items:center">
 
-<div id="loginWrapper" style="position:fixed;inset:0;background:#f4f6f9;display:flex;justify-content:center;align-items:center;z-index:9999;">
-
-<div style="width:350px;background:#fff;padding:30px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.15);text-align:center;">
+<div style="width:350px;background:#fff;padding:30px;border-radius:16px;text-align:center">
 
 <h2>🔐 Harmonia Care</h2>
 
-<input type="email" id="loginEmail" placeholder="Digite seu email" style="width:100%;padding:12px;margin-top:10px;border-radius:8px;border:1px solid #ccc">
+<input type="email" id="loginEmail" placeholder="Email" style="width:100%;margin-top:10px">
+<input type="password" id="loginSenha" placeholder="Senha" style="width:100%;margin-top:10px">
 
-<input type="password" id="loginSenha" placeholder="Digite a senha" style="width:100%;padding:12px;margin-top:20px;border-radius:8px;border:1px solid #ccc">
-
-<button onclick="login()" style="margin-top:20px;width:100%;padding:12px;border:0;border-radius:8px;background:#3498db;color:#fff;font-weight:bold;">Entrar</button>
+<button onclick="login()" style="margin-top:20px;width:100%">Entrar</button>
 
 </div>
 </div>
-
-<!-- APP -->
 
 <div id="app" style="display:none">
 
@@ -191,7 +113,6 @@ width:100%
 <button onclick="logout()" class="btn-danger">Sair</button>
 </h1>
 
-<!-- MAPA CLÍNICO -->
 <div id="mapaClinico"></div>
 
 <div class="layout">
@@ -210,28 +131,15 @@ width:100%
 
 </div>
 
-<hr>
-
 <h2>Históricos</h2>
 
-<div style="display:flex;gap:10px;margin-bottom:15px;">
 <button onclick="carregarHistoricoRotinas()" class="btn-secondary">Rotinas</button>
 <button onclick="carregarHistoricoClinico()" class="btn-primary">Clínico</button>
-</div>
 
-<div style="margin-bottom:15px;">
-<input type="text" id="buscaDinamica" placeholder="Buscar paciente ou rotina..." onkeyup="filtrarBusca()" style="width:100%;">
-</div>
-
-<div id="historicoLista"></div>
-
-<div class="grafico-container">
-<h3>Indicador Institucional</h3>
+<div id="historicoLista" style="margin-top:20px"></div>
 
 <div class="grafico-wrapper">
 <canvas id="graficoInstitucional"></canvas>
-</div>
-
 </div>
 
 </div>
@@ -247,6 +155,200 @@ const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let graficoInstitucional=null;
+
+/* ================= PACIENTES ================= */
+
+async function carregarPacientes(){
+
+const {data,error}=await db
+.from("pacientes")
+.select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
+.order("nome_completo");
+
+if(error){console.log(error);return;}
+
+let html=`<option value="todos">Todos</option>`;
+
+data.forEach(p=>{
+html+=`<option value="${p.id}">${p.nome_completo}</option>`;
+});
+
+document.getElementById("selectPaciente").innerHTML=html;
+
+}
+
+/* ================= COLABORADORES ================= */
+
+async function carregarColaboradores(){
+
+const {data,error}=await db
+.from("vw_usuarios")
+.select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
+.order("nome_completo");
+
+if(error){console.log(error);return;}
+
+let html="";
+
+data.forEach(c=>{
+html+=`<option value="${c.id}">${c.nome_completo}</option>`;
+});
+
+document.getElementById("selectColaborador").innerHTML=html;
+
+}
+
+/* ================= PRONTUARIO ================= */
+
+async function abrirProntuarioPaciente(){
+
+const id=document.getElementById("selectPaciente").value;
+
+const {data}=await db
+.from("pacientes")
+.select("*")
+.eq("id",id)
+.single();
+
+if(!data)return;
+
+let html=`
+<div class="prontuario-card">
+
+<h2>${data.nome_completo}</h2>
+
+${data.grau_risco==="ALTO" ? `<div class="alerta-risco">⚠ PACIENTE DE ALTO RISCO</div>` : ""}
+
+<p><b>Comorbidades:</b> ${data.comorbidades ?? "-"}</p>
+<p><b>Alergias:</b> ${data.alergias ?? "-"}</p>
+<p><b>Medicações:</b> ${data.medicacoes ?? "-"}</p>
+
+</div>
+`;
+
+document.getElementById("prontuarioPaciente").innerHTML=html;
+
+}
+
+/* ================= HISTORICO ROTINAS ================= */
+
+async function carregarHistoricoRotinas(){
+
+const {data,error}=await db
+.from("rotinas")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.order("created_at",{ascending:false});
+
+if(error){console.log(error);return;}
+
+let html="<table width='100%'><tr><th>Paciente</th><th>Rotina</th><th>Data</th></tr>";
+
+data.forEach(r=>{
+html+=`<tr>
+<td>${r.paciente_nome ?? "-"}</td>
+<td>${r.rotina_nome ?? "-"}</td>
+<td>${new Date(r.created_at).toLocaleString()}</td>
+</tr>`;
+});
+
+html+="</table>";
+
+document.getElementById("historicoLista").innerHTML=html;
+
+}
+
+/* ================= HISTORICO CLINICO ================= */
+
+async function carregarHistoricoClinico(){
+
+const {data,error}=await db
+.from("vw_historico_geral")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.order("nome_completo");
+
+if(error){console.log(error);return;}
+
+let html="<table width='100%'><tr><th>Nome</th><th>HAS</th><th>DM</th><th>DA</th><th>Cardio</th><th>Acamado</th></tr>";
+
+data.forEach(p=>{
+html+=`<tr>
+<td>${p.nome_completo}</td>
+<td>${p.has?"✔":""}</td>
+<td>${p.dm?"✔":""}</td>
+<td>${p.da?"✔":""}</td>
+<td>${p.cardiopatia?"✔":""}</td>
+<td>${p.acamado?"✔":""}</td>
+</tr>`;
+});
+
+html+="</table>";
+
+document.getElementById("historicoLista").innerHTML=html;
+
+}
+
+/* ================= MAPA CLINICO ================= */
+
+async function carregarMapaClinico(){
+
+const {data}=await db
+.from("pacientes")
+.select("*")
+.eq("empresa_id",EMPRESA_ID);
+
+let total=data.length;
+
+let html=`
+<div class="mapa-clinico">
+
+<div class="card-mapa">
+<b>Pacientes</b>
+<h2>${total}</h2>
+</div>
+
+</div>
+`;
+
+document.getElementById("mapaClinico").innerHTML=html;
+
+}
+
+/* ================= GRAFICO ================= */
+
+async function carregarGrafico(){
+
+const {data}=await db
+.from("rotina_execucao")
+.select("status")
+.eq("empresa_id",EMPRESA_ID);
+
+let c=0,p=0,a=0;
+
+data.forEach(r=>{
+if(r.status==="concluida")c++;
+else if(r.status==="pendente")p++;
+else a++;
+});
+
+graficoInstitucional=new Chart(
+document.getElementById("graficoInstitucional"),
+{
+type:"bar",
+data:{
+labels:["Concluídas","Pendentes","Atrasadas"],
+datasets:[{
+data:[c,p,a],
+backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
+}]
+}
+}
+);
+
+}
 
 /* ================= LOGIN ================= */
 
@@ -267,7 +369,7 @@ return;
 
 localStorage.setItem("HC_USER",JSON.stringify(data[0]));
 
-iniciarSistema(data[0]);
+iniciarSistema();
 
 }
 
@@ -276,18 +378,16 @@ localStorage.removeItem("HC_USER");
 location.reload();
 }
 
-/* ================= SISTEMA ================= */
-
-function iniciarSistema(usuario){
+function iniciarSistema(){
 
 document.getElementById("loginWrapper").style.display="none";
 document.getElementById("app").style.display="block";
 
 carregarPacientes();
 carregarColaboradores();
+carregarMapaClinico();
 carregarHistoricoRotinas();
 carregarHistoricoClinico();
-carregarMapaClinico();
 carregarGrafico();
 
 }
@@ -297,7 +397,7 @@ window.onload=function(){
 const user=localStorage.getItem("HC_USER");
 
 if(user){
-iniciarSistema(JSON.parse(user));
+iniciarSistema();
 }
 
 };
