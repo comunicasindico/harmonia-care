@@ -259,7 +259,7 @@ async function gerarRotinasDoDia(){
 
 const hoje = new Date().toISOString().split("T")[0];
 
-/* PACIENTES */
+/* BUSCAR PACIENTES */
 
 const {data:pacientes,error:erroPac}=await db
 .from("pacientes")
@@ -267,22 +267,32 @@ const {data:pacientes,error:erroPac}=await db
 .eq("empresa_id",EMPRESA_ID);
 
 if(erroPac){
-console.log("Erro pacientes",erroPac);
+console.log("Erro pacientes:",erroPac);
 return;
 }
 
-/* MODELOS */
+if(!pacientes || pacientes.length===0){
+console.log("Nenhum paciente encontrado");
+return;
+}
+
+/* BUSCAR MODELOS */
 
 const {data:modelos,error:erroMod}=await db
 .from("rotina_modelos")
 .select("id");
 
 if(erroMod){
-console.log("Erro modelos",erroMod);
+console.log("Erro modelos:",erroMod);
 return;
 }
 
-/* VERIFICAR SE JÁ EXISTEM */
+if(!modelos || modelos.length===0){
+console.log("Nenhum modelo de rotina cadastrado");
+return;
+}
+
+/* VERIFICAR SE JÁ EXISTE */
 
 const {data:existente}=await db
 .from("rotina_execucao")
@@ -291,10 +301,11 @@ const {data:existente}=await db
 .eq("data",hoje);
 
 if(existente && existente.length>0){
+console.log("Rotinas já geradas hoje");
 return;
 }
 
-/* CRIAR ROTINAS */
+/* GERAR ROTINAS */
 
 let inserts=[];
 
@@ -315,16 +326,16 @@ created_at:new Date()
 
 });
 
-if(inserts.length>0){
+/* INSERIR */
 
-const {error}=await db
+const {error:erroInsert}=await db
 .from("rotina_execucao")
 .insert(inserts);
 
-if(error){
-console.log("Erro inserir rotinas",error);
-}
-
+if(erroInsert){
+console.log("Erro inserir rotinas:",erroInsert);
+}else{
+console.log("Rotinas geradas:",inserts.length);
 }
 
 }
@@ -347,7 +358,6 @@ pacientes:paciente_id(nome_completo),
 rotina_modelos:modelo_id(titulo)
 `)
 .eq("empresa_id",EMPRESA_ID)
-.order("created_at",{ascending:false})
 .order("paciente_id",{ascending:true});
 
 if(error){
@@ -822,6 +832,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
