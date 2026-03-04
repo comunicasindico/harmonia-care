@@ -131,6 +131,20 @@ border-radius:16px;
 
 </div>
 
+<div style="margin:15px 0;">
+<label><b>Data das Rotinas</b></label><br>
+
+<input type="date" id="dataRotina" 
+value="" 
+style="padding:8px;border-radius:6px;border:1px solid #ccc">
+
+<button class="btn-primary" onclick="carregarHistoricoRotinas()" style="margin-left:10px">
+Buscar
+</button>
+
+</div>
+
+
 <h2>Históricos</h2>
 
 <button onclick="carregarHistoricoRotinas()" class="btn-secondary">Rotinas</button>
@@ -232,18 +246,6 @@ document.getElementById("prontuarioPaciente").innerHTML=html;
 
 }
 
-<div style="margin:15px 0;">
-<label><b>Data das Rotinas</b></label><br>
-
-<input type="date" id="dataRotina" 
-value="" 
-style="padding:8px;border-radius:6px;border:1px solid #ccc">
-
-<button class="btn-primary" onclick="carregarHistoricoRotinas()" style="margin-left:10px">
-Buscar
-</button>
-
-</div>
   
 /* ================= HISTORICO ROTINAS ================= */
 
@@ -500,6 +502,7 @@ campo.value = hoje;
 
 </body>
 </html>
+
 
 
 
