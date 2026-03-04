@@ -174,6 +174,33 @@ color:#7d6608;
 background:#fdecea;
 color:#922b21;
 }
+
+.form-paciente{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:10px;
+margin-top:10px;
+}
+
+.form-paciente label{
+font-size:12px;
+color:#555;
+display:block;
+}
+
+.form-paciente input[type="text"],
+.form-paciente input[type="number"]{
+width:100%;
+padding:6px;
+}
+
+.form-botoes{
+margin-top:10px;
+display:flex;
+gap:10px;
+}
+
+
 </style>
 </head>
 
@@ -210,7 +237,7 @@ color:#922b21;
 </div>
 
 <div id="prontuarioPaciente"></div>
-
+<div id="formPaciente" class="box" style="margin-top:15px"></div>
 <div class="box">
 <h3>Selecionar Colaborador</h3>
 <select id="selectColaborador"></select>
@@ -307,32 +334,193 @@ async function abrirProntuarioPaciente(){
 
 const id=document.getElementById("selectPaciente").value;
 
-const {data}=await db
+if(id==="todos") return;
+
+const {data,error}=await db
 .from("pacientes")
 .select("*")
 .eq("id",id)
 .single();
 
-if(!data)return;
+if(error){console.log(error);return;}
 
 let html=`
-<div class="prontuario-card">
+<h3>Editar Paciente</h3>
 
-<h2>${data.nome_completo}</h2>
+<div class="form-paciente">
 
-${data.grau_risco==="ALTO" ? `<div class="alerta-risco">⚠ PACIENTE DE ALTO RISCO</div>` : ""}
+<div>
+<label>Nome</label>
+<input type="text" id="p_nome" value="${data.nome_completo ?? ""}">
+</div>
 
-<p><b>Comorbidades:</b> ${data.comorbidades ?? "-"}</p>
-<p><b>Alergias:</b> ${data.alergias ?? "-"}</p>
-<p><b>Medicações:</b> ${data.medicacoes ?? "-"}</p>
+<div>
+<label>Idade</label>
+<input type="number" id="p_idade" value="${data.idade ?? ""}">
+</div>
+
+<div>
+<label>HAS</label>
+<input type="checkbox" id="p_has" ${data.has ? "checked":""}>
+</div>
+
+<div>
+<label>DM</label>
+<input type="checkbox" id="p_dm" ${data.dm ? "checked":""}>
+</div>
+
+<div>
+<label>Demência (DA)</label>
+<input type="checkbox" id="p_da" ${data.da ? "checked":""}>
+</div>
+
+<div>
+<label>Cardiopatia</label>
+<input type="checkbox" id="p_cardio" ${data.cardiopatia ? "checked":""}>
+</div>
+
+<div>
+<label>Acamado</label>
+<input type="checkbox" id="p_acamado" ${data.acamado ? "checked":""}>
+</div>
+
+<div>
+<label>Dieta Especial</label>
+<input type="checkbox" id="p_dieta" ${data.dieta_especial ? "checked":""}>
+</div>
+
+<div style="grid-column:1 / -1">
+<label>Outras Comorbidades</label>
+<input type="text" id="p_outros" value="${data.outras_comorbidades ?? ""}">
+</div>
+
+</div>
+
+<div class="form-botoes">
+
+<button class="btn-primary" onclick="salvarPaciente('${data.id}')">
+Salvar
+</button>
+
+<button class="btn-secondary" onclick="novoPaciente()">
+Novo
+</button>
+
+<button class="btn-danger" onclick="excluirPaciente('${data.id}')">
+Excluir
+</button>
 
 </div>
 `;
 
-document.getElementById("prontuarioPaciente").innerHTML=html;
+document.getElementById("formPaciente").innerHTML=html;
 
 }
 
+
+async function salvarPaciente(id){
+const user=JSON.parse(localStorage.getItem("HC_USER"));
+
+const payload={
+nome_completo:document.getElementById("p_nome").value,
+idade:parseInt(document.getElementById("p_idade").value),
+has:document.getElementById("p_has").checked,
+dm:document.getElementById("p_dm").checked,
+da:document.getElementById("p_da").checked,
+cardiopatia:document.getElementById("p_cardio").checked,
+acamado:document.getElementById("p_acamado").checked,
+dieta_especial:document.getElementById("p_dieta").checked,
+outras_comorbidades:document.getElementById("p_outros").value
+};
+
+const {error}=await db
+.from("pacientes")
+.update(payload)
+.eq("id",id);
+
+const {error}=await db
+.from("pacientes")
+.update(payload)
+.eq("id",id);
+
+await db.from("logs_clinicos").insert({
+empresa_id:EMPRESA_ID,
+paciente_id:id,
+usuario_id:user.id,
+acao:"EDITAR",
+dados_novos:payload
+});
+
+if(error){
+alert("Erro ao salvar.");
+console.log(error);
+return;
+}
+
+alert("Paciente atualizado.");
+
+carregarPacientes();
+carregarMapaClinico();
+carregarHistoricoClinico();
+
+}
+  
+
+  async function novoPaciente(){
+
+const nome=prompt("Nome do paciente");
+
+if(!nome) return;
+
+const {error}=await db
+.from("pacientes")
+.insert({
+empresa_id:EMPRESA_ID,
+nome_completo:nome
+});
+
+if(error){
+alert("Erro ao criar paciente.");
+console.log(error);
+return;
+}
+
+carregarPacientes();
+alert("Paciente criado.");
+
+}
+
+
+ async function excluirPaciente(id){
+
+const user=JSON.parse(localStorage.getItem("HC_USER"));
+
+if(!user || user.perfil!=="ADMIN"){
+alert("Apenas administradores podem excluir pacientes.");
+return;
+}
+
+if(!confirm("Deseja excluir este paciente?")) return;
+
+const {error}=await db
+.from("pacientes")
+.delete()
+.eq("id",id);
+
+if(error){
+alert("Erro ao excluir.");
+console.log(error);
+return;
+}
+
+alert("Paciente removido.");
+
+carregarPacientes();
+document.getElementById("formPaciente").innerHTML="";
+
+}
+
+  
   
 /* ================= HISTORICO ROTINAS ================= */
 
@@ -718,6 +906,7 @@ campo.value = hoje;
 
 </body>
 </html>
+
 
 
 
