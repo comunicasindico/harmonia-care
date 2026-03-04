@@ -270,6 +270,11 @@ Buscar
 <canvas id="graficoInstitucional"></canvas>
 </div>
 
+<div id="adminAuditoria" class="box" style="display:none;margin-top:20px">
+<h3>Auditoria do Sistema</h3>
+<div id="listaAuditoria"></div>
+</div>
+
 </div>
 
 <script>
@@ -857,9 +862,46 @@ carregarMapaClinico();
 carregarHistoricoRotinas();
 carregarHistoricoClinico();
 carregarGrafico();
-
+carregarAuditoria();
+  
 }
 
+async function carregarAuditoria(){
+
+const user=JSON.parse(localStorage.getItem("HC_USER"));
+
+if(!user || user.perfil!=="ADMIN") return;
+
+document.getElementById("adminAuditoria").style.display="block";
+
+const {data,error}=await db
+.from("logs_clinicos")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.order("created_at",{ascending:false})
+.limit(20);
+
+if(error){console.log(error);return;}
+
+let html="<table width='100%'><tr><th>Data</th><th>Ação</th></tr>";
+
+data.forEach(l=>{
+
+html+=`
+<tr>
+<td>${new Date(l.created_at).toLocaleString()}</td>
+<td>${l.acao}</td>
+</tr>
+`;
+
+});
+
+html+="</table>";
+
+document.getElementById("listaAuditoria").innerHTML=html;
+
+}
+  
 window.onload=function(){
 
 const user=localStorage.getItem("HC_USER");
@@ -906,6 +948,7 @@ campo.value = hoje;
 
 </body>
 </html>
+
 
 
 
