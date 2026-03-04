@@ -173,301 +173,255 @@ const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let dadosAtuais=[];
 let graficoInstitucional=null;
 
-/* DATA PADRÃO */
-const hoje=new Date().toISOString().split("T")[0];
-histInicio.value=hoje;
-histFim.value=hoje;
+/* ================= FUNÇÕES PRINCIPAIS ================= */
 
-/* ================= PACIENTES ================= */
 async function carregarPacientes(){
+  const {data,error}=await db
+  .from("pacientes")
+  .select("id,nome_completo")
+  .eq("empresa_id",EMPRESA_ID)
+  .order("nome_completo");
 
-const {data,error}=await db
-.from("pacientes")
-.select("id,nome_completo")
-.eq("empresa_id",EMPRESA_ID)
-.order("nome_completo");
+  if(error){console.log(error);return;}
 
-if(error){console.log(error);return;}
+  let html=`<option value="todos">Todos os pacientes</option>`;
+  data?.forEach(p=>{
+    html+=`<option value="${p.id}">${p.nome_completo}</option>`;
+  });
 
-let html=`<option value="todos">Todos os pacientes</option>`;
-data?.forEach(p=>{
-html+=`<option value="${p.id}">${p.nome_completo}</option>`;
-});
-
-selectPaciente.innerHTML=html;
+  document.getElementById("selectPaciente").innerHTML=html;
 }
 
-/* ================= COLABORADORES ================= */
 async function carregarColaboradores(){
+  const {data,error}=await db
+  .from("vw_usuarios")
+  .select("id,nome_completo")
+  .eq("empresa_id",EMPRESA_ID)
+  .order("nome_completo");
 
-const {data,error}=await db
-.from("vw_usuarios")
-.select("id,nome_completo")
-.eq("empresa_id",EMPRESA_ID)
-.order("nome_completo");
+  if(error){console.log(error);return;}
 
-if(error){console.log(error);return;}
+  let html=`<option value="todos">Todos os colaboradores</option>`;
+  data?.forEach(c=>{
+    html+=`<option value="${c.id}">${c.nome_completo}</option>`;
+  });
 
-let html=`<option value="todos">Todos os colaboradores</option>`;
-data?.forEach(c=>{
-html+=`<option value="${c.id}">${c.nome_completo}</option>`;
-});
-
-selectColaborador.innerHTML=html;
+  document.getElementById("selectColaborador").innerHTML=html;
 }
 
-/* ================= HISTÓRICO ROTINAS ================= */
 async function carregarHistoricoRotinas(){
+  const histInicio=document.getElementById("histInicio");
+  const histFim=document.getElementById("histFim");
+  const selectPaciente=document.getElementById("selectPaciente");
 
-let inicio=histInicio.value;
-let fim=histFim.value;
-let paciente=selectPaciente.value;
+  let inicio=histInicio.value;
+  let fim=histFim.value;
+  let paciente=selectPaciente.value;
 
-let query=db.from("rotina_execucao")
-.select(`
-data,
-status,
-paciente_id,
-pacientes(nome_completo),
-rotina_modelos(titulo)
-`)
-.eq("empresa_id",EMPRESA_ID)
-.gte("data",inicio)
-.lte("data",fim);
+  let query=db.from("rotina_execucao")
+  .select(`
+    data,
+    status,
+    paciente_id,
+    pacientes(nome_completo),
+    rotina_modelos(titulo)
+  `)
+  .eq("empresa_id",EMPRESA_ID)
+  .gte("data",inicio)
+  .lte("data",fim);
 
-if(paciente!=="todos"){
-query=query.eq("paciente_id",paciente);
+  if(paciente!=="todos"){
+    query=query.eq("paciente_id",paciente);
+  }
+
+  const {data,error}=await query.order("data",{ascending:false});
+  if(error){console.log(error);return;}
+
+  dadosAtuais=data||[];
+  renderizarLista(dadosAtuais);
 }
 
-const {data,error}=await query.order("data",{ascending:false});
-
-if(error){console.log(error);return;}
-
-dadosAtuais=data||[];
-renderizarLista(dadosAtuais);
-}
-
-/* ================= HISTÓRICO CLÍNICO ================= */
 async function carregarHistoricoClinico(){
+  const {data,error}=await db
+  .from("vw_historico_geral")
+  .select("*")
+  .eq("empresa_id",EMPRESA_ID)
+  .order("nome_completo");
 
-const {data,error}=await db
-.from("vw_historico_geral")
-.select("*")
-.eq("empresa_id",EMPRESA_ID)
-.order("nome_completo");
+  if(error){console.log(error);return;}
 
-if(error){console.log(error);return;}
+  let html="<table width='100%'><tr><th>Nome</th><th>Idade</th><th>HAS</th><th>DM</th><th>D.A</th><th>Cardio</th><th>Acamado</th><th>Dieta Especial</th><th>Outras Comorbidades</th><th>Grau Risco</th></tr>";
 
-let html="<table width='100%' border='0'><tr><th>Nome</th><th>Idade</th><th>HAS</th><th>DM</th><th>D.A</th><th>Cardio</th><th>Acamado</th><th>Dieta Especial</th><th>Outras Comorbidades</th><th>Grau Risco</th></tr>";
+  data?.forEach(p=>{
+    html+=`<tr>
+    <td>${p.nome_completo}</td>
+    <td>${p.idade || ""}</td>
+    <td>${p.has?"✔":""}</td>
+    <td>${p.dm?"✔":""}</td>
+    <td>${p.da?"✔":""}</td>
+    <td>${p.cardiopatia?"✔":""}</td>
+    <td>${p.acamado?"✔":""}</td>
+    <td>${p.dieta_especial||""}</td>
+    <td>${p.outras_comorbidades||""}</td>
+    <td>${p.grau_risco||""}</td>
+    </tr>`;
+  });
 
-data?.forEach(p=>{
-html+=`<tr>
-<td>${p.nome_completo}</td>
-<td>${p.idade || ""}</td>
-<td>${p.has?"✔":""}</td>
-<td>${p.dm?"✔":""}</td>
-<td>${p.da?"✔":""}</td>
-<td>${p.cardiopatia?"✔":""}</td>
-<td>${p.acamado?"✔":""}</td>
-<td>${p.dieta_especial||""}</td>
-<td>${p.outras_comorbidades||""}</td>
-<td>${p.grau_risco||""}</td>
-</tr>`;
-});
-
-html+="</table>";
-
-historicoLista.innerHTML=html;
+  html+="</table>";
+  document.getElementById("historicoLista").innerHTML=html;
 }
 
-/* ================= RENDER ================= */
 function renderizarLista(lista){
+  if(!lista.length){
+    document.getElementById("historicoLista").innerHTML="<p>Nenhuma rotina encontrada.</p>";
+    return;
+  }
 
-if(!lista.length){
-historicoLista.innerHTML="<p>Nenhuma rotina encontrada.</p>";
-return;
+  let html="";
+
+  lista.forEach(r=>{
+    let classe="";
+    if(r.status==="concluida")classe="status-concluida";
+    else if(r.status==="pendente")classe="status-pendente";
+    else classe="status-atrasado";
+
+    html+=`<div class="timeline-item ${classe}">
+      <strong>${r.data}</strong> -
+      ${r.pacientes?.nome_completo} -
+      ${r.rotina_modelos?.titulo}
+      (${r.status})
+    </div>`;
+  });
+
+  document.getElementById("historicoLista").innerHTML=html;
 }
 
-let html="";
-
-lista.forEach(r=>{
-let classe="";
-if(r.status==="concluida")classe="status-concluida";
-else if(r.status==="pendente")classe="status-pendente";
-else classe="status-atrasado";
-
-html+=`<div class="timeline-item ${classe}">
-<strong>${r.data}</strong> -
-${r.pacientes?.nome_completo} -
-${r.rotina_modelos?.titulo}
-(${r.status})
-</div>`;
-});
-
-historicoLista.innerHTML=html;
-}
-
-/* ================= BUSCA ================= */
 function filtrarBusca(){
-let termo=buscaDinamica.value.toLowerCase();
-let filtrado=dadosAtuais.filter(r=>
-(r.pacientes?.nome_completo||"").toLowerCase().includes(termo) ||
-(r.rotina_modelos?.titulo||"").toLowerCase().includes(termo)
-);
-renderizarLista(filtrado);
+  const termo=document.getElementById("buscaDinamica").value.toLowerCase();
+  let filtrado=dadosAtuais.filter(r=>
+    (r.pacientes?.nome_completo||"").toLowerCase().includes(termo) ||
+    (r.rotina_modelos?.titulo||"").toLowerCase().includes(termo)
+  );
+  renderizarLista(filtrado);
 }
 
-/* ================= PDF ================= */
-function exportarPDF(){
-if(!dadosAtuais.length){alert("Sem dados.");return;}
-
-const { jsPDF } = window.jspdf;
-const doc=new jsPDF();
-doc.text("Relatório Harmonia Care",20,20);
-
-let y=30;
-
-dadosAtuais.forEach(r=>{
-doc.text(`${r.data} - ${r.pacientes?.nome_completo} - ${r.rotina_modelos?.titulo} (${r.status})`,20,y);
-y+=8;
-if(y>270){doc.addPage();y=20;}
-});
-
-doc.save("relatorio.pdf");
-}
-
-/* ================= GRÁFICO ================= */
 async function carregarGrafico(){
+  if(graficoInstitucional){
+    graficoInstitucional.destroy();
+    graficoInstitucional=null;
+  }
 
-if(graficoInstitucional){
-graficoInstitucional.destroy();
-graficoInstitucional=null;
+  const {data,error}=await db
+  .from("rotina_execucao")
+  .select("status")
+  .eq("empresa_id",EMPRESA_ID);
+
+  if(error){console.log(error);return;}
+
+  let c=0,p=0,a=0;
+  data?.forEach(r=>{
+    if(r.status==="concluida")c++;
+    else if(r.status==="pendente")p++;
+    else a++;
+  });
+
+  graficoInstitucional=new Chart(
+    document.getElementById("graficoInstitucional"),
+    {
+      type:"bar",
+      data:{
+        labels:["Concluídas","Pendentes","Atrasadas"],
+        datasets:[{
+          data:[c,p,a],
+          backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        animation:false,
+        plugins:{legend:{display:false}},
+        scales:{y:{beginAtZero:true}}
+      }
+    }
+  );
 }
 
-const {data,error}=await db
-.from("rotina_execucao")
-.select("status")
-.eq("empresa_id",EMPRESA_ID);
-
-if(error){console.log(error);return;}
-
-let c=0,p=0,a=0;
-
-data?.forEach(r=>{
-if(r.status==="concluida")c++;
-else if(r.status==="pendente")p++;
-else a++;
-});
-
-graficoInstitucional=new Chart(
-document.getElementById("graficoInstitucional"),
-{
-type:"bar",
-data:{
-labels:["Concluídas","Pendentes","Atrasadas"],
-datasets:[{
-data:[c,p,a],
-backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
-}]
-},
-options:{
-responsive:true,
-maintainAspectRatio:false,
-animation:false,
-plugins:{legend:{display:false}},
-scales:{y:{beginAtZero:true}}
-}
-});
-}
-
-/* INIT */
-carregarPacientes();
-carregarColaboradores();
-carregarGrafico();
-carregarHistoricoRotinas();
 /* ================= LOGIN ================= */
 
 async function login(){
+  const email=document.getElementById("loginEmail").value;
+  const senha=document.getElementById("loginSenha").value;
 
-  const email = document.getElementById("loginEmail").value;
-  const senha = document.getElementById("loginSenha").value;
-
-  const { data, error } = await db.rpc('verificar_login',{
-    p_email: email,
-    p_senha: senha
+  const {data,error}=await db.rpc('verificar_login',{
+    p_email:email,
+    p_senha:senha
   });
 
-  if(error || !data || data.length === 0){
+  if(error || !data || data.length===0){
     alert("Usuário ou senha inválidos.");
     return;
   }
 
-  const usuario = data[0];
+  const usuario=data[0];
+  localStorage.setItem("HC_USER",JSON.stringify(usuario));
 
-  localStorage.setItem("HC_USER", JSON.stringify(usuario));
-
-  document.getElementById("loginWrapper").style.display="none";
-  document.getElementById("app").style.display="block";
-
-  aplicarPermissoes(usuario.cargo);
+  iniciarSistema(usuario);
 }
 
+function aplicarPermissoes(cargo){
+  if(cargo==="admin") return;
 
-  function aplicarPermissoes(cargo){
-
-  if(cargo === "admin"){
-    return;
-  }
-
-  if(cargo === "enfermeiro"){
+  if(cargo==="enfermeiro"){
     document.querySelectorAll(".btn-danger")
-      .forEach(btn => btn.style.display="none");
+    .forEach(btn=>btn.style.display="none");
   }
 
-  if(cargo === "tecnico"){
-    const botaoClinico = document.querySelector("button[onclick='carregarHistoricoClinico()']");
+  if(cargo==="tecnico"){
+    const botaoClinico=document.querySelector("button[onclick='carregarHistoricoClinico()']");
     if(botaoClinico) botaoClinico.style.display="none";
   }
 }
 
-  
 function logout(){
-
   localStorage.removeItem("HC_USER");
-
-  document.getElementById("app").style.display="none";
-  document.getElementById("loginWrapper").style.display="flex";
+  location.reload();
 }
 
-/* Verifica sessão ao abrir */
-window.onload = function(){
+function iniciarSistema(usuario){
+  document.getElementById("loginWrapper").style.display="none";
+  document.getElementById("app").style.display="block";
 
-  const user = localStorage.getItem("HC_USER");
+  aplicarPermissoes(usuario.cargo);
+
+  const hoje=new Date().toISOString().split("T")[0];
+  document.getElementById("histInicio").value=hoje;
+  document.getElementById("histFim").value=hoje;
+
+  carregarPacientes();
+  carregarColaboradores();
+  carregarGrafico();
+  carregarHistoricoRotinas();
+}
+
+/* ================= VERIFICA SESSÃO ================= */
+
+window.onload=function(){
+  const user=localStorage.getItem("HC_USER");
 
   if(user){
-    document.getElementById("loginWrapper").style.display="none";
-    document.getElementById("app").style.display="block";
-
-    aplicarPermissoes(JSON.parse(user).cargo);
-
-    // Só carrega sistema se estiver logado
-    carregarPacientes();
-    carregarColaboradores();
-    carregarGrafico();
-    carregarHistoricoRotinas();
-
-  } else {
+    iniciarSistema(JSON.parse(user));
+  }else{
     document.getElementById("loginWrapper").style.display="flex";
     document.getElementById("app").style.display="none";
   }
-
 };
 
-  
 </script>
 
 </body>
 </html>
+
 
 
 
