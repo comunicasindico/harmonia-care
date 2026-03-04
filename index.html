@@ -1056,7 +1056,7 @@ const {data:rotinasHoje} = await db
 if(!rotinasHoje || rotinasHoje.length === 0){
 console.log("Gerando rotinas do dia...");
 try{
-await gerarRotinasDoDia();
+
 }catch(e){
 console.warn("Erro gerar rotinas:",e);
 }
@@ -1144,6 +1144,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
