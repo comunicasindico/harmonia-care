@@ -152,7 +152,33 @@ border:1px solid #eee;
 .tabela-rotinas tr:hover{
 background:#fafafa;
 }
+.grade-rotinas{
+width:100%;
+border-collapse:collapse;
+font-size:13px;
+}
 
+.grade-rotinas th{
+background:#2c3e50;
+color:white;
+padding:8px;
+border:1px solid #ddd;
+}
+
+.grade-rotinas td{
+border:1px solid #eee;
+padding:6px;
+text-align:center;
+}
+
+.grade-rotinas td.nome{
+text-align:left;
+font-weight:bold;
+}
+
+.grade-rotinas tr:nth-child(even){
+background:#f9f9f9;
+}
   
 </style>
 </head>
@@ -202,8 +228,13 @@ background:#fafafa;
 Gerar Rotinas do Dia
 </button>
 
-<button onclick="carregarHistoricoRotinas()" class="btn-secondary">Rotinas</button>
-<button onclick="carregarHistoricoClinico()" class="btn-primary">Clínico</button>
+<button onclick="carregarTabelaRotinas()" class="btn-secondary">
+Grade de Rotinas
+</button>
+
+<button onclick="carregarHistoricoClinico()" class="btn-primary">
+Clínico
+</button>
 
 <div id="historicoLista" style="margin-top:20px"></div>
 
@@ -567,17 +598,15 @@ carregarGrafico();
 }
 
 /* TABELA ROTINAS */
-
 async function carregarTabelaRotinas(){
 
 const hoje = new Date().toISOString().split("T")[0];
 
-const {data,error} = await db
+const {data,error}=await db
 .from("rotina_execucao")
 .select(`
 id,
 status,
-data,
 paciente_id,
 pacientes:paciente_id(nome_completo),
 rotina_modelos:modelo_id(titulo)
@@ -607,59 +636,45 @@ pacientes[pid].rotinas[r.rotina_modelos?.titulo]=r;
 
 });
 
-let html=`
+let colunas=[
+"Banho",
+"Medicação",
+"Alimentação",
+"Higiene",
+"Troca de Fralda"
+];
 
-<h3>Rotinas do dia</h3>
-
-<table class="tabela-rotinas">
+let html=`<h3>Grade de Rotinas</h3>
+<table class="grade-rotinas">
 
 <tr>
 <th>Paciente</th>
-<th>Banho</th>
-<th>Fraldas</th>
-<th>Água</th>
-<th>Café</th>
-<th>Almoço</th>
-<th>Suco</th>
-<th>Jantar</th>
-<th>Outros</th>
+${colunas.map(c=>`<th>${c}</th>`).join("")}
 </tr>
-
 `;
 
 for(let pid in pacientes){
 
 let p=pacientes[pid];
 
-html+=`<tr><td>${p.nome}</td>`;
+html+=`<tr>
+<td class="nome">${p.nome}</td>
+`;
 
-const colunas=[
-"Banho",
-"Trocar Fraldas",
-"Tomar Agua",
-"Cafe da Manha",
-"Almoco",
-"Suco",
-"Jantar",
-"Outros"
-];
+colunas.forEach(c=>{
 
-colunas.forEach(nome=>{
+let r=p.rotinas[c];
 
-let rotina=p.rotinas[nome];
+if(r){
 
-if(rotina){
-
-let checked = rotina.status==="concluida" ? "checked" : "";
+let checked=r.status==="concluida"?"checked":"";
 
 html+=`
-
 <td>
 <input type="checkbox"
 ${checked}
-onchange="toggleRotina('${rotina.id}',this.checked)">
+onchange="toggleRotina('${r.id}',this.checked)">
 </td>
-
 `;
 
 }else{
@@ -1014,6 +1029,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
