@@ -220,6 +220,127 @@ document.getElementById("selectPaciente").innerHTML=html;
 
 }
 
+async function carregarHistoricoRotinas(){
+
+const dataFiltro = document.getElementById("dataRotina")?.value;
+
+let query = db
+.from("rotina_execucao")
+.select(`
+id,
+status,
+data,
+pacientes:paciente_id(nome_completo),
+rotina_modelos:modelo_id(titulo),
+executado_por
+`)
+.eq("empresa_id",EMPRESA_ID)
+.order("data",{ascending:false});
+
+if(dataFiltro){
+query=query.eq("data",dataFiltro);
+}
+
+const {data,error}=await query;
+
+if(error){
+console.error(error);
+alert("Erro ao carregar rotinas.");
+return;
+}
+
+if(!data || data.length===0){
+document.getElementById("historicoLista").innerHTML="<p>Nenhuma rotina registrada.</p>";
+return;
+}
+
+let html=`
+<table class="tabela-clinica">
+
+<tr>
+<th>Paciente</th>
+<th>Rotina</th>
+<th>Status</th>
+<th>Ação</th>
+</tr>
+`;
+
+data.forEach(r=>{
+
+let status="";
+let botao="";
+
+if(r.status==="concluida"){
+status="✔ Concluída";
+botao="";
+}
+else{
+
+status="⏳ Pendente";
+
+botao=`
+<button class="btn-primary"
+onclick="concluirRotina('${r.id}')">
+Concluir
+</button>
+`;
+
+}
+
+html+=`
+<tr>
+
+<td class="nome">
+${r.pacientes?.nome_completo ?? "-"}
+</td>
+
+<td>
+${r.rotina_modelos?.titulo ?? "-"}
+</td>
+
+<td>
+${status}
+</td>
+
+<td>
+${botao}
+</td>
+
+</tr>
+`;
+
+});
+
+html+="</table>";
+
+document.getElementById("historicoLista").innerHTML=html;
+
+}
+
+async function concluirRotina(id){
+
+const user=JSON.parse(localStorage.getItem("HC_USER"));
+
+const {error}=await db
+.from("rotina_execucao")
+.update({
+status:"concluida",
+executado_por:user?.id,
+horario_execucao:new Date()
+})
+.eq("id",id);
+
+if(error){
+console.error(error);
+alert("Erro ao concluir rotina.");
+return;
+}
+
+carregarHistoricoRotinas();
+carregarGrafico();
+
+}
+
 /* HISTORICO CLINICO */
 
 async function carregarHistoricoClinico(){
@@ -468,3 +589,4 @@ iniciarSistema();
 
 </body>
 </html>
+
