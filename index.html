@@ -270,7 +270,14 @@ const {data:pacientes}=await db
 
 const {data:modelos}=await db
 .from("rotina_modelos")
-.select("id");
+.select("id")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true);
+
+if(!modelos || modelos.length===0){
+console.log("Nenhum modelo de rotina encontrado");
+return;
+}
 
 /* VERIFICAR EXISTENTE */
 
@@ -289,30 +296,30 @@ return;
 let inserts=[];
 
 pacientes?.forEach(p=>{
-
 modelos?.forEach(m=>{
-
 inserts.push({
 empresa_id:EMPRESA_ID,
 paciente_id:p.id,
-rotina_modelo_id:m.id,
+modelo_id:m.id,
 data:hoje,
-status:"pendente",
-created_at:new Date()
+status:"pendente"
 });
-
 });
-
 });
 
 /* INSERIR */
 
-await db
+const {error}=await db
 .from("rotina_execucao")
 .insert(inserts);
 
+if(error){
+console.log("Erro inserir rotinas:",error);
+}else{
+console.log("Rotinas geradas:",inserts.length);
 }
 
+}
 
 /* HISTORICO ROTINAS */
 
@@ -805,6 +812,7 @@ alert("Erro ao gerar rotinas.");
 
 </body>
 </html>
+
 
 
 
