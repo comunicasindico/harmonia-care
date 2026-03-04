@@ -248,6 +248,67 @@ document.getElementById("selectColaborador").innerHTML=html;
 
 }
 
+
+async function gerarRotinasDoDia(){
+
+const hoje = new Date().toISOString().split("T")[0];
+
+/* PACIENTES */
+
+const {data:pacientes}=await db
+.from("pacientes")
+.select("id")
+.eq("empresa_id",EMPRESA_ID);
+
+/* MODELOS DE ROTINA */
+
+const {data:modelos}=await db
+.from("rotina_modelos")
+.select("id");
+
+/* VERIFICAR SE JÁ EXISTE */
+
+const {data:existente}=await db
+.from("rotina_execucao")
+.select("id")
+.eq("empresa_id",EMPRESA_ID)
+.eq("data",hoje);
+
+if(existente.length>0){
+return;
+}
+
+/* CRIAR ROTINAS */
+
+let inserts=[];
+
+pacientes.forEach(p=>{
+
+modelos.forEach(m=>{
+
+inserts.push({
+
+empresa_id:EMPRESA_ID,
+paciente_id:p.id,
+modelo_id:m.id,
+data:hoje,
+status:"pendente"
+
+});
+
+});
+
+});
+
+if(inserts.length>0){
+
+await db
+.from("rotina_execucao")
+.insert(inserts);
+
+}
+
+}
 async function carregarHistoricoRotinas(){
 
 const dataFiltro = document.getElementById("dataRotina")?.value;
@@ -608,12 +669,19 @@ backgroundColor:["#2ecc71","#e74c3c","#f39c12"]
 
 }
 
+<script>
+
 /* LOGIN */
 
 async function login(){
 
-const email=document.getElementById("loginEmail").value;
-const senha=document.getElementById("loginSenha").value;
+const email=document.getElementById("loginEmail").value.trim();
+const senha=document.getElementById("loginSenha").value.trim();
+
+if(!email || !senha){
+alert("Informe email e senha.");
+return;
+}
 
 const {data,error}=await db.rpc('verificar_login',{
 p_email:email,
@@ -621,50 +689,75 @@ p_senha:senha
 });
 
 if(error || !data || data.length===0){
+console.error("Erro login:",error);
 alert("Usuário ou senha inválidos.");
 return;
 }
 
 localStorage.setItem("HC_USER",JSON.stringify(data[0]));
 
-iniciarSistema();
+await iniciarSistema();
 
 }
 
 function logout(){
+
 localStorage.removeItem("HC_USER");
 location.reload();
+
 }
 
-function iniciarSistema(){
+/* INICIAR SISTEMA */
+
+async function iniciarSistema(){
 
 document.getElementById("loginWrapper").style.display="none";
 document.getElementById("app").style.display="block";
 
-carregarPacientes();
-carregarColaboradores();
-carregarMapaClinico();
+/* GERAR ROTINAS DO DIA */
 
-carregarHistoricoRotinas();
-carregarHistoricoClinico();
+try{
+await gerarRotinasDoDia();
+}catch(e){
+console.warn("Erro gerar rotinas:",e);
+}
 
-carregarGrafico();
-carregarAuditoria();
+/* CARREGAR SISTEMA */
+
+await carregarPacientes();
+
+if(typeof carregarColaboradores==="function"){
+await carregarColaboradores();
+}
+
+await carregarMapaClinico();
+await carregarHistoricoRotinas();
+await carregarHistoricoClinico();
+
+if(typeof carregarGrafico==="function"){
+await carregarGrafico();
+}
+
+if(typeof carregarAuditoria==="function"){
+await carregarAuditoria();
+}
 
 }
+
+/* CALCULAR IDADE */
 
 function calcularIdade(data){
 
 if(!data) return "";
 
-const hoje = new Date();
-const nasc = new Date(data);
+const hoje=new Date();
+const nasc=new Date(data);
 
-let idade = hoje.getFullYear() - nasc.getFullYear();
+let idade=hoje.getFullYear()-nasc.getFullYear();
 
-const m = hoje.getMonth() - nasc.getMonth();
+const m=hoje.getMonth()-nasc.getMonth();
 
-if(m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())){
+if(m<0 || (m===0 && hoje.getDate()<nasc.getDate())){
 idade--;
 }
 
@@ -672,15 +765,17 @@ return idade;
 
 }
 
-window.onload=function(){
+/* AUTO LOGIN */
+
+document.addEventListener("DOMContentLoaded", async ()=>{
 
 const user=localStorage.getItem("HC_USER");
 
 if(user){
-iniciarSistema();
+await iniciarSistema();
 }
 
-}
+});
 
 </script>
 
