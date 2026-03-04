@@ -243,8 +243,7 @@ id,
 status,
 created_at,
 pacientes!fk_rotina_paciente(nome_completo),
-rotina_modelos!rotina_execucao_modelo_id_fkey(titulo),
-usuarios!executado_por(nome_completo)
+rotina_modelos!rotina_execucao_modelo_id_fkey(titulo)
 `)
 .eq("empresa_id", EMPRESA_ID)
 .order("created_at", { ascending:false });
@@ -472,6 +471,7 @@ carregarGrafico();
 
 </body>
 </html>
+
 
 
 
