@@ -162,7 +162,7 @@ const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 
-const supabase = window.supabase.createClient(
+const db = window.supabase.createClient(
 SUPABASE_URL,
 SUPABASE_KEY
 );
@@ -238,7 +238,7 @@ try{
 
 const turno="manha"
 
-const {data,error}=await supabase
+const {data,error}=await db
 .from("vw_rotinas_painel")
 .select("*")
 .eq("turno",turno)
@@ -276,7 +276,7 @@ console.log(e)
 
 async function executar(id){
 
-await supabase
+await db
 .from("rotinas_execucao")
 .update({status:"executado"})
 .eq("id",id)
@@ -289,7 +289,7 @@ async function carregarClinico(){
 
 try{
 
-const {data,error}=await supabase
+const {data,error}=await db
 .from("pacientes")
 .select("*")
 .eq("empresa_id",EMPRESA_ID)
@@ -352,6 +352,7 @@ carregarClinico()
 
 </body>
 </html>
+
 
 
 
