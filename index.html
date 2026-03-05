@@ -56,6 +56,22 @@ th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left;}
 .status-pendente{color:#e67e22;font-weight:bold}
 .status-executado{color:#2ecc71;font-weight:bold}
 .status-atrasado{color:#e74c3c;font-weight:bold}
+
+.status-pendente{
+color:#e67e22;
+font-weight:bold;
+}
+
+.status-executado{
+color:#2ecc71;
+font-weight:bold;
+}
+
+.status-atrasado{
+color:#e74c3c;
+font-weight:bold;
+}
+
 </style>
 </head>
 
@@ -271,7 +287,7 @@ document.getElementById("rotinas").innerHTML=html;
 }
 
 async function executar(id){
-
+if(!confirm("Confirmar execução da rotina?")) return;
 const {error}=await db
 .from("rotinas_execucao")
 .update({
@@ -279,15 +295,12 @@ status:"executado",
 horario_execucao:new Date()
 })
 .eq("id",id);
-
 if(error){
 console.log(error);
 alert("Erro ao registrar execução");
 return;
 }
-
 carregarRotinas();
-
 }
 
 async function carregarClinico(){
@@ -355,6 +368,7 @@ carregarClinico()
 
 </body>
 </html>
+
 
 
 
