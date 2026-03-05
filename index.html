@@ -248,25 +248,19 @@ document.getElementById("painelClinico").style.display="block"
 }
 
 async function carregarRotinas(){
-
 const turno="manha";
-
 const {data,error}=await db
 .from("vw_rotinas_painel")
 .select("*")
-.eq("empresa_id",EMPRESA_ID)
+
 .eq("turno",turno)
 .order("paciente",{ascending:true});
-
 if(error){
 console.log(error);
 return;
 }
-
 let html="";
-
 data.forEach(r=>{
-
 html+=`
 <tr>
 <td>${r.paciente}</td>
@@ -279,11 +273,8 @@ Executar
 </td>
 </tr>
 `;
-
 });
-
 document.getElementById("rotinas").innerHTML=html;
-
 }
 
 async function executar(id){
@@ -368,6 +359,7 @@ carregarClinico()
 
 </body>
 </html>
+
 
 
 
