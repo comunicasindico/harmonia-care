@@ -70,21 +70,21 @@ button{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:poin
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co"
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e"
-const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+const { createClient } = supabase;
+const db=createClient(SUPABASE_URL,SUPABASE_KEY);
 let grafico=null
 
 function turnoAtual(){const h=new Date().getHours();if(h>=5&&h<12)return"manha";if(h>=12&&h<18)return"tarde";return"noite"}
 
 async function gerarRotinasDoDia(){
-console.log("Gerando rotinas...");
 const hoje=new Date().toISOString().slice(0,10);
+console.log("Gerando rotinas",hoje);
 
-const{data:pacientes,error:pErro}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID);
-if(pErro){alert("Erro pacientes");console.error(pErro);return;}
-if(!pacientes||pacientes.length===0){alert("Nenhum paciente cadastrado");return;}
+const {data:pacientes,error:pErro}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID);
+if(pErro){console.error(pErro);alert("Erro pacientes");return;}
 
-const{data:modelos,error:mErro}=await db.from("rotina_modelos").select("id,turno").eq("empresa_id",EMPRESA_ID).eq("ativo",true);
-if(mErro){alert("Erro modelos");console.error(mErro);return;}
+const {data:modelos,error:mErro}=await db.from("rotina_modelos").select("id,turno").eq("empresa_id",EMPRESA_ID).eq("ativo",true);
+if(mErro){console.error(mErro);alert("Erro modelos");return;}
 
 let inserts=[];
 pacientes.forEach(p=>{
@@ -101,13 +101,10 @@ turno:m.turno
 });
 });
 
-if(inserts.length===0){
-alert("Nada para gerar");
-return;
-}
+console.log("Inserindo rotinas:",inserts.length);
 
-const{error}=await db.from("rotina_execucao").insert(inserts);
-if(error){alert("Erro ao gravar");console.error(error);return;}
+const {error}=await db.from("rotina_execucao").insert(inserts);
+if(error){console.error(error);alert("Erro ao inserir");return;}
 
 alert("Rotinas geradas com sucesso");
 carregarPainel();
@@ -205,5 +202,6 @@ if(u)iniciarSistema()
 </script>
 </body>
 </html>
+
 
 
