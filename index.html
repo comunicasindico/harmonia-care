@@ -1,26 +1,67 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Harmonia Care</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#f4f6f9}
-#app{padding:30px}
-h1{display:flex;justify-content:space-between;align-items:center}
-button{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
+
+body{
+margin:0;
+font-family:Arial;
+background:#f4f6f9;
+}
+
+#app{
+padding:30px;
+}
+
+h1{
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+button{
+padding:10px 16px;
+border:0;
+border-radius:8px;
+font-weight:bold;
+cursor:pointer;
+}
+
 .btn-primary{background:#3498db;color:#fff}
 .btn-secondary{background:#555;color:#fff}
-.btn-danger{background:#e74c3c;color:#fff}
-.card{background:#fff;border-radius:12px;padding:20px;margin-top:20px;box-shadow:0 3px 10px rgba(0,0,0,0.1)}
-.turno{margin-top:20px}
-.rotina{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #eee}
-.status-ok{color:green;font-weight:bold}
+.btn-success{background:#2ecc71;color:#fff}
+
+.box{
+background:#fff;
+padding:25px;
+border-radius:12px;
+margin-top:20px;
+box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:10px;
+border-bottom:1px solid #ddd;
+text-align:left;
+}
+
 .status-pendente{color:#e67e22;font-weight:bold}
-.status-atrasado{color:red;font-weight:bold}
+.status-executado{color:#2ecc71;font-weight:bold}
+.status-atrasado{color:#e74c3c;font-weight:bold}
+
 </style>
 </head>
 
@@ -30,228 +71,179 @@ button{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:poin
 
 <h1>
 <span>Harmonia Care</span>
-<button onclick="logout()" class="btn-danger">Sair</button>
+<button onclick="logout()" class="btn-secondary">Sair</button>
 </h1>
 
 <h2>Painel Enfermagem</h2>
 
-<button onclick="gerarRotinasDoDia()" class="btn-primary">Gerar Rotinas</button>
-<button onclick="carregarPainel()" class="btn-secondary">Atualizar</button>
+<button onclick="gerarRotinas()" class="btn-primary">Gerar Rotinas</button>
+<button onclick="carregarTudo()" class="btn-secondary">Atualizar</button>
 
-<div class="card">
+<div class="box">
 <h3>Ranking da Equipe</h3>
-<canvas id="graficoEquipe"></canvas>
+<div id="ranking"></div>
 </div>
 
-<div class="card">
+<div class="box">
 <h3>Rotinas do Turno</h3>
-<div id="painelRotinas"></div>
+<table>
+<thead>
+<tr>
+<th>Paciente</th>
+<th>Rotina</th>
+<th>Status</th>
+<th>Ação</th>
+</tr>
+</thead>
+<tbody id="rotinas"></tbody>
+</table>
 </div>
 
 </div>
 
 <script>
 
-const SUPABASE_URL="https://SEU_PROJETO.supabase.co"
+/* SUPABASE */
+const SUPABASE_URL = "https://whvwqektkinnhdprehss.supabase.co"
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
-
-const {createClient}=supabase
-const db=createClient(SUPABASE_URL,SUPABASE_KEY)
-
-let usuarioAtual=null
-
-function logout(){
-location.reload()
-}
-
+const supabase = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+ 
+/* DETECTAR TURNO */
 function turnoAtual(){
-const h=new Date().getHours()
-if(h>=5&&h<12)return"manha"
-if(h>=12&&h<18)return"tarde"
-return"noite"
+const h = new Date().getHours()
+if(h>=5 && h<12) return "MANHÃ"
+if(h>=12 && h<18) return "TARDE"
+return "NOITE"
 }
 
-function statusRotina(r){
-if(r.status==="executado")return"status-ok"
-const agora=new Date()
-const exec=new Date(r.data+"T23:59:59")
-if(agora>exec)return"status-atrasado"
-return"status-pendente"
-}
-
-async function gerarRotinasDoDia(){
-
-const hoje=new Date().toISOString().slice(0,10)
-
-const {data:exist}=await db
-.from("rotinas_execucao")
-.select("id")
-.eq("data",hoje)
-.limit(1)
-
-if(exist.length){
-alert("Rotinas já geradas hoje")
-return
-}
-
-const {data:pacientes}=await db
-.from("pacientes")
-.select("id")
-
-const {data:modelos}=await db
-.from("rotina_modelos")
-.select("id,titulo,turno")
-.eq("ativo",true)
-
-if(!pacientes.length||!modelos.length){
-alert("Nada para gerar")
-return
-}
-
-let inserts=[]
-
-pacientes.forEach(p=>{
-modelos.forEach(m=>{
-inserts.push({
-paciente_id:p.id,
-rotina_id:m.id,
-data:hoje,
-status:"pendente"
-})
-})
-})
-
-const {error}=await db
-.from("rotinas_execucao")
-.insert(inserts)
-
+/* GERAR ROTINAS */
+async function gerarRotinas(){
+const {error} = await supabase.rpc("gerar_rotinas_do_dia")
 if(error){
-console.error(error)
-alert("Erro ao gerar")
+alert("Erro ao gerar rotinas")
 return
 }
-
-alert("Rotinas geradas")
-
-carregarPainel()
+carregarTudo()
 }
 
-async function carregarPainel(){
-
-const hoje=new Date().toISOString().slice(0,10)
-const turno=turnoAtual()
-
-const {data, error}=await db
-.from("rotinas_execucao")
-.select(`
-id,
-status,
-data,
-turno,
-rotina_modelos(titulo),
-pacientes(nome_completo)
-`)
-.eq("data",hoje)
-.eq("turno",turno)
-
+/* CARREGAR ROTINAS */
+async function carregarRotinas(){
+const turno = turnoAtual()
+const {data,error} = await supabase
+.from("vw_rotinas_painel")
+.select("*")
+.eq("data", new Date().toISOString().slice(0,10))
+.eq("turno", turno)
+.order("paciente")
+.limit(1000)
 if(error){
-console.error(error)
+console.error("Erro ao carregar rotinas:",error)
 return
 }
-
-renderRotinas(data)
-rankingEquipe()
-
-}
-
-function renderRotinas(rotinas){
-
-const painel=document.getElementById("painelRotinas")
-painel.innerHTML=""
-
-if(!rotinas.length){
-painel.innerHTML="<p>Nenhuma rotina</p>"
+let html=""
+if(!data || data.length===0){
+document.getElementById("rotinas").innerHTML=
+`<tr><td colspan="4">Nenhuma rotina encontrada</td></tr>`
 return
 }
-
-rotinas.forEach(r=>{
-
-const div=document.createElement("div")
-div.className="rotina"
-
-div.innerHTML=`
-<span>${r.pacientes?.nome_completo||""}</span>
-<span>${r.rotina_modelos?.titulo||""}</span>
-<span class="${statusRotina(r)}">${r.status}</span>
-<button onclick="executarRotina('${r.id}')">Executar</button>
+data.forEach(r=>{
+html+=`
+<tr>
+<td>${r.paciente}</td>
+<td>${r.rotina}</td>
+<td class="status-${r.status}">${r.status}</td>
+<td>
+${r.status!=="executado"
+? `<button onclick="executar('${r.id}')" class="btn-success">Executar</button>`
+: ""}
+</td>
+</tr>
 `
-
-painel.appendChild(div)
-
 })
-
+document.getElementById("rotinas").innerHTML=html
 }
 
-async function executarRotina(id){
+/* EXECUTAR ROTINA */
 
-const {error}=await db
+async function executar(id){
+
+const {error} = await supabase
 .from("rotinas_execucao")
 .update({
 status:"executado",
-horario_execucao:new Date()
+horario_executado:new Date()
 })
 .eq("id",id)
 
-if(error){
-alert("Erro executar")
-return
-}
+if(error)return
 
-carregarPainel()
+carregarTudo()
 
 }
 
-async function rankingEquipe(){
+/* RANKING EQUIPE */
 
-const hoje=new Date().toISOString().slice(0,10)
+async function carregarRanking(){
 
-const {data}=await db
+const hoje = new Date().toISOString().slice(0,10)
+
+const {data} = await supabase
 .from("rotinas_execucao")
 .select("executado_por")
 .eq("data",hoje)
 .eq("status","executado")
 
-let mapa={}
+let ranking={}
 
 data.forEach(r=>{
 if(!r.executado_por)return
-if(!mapa[r.executado_por])mapa[r.executado_por]=0
-mapa[r.executado_por]++
+ranking[r.executado_por]=(ranking[r.executado_por]||0)+1
 })
 
-const nomes=Object.keys(mapa)
-const valores=Object.values(mapa)
+let html="<table>"
 
-const ctx=document.getElementById("graficoEquipe")
+for(let k in ranking){
 
-new Chart(ctx,{
-type:"bar",
-data:{
-labels:nomes,
-datasets:[{
-label:"Execuções",
-data:valores
-}]
-}
-})
+html+=`
+<tr>
+<td>${k}</td>
+<td>${ranking[k]}</td>
+</tr>
+`
 
 }
 
-carregarPainel()
+html+="</table>"
+
+document.getElementById("ranking").innerHTML=html
+
+}
+
+/* CARREGAR TUDO */
+
+function carregarTudo(){
+
+carregarRotinas()
+carregarRanking()
+
+}
+
+/* LOGOUT */
+
+function logout(){
+
+location.reload()
+
+}
+
+/* AUTO LOAD */
+
+carregarTudo()
 
 </script>
 
 </body>
 </html>
-
-
