@@ -6,42 +6,27 @@
 <title>Harmonia Care</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 body{margin:0;font-family:Arial;background:#f4f6f9}
 #app{padding:30px}
-h1{display:flex;justify-content:space-between}
+h1{display:flex;justify-content:space-between;align-items:center}
 button{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
 .btn-primary{background:#3498db;color:#fff}
 .btn-secondary{background:#555;color:#fff}
 .btn-danger{background:#e74c3c;color:#fff}
-.box{background:#fff;padding:20px;border-radius:12px;box-shadow:0 3px 10px rgba(0,0,0,.08)}
-.grade-rotinas{width:100%;border-collapse:collapse;font-size:13px}
-.grade-rotinas th{background:#2c3e50;color:#fff;padding:8px;border:1px solid #ddd}
-.grade-rotinas td{border:1px solid #eee;padding:6px;text-align:center}
-.grade-rotinas td.nome{text-align:left;font-weight:bold}
-.turno{margin-top:25px;font-weight:bold}
-.alerta{padding:6px 10px;border-radius:10px;font-size:12px;margin-right:6px}
-.alerta-ok{background:#eafaf1;color:#1e8449}
-.alerta-warn{background:#fff3cd;color:#7d6608}
-.alerta-crit{background:#fdecea;color:#922b21}
-.ranking-table{width:400px;border-collapse:collapse;margin-top:20px}
-.ranking-table th{background:#34495e;color:#fff;padding:8px}
-.ranking-table td{padding:6px;border-bottom:1px solid #eee;text-align:center}
-.grafico{width:600px;height:350px;margin-top:30px;background:#fff;padding:20px;border-radius:14px}
+.card{background:#fff;border-radius:12px;padding:20px;margin-top:20px;box-shadow:0 3px 10px rgba(0,0,0,0.1)}
+.turno{margin-top:20px}
+.rotina{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #eee}
+.status-ok{color:green;font-weight:bold}
+.status-pendente{color:#e67e22;font-weight:bold}
+.status-atrasado{color:red;font-weight:bold}
 </style>
 </head>
+
 <body>
 
-<div id="loginWrapper" style="position:fixed;inset:0;background:#f4f6f9;display:flex;justify-content:center;align-items:center">
-<div style="width:340px;background:#fff;padding:30px;border-radius:16px;text-align:center">
-<h2>🔐 Harmonia Care</h2>
-<input type="email" id="loginEmail" placeholder="Email" style="width:100%;margin-top:10px">
-<input type="password" id="loginSenha" placeholder="Senha" style="width:100%;margin-top:10px">
-<button onclick="login()" style="margin-top:20px;width:100%">Entrar</button>
-</div>
-</div>
-
-<div id="app" style="display:none">
+<div id="app">
 
 <h1>
 <span>Harmonia Care</span>
@@ -53,32 +38,61 @@ button{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:poin
 <button onclick="gerarRotinasDoDia()" class="btn-primary">Gerar Rotinas</button>
 <button onclick="carregarPainel()" class="btn-secondary">Atualizar</button>
 
-<div id="alertas"></div>
-<div id="painelRotinas"></div>
-
+<div class="card">
 <h3>Ranking da Equipe</h3>
-<div id="ranking"></div>
+<canvas id="graficoEquipe"></canvas>
+</div>
 
-<div class="grafico">
-<canvas id="grafico"></canvas>
+<div class="card">
+<h3>Rotinas do Turno</h3>
+<div id="painelRotinas"></div>
 </div>
 
 </div>
 
 <script>
 
-const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co"
+const SUPABASE_URL="https://SEU_PROJETO.supabase.co"
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
-const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e"
-const { createClient } = supabase;
-const db=createClient(SUPABASE_URL,SUPABASE_KEY);
-let grafico=null
 
-function turnoAtual(){const h=new Date().getHours();if(h>=5&&h<12)return"manha";if(h>=12&&h<18)return"tarde";return"noite"}
+const {createClient}=supabase
+const db=createClient(SUPABASE_URL,SUPABASE_KEY)
+
+let usuarioAtual=null
+
+function logout(){
+location.reload()
+}
+
+function turnoAtual(){
+const h=new Date().getHours()
+if(h>=5&&h<12)return"manha"
+if(h>=12&&h<18)return"tarde"
+return"noite"
+}
+
+function statusRotina(r){
+if(r.status==="executado")return"status-ok"
+const agora=new Date()
+const exec=new Date(r.data+"T23:59:59")
+if(agora>exec)return"status-atrasado"
+return"status-pendente"
+}
 
 async function gerarRotinasDoDia(){
 
 const hoje=new Date().toISOString().slice(0,10)
+
+const {data:exist}=await db
+.from("rotina_execucao")
+.select("id")
+.eq("data",hoje)
+.limit(1)
+
+if(exist.length){
+alert("Rotinas já geradas hoje")
+return
+}
 
 const {data:pacientes,error:pErro}=await db
 .from("pacientes")
@@ -106,9 +120,9 @@ inserts.push({
 paciente_id:p.id,
 modelo_id:m.id,
 rotina_modelo_id:m.id,
+turno:m.turno,
 data:hoje,
-status:"pendente",
-turno:m.turno
+status:"pendente"
 })
 })
 })
@@ -117,110 +131,128 @@ const {error}=await db
 .from("rotina_execucao")
 .insert(inserts)
 
-if(error){
-console.error(error)
-alert("Erro ao gerar")
-return
-}
+if(error){alert("Erro ao gerar");return}
 
-alert("Rotinas geradas com sucesso")
+alert("Rotinas geradas")
 
 carregarPainel()
+
 }
 
 async function carregarPainel(){
+
 const hoje=new Date().toISOString().slice(0,10)
-const{data:pacientes}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).order("nome_completo")
-const{data:modelos}=await db.from("rotina_modelos").select("id,titulo,turno,tipo").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
-const{data:rotinas}=await db.from("rotina_execucao").select("*").eq("empresa_id",EMPRESA_ID)
-const hojeRot=rotinas.filter(r=>String(r.data).slice(0,10)===hoje)
-let mapa={};hojeRot.forEach(r=>mapa[r.paciente_id+"_"+r.modelo_id]=r)
-let turnos={manha:[],tarde:[],noite:[]}
-modelos.forEach(m=>{let t=(m.turno||"").toLowerCase();if(t.includes("man"))turnos.manha.push(m);else if(t.includes("tar"))turnos.tarde.push(m);else turnos.noite.push(m)})
-let html=""
-Object.keys(turnos).forEach(turno=>{
-html+=`<div class="turno">${turno.toUpperCase()}</div><table class="grade-rotinas"><tr><th>Paciente</th>${turnos[turno].map(m=>`<th>${m.titulo}</th>`).join("")}</tr>`
-pacientes.forEach(p=>{
-html+=`<tr><td class="nome">${p.nome_completo}</td>`
-turnos[turno].forEach(m=>{
-let r=mapa[p.id+"_"+m.id]
-if(r){let c=r.status==="concluida"?"checked":"";html+=`<td><input type="checkbox" ${c} onclick="executarRotina('${r.id}')"></td>`}
-else html+=`<td>—</td>`
+const turno=turnoAtual()
+
+const {data, error}=await db
+.from("rotina_execucao")
+.select(`
+id,
+status,
+data,
+turno,
+rotina_modelos(titulo),
+pacientes(nome_completo)
+`)
+.eq("data",hoje)
+.eq("turno",turno)
+
+if(error){
+console.error(error)
+return
+}
+
+renderRotinas(data)
+rankingEquipe()
+
+}
+
+function renderRotinas(rotinas){
+
+const painel=document.getElementById("painelRotinas")
+painel.innerHTML=""
+
+if(!rotinas.length){
+painel.innerHTML="<p>Nenhuma rotina</p>"
+return
+}
+
+rotinas.forEach(r=>{
+
+const div=document.createElement("div")
+div.className="rotina"
+
+div.innerHTML=`
+<span>${r.pacientes?.nome_completo||""}</span>
+<span>${r.rotina_modelos?.titulo||""}</span>
+<span class="${statusRotina(r)}">${r.status}</span>
+<button onclick="executarRotina('${r.id}')">Executar</button>
+`
+
+painel.appendChild(div)
+
 })
-html+="</tr>"
-})
-html+="</table>"
-})
-document.getElementById("painelRotinas").innerHTML=html
-carregarAlertas(hojeRot)
-carregarRanking()
-carregarGrafico(hojeRot)
+
 }
 
 async function executarRotina(id){
-const user=JSON.parse(localStorage.getItem("HC_USER")||"{}")
-await db.from("rotina_execucao").update({status:"concluida",executado_por:user.id,horario_execucao:new Date().toISOString()}).eq("id",id)
+
+const {error}=await db
+.from("rotina_execucao")
+.update({
+status:"executado",
+horario_execucao:new Date()
+})
+.eq("id",id)
+
+if(error){
+alert("Erro executar")
+return
+}
+
 carregarPainel()
+
 }
 
-function carregarAlertas(rotinas){
-let atrasadas=rotinas.filter(r=>r.status==="pendente")
-let html=""
-if(atrasadas.length===0)html=`<span class="alerta alerta-ok">Sem atrasos</span>`
-else html=`<span class="alerta alerta-crit">⚠ ${atrasadas.length} rotinas atrasadas</span>`
-document.getElementById("alertas").innerHTML=html
-}
+async function rankingEquipe(){
 
-async function carregarRanking(){
-const{data}=await db.from("rotina_execucao").select("executado_por").eq("empresa_id",EMPRESA_ID).eq("status","concluida")
-let cont={}
-data?.forEach(r=>{if(!r.executado_por)return;cont[r.executado_por]=(cont[r.executado_por]||0)+1})
-let arr=Object.entries(cont).sort((a,b)=>b[1]-a[1])
-let html=`<table class="ranking-table"><tr><th>Colaborador</th><th>Rotinas</th></tr>`
-for(const [id,total] of arr){
-const{data:u}=await db.from("usuarios").select("nome_completo").eq("id",id).single()
-html+=`<tr><td>${u?.nome_completo||id}</td><td>${total}</td></tr>`
-}
-html+="</table>"
-document.getElementById("ranking").innerHTML=html
-}
-
-function carregarGrafico(rotinas){
-let c=0,p=0
-rotinas.forEach(r=>{if(r.status==="concluida")c++;else p++})
-if(grafico)grafico.destroy()
-grafico=new Chart(document.getElementById("grafico"),{type:"bar",data:{labels:["Concluídas","Pendentes"],datasets:[{data:[c,p],backgroundColor:["#2ecc71","#e74c3c"]}]}})
-}
-
-async function login(){
-const email=document.getElementById("loginEmail").value
-const senha=document.getElementById("loginSenha").value
-const{data}=await db.rpc("verificar_login",{p_email:email,p_senha:senha})
-if(!data||data.length===0){alert("Login inválido");return}
-localStorage.setItem("HC_USER",JSON.stringify(data[0]))
-iniciarSistema()
-}
-
-function logout(){localStorage.removeItem("HC_USER");location.reload()}
-
-async function iniciarSistema(){
-document.getElementById("loginWrapper").style.display="none"
-document.getElementById("app").style.display="block"
 const hoje=new Date().toISOString().slice(0,10)
-const{data}=await db.from("rotina_execucao").select("id").eq("empresa_id",EMPRESA_ID).eq("data",hoje).limit(1)
-if(!data||data.length===0)await gerarRotinasDoDia()
-carregarPainel()
-}
 
-document.addEventListener("DOMContentLoaded",()=>{
-const u=localStorage.getItem("HC_USER")
-if(u)iniciarSistema()
+const {data}=await db
+.from("rotina_execucao")
+.select("executado_por")
+.eq("data",hoje)
+.eq("status","executado")
+
+let mapa={}
+
+data.forEach(r=>{
+if(!r.executado_por)return
+if(!mapa[r.executado_por])mapa[r.executado_por]=0
+mapa[r.executado_por]++
 })
 
+const nomes=Object.keys(mapa)
+const valores=Object.values(mapa)
+
+const ctx=document.getElementById("graficoEquipe")
+
+new Chart(ctx,{
+type:"bar",
+data:{
+labels:nomes,
+datasets:[{
+label:"Execuções",
+data:valores
+}]
+}
+})
+
+}
+
+carregarPainel()
+
 </script>
+
 </body>
 </html>
-
-
-
-
