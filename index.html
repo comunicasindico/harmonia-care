@@ -122,22 +122,16 @@ text-align:left;
 <body>
 
 <!-- LOGIN -->
-
 <div id="login">
-
 <div class="login-box">
-
 <h2>Harmonia Care</h2>
-
 <input id="usuario" placeholder="Usuário">
 <input id="senha" type="password" placeholder="Senha">
-
 <button onclick="login()" class="btn-primary" style="width:100%">
 Entrar
 </button>
 
 </div>
-
 </div>
 
 <!-- APP -->
@@ -250,7 +244,7 @@ SUPABASE_KEY
 function login(){
 const u=document.getElementById("usuario").value
 const s=document.getElementById("senha").value
-if(u==="admin" && s==="123"){
+if(u==="admin" && s==="123456"){
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 carregarTudo()
@@ -378,4 +372,5 @@ carregarClinico()
 
 </body>
 </html>
+
 
