@@ -133,7 +133,6 @@ Demência
 <h3>Quadro Clínico</h3>
 
 <table>
-
 <thead>
 <tr>
 <th>Paciente</th>
@@ -234,54 +233,60 @@ document.getElementById("painelClinico").style.display="block"
 
 async function carregarRotinas(){
 
-try{
-
-const turno="manha"
+const turno="manha";
 
 const {data,error}=await db
 .from("vw_rotinas_painel")
 .select("*")
-.eq("turno",turno)
 .eq("empresa_id",EMPRESA_ID)
-  
+.eq("turno",turno)
+.order("paciente",{ascending:true});
+
 if(error){
-console.log(error)
-return
+console.log(error);
+return;
 }
 
-let html=""
+let html="";
 
-data?.forEach(r=>{
+data.forEach(r=>{
 
 html+=`
 <tr>
 <td>${r.paciente}</td>
 <td>${r.rotina}</td>
 <td class="status-${r.status}">${r.status}</td>
-<td><button onclick="executar('${r.id}')" class="btn-success">Executar</button></td>
+<td>
+<button onclick="executar('${r.id}')" class="btn-success">
+Executar
+</button>
+</td>
 </tr>
-`
+`;
 
-})
+});
 
-document.getElementById("rotinas").innerHTML=html
-
-}catch(e){
-
-console.log(e)
-
-}
+document.getElementById("rotinas").innerHTML=html;
 
 }
 
 async function executar(id){
 
-await db
+const {error}=await db
 .from("rotinas_execucao")
-.update({status:"executado"})
-.eq("id",id)
+.update({
+status:"executado",
+horario_execucao:new Date()
+})
+.eq("id",id);
 
-carregarRotinas()
+if(error){
+console.log(error);
+alert("Erro ao registrar execução");
+return;
+}
+
+carregarRotinas();
 
 }
 
@@ -342,16 +347,15 @@ console.log(e)
 }
 
 function carregarTudo(){
-
 carregarRotinas()
 carregarClinico()
-
 }
 
 </script>
 
 </body>
 </html>
+
 
 
 
