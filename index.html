@@ -233,15 +233,11 @@ Demência
 <tbody id="quadroClinico"></tbody>
 
 </table>
-
 </div>
-
 </div>
-
 </div>
 
 <script>
-
 /* SUPABASE */
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co"
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU"
@@ -252,55 +248,36 @@ SUPABASE_KEY
 
 /* LOGIN */
 function login(){
-
 const u=document.getElementById("usuario").value
 const s=document.getElementById("senha").value
-
 if(u==="admin" && s==="123"){
-
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
-
 carregarTudo()
-
 }else{
-
 alert("Usuário ou senha inválidos")
-
 }
-
 }
 
 /* LOGOUT */
-
 function logout(){
-
 location.reload()
-
 }
 
 /* NAVEGAÇÃO */
-
 function abrirEnfermagem(){
-
 document.getElementById("painelEnfermagem").style.display="block"
 document.getElementById("painelClinico").style.display="none"
-
 }
 
 function abrirClinico(){
-
 document.getElementById("painelEnfermagem").style.display="none"
 document.getElementById("painelClinico").style.display="block"
-
 }
 
 /* ROTINAS */
-
 async function carregarRotinas(){
-
 const turno="MANHÃ"
-
 const {data}=await supabase
 .from("vw_rotinas_painel")
 .select("*")
@@ -401,3 +378,4 @@ carregarClinico()
 
 </body>
 </html>
+
