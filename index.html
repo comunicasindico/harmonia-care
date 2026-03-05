@@ -93,20 +93,36 @@ th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left;}
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co"
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU"
 const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
-function login(){
+
+if(localStorage.getItem("hc_login")){
+document.getElementById("login").style.display="none"
+document.getElementById("app").style.display="block"
+carregarTudo() }
+  
+window.login=function(){
 const u=document.getElementById("usuario").value.trim()
 const s=document.getElementById("senha").value.trim()
+
 if(u==="admin" && s==="123456"){
+localStorage.setItem("hc_login","ok")
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 carregarTudo()
 }else{
 alert("Usuário ou senha inválidos")
-}}
+}
+}
 document.addEventListener("keydown",function(e){
-if(e.key==="Enter")login()
+if(e.key==="Enter" && document.getElementById("login").style.display!=="none"){
+login()
+}
 })
-function logout(){location.reload()}
+
+function logout(){
+localStorage.removeItem("hc_login")
+location.reload()
+}
+
 function abrirEnfermagem(){
 document.getElementById("painelEnfermagem").style.display="block"
 document.getElementById("painelClinico").style.display="none"
@@ -167,3 +183,4 @@ carregarClinico()
 </script>
 </body>
 </html>
+
