@@ -142,7 +142,7 @@ const hoje=new Date().toISOString().slice(0,10)
 const turno=turnoAtual()
 
 const {data, error}=await db
-.from("rotina_execucao")
+.from("rotinas_execucao")
 .select(`
 id,
 status,
@@ -195,7 +195,7 @@ painel.appendChild(div)
 async function executarRotina(id){
 
 const {error}=await db
-.from("rotina_execucao")
+.from("rotinas_execucao")
 .update({
 status:"executado",
 horario_execucao:new Date()
@@ -216,7 +216,7 @@ async function rankingEquipe(){
 const hoje=new Date().toISOString().slice(0,10)
 
 const {data}=await db
-.from("rotina_execucao")
+.from("rotinas_execucao")
 .select("executado_por")
 .eq("data",hoje)
 .eq("status","executado")
@@ -253,4 +253,5 @@ carregarPainel()
 
 </body>
 </html>
+
 
