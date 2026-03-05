@@ -77,10 +77,16 @@ function turnoAtual(){const h=new Date().getHours();if(h>=5&&h<12)return"manha";
 
 async function gerarRotinasDoDia(){
 const hoje=new Date().toISOString().slice(0,10)
+const{data:existe}=await db.from("rotina_execucao").select("id").eq("empresa_id",EMPRESA_ID).eq("data",hoje).limit(1)
+if(existe&&existe.length>0){carregarPainel();return}
 const{data:pacientes}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID)
 const{data:modelos}=await db.from("rotina_modelos").select("id,turno").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
 let inserts=[]
-pacientes?.forEach(p=>{modelos?.forEach(m=>{inserts.push({empresa_id:EMPRESA_ID,paciente_id:p.id,modelo_id:m.id,rotina_modelo_id:m.id,data:hoje,status:"pendente",turno:m.turno})})})
+pacientes?.forEach(p=>{
+modelos?.forEach(m=>{
+inserts.push({empresa_id:EMPRESA_ID,paciente_id:p.id,modelo_id:m.id,rotina_modelo_id:m.id,data:hoje,status:"pendente",turno:m.turno})
+})
+})
 if(inserts.length>0)await db.from("rotina_execucao").insert(inserts)
 carregarPainel()
 }
@@ -177,3 +183,4 @@ if(u)iniciarSistema()
 </script>
 </body>
 </html>
+
