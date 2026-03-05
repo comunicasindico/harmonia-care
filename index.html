@@ -127,9 +127,8 @@ text-align:left;
 <h2>Harmonia Care</h2>
 <input id="usuario" placeholder="Usuário">
 <input id="senha" type="password" placeholder="Senha">
-<button onclick="login()" class="btn-primary" style="width:100%">
-Entrar
-</button>
+
+<button onclick="login()" class="btn-primary" style="width:100%">Entrar</button>
 
 </div>
 </div>
@@ -242,18 +241,18 @@ SUPABASE_KEY
 
 /* LOGIN */
 function login(){
-const u = document.getElementById("usuario").value.trim()
-const s = document.getElementById("senha").value.trim()
-if(u === "admin" && s === "123456"){
-document.getElementById("login").style.display = "none"
-document.getElementById("app").style.display = "block"
+const u=document.getElementById("usuario").value.trim()
+const s=document.getElementById("senha").value.trim()
+if(u==="admin" && s==="123456"){
+document.getElementById("login").style.display="none"
+document.getElementById("app").style.display="block"
 carregarTudo()
 }else{
 alert("Usuário ou senha inválidos")
 }
 }
 /* ENTER LOGIN */
-document.addEventListener("keypress",function(e){
+document.addEventListener("keydown",function(e){
 if(e.key==="Enter")login()
 })
   
@@ -299,9 +298,7 @@ Executar
 `
 
 })
-
 document.getElementById("rotinas").innerHTML=html
-
 }
 
 /* EXECUTAR */
@@ -376,6 +373,7 @@ carregarClinico()
 
 </body>
 </html>
+
 
 
 
