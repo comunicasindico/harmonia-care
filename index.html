@@ -84,7 +84,7 @@ async function gerarRotinasDoDia(){
 const hoje=new Date().toISOString().slice(0,10)
 
 const {data:exist}=await db
-.from("rotina_execucao")
+.from("rotinas_execucao")
 .select("id")
 .eq("data",hoje)
 .limit(1)
@@ -94,18 +94,14 @@ alert("Rotinas já geradas hoje")
 return
 }
 
-const {data:pacientes,error:pErro}=await db
+const {data:pacientes}=await db
 .from("pacientes")
 .select("id")
 
-if(pErro){alert("Erro pacientes");return}
-
-const {data:modelos,error:mErro}=await db
+const {data:modelos}=await db
 .from("rotina_modelos")
-.select("id,turno")
+.select("id,titulo,turno")
 .eq("ativo",true)
-
-if(mErro){alert("Erro modelos");return}
 
 if(!pacientes.length||!modelos.length){
 alert("Nada para gerar")
@@ -118,9 +114,7 @@ pacientes.forEach(p=>{
 modelos.forEach(m=>{
 inserts.push({
 paciente_id:p.id,
-modelo_id:m.id,
-rotina_modelo_id:m.id,
-turno:m.turno,
+rotina_id:m.id,
 data:hoje,
 status:"pendente"
 })
@@ -128,15 +122,18 @@ status:"pendente"
 })
 
 const {error}=await db
-.from("rotina_execucao")
+.from("rotinas_execucao")
 .insert(inserts)
 
-if(error){alert("Erro ao gerar");return}
+if(error){
+console.error(error)
+alert("Erro ao gerar")
+return
+}
 
 alert("Rotinas geradas")
 
 carregarPainel()
-
 }
 
 async function carregarPainel(){
@@ -256,3 +253,4 @@ carregarPainel()
 
 </body>
 </html>
+
