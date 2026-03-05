@@ -140,77 +140,7 @@ document.getElementById("selectColaborador").innerHTML=html;
 
 async function gerarRotinasDoDia(){const hoje=new Date().toISOString().slice(0,10);const{data:pacientes}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID);const{data:modelos}=await db.from("rotina_modelos").select("id").eq("empresa_id",EMPRESA_ID);let inserts=[];pacientes?.forEach(p=>{modelos?.forEach(m=>{inserts.push({empresa_id:EMPRESA_ID,paciente_id:p.id,modelo_id:m.id,rotina_modelo_id:m.id,data:hoje,status:"pendente"})})});if(inserts.length>0)await db.from("rotina_execucao").insert(inserts);atualizarInfoHistorico();carregarPainelEnfermagem();}
 
-async function carregarPainelEnfermagem(){
-const hoje=new Date().toISOString().slice(0,10);
-
-const{data:pacientes}=await db
-.from("pacientes")
-.select("id,nome_completo")
-.eq("empresa_id",EMPRESA_ID)
-.order("nome_completo");
-
-const{data:modelos}=await db
-.from("rotina_modelos")
-.select("id,titulo,turno")
-.eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true)
-.order("turno");
-
-const{data:rotinas}=await db
-.from("rotina_execucao")
-.select("id,status,paciente_id,modelo_id")
-.eq("empresa_id",EMPRESA_ID)
-.eq("data",hoje);
-
-let mapa={};
-
-rotinas?.forEach(r=>{
-mapa[r.paciente_id+"_"+r.modelo_id]=r;
-});
-
-let html=`<h3>Painel de Rotinas - ${new Date().toLocaleDateString("pt-BR")}</h3>
-<table class="grade-rotinas">
-<tr>
-<th>Paciente</th>
-${modelos.map(m=>`<th>${m.titulo}<br><small>${m.turno}</small></th>`).join("")}
-</tr>`;
-
-pacientes?.forEach(p=>{
-
-html+=`<tr>
-<td class="nome">${p.nome_completo}</td>`;
-
-modelos.forEach(m=>{
-
-let chave=p.id+"_"+m.id;
-let r=mapa[chave];
-
-if(r){
-
-let checked=r.status==="concluida"?"checked":"";
-
-html+=`
-<td>
-<input type="checkbox" ${checked}
-onchange="toggleRotina('${r.id}',this.checked)">
-</td>`;
-
-}else{
-
-html+=`<td>○</td>`;
-
-}
-
-});
-
-html+=`</tr>`;
-
-});
-
-html+=`</table>`;
-
-document.getElementById("historicoLista").innerHTML=html;
-}
+async function carregarPainelEnfermagem(){const hoje=new Date().toISOString().slice(0,10);const{data:pacientes}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).order("nome_completo");const{data:modelos}=await db.from("rotina_modelos").select("id,titulo,turno").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("turno");const{data:rotinas}=await db.from("rotina_execucao").select("id,status,paciente_id,modelo_id").eq("empresa_id",EMPRESA_ID).eq("data",hoje);let mapa={};rotinas?.forEach(r=>{mapa[r.paciente_id+"_"+r.modelo_id]=r});let turnos={manha:[],tarde:[],noite:[]};modelos?.forEach(m=>{if(turnos[m.turno])turnos[m.turno].push(m)});let html=`<h3>Painel de Rotinas - ${new Date().toLocaleDateString("pt-BR")}</h3>`;Object.keys(turnos).forEach(turno=>{if(turnos[turno].length===0)return;html+=`<h4 style="margin-top:20px">${turno.toUpperCase()}</h4><table class="grade-rotinas"><tr><th>Paciente</th>${turnos[turno].map(m=>`<th>${m.titulo}</th>`).join("")}</tr>`;pacientes?.forEach(p=>{html+=`<tr><td class="nome">${p.nome_completo}</td>`;turnos[turno].forEach(m=>{let chave=p.id+"_"+m.id;let r=mapa[chave];if(r){let checked=r.status==="concluida"?"checked":"";html+=`<td><input type="checkbox" ${checked} onchange="toggleRotina('${r.id}',this.checked)"></td>`}else{html+=`<td>○</td>`}});html+=`</tr>`});html+=`</table>`});document.getElementById("historicoLista").innerHTML=html;}
   
 async function toggleRotina(id,checked){
 let status=checked?"concluida":"pendente";
@@ -293,6 +223,7 @@ function atualizarInfoHistorico(){const el=document.getElementById("infoHistoric
 </script>
 </body>
 </html>
+
 
 
 
