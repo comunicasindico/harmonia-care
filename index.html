@@ -77,37 +77,55 @@ let grafico=null
 function turnoAtual(){const h=new Date().getHours();if(h>=5&&h<12)return"manha";if(h>=12&&h<18)return"tarde";return"noite"}
 
 async function gerarRotinasDoDia(){
-const hoje=new Date().toISOString().slice(0,10);
-console.log("Gerando rotinas",hoje);
 
-const {data:pacientes,error:pErro}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID);
-if(pErro){console.error(pErro);alert("Erro pacientes");return;}
+const hoje=new Date().toISOString().slice(0,10)
 
-const {data:modelos,error:mErro}=await db.from("rotina_modelos").select("id,turno").eq("empresa_id",EMPRESA_ID).eq("ativo",true);
-if(mErro){console.error(mErro);alert("Erro modelos");return;}
+const {data:pacientes,error:pErro}=await db
+.from("pacientes")
+.select("id")
 
-let inserts=[];
+if(pErro){alert("Erro pacientes");return}
+
+const {data:modelos,error:mErro}=await db
+.from("rotina_modelos")
+.select("id,turno")
+.eq("ativo",true)
+
+if(mErro){alert("Erro modelos");return}
+
+if(!pacientes.length||!modelos.length){
+alert("Nada para gerar")
+return
+}
+
+let inserts=[]
+
 pacientes.forEach(p=>{
 modelos.forEach(m=>{
 inserts.push({
-empresa_id:EMPRESA_ID,
 paciente_id:p.id,
 modelo_id:m.id,
 rotina_modelo_id:m.id,
 data:hoje,
 status:"pendente",
 turno:m.turno
-});
-});
-});
+})
+})
+})
 
-console.log("Inserindo rotinas:",inserts.length);
+const {error}=await db
+.from("rotina_execucao")
+.insert(inserts)
 
-const {error}=await db.from("rotina_execucao").insert(inserts);
-if(error){console.error(error);alert("Erro ao inserir");return;}
+if(error){
+console.error(error)
+alert("Erro ao gerar")
+return
+}
 
-alert("Rotinas geradas com sucesso");
-carregarPainel();
+alert("Rotinas geradas com sucesso")
+
+carregarPainel()
 }
 
 async function carregarPainel(){
@@ -202,6 +220,7 @@ if(u)iniciarSistema()
 </script>
 </body>
 </html>
+
 
 
 
