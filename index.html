@@ -76,19 +76,41 @@ let grafico=null
 function turnoAtual(){const h=new Date().getHours();if(h>=5&&h<12)return"manha";if(h>=12&&h<18)return"tarde";return"noite"}
 
 async function gerarRotinasDoDia(){
-const hoje=new Date().toISOString().slice(0,10)
-const{data:existe}=await db.from("rotina_execucao").select("id").eq("empresa_id",EMPRESA_ID).eq("data",hoje).limit(1)
-if(existe&&existe.length>0){carregarPainel();return}
-const{data:pacientes}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID)
-const{data:modelos}=await db.from("rotina_modelos").select("id,turno").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
-let inserts=[]
-pacientes?.forEach(p=>{
-modelos?.forEach(m=>{
-inserts.push({empresa_id:EMPRESA_ID,paciente_id:p.id,modelo_id:m.id,rotina_modelo_id:m.id,data:hoje,status:"pendente",turno:m.turno})
-})
-})
-if(inserts.length>0)await db.from("rotina_execucao").insert(inserts)
-carregarPainel()
+console.log("Gerando rotinas...");
+const hoje=new Date().toISOString().slice(0,10);
+
+const{data:pacientes,error:pErro}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID);
+if(pErro){alert("Erro pacientes");console.error(pErro);return;}
+if(!pacientes||pacientes.length===0){alert("Nenhum paciente cadastrado");return;}
+
+const{data:modelos,error:mErro}=await db.from("rotina_modelos").select("id,turno").eq("empresa_id",EMPRESA_ID).eq("ativo",true);
+if(mErro){alert("Erro modelos");console.error(mErro);return;}
+
+let inserts=[];
+pacientes.forEach(p=>{
+modelos.forEach(m=>{
+inserts.push({
+empresa_id:EMPRESA_ID,
+paciente_id:p.id,
+modelo_id:m.id,
+rotina_modelo_id:m.id,
+data:hoje,
+status:"pendente",
+turno:m.turno
+});
+});
+});
+
+if(inserts.length===0){
+alert("Nada para gerar");
+return;
+}
+
+const{error}=await db.from("rotina_execucao").insert(inserts);
+if(error){alert("Erro ao gravar");console.error(error);return;}
+
+alert("Rotinas geradas com sucesso");
+carregarPainel();
 }
 
 async function carregarPainel(){
@@ -183,4 +205,5 @@ if(u)iniciarSistema()
 </script>
 </body>
 </html>
+
 
