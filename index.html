@@ -17,22 +17,34 @@ font-family:Arial;
 background:#f4f6f9;
 }
 
-#app{
-padding:30px;
-max-width:1200px;
-margin:auto;
-}
+/* LOGIN */
 
-h1{
+#login{
 display:flex;
-justify-content:space-between;
+justify-content:center;
 align-items:center;
-margin-bottom:10px;
+height:100vh;
 }
 
-h2{
-margin-top:0;
-color:#555;
+.login-box{
+background:#fff;
+padding:40px;
+border-radius:12px;
+box-shadow:0 4px 12px rgba(0,0,0,0.1);
+width:320px;
+}
+
+.login-box h2{
+text-align:center;
+margin-bottom:20px;
+}
+
+.login-box input{
+width:100%;
+padding:10px;
+margin-bottom:15px;
+border-radius:8px;
+border:1px solid #ccc;
 }
 
 button{
@@ -45,22 +57,35 @@ cursor:pointer;
 
 .btn-primary{background:#3498db;color:#fff}
 .btn-secondary{background:#555;color:#fff}
-.btn-success{background:#2ecc71;color:#fff}
 .btn-danger{background:#e74c3c;color:#fff}
+.btn-success{background:#2ecc71;color:#fff}
+
+/* APP */
+
+#app{
+display:none;
+padding:30px;
+max-width:1200px;
+margin:auto;
+}
+
+.menu{
+margin-bottom:20px;
+}
 
 .dashboard{
 display:grid;
 grid-template-columns:repeat(4,1fr);
 gap:15px;
-margin-top:20px;
+margin-bottom:20px;
 }
 
 .card{
 background:#fff;
 padding:20px;
 border-radius:12px;
-box-shadow:0 2px 8px rgba(0,0,0,0.08);
 text-align:center;
+box-shadow:0 2px 8px rgba(0,0,0,0.08);
 }
 
 .card h3{
@@ -68,96 +93,75 @@ margin:0;
 font-size:30px;
 }
 
-.card span{
-color:#888;
-}
-
 .box{
 background:#fff;
-padding:25px;
+padding:20px;
 border-radius:12px;
-margin-top:20px;
 box-shadow:0 2px 8px rgba(0,0,0,0.08);
+margin-top:20px;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:10px;
 }
 
 th,td{
-padding:12px;
+padding:10px;
 border-bottom:1px solid #ddd;
 text-align:left;
 }
 
-.status-pendente{
-color:#e67e22;
-font-weight:bold;
-}
-
-.status-executado{
-color:#2ecc71;
-font-weight:bold;
-}
-
-.status-atrasado{
-color:#e74c3c;
-font-weight:bold;
-}
-
-tr:hover{
-background:#fafafa;
-}
+.status-pendente{color:#e67e22;font-weight:bold}
+.status-executado{color:#2ecc71;font-weight:bold}
+.status-atrasado{color:#e74c3c;font-weight:bold}
 
 </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
+
+<div id="login">
+
+<div class="login-box">
+
+<h2>Harmonia Care</h2>
+
+<input id="usuario" placeholder="Usuário">
+<input id="senha" type="password" placeholder="Senha">
+
+<button onclick="login()" class="btn-primary" style="width:100%">
+Entrar
+</button>
+
+</div>
+
+</div>
+
+<!-- APP -->
+
 <div id="app">
 
 <h1>
-<span>Harmonia Care</span>
+Harmonia Care
 <button onclick="logout()" class="btn-danger">Sair</button>
 </h1>
 
-<h2>Painel Enfermagem</h2>
+<div class="menu">
 
-<button onclick="gerarRotinas()" class="btn-primary">Gerar Rotinas</button>
-<button onclick="carregarTudo()" class="btn-secondary">Atualizar</button>
-
-<div class="dashboard">
-
-<div class="card">
-<h3 id="total">0</h3>
-<span>Rotinas</span>
-</div>
-
-<div class="card">
-<h3 id="pendentes">0</h3>
-<span>Pendentes</span>
-</div>
-
-<div class="card">
-<h3 id="executadas">0</h3>
-<span>Executadas</span>
-</div>
-
-<div class="card">
-<h3 id="atrasadas">0</h3>
-<span>Atrasadas</span>
-</div>
+<button onclick="abrirEnfermagem()" class="btn-primary">Painel Enfermagem</button>
+<button onclick="abrirClinico()" class="btn-secondary">Painel Clínico</button>
 
 </div>
+
+<!-- PAINEL ENFERMAGEM -->
+
+<div id="painelEnfermagem">
 
 <div class="box">
-<h3>Ranking da Equipe</h3>
-<div id="ranking"></div>
-</div>
 
-<div class="box">
 <h3>Rotinas do Turno</h3>
 
 <table>
@@ -179,178 +183,91 @@ background:#fafafa;
 
 </div>
 
+<!-- PAINEL CLINICO -->
+
+<div id="painelClinico" style="display:none">
+
+<div class="dashboard">
+
+<div class="card">
+<h3 id="totalPacientes">0</h3>
+Pacientes
+</div>
+
+<div class="card">
+<h3 id="totalHas">0</h3>
+HAS
+</div>
+
+<div class="card">
+<h3 id="totalDm">0</h3>
+DM
+</div>
+
+<div class="card">
+<h3 id="totalDemencia">0</h3>
+Demência
+</div>
+
+</div>
+
+<div class="box">
+
+<h3>Quadro Clínico</h3>
+
+<table>
+
+<thead>
+<tr>
+<th>Paciente</th>
+<th>Idade</th>
+<th>HAS</th>
+<th>DM</th>
+<th>Demência</th>
+<th>Cardio</th>
+<th>Acamado</th>
+<th>Observações</th>
+</tr>
+</thead>
+
+<tbody id="quadroClinico"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
 <script>
 
 /* SUPABASE */
-
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co"
-
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU"
-
 const supabase=window.supabase.createClient(
 SUPABASE_URL,
 SUPABASE_KEY
 )
 
-/* TURNO */
+/* LOGIN */
+function login(){
 
-function turnoAtual(){
+const u=document.getElementById("usuario").value
+const s=document.getElementById("senha").value
 
-const h=new Date().getHours()
+if(u==="admin" && s==="123"){
 
-if(h>=5 && h<12) return "MANHÃ"
-if(h>=12 && h<18) return "TARDE"
-
-return "NOITE"
-
-}
-
-/* GERAR ROTINAS */
-
-async function gerarRotinas(){
-
-const {error}=await supabase.rpc("gerar_rotinas_do_dia")
-
-if(error){
-alert("Erro ao gerar rotinas")
-return
-}
+document.getElementById("login").style.display="none"
+document.getElementById("app").style.display="block"
 
 carregarTudo()
 
-}
+}else{
 
-/* EXECUTAR ROTINA */
-
-async function executar(id){
-
-const {error}=await supabase
-.from("rotinas_execucao")
-.update({
-status:"executado",
-horario_executado:new Date()
-})
-.eq("id",id)
-
-if(error)return
-
-carregarTudo()
+alert("Usuário ou senha inválidos")
 
 }
-
-/* ROTINAS */
-
-async function carregarRotinas(){
-
-const turno=turnoAtual()
-
-const hoje=new Date().toISOString().slice(0,10)
-
-const {data,error}=await supabase
-.from("vw_rotinas_painel")
-.select("*")
-.eq("data",hoje)
-.eq("turno",turno)
-.order("paciente")
-
-if(error)return
-
-let html=""
-
-let pendentes=0
-let executadas=0
-let atrasadas=0
-
-data.forEach(r=>{
-
-if(r.status==="pendente") pendentes++
-if(r.status==="executado") executadas++
-
-html+=`
-
-<tr>
-
-<td>${r.paciente}</td>
-
-<td>${r.rotina}</td>
-
-<td class="status-${r.status}">
-${r.status}
-</td>
-
-<td>
-
-${r.status!=="executado"
-
-? `<button onclick="executar('${r.id}')" class="btn-success">Executar</button>`
-
-: ""}
-
-</td>
-
-</tr>
-
-`
-
-})
-
-document.getElementById("rotinas").innerHTML=html
-
-document.getElementById("total").innerText=data.length
-document.getElementById("pendentes").innerText=pendentes
-document.getElementById("executadas").innerText=executadas
-document.getElementById("atrasadas").innerText=atrasadas
-
-}
-
-/* RANKING */
-
-async function carregarRanking(){
-
-const hoje=new Date().toISOString().slice(0,10)
-
-const {data}=await supabase
-.from("rotinas_execucao")
-.select("executado_por")
-.eq("data",hoje)
-.eq("status","executado")
-
-let ranking={}
-
-data.forEach(r=>{
-
-if(!r.executado_por) return
-
-ranking[r.executado_por]=(ranking[r.executado_por]||0)+1
-
-})
-
-let html="<table>"
-
-for(let k in ranking){
-
-html+=`
-<tr>
-<td>${k}</td>
-<td>${ranking[k]}</td>
-</tr>
-`
-
-}
-
-html+="</table>"
-
-document.getElementById("ranking").innerHTML=html
-
-}
-
-/* CARREGAR */
-
-function carregarTudo(){
-
-carregarRotinas()
-
-carregarRanking()
 
 }
 
@@ -362,11 +279,123 @@ location.reload()
 
 }
 
-/* AUTO LOAD */
+/* NAVEGAÇÃO */
 
-carregarTudo()
+function abrirEnfermagem(){
 
-setInterval(carregarTudo,30000)
+document.getElementById("painelEnfermagem").style.display="block"
+document.getElementById("painelClinico").style.display="none"
+
+}
+
+function abrirClinico(){
+
+document.getElementById("painelEnfermagem").style.display="none"
+document.getElementById("painelClinico").style.display="block"
+
+}
+
+/* ROTINAS */
+
+async function carregarRotinas(){
+
+const turno="MANHÃ"
+
+const {data}=await supabase
+.from("vw_rotinas_painel")
+.select("*")
+.eq("turno",turno)
+
+let html=""
+
+data.forEach(r=>{
+
+html+=`
+<tr>
+<td>${r.paciente}</td>
+<td>${r.rotina}</td>
+<td class="status-${r.status}">${r.status}</td>
+<td>
+<button onclick="executar('${r.id}')" class="btn-success">
+Executar
+</button>
+</td>
+</tr>
+`
+
+})
+
+document.getElementById("rotinas").innerHTML=html
+
+}
+
+/* EXECUTAR */
+
+async function executar(id){
+
+await supabase
+.from("rotinas_execucao")
+.update({
+status:"executado"
+})
+.eq("id",id)
+
+carregarRotinas()
+
+}
+
+/* QUADRO CLINICO */
+
+async function carregarClinico(){
+
+const {data}=await supabase
+.from("pacientes")
+.select("*")
+
+let html=""
+
+let has=0
+let dm=0
+let dem=0
+
+data.forEach(p=>{
+
+if(p.has) has++
+if(p.dm) dm++
+if(p.demencia) dem++
+
+html+=`
+<tr>
+<td>${p.nome_completo}</td>
+<td>${p.idade}</td>
+<td>${p.has?"✔":""}</td>
+<td>${p.dm?"✔":""}</td>
+<td>${p.demencia?"✔":""}</td>
+<td>${p.cardio?"✔":""}</td>
+<td>${p.acamado?"✔":""}</td>
+<td>${p.outras||""}</td>
+</tr>
+`
+
+})
+
+document.getElementById("quadroClinico").innerHTML=html
+
+document.getElementById("totalPacientes").innerText=data.length
+document.getElementById("totalHas").innerText=has
+document.getElementById("totalDm").innerText=dm
+document.getElementById("totalDemencia").innerText=dem
+
+}
+
+/* LOAD */
+
+function carregarTudo(){
+
+carregarRotinas()
+carregarClinico()
+
+}
 
 </script>
 
