@@ -95,11 +95,12 @@ const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
 const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
+window.onload=function(){
 if(localStorage.getItem("hc_login")){
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 carregarTudo() }
-  
+}  
 window.login=function(){
 const u=document.getElementById("usuario").value.trim()
 const s=document.getElementById("senha").value.trim()
@@ -136,7 +137,7 @@ async function carregarRotinas(){
 const turno="MANHÃ"
 const {data}=await supabase.from("vw_rotinas_painel").select("*").eq("turno",turno)
 let html=""
-data.forEach(r=>{
+data?.forEach(r=>{
 html+=`<tr>
 <td>${r.paciente}</td>
 <td>${r.rotina}</td>
@@ -151,7 +152,10 @@ await supabase.from("rotinas_execucao").update({status:"executado"}).eq("id",id)
 carregarRotinas()
 }
 async function carregarClinico(){
-const {data}=await supabase.from("pacientes").select("*")
+const {data}=await supabase
+.from("pacientes")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
 let html=""
 let has=0
 let dm=0
@@ -184,5 +188,6 @@ carregarClinico()
 </script>
 </body>
 </html>
+
 
 
