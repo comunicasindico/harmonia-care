@@ -247,25 +247,11 @@ let classe="badge-pendente"
 if(r.status==="executado")classe="badge-executado"
 if(r.status==="atrasado")classe="badge-atrasado"
 if(r.status==="atrasado")pacientes[r.paciente].atrasado=true
-let statusIcon = r.status==="executado" ? "✔ OK" : "⏳"
-
-let badge=
-`<span class="badge ${classe}"
-onclick="executarRotina('${r.id}',this)"
->
-${r.rotina}<br>
-<small>${statusIcon}</small>
-</span>`
+let statusIcon=r.status==="executado"?"✔ OK":"⏳"
+let badge=`<span class="badge ${classe}" onclick="executarRotina('${r.id}',this)">${r.rotina}<br><small>${statusIcon}</small></span>`
 if(r.turno==="manha")pacientes[r.paciente].manha.push(badge)
 if(r.turno==="tarde")pacientes[r.paciente].tarde.push(badge)
 if(r.turno==="noite")pacientes[r.paciente].noite.push(badge)
-`<span class="badge ${classe}" 
-onclick="executarRotina('${r.id}',this)"
->
-${r.rotina}<br>
-<small>${statusIcon}</small>
-</span>`
-)
 })
 let html=""
 Object.keys(pacientes).forEach(p=>{
@@ -275,10 +261,12 @@ let progresso=Math.round((ok/total)*100)
 let cor="#f39c12"
 if(progresso>=80)cor="#2ecc71"
 if(progresso<40)cor="#e74c3c"
+let painelClinico=`<div style="width:160px"><div style="font-size:12px;margin-bottom:2px">${progresso}% cuidados</div><div style="background:#eee;border-radius:6px;height:8px"><div style="width:${progresso}%;background:${cor};height:8px;border-radius:6px"></div></div></div>`
+let alerta=pacientes[p].atrasado?'<span style="color:#e74c3c;font-weight:bold;margin-left:6px">⚠</span>':''
 html+=`<tr>
 <td onclick="mostrarPaciente('${pacientes[p].id}')" style="cursor:pointer;font-weight:600">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-<span>${p}</span>
+<span>${p}${alerta}</span>
 ${painelClinico}
 </div>
 </td>
@@ -289,21 +277,12 @@ ${painelClinico}
 </div></td>
 <td></td>
 <td></td>
-</tr>
-`
+</tr>`
 })
 document.getElementById("rotinas").innerHTML=html
 document.getElementById("contadorExecutadas").innerText=executadas
 document.getElementById("contadorPendentes").innerText=pendentes
 document.getElementById("contadorAtrasadas").innerText=atrasadas
-
-let painelClinico=
-`<div style="width:160px">
-<div style="font-size:12px;margin-bottom:2px">${progresso}% cuidados</div>
-<div style="background:#eee;border-radius:6px;height:8px">
-<div style="width:${progresso}%;background:${cor};height:8px;border-radius:6px"></div>
-</div>
-</div>`
 }
 
 async function executarRotina(id,el){
@@ -478,6 +457,7 @@ carregarRotinaModelos()
 
 </body>
 </html>
+
 
 
 
