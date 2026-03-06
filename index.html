@@ -94,7 +94,6 @@ th,td{
 padding:4px 6px;
 font-size:13px;
 line-height:1.2;
-}
 border-bottom:1px solid #ddd;
 text-align:left;
 }
@@ -120,7 +119,19 @@ padding:8px;
 border-radius:6px;
 border:1px solid #ccc;
 }
+.badge-filtros{
+display:flex;
+gap:10px;
+margin-bottom:10px;
+}
 
+.badge-filtro{
+background:#ecf0f1;
+padding:6px 12px;
+border-radius:8px;
+font-size:13px;
+font-weight:600;
+}
 </style>
 
 </head>
@@ -153,26 +164,19 @@ Entrar
 <!-- ======================================================
 005 APP
 ====================================================== -->
-
 <div id="app">
-
 <h1>
 Harmonia Care
 <button onclick="logout()" class="btn-danger">Sair</button>
 </h1>
-
 <div class="menu">
-
 <button onclick="abrirEnfermagem()" class="btn-primary">
 Painel Enfermagem
 </button>
-
 <button onclick="abrirClinico()" class="btn-secondary">
 Painel Clínico
 </button>
-
 </div>
-
 <!-- ======================================================
 006 PAINEL ENFERMAGEM
 ====================================================== -->
@@ -194,14 +198,16 @@ Painel Clínico
 </div>
 </div>
 <div class="busca">
+
+<label>Paciente</label>
 <select id="buscaPaciente"></select>
-<select id="buscaRotina">
+
 <label>Profissional</label>
 <select id="buscaProfissional">
 <option value="">PROFISSIONAIS</option>
 </select>
-<label>Rotina</label>
 
+<label>Rotina</label>
 <select id="buscaRotina">
 <option value="">ROTINAS</option>
 
@@ -845,6 +851,7 @@ document.getElementById("buscaProfissional").innerHTML=opt
 
 </body>
 </html>
+
 
 
 
