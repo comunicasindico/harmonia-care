@@ -332,7 +332,11 @@ ${tabelaRotinas}
 
 })
 
-document.getElementById("rotinas").innerHTML=html
+const tabela = document.getElementById("rotinas")
+
+if(tabela){
+tabela.innerHTML = html
+}
 
 document.getElementById("contadorExecutadas").innerText=executadas
 document.getElementById("contadorPendentes").innerText=pendentes
@@ -435,28 +439,14 @@ let barra=`
 </div>
 `
 
-document.getElementById("rotinas").innerHTML=`
-
+let html = `
 <tr>
-
-<td style="font-weight:600">
-${pacienteSelecionado}
-</td>
-
-<td>
-${barra}
-</td>
-
-<td>
-
-<table style="width:100%">
-${rotinasHTML}
-</table>
-
-</td>
-
+<td style="font-weight:600">${pacienteSelecionado}</td>
+<td>${barra}</td>
+<td>${rotinasHTML}</td>
 </tr>
 `
+document.getElementById("rotinas").innerHTML = html
 
 document.getElementById("contadorExecutadas").innerText=executadas
 document.getElementById("contadorPendentes").innerText=pendentes
@@ -616,7 +606,11 @@ html+=`
 
 })
 
-document.getElementById("rotinas").innerHTML = html
+let tabela = document.getElementById("rotinas")
+
+if(tabela){
+tabela.innerHTML = html
+}
 
 document.getElementById("contadorExecutadas").innerText = executadas
 document.getElementById("contadorPendentes").innerText = pendentes
@@ -697,6 +691,7 @@ carregarRotinaModelos()
 
 </body>
 </html>
+
 
 
 
