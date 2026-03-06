@@ -247,18 +247,23 @@ document.getElementById("contadorExecutadas").innerText=executadas
 }
 
 async function executarRotina(id,el){
-el.style.pointerEvents="none"
-
-el.classList.remove("badge-pendente","badge-atrasado")
-el.classList.add("badge-executado")
 
 const usuario_id = localStorage.getItem("usuario_id")
+const usuario_nome = localStorage.getItem("usuario_nome")
+
+let executado = el.classList.contains("badge-executado")
+
+if(!executado){
+
+/* EXECUTAR */
+
+const agora = new Date()
 
 const {error} = await db
 .from("rotinas_execucao")
 .update({
 status:"executado",
-horario_executado:new Date(),
+horario_executado:agora,
 executado_por:usuario_id
 })
 .eq("id",id)
@@ -266,15 +271,46 @@ executado_por:usuario_id
 if(error){
 console.log(error)
 alert(error.message)
-
-el.style.pointerEvents="auto"
-el.classList.remove("badge-executado")
-el.classList.add("badge-pendente")
 return
 }
 
-let c=document.getElementById("contadorExecutadas")
-if(c)c.innerText=parseInt(c.innerText||0)+1
+el.classList.remove("badge-pendente","badge-atrasado")
+el.classList.add("badge-executado")
+
+let hora = agora.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
+
+el.innerHTML = `
+✔ Executado<br>
+<small>${usuario_nome}</small><br>
+<small>${hora}</small>
+`
+
+}else{
+
+/* DESFAZER */
+
+const {error} = await db
+.from("rotinas_execucao")
+.update({
+status:"pendente",
+horario_executado:null,
+executado_por:null
+})
+.eq("id",id)
+
+if(error){
+console.log(error)
+alert(error.message)
+return
+}
+
+el.classList.remove("badge-executado")
+el.classList.add("badge-pendente")
+
+el.innerHTML = "Pendente"
+
+}
+
 }
   
 async function carregarPacientesBusca(){
@@ -374,6 +410,7 @@ carregarRotinaModelos()
 
 </body>
 </html>
+
 
 
 
