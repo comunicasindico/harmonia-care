@@ -261,7 +261,7 @@ document.getElementById("contadorExecutadas").innerText=executadas
 async function executarRotina(id){
 if(!confirm("Confirmar execução da rotina?"))return
 const agora=new Date().toISOString()
-const {error}=await db.from("rotinas_execucao").update({status:"executado",horario_execucao:agora}).eq("id",id)
+const {error}=await db.from("rotinas_execucao").update({status:"executado",horario_exec:agora}).eq("id",id)
 if(error){console.log(error);alert(JSON.stringify(error));return}
 carregarRotinas()
 }
@@ -363,5 +363,6 @@ carregarRotinaModelos()
 
 </body>
 </html>
+
 
 
