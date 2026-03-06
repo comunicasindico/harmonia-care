@@ -498,11 +498,21 @@ const dataFim = document.getElementById("dataFim").value
 let query = db
 .from("vw_rotinas_painel")
 .select("*")
-.eq("paciente",paciente)
-.order("rotina",{ascending:true})
+.order("paciente",{ascending:true})
 
-if(dataInicio) query = query.gte("data",dataInicio)
-if(dataFim) query = query.lte("data",dataFim)
+/* FILTRO PACIENTE */
+if(paciente !== "Todos"){
+query = query.eq("paciente",paciente)
+}
+
+/* FILTRO DATA */
+if(dataInicio){
+query = query.gte("data",dataInicio)
+}
+
+if(dataFim){
+query = query.lte("data",dataFim)
+}
 
 const {data,error} = await query
 
@@ -518,68 +528,100 @@ document.getElementById("rotinas").innerHTML =
 return
 }
 
+/* AGRUPAR PACIENTES */
+let pacientes={}
 let executadas=0
 let pendentes=0
 let atrasadas=0
 
-let rotinasHTML=""
-
 data.forEach(r=>{
 
-if(r.status==="executado") executadas++
+if(!pacientes[r.paciente]){
+pacientes[r.paciente]={
+rotinas:[],
+total:0,
+ok:0
+}
+}
+
+pacientes[r.paciente].total++
+
+if(r.status==="executado"){
+executadas++
+pacientes[r.paciente].ok++
+}
+
 if(r.status==="pendente") pendentes++
 if(r.status==="atrasado") atrasadas++
 
-let statusIcon="⏳"
+let status="⏳"
 let classe="status-pendente"
 
 if(r.status==="executado"){
-statusIcon="✔"
+status="✔"
 classe="status-executado"
 }
 
 if(r.status==="atrasado"){
-statusIcon="⚠"
+status="⚠"
 classe="status-atrasado"
 }
 
-let dataFormatada = new Date(r.data)
-.toLocaleDateString("pt-BR")
-
-rotinasHTML+=`
+let linha=`
 <tr onclick="executarRotina('${r.id}')" style="cursor:pointer">
 <td>${r.rotina}</td>
-<td class="${classe}">${statusIcon}</td>
-<td>${dataFormatada}</td>
+<td class="${classe}">${status}</td>
 </tr>
 `
+
+pacientes[r.paciente].rotinas.push(linha)
+
 })
-let progresso = Math.round((executadas/data.length)*100)
+
+let html=""
+
+Object.keys(pacientes).sort().forEach(p=>{
+
+let total = pacientes[p].total
+let ok = pacientes[p].ok
+
+let progresso = Math.round((ok/total)*100)
+
 let cor="#f39c12"
 if(progresso>=80) cor="#2ecc71"
 if(progresso<40) cor="#e74c3c"
+
 let barra=`
-<div style="width:180px">
+<div style="width:160px">
 <div style="font-size:12px">${progresso}%</div>
 <div style="background:#eee;height:8px;border-radius:6px">
 <div style="width:${progresso}%;background:${cor};height:8px;border-radius:6px"></div>
 </div>
 </div>
 `
-document.getElementById("rotinas").innerHTML = `
-<tr>
-<td style="font-weight:600">${paciente}</td>
-<td>${barra}</td>
-<td>
+
+let tabela=`
 <table style="width:100%">
-${rotinasHTML}
+${pacientes[p].rotinas.join("")}
 </table>
-</td>
+`
+
+html+=`
+<tr>
+<td style="font-weight:600">${p}</td>
+<td>${barra}</td>
+<td>${tabela}</td>
 </tr>
 `
+
+})
+
+document.getElementById("rotinas").innerHTML = html
+
 document.getElementById("contadorExecutadas").innerText = executadas
 document.getElementById("contadorPendentes").innerText = pendentes
 document.getElementById("contadorAtrasadas").innerText = atrasadas
+
 }
 
 async function carregarClinico(){
@@ -655,6 +697,7 @@ carregarRotinaModelos()
 
 </body>
 </html>
+
 
 
 
