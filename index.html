@@ -72,6 +72,15 @@ color:#e74c3c;
 font-weight:bold;
 }
 
+.turnos{display:flex;gap:10px;margin-bottom:15px}
+.badge-rotina{background:#ecf0f1;padding:6px 10px;border-radius:8px;margin-right:6px;display:inline-block}
+.badge-pendente{background:#f39c12;color:#fff}
+.badge-executado{background:#2ecc71;color:#fff}
+.badge-atrasado{background:#e74c3c;color:#fff}
+.busca{display:flex;gap:10px;margin-bottom:15px}
+.busca input,.busca select{padding:8px;border-radius:6px;border:1px solid #ccc}
+
+
 </style>
 </head>
 
@@ -171,7 +180,27 @@ Demência
 
 </div>
 
+
+<div class="turnos">
+<button onclick="mudarTurno('manha')" class="btn-primary">Manhã</button>
+<button onclick="mudarTurno('tarde')" class="btn-secondary">Tarde</button>
+<button onclick="mudarTurno('noite')" class="btn-secondary">Noite</button>
+</div>
+
+<div class="busca">
+<select id="buscaPaciente"></select>
+<input type="date" id="dataInicio">
+<input type="date" id="dataFim">
+<button onclick="buscarHistorico()" class="btn-primary">Pesquisar</button>
+</div>
+
+<div style="margin-bottom:10px;font-weight:bold">
+Executadas: <span id="contadorExecutadas">0</span>
+</div>
+  
 <script>
+
+let TURNO_ATUAL="manha"
 
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
@@ -233,6 +262,11 @@ location.reload()
 
 }
 
+function mudarTurno(t){
+TURNO_ATUAL=t
+carregarRotinas()
+}
+  
 function abrirEnfermagem(){
 
 document.getElementById("painelEnfermagem").style.display="block"
@@ -248,52 +282,57 @@ document.getElementById("painelClinico").style.display="block"
 }
 
 async function carregarRotinas(){
-const turno="manha";
-const {data,error}=await db
-.from("vw_rotinas_painel")
-.select("*")
-
-.eq("turno",turno)
-.order("paciente",{ascending:true});
-if(error){
-console.log(error);
-return;
-}
-let html="";
+const {data,error}=await db.from("vw_rotinas_painel").select("*").eq("turno",TURNO_ATUAL).order("paciente",{ascending:true})
+if(error){console.log(error);return}
+let pacientes={}
+let executadas=0
 data.forEach(r=>{
-html+=`
-<tr>
-<td>${r.paciente}</td>
-<td>${r.rotina}</td>
-<td class="status-${r.status}">${r.status}</td>
-<td>
-<button onclick="executar('${r.id}')" class="btn-success">
-Executar
-</button>
-</td>
-</tr>
-`;
-});
-document.getElementById("rotinas").innerHTML=html;
+if(!pacientes[r.paciente])pacientes[r.paciente]=[]
+if(r.status==="executado")executadas++
+let classe="badge-pendente"
+if(r.status==="executado")classe="badge-executado"
+if(r.status==="atrasado")classe="badge-atrasado"
+pacientes[r.paciente].push(`<span class="badge-rotina ${classe}" onclick="executar('${r.id}')">${r.rotina}</span>`)
+})
+let html=""
+Object.keys(pacientes).forEach(p=>{
+html+=`<tr><td>${p}</td><td>${pacientes[p].join("")}</td><td></td><td></td></tr>`
+})
+document.getElementById("rotinas").innerHTML=html
+document.getElementById("contadorExecutadas").innerText=executadas
 }
 
 async function executar(id){
-if(!confirm("Confirmar execução da rotina?")) return;
-const {error}=await db
-.from("rotinas_execucao")
-.update({
-status:"executado",
-horario_execucao:new Date()
-})
-.eq("id",id);
-if(error){
-console.log(error);
-alert("Erro ao registrar execução");
-return;
-}
-carregarRotinas();
+if(!confirm("Confirmar execução da rotina?"))return
+const {error}=await db.from("rotinas_execucao").update({status:"executado",horario_execucao:new Date()}).eq("id",id)
+if(error){console.log(error);alert("Erro ao registrar execução");return}
+carregarRotinas()
 }
 
+async function carregarPacientesBusca(){
+const {data}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).order("nome_completo")
+let opt="<option value=''>Todos</option>"
+data?.forEach(p=>{opt+=`<option value="${p.id}">${p.nome_completo}</option>`})
+document.getElementById("buscaPaciente").innerHTML=opt
+}
+
+async function buscarHistorico(){
+const paciente=document.getElementById("buscaPaciente").value
+const di=document.getElementById("dataInicio").value
+const df=document.getElementById("dataFim").value
+let q=db.from("vw_rotinas_painel").select("*")
+if(paciente)q=q.eq("paciente_id",paciente)
+if(di)q=q.gte("data",di)
+if(df)q=q.lte("data",df)
+const {data,error}=await q.order("data",{ascending:false})
+if(error){console.log(error);return}
+let html=""
+data.forEach(r=>{
+html+=`<tr><td>${r.paciente}</td><td>${r.rotina}</td><td class="status-${r.status}">${r.status}</td><td>${r.data}</td></tr>`
+})
+document.getElementById("rotinas").innerHTML=html
+}
+  
 async function carregarClinico(){
 
 try{
@@ -353,12 +392,14 @@ console.log(e)
 function carregarTudo(){
 carregarRotinas()
 carregarClinico()
+carregarPacientesBusca()
 }
 
 </script>
 
 </body>
 </html>
+
 
 
 
