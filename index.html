@@ -260,11 +260,12 @@ document.getElementById("contadorExecutadas").innerText=executadas
 
 async function executarRotina(id){
 if(!confirm("Confirmar execução da rotina?"))return
-const {error}=await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date()}).eq("id",id)
+const usuario=localStorage.getItem("usuario_nome")||"enfermagem"
+const {error}=await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),executado_por:usuario}).eq("id",id)
 if(error){console.log(error);alert(error.message);return}
 carregarRotinas()
 }
-
+  
 async function carregarPacientesBusca(){
 const {data}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).order("nome_completo")
 let opt="<option value=''>Todos</option>"
@@ -362,6 +363,7 @@ carregarRotinaModelos()
 
 </body>
 </html>
+
 
 
 
