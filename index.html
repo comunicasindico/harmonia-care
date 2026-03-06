@@ -360,7 +360,110 @@ return
 carregarRotinas()
 
 }
-  
+
+async function pesquisarPaciente(){
+
+const pacienteSelecionado = document.querySelector(".busca select").value
+
+const {data,error}=await db
+.from("vw_rotinas_painel")
+.select("*")
+.eq("paciente",pacienteSelecionado)
+.order("rotina",{ascending:true})
+
+if(error){
+console.log(error)
+return
+}
+
+if(!data || data.length===0){
+document.getElementById("rotinas").innerHTML="<tr><td colspan='3'>Nenhum registro encontrado</td></tr>"
+return
+}
+
+let executadas=0
+let pendentes=0
+let atrasadas=0
+
+let rotinasHTML=""
+
+data.forEach(r=>{
+
+if(r.status==="executado")executadas++
+if(r.status==="pendente")pendentes++
+if(r.status==="atrasado")atrasadas++
+
+let statusIcon="⏳"
+let classe="status-pendente"
+
+if(r.status==="executado"){
+statusIcon="✔"
+classe="status-executado"
+}
+
+if(r.status==="atrasado"){
+statusIcon="⚠"
+classe="status-atrasado"
+}
+
+let dataFormatada = new Date(r.data)
+.toLocaleDateString("pt-BR")
+.replace(/\//g,"-")
+
+rotinasHTML+=`
+<tr onclick="executarRotina('${r.id}')" style="cursor:pointer">
+<td>${r.rotina}</td>
+<td class="${classe}">${statusIcon}</td>
+<td>${dataFormatada}</td>
+</tr>
+`
+
+})
+
+let progresso=Math.round((executadas/data.length)*100)
+
+let cor="#f39c12"
+if(progresso>=80)cor="#2ecc71"
+if(progresso<40)cor="#e74c3c"
+
+let barra=`
+<div style="width:180px">
+<div style="font-size:12px">${progresso}%</div>
+<div style="background:#eee;height:8px;border-radius:6px">
+<div style="width:${progresso}%;background:${cor};height:8px;border-radius:6px"></div>
+</div>
+</div>
+`
+
+document.getElementById("rotinas").innerHTML=`
+
+<tr>
+
+<td style="font-weight:600">
+${pacienteSelecionado}
+</td>
+
+<td>
+${barra}
+</td>
+
+<td>
+
+<table style="width:100%">
+${rotinasHTML}
+</table>
+
+</td>
+
+</tr>
+`
+
+document.getElementById("contadorExecutadas").innerText=executadas
+document.getElementById("contadorPendentes").innerText=pendentes
+document.getElementById("contadorAtrasadas").innerText=atrasadas
+
+}
+
 async function carregarPacientesBusca(){
 const {data}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).order("nome_completo")
 let opt="<option value=''>Todos</option>"
@@ -387,20 +490,96 @@ Observação: ${data.observacao ?? "-"}
 }
 
 async function buscarHistorico(){
-const paciente=document.getElementById("buscaPaciente").value
-const di=document.getElementById("dataInicio").value
-const df=document.getElementById("dataFim").value
-let q=db.from("vw_rotinas_painel").select("*")
-if(paciente)q=q.eq("paciente_id",paciente)
-if(di)q=q.gte("data",di)
-if(df)q=q.lte("data",df)
-const {data,error}=await q.order("data",{ascending:false})
-if(error){console.log(error);return}
-let html=""
-data?.forEach(r=>{
-html+=`<tr><td>${r.paciente}</td><td>${r.rotina}</td><td class="status-${r.status}">${r.status}</td><td>${r.data}</td></tr>`
+
+const paciente = document.getElementById("buscaPaciente").value
+const dataInicio = document.getElementById("dataInicio").value
+const dataFim = document.getElementById("dataFim").value
+
+let query = db
+.from("vw_rotinas_painel")
+.select("*")
+.eq("paciente",paciente)
+.order("rotina",{ascending:true})
+
+if(dataInicio) query = query.gte("data",dataInicio)
+if(dataFim) query = query.lte("data",dataFim)
+
+const {data,error} = await query
+
+if(error){
+console.log(error)
+alert(error.message)
+return
+}
+
+if(!data || data.length===0){
+document.getElementById("rotinas").innerHTML =
+"<tr><td colspan='3'>Nenhum registro encontrado</td></tr>"
+return
+}
+
+let executadas=0
+let pendentes=0
+let atrasadas=0
+
+let rotinasHTML=""
+
+data.forEach(r=>{
+
+if(r.status==="executado") executadas++
+if(r.status==="pendente") pendentes++
+if(r.status==="atrasado") atrasadas++
+
+let statusIcon="⏳"
+let classe="status-pendente"
+
+if(r.status==="executado"){
+statusIcon="✔"
+classe="status-executado"
+}
+
+if(r.status==="atrasado"){
+statusIcon="⚠"
+classe="status-atrasado"
+}
+
+let dataFormatada = new Date(r.data)
+.toLocaleDateString("pt-BR")
+
+rotinasHTML+=`
+<tr onclick="executarRotina('${r.id}')" style="cursor:pointer">
+<td>${r.rotina}</td>
+<td class="${classe}">${statusIcon}</td>
+<td>${dataFormatada}</td>
+</tr>
+`
 })
-document.getElementById("rotinas").innerHTML=html
+let progresso = Math.round((executadas/data.length)*100)
+let cor="#f39c12"
+if(progresso>=80) cor="#2ecc71"
+if(progresso<40) cor="#e74c3c"
+let barra=`
+<div style="width:180px">
+<div style="font-size:12px">${progresso}%</div>
+<div style="background:#eee;height:8px;border-radius:6px">
+<div style="width:${progresso}%;background:${cor};height:8px;border-radius:6px"></div>
+</div>
+</div>
+`
+document.getElementById("rotinas").innerHTML = `
+<tr>
+<td style="font-weight:600">${paciente}</td>
+<td>${barra}</td>
+<td>
+<table style="width:100%">
+${rotinasHTML}
+</table>
+</td>
+</tr>
+`
+document.getElementById("contadorExecutadas").innerText = executadas
+document.getElementById("contadorPendentes").innerText = pendentes
+document.getElementById("contadorAtrasadas").innerText = atrasadas
 }
 
 async function carregarClinico(){
@@ -476,6 +655,7 @@ carregarRotinaModelos()
 
 </body>
 </html>
+
 
 
 
