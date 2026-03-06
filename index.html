@@ -202,46 +202,35 @@ document.getElementById("painelClinico").style.display="block"
 }
 
 async function carregarRotinas(){
-
 const {data,error}=await db
 .from("vw_rotinas_painel")
 .select("*")
 .eq("turno",TURNO_ATUAL)
 .order("paciente",{ascending:true})
-
 if(error){
 console.log(error)
 return
 }
-
 if(!data || data.length===0){
 document.getElementById("rotinas").innerHTML="<tr><td colspan='4'>Nenhuma rotina encontrada</td></tr>"
 return
 }
-
 let pacientes={}
 let executadas=0
-
 data?.forEach(r=>{
-
 if(!pacientes[r.paciente])pacientes[r.paciente]=[]
-
 if(r.status==="executado")executadas++
-
 let classe="badge-pendente"
 if(r.status==="executado")classe="badge-executado"
 if(r.status==="atrasado")classe="badge-atrasado"
-
 pacientes[r.paciente].push(
-`<span class="badge ${classe}" onclick="executarRotina('${r.id}')">${r.rotina}</span>`
+`<span class="badge ${classe}" 
+onclick="executarRotina('${r.id}',this)"
+>${r.rotina}</span>`
 )
-
 })
-
 let html=""
-
 Object.keys(pacientes).forEach(p=>{
-
 html+=`
 <tr>
 <td>${p}</td>
@@ -250,20 +239,20 @@ html+=`
 <td></td>
 </tr>
 `
-
 })
-
 document.getElementById("rotinas").innerHTML=html
 document.getElementById("contadorExecutadas").innerText=executadas
-
 }
 
-async function executarRotina(id){
-if(!confirm("Confirmar execução da rotina?"))return
+async function executarRotina(id,el){
+el.style.pointerEvents="none"
+el.classList.remove("badge-pendente","badge-atrasado")
+el.classList.add("badge-executado")
 const usuario=localStorage.getItem("usuario_nome")||"enfermagem"
 const {error}=await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),executado_por:usuario}).eq("id",id)
-if(error){console.log(error);alert(error.message);return}
-carregarRotinas()
+if(error){console.log(error);alert(error.message);el.style.pointerEvents="auto";el.classList.remove("badge-executado");el.classList.add("badge-pendente");return}
+let c=document.getElementById("contadorExecutadas")
+if(c)c.innerText=parseInt(c.innerText||0)+1
 }
   
 async function carregarPacientesBusca(){
@@ -363,6 +352,7 @@ carregarRotinaModelos()
 
 </body>
 </html>
+
 
 
 
