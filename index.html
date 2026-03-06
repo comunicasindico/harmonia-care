@@ -217,86 +217,164 @@ document.getElementById("painelClinico").style.display="block"
 }
 
 async function carregarRotinas(){
+
 const {data,error}=await db
 .from("vw_rotinas_painel")
 .select("*")
 .eq("turno",TURNO_ATUAL)
 .order("paciente",{ascending:true})
+
 if(error){
 console.log(error)
 return
 }
+
 if(!data || data.length===0){
-document.getElementById("rotinas").innerHTML="<tr><td colspan='4'>Nenhuma rotina encontrada</td></tr>"
+document.getElementById("rotinas").innerHTML="<tr><td colspan='5'>Nenhuma rotina encontrada</td></tr>"
 return
 }
+
 let pacientes={}
 let executadas=0
 let pendentes=0
 let atrasadas=0
-data?.forEach(r=>{
+
+data.forEach(r=>{
+
 if(!pacientes[r.paciente]){
-pacientes[r.paciente]={id:r.paciente_id,manha:[],tarde:[],noite:[],atrasado:false,total:0,ok:0}
+pacientes[r.paciente]={
+id:r.paciente_id,
+manha:[],
+tarde:[],
+noite:[],
+total:0,
+ok:0
 }
-if(r.status==="executado")executadas++
+}
+
+pacientes[r.paciente].total++
+
+if(r.status==="executado"){
+pacientes[r.paciente].ok++
+executadas++
+}
+
 if(r.status==="pendente")pendentes++
 if(r.status==="atrasado")atrasadas++
-pacientes[r.paciente].total++
-if(r.status==="executado")pacientes[r.paciente].ok++
-let classe="badge-pendente"
-if(r.status==="executado")classe="badge-executado"
-if(r.status==="atrasado")classe="badge-atrasado"
-if(r.status==="atrasado")pacientes[r.paciente].atrasado=true
-let statusIcon=r.status==="executado"?"✔ OK":"⏳"
-let badge=`<span class="badge ${classe}" onclick="executarRotina('${r.id}',this)">${r.rotina}<br><small>${statusIcon}</small></span>`
-if(r.turno==="manha")pacientes[r.paciente].manha.push(badge)
-if(r.turno==="tarde")pacientes[r.paciente].tarde.push(badge)
-if(r.turno==="noite")pacientes[r.paciente].noite.push(badge)
+
+let status="⏳"
+let classe="status-pendente"
+
+if(r.status==="executado"){
+status="✔"
+classe="status-executado"
+}
+
+if(r.status==="atrasado"){
+status="⚠"
+classe="status-atrasado"
+}
+
+let linha=`
+<tr onclick="executarRotina('${r.id}')" style="cursor:pointer">
+<td>${r.rotina}</td>
+<td class="${classe}">${status}</td>
+</tr>
+`
+
+if(r.turno==="manha")pacientes[r.paciente].manha.push(linha)
+if(r.turno==="tarde")pacientes[r.paciente].tarde.push(linha)
+if(r.turno==="noite")pacientes[r.paciente].noite.push(linha)
+
 })
+
 let html=""
+
 Object.keys(pacientes).forEach(p=>{
+
 let total=pacientes[p].total
 let ok=pacientes[p].ok
+
 let progresso=Math.round((ok/total)*100)
+
 let cor="#f39c12"
 if(progresso>=80)cor="#2ecc71"
 if(progresso<40)cor="#e74c3c"
-let painelClinico=`<div style="width:160px"><div style="font-size:12px;margin-bottom:2px">${progresso}% cuidados</div><div style="background:#eee;border-radius:6px;height:8px"><div style="width:${progresso}%;background:${cor};height:8px;border-radius:6px"></div></div></div>`
-let alerta=pacientes[p].atrasado?'<span style="color:#e74c3c;font-weight:bold;margin-left:6px">⚠</span>':''
-html+=`<tr>
-<td onclick="mostrarPaciente('${pacientes[p].id}')" style="cursor:pointer;font-weight:600">
-<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-<span>${p}${alerta}</span>
-${painelClinico}
+
+let barra=`
+<div style="width:160px">
+<div style="font-size:12px">${progresso}%</div>
+<div style="background:#eee;height:8px;border-radius:6px">
+<div style="width:${progresso}%;background:${cor};height:8px;border-radius:6px"></div>
 </div>
+</div>
+`
+
+let tabelaManha=`
+<table style="width:100%">
+${pacientes[p].manha.join("")}
+</table>
+`
+
+let tabelaTarde=`
+<table style="width:100%">
+${pacientes[p].tarde.join("")}
+</table>
+`
+
+let tabelaNoite=`
+<table style="width:100%">
+${pacientes[p].noite.join("")}
+</table>
+`
+
+html+=`
+<tr>
+
+<td onclick="mostrarPaciente('${pacientes[p].id}')" style="cursor:pointer;font-weight:600">
+${p}
 </td>
-<td><div class="rotinasPaciente">
-<div style="margin-bottom:6px"><b style="color:#3498db">Manhã</b><br>${pacientes[p].manha.join("")}</div>
-<div style="margin-bottom:6px"><b style="color:#f39c12">Tarde</b><br>${pacientes[p].tarde.join("")}</div>
-<div><b style="color:#2c3e50">Noite</b><br>${pacientes[p].noite.join("")}</div>
-</div></td>
-<td></td>
-<td></td>
-</tr>`
+
+<td>
+${barra}
+</td>
+
+<td>
+${tabelaManha}
+</td>
+
+<td>
+${tabelaTarde}
+</td>
+
+<td>
+${tabelaNoite}
+</td>
+
+</tr>
+`
+
 })
+
 document.getElementById("rotinas").innerHTML=html
+
 document.getElementById("contadorExecutadas").innerText=executadas
 document.getElementById("contadorPendentes").innerText=pendentes
 document.getElementById("contadorAtrasadas").innerText=atrasadas
-}
 
-async function executarRotina(id,el){
+}
+  
+async function executarRotina(id){
+
 const usuario_id = localStorage.getItem("usuario_id")
-const usuario_nome = localStorage.getItem("usuario_nome")
-let executado = el.classList.contains("badge-executado")
-if(!executado){
-/* EXECUTAR */
+
 const agora = new Date()
+
 const {error} = await db
 .from("rotinas_execucao")
 .update({
 status:"executado",
-horario_executado:agora,
+horario_execucao:agora,
 executado_por:usuario_id
 })
 .eq("id",id)
@@ -307,39 +385,8 @@ alert(error.message)
 return
 }
 
-el.classList.remove("badge-pendente","badge-atrasado")
-el.classList.add("badge-executado")
+carregarRotinas()
 
-let hora = agora.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
-
-el.innerHTML = `
-✔ Executado<br>
-<small>${usuario_nome}</small><br>
-<small>${hora}</small>
-`
-
-}else{
-
-/* DESFAZER */
-
-const {error} = await db
-.from("rotinas_execucao")
-.update({
-status:"pendente",
-horario_executado:null,
-executado_por:null
-})
-.eq("id",id)
-
-if(error){
-console.log(error)
-alert(error.message)
-return
-}
-el.classList.remove("badge-executado")
-el.classList.add("badge-pendente")
-el.innerHTML = "Pendente"
-}
 }
   
 async function carregarPacientesBusca(){
@@ -457,6 +504,7 @@ carregarRotinaModelos()
 
 </body>
 </html>
+
 
 
 
