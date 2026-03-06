@@ -323,7 +323,6 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 async function login(){
 
 const email=document.getElementById("usuario").value.trim()
-
 const senha=document.getElementById("senha").value.trim()
 
 const {data,error}=await db
@@ -345,7 +344,6 @@ return
 localStorage.setItem("usuario_id",data.id)
 
 document.getElementById("login").style.display="none"
-
 document.getElementById("app").style.display="block"
 
 carregarTudo()
@@ -353,15 +351,30 @@ carregarTudo()
 }
 
 function logout(){
-
 localStorage.clear()
-
 location.reload()
+}
+
+/* ======================================================
+011 NAVEGAÇÃO PAINÉIS
+====================================================== */
+
+function abrirEnfermagem(){
+
+document.getElementById("painelEnfermagem").style.display="block"
+document.getElementById("painelClinico").style.display="none"
+
+}
+
+function abrirClinico(){
+
+document.getElementById("painelEnfermagem").style.display="none"
+document.getElementById("painelClinico").style.display="block"
 
 }
 
 /* ======================================================
-011 TURNOS
+012 TURNOS
 ====================================================== */
 
 function mudarTurno(t){
@@ -373,7 +386,34 @@ carregarRotinas()
 }
 
 /* ======================================================
-012 CARREGAR ROTINAS
+013 CARREGAR PACIENTES BUSCA
+====================================================== */
+
+async function carregarPacientesBusca(){
+
+const {data,error}=await db
+.from("pacientes")
+.select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
+.order("nome_completo",{ascending:true})
+
+if(error){
+console.log(error)
+return
+}
+
+let opt=`<option value="">TODOS</option>`
+
+data?.forEach(p=>{
+opt+=`<option value="${p.id}">${p.nome_completo}</option>`
+})
+
+document.getElementById("buscaPaciente").innerHTML=opt
+
+}
+
+/* ======================================================
+014 CARREGAR ROTINAS
 ====================================================== */
 
 async function carregarRotinas(){
@@ -420,7 +460,6 @@ pacientes[r.paciente].ok++
 }
 
 if(r.status==="pendente")pendentes++
-
 if(r.status==="atrasado")atrasadas++
 
 let status="⏳"
@@ -472,7 +511,6 @@ return a.localeCompare(b)
 .forEach(p=>{
 
 let total=pacientes[p].total
-
 let ok=pacientes[p].ok
 
 let progresso=Math.round((ok/total)*100)
@@ -480,14 +518,13 @@ let progresso=Math.round((ok/total)*100)
 let cor="#f39c12"
 
 if(progresso>=80)cor="#2ecc71"
-
 if(progresso<40)cor="#e74c3c"
 
 let barra=`
-<div style="width:160px">
-<div style="font-size:12px">${progresso}%</div>
-<div style="background:#eee;height:8px;border-radius:6px">
-<div style="width:${progresso}%;background:${cor};height:8px;border-radius:6px"></div>
+<div style="width:140px">
+<div style="font-size:11px">${progresso}%</div>
+<div style="background:#eee;height:6px;border-radius:6px">
+<div style="width:${progresso}%;background:${cor};height:6px;border-radius:6px"></div>
 </div>
 </div>
 `
@@ -511,15 +548,13 @@ html+=`
 document.getElementById("rotinas").innerHTML=html
 
 document.getElementById("contadorExecutadas").innerText=executadas
-
 document.getElementById("contadorPendentes").innerText=pendentes
-
 document.getElementById("contadorAtrasadas").innerText=atrasadas
 
 }
 
 /* ======================================================
-013 EXECUTAR ROTINA
+015 EXECUTAR ROTINA
 ====================================================== */
 
 async function executarRotina(id){
@@ -544,20 +579,153 @@ carregarRotinas()
 }
 
 /* ======================================================
-014 CARREGAR TUDO
+016 BUSCAR HISTÓRICO
+====================================================== */
+
+async function buscarHistorico(){
+
+const paciente=document.getElementById("buscaPaciente").value
+const dataInicio=document.getElementById("dataInicio").value
+const dataFim=document.getElementById("dataFim").value
+
+let query=db
+.from("vw_rotinas_painel")
+.select("*")
+.order("paciente",{ascending:true})
+
+if(paciente && paciente!==""){
+query=query.eq("paciente_id",paciente)
+}
+
+if(dataInicio){
+query=query.gte("data",dataInicio)
+}
+
+if(dataFim){
+query=query.lte("data",dataFim)
+}
+
+const {data,error}=await query
+
+if(error){
+console.log(error)
+return
+}
+
+if(!data||data.length===0){
+document.getElementById("rotinas").innerHTML=
+"<tr><td colspan='3'>Nenhum registro encontrado</td></tr>"
+return
+}
+
+renderizarRotinas(data)
+
+}
+
+/* ======================================================
+017 RENDERIZAR ROTINAS
+====================================================== */
+
+function renderizarRotinas(data){
+
+let pacientes={}
+let executadas=0
+let pendentes=0
+let atrasadas=0
+
+data.forEach(r=>{
+
+if(!pacientes[r.paciente]){
+
+pacientes[r.paciente]={
+rotinas:[],
+total:0,
+ok:0
+}
+
+}
+
+pacientes[r.paciente].total++
+
+if(r.status==="executado"){
+executadas++
+pacientes[r.paciente].ok++
+}
+
+if(r.status==="pendente")pendentes++
+if(r.status==="atrasado")atrasadas++
+
+})
+
+carregarRotinas()
+
+}
+
+/* ======================================================
+018 CARREGAR CLÍNICO
+====================================================== */
+
+async function carregarClinico(){
+
+const {data,error}=await db
+.from("pacientes")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+
+if(error){
+console.log(error)
+return
+}
+
+let html=""
+let has=0
+let dm=0
+let dem=0
+
+data?.forEach(p=>{
+
+if(p.has)has++
+if(p.dm)dm++
+if(p.demencia)dem++
+
+html+=`
+<tr>
+<td>${p.nome_completo}</td>
+<td>${p.idade??""}</td>
+<td>${p.has?"✔":""}</td>
+<td>${p.dm?"✔":""}</td>
+<td>${p.demencia?"✔":""}</td>
+<td>${p.cardio?"✔":""}</td>
+<td>${p.acamado?"✔":""}</td>
+<td>${p.outras??""}</td>
+</tr>
+`
+
+})
+
+document.getElementById("quadroClinico").innerHTML=html
+document.getElementById("totalPacientes").innerText=data?.length??0
+document.getElementById("totalHas").innerText=has
+document.getElementById("totalDm").innerText=dm
+document.getElementById("totalDemencia").innerText=dem
+
+}
+
+/* ======================================================
+019 CARREGAR TUDO
 ====================================================== */
 
 function carregarTudo(){
 
+carregarPacientesBusca()
 carregarRotinas()
-
 carregarClinico()
 
-carregarPacientesBusca()
-
 }
+
 
 </script>
 
 </body>
 </html>
+
