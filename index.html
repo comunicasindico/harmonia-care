@@ -1,58 +1,156 @@
 <!DOCTYPE html>
+
+<!-- ======================================================
+001 HEAD
+====================================================== -->
 <html lang="pt-BR">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Harmonia Care</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<!-- ======================================================
+002 STYLE
+====================================================== -->
+
 <style>
+
 body{margin:0;font-family:Arial;background:#f4f6f9;}
+
 #login{display:flex;justify-content:center;align-items:center;height:100vh;}
-.login-box{background:#fff;padding:40px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);width:320px;}
+
+.login-box{
+background:#fff;
+padding:40px;
+border-radius:12px;
+box-shadow:0 4px 12px rgba(0,0,0,0.1);
+width:320px;
+}
+
 .login-box h2{text-align:center;margin-bottom:20px;}
-.login-box input{width:100%;padding:10px;margin-bottom:15px;border-radius:8px;border:1px solid #ccc;}
-button{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;}
+
+.login-box input{
+width:100%;
+padding:10px;
+margin-bottom:15px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+button{
+padding:10px 16px;
+border:0;
+border-radius:8px;
+font-weight:bold;
+cursor:pointer;
+}
+
 .btn-primary{background:#3498db;color:#fff}
 .btn-secondary{background:#555;color:#fff}
 .btn-danger{background:#e74c3c;color:#fff}
 .btn-success{background:#2ecc71;color:#fff}
-#app{display:none;padding:30px;max-width:1200px;margin:auto;}
+
+#app{
+display:none;
+padding:30px;
+max-width:1200px;
+margin:auto;
+}
+
 .menu{margin-bottom:20px;}
-.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;}
-.card{background:#fff;padding:20px;border-radius:12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+
+.dashboard{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:15px;
+margin-bottom:20px;
+}
+
+.card{
+background:#fff;
+padding:20px;
+border-radius:12px;
+text-align:center;
+box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+
 .card h3{margin:0;font-size:30px;}
-.box{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-top:20px;}
+
+.box{
+background:#fff;
+padding:20px;
+border-radius:12px;
+box-shadow:0 2px 8px rgba(0,0,0,0.08);
+margin-top:20px;
+}
+
 table{width:100%;border-collapse:collapse;}
-th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left;}
+
+th,td{
+padding:10px;
+border-bottom:1px solid #ddd;
+text-align:left;
+}
+
 .status-pendente{color:#e67e22;font-weight:bold}
 .status-executado{color:#2ecc71;font-weight:bold}
 .status-atrasado{color:#e74c3c;font-weight:bold}
+
 .turnos{display:flex;gap:10px;margin-bottom:15px}
+
 .turno-manha{background:#3498db;color:#fff}
 .turno-tarde{background:#f39c12;color:#fff}
 .turno-noite{background:#2c3e50;color:#fff}
-.busca{display:flex;gap:10px;margin-bottom:15px}
-.busca input,.busca select{padding:8px;border-radius:6px;border:1px solid #ccc}
-.rotinasPaciente{display:flex;flex-wrap:wrap;gap:6px}
-.badge{padding:6px 10px;border-radius:8px;font-size:13px;cursor:pointer}
-.badge-pendente{background:#f39c12;color:#fff}
-.badge-executado{background:#2ecc71;color:#fff}
-.badge-atrasado{background:#e74c3c;color:#fff}
+
+.busca{
+display:flex;
+gap:10px;
+margin-bottom:15px;
+}
+
+.busca input,.busca select{
+padding:8px;
+border-radius:6px;
+border:1px solid #ccc;
+}
+
 </style>
+
 </head>
 
+<!-- ======================================================
+003 BODY
+====================================================== -->
+
 <body>
+
+<!-- ======================================================
+004 LOGIN
+====================================================== -->
 
 <div id="login">
 <div class="login-box">
 <h2>Harmonia Care</h2>
+
 <input id="usuario" placeholder="Usuário">
+
 <input id="senha" type="password" placeholder="Senha">
-<button onclick="login()" class="btn-primary" style="width:100%">Entrar</button>
+
+<button onclick="login()" class="btn-primary" style="width:100%">
+Entrar
+</button>
+
 </div>
 </div>
+
+<!-- ======================================================
+005 APP
+====================================================== -->
 
 <div id="app">
 
@@ -62,82 +160,124 @@ Harmonia Care
 </h1>
 
 <div class="menu">
-<button onclick="abrirEnfermagem()" class="btn-primary">Painel Enfermagem</button>
-<button onclick="abrirClinico()" class="btn-secondary">Painel Clínico</button>
+
+<button onclick="abrirEnfermagem()" class="btn-primary">
+Painel Enfermagem
+</button>
+
+<button onclick="abrirClinico()" class="btn-secondary">
+Painel Clínico
+</button>
+
 </div>
+
+<!-- ======================================================
+006 PAINEL ENFERMAGEM
+====================================================== -->
 
 <div id="painelEnfermagem">
 
 <div class="box">
+
 <h3>Rotinas do Turno</h3>
 
 <div class="turnos">
+
 <button class="turno-manha" onclick="mudarTurno('manha')">Manhã</button>
+
 <button class="turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
+
 <button class="turno-noite" onclick="mudarTurno('noite')">Noite</button>
+
 </div>
 
 <div class="busca">
+
 <select id="buscaPaciente"></select>
+
 <input type="date" id="dataInicio">
+
 <input type="date" id="dataFim">
-<button onclick="buscarHistorico()" class="btn-primary">Pesquisar</button>
+
+<button onclick="buscarHistorico()" class="btn-primary">
+Pesquisar
+</button>
+
 </div>
 
 <div style="margin-bottom:12px;display:flex;gap:10px;font-weight:bold">
+
 <div style="background:#2ecc71;color:white;padding:6px 10px;border-radius:6px">
 Executadas: <span id="contadorExecutadas">0</span>
 </div>
+
 <div style="background:#f39c12;color:white;padding:6px 10px;border-radius:6px">
 Pendentes: <span id="contadorPendentes">0</span>
 </div>
+
 <div style="background:#e74c3c;color:white;padding:6px 10px;border-radius:6px">
 Atrasadas: <span id="contadorAtrasadas">0</span>
 </div>
+
 </div>
-  
-<div id="detalhePaciente" style="margin-top:12px;padding:12px;background:#eef3f8;border-radius:8px;display:none;font-size:14px"></div>
-    
+
 <table>
+
 <thead>
+
 <tr>
 <th>Paciente</th>
 <th>Progresso</th>
 <th>Rotinas</th>
 </tr>
+
 </thead>
 
 <tbody id="rotinas"></tbody>
+
 </table>
 
 </div>
 </div>
 
+<!-- ======================================================
+007 PAINEL CLÍNICO
+====================================================== -->
+
 <div id="painelClinico" style="display:none">
 
 <div class="dashboard">
+
 <div class="card">
 <h3 id="totalPacientes">0</h3>
 Pacientes
 </div>
+
 <div class="card">
 <h3 id="totalHas">0</h3>
 HAS
 </div>
+
 <div class="card">
 <h3 id="totalDm">0</h3>
 DM
 </div>
+
 <div class="card">
 <h3 id="totalDemencia">0</h3>
 Demência
 </div>
+
 </div>
 
 <div class="box">
+
 <h3>Quadro Clínico</h3>
+
 <table>
+
 <thead>
+
 <tr>
 <th>Paciente</th>
 <th>Idade</th>
@@ -148,73 +288,93 @@ Demência
 <th>Acamado</th>
 <th>Observações</th>
 </tr>
+
 </thead>
+
 <tbody id="quadroClinico"></tbody>
+
 </table>
+
 </div>
 
 </div>
+
 </div>
+
+<!-- ======================================================
+008 SCRIPT
+====================================================== -->
 
 <script>
 
 let TURNO_ATUAL="manha"
 
-const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co";
+/* ======================================================
+009 SUPABASE
+====================================================== */
+const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co"
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
-const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e";
-
+const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e"
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
-
-window.onload=function(){
-const loginSalvo=localStorage.getItem("hc_login")
-if(loginSalvo){
-document.getElementById("login").style.display="none"
-document.getElementById("app").style.display="block"
-carregarTudo()
-}
-}
+/* ======================================================
+010 LOGIN
+====================================================== */
 
 async function login(){
+
 const email=document.getElementById("usuario").value.trim()
+
 const senha=document.getElementById("senha").value.trim()
-const {data,error}=await db.from("usuarios").select("id,nome_completo,perfil,senha_hash,ativo").eq("email",email).single()
-if(error||!data){alert("Usuário não encontrado");return}
-if(!data.ativo){alert("Usuário inativo");return}
-if(senha!==data.senha_hash){alert("Senha incorreta");return}
-localStorage.setItem("usuario_id",data.id)
-localStorage.setItem("usuario_nome",data.nome_completo)
-localStorage.setItem("usuario_perfil",data.perfil)
-document.getElementById("login").style.display="none"
-document.getElementById("app").style.display="block"
-carregarTudo()
+
+const {data,error}=await db
+.from("usuarios")
+.select("*")
+.eq("email",email)
+.single()
+
+if(error||!data){
+alert("Usuário não encontrado")
+return
 }
 
-document.addEventListener("keydown",function(e){
-if(e.key==="Enter"){
-if(document.getElementById("login").style.display!=="none"){login()}
+if(senha!==data.senha_hash){
+alert("Senha incorreta")
+return
 }
-})
+
+localStorage.setItem("usuario_id",data.id)
+
+document.getElementById("login").style.display="none"
+
+document.getElementById("app").style.display="block"
+
+carregarTudo()
+
+}
 
 function logout(){
-localStorage.removeItem("hc_login")
+
+localStorage.clear()
+
 location.reload()
+
 }
+
+/* ======================================================
+011 TURNOS
+====================================================== */
 
 function mudarTurno(t){
+
 TURNO_ATUAL=t
+
 carregarRotinas()
+
 }
 
-function abrirEnfermagem(){
-document.getElementById("painelEnfermagem").style.display="block"
-document.getElementById("painelClinico").style.display="none"
-}
-
-function abrirClinico(){
-document.getElementById("painelEnfermagem").style.display="none"
-document.getElementById("painelClinico").style.display="block"
-}
+/* ======================================================
+012 CARREGAR ROTINAS
+====================================================== */
 
 async function carregarRotinas(){
 
@@ -222,15 +382,15 @@ const {data,error}=await db
 .from("vw_rotinas_painel")
 .select("*")
 .eq("turno",TURNO_ATUAL)
-.order("paciente",{ascending:true})
 
 if(error){
 console.log(error)
 return
 }
 
-if(!data || data.length===0){
-document.getElementById("rotinas").innerHTML="<tr><td colspan='3'>Nenhuma rotina encontrada</td></tr>"
+if(!data||data.length===0){
+document.getElementById("rotinas").innerHTML=
+"<tr><td colspan='3'>Nenhuma rotina encontrada</td></tr>"
 return
 }
 
@@ -242,12 +402,14 @@ let atrasadas=0
 data.forEach(r=>{
 
 if(!pacientes[r.paciente]){
+
 pacientes[r.paciente]={
 id:r.paciente_id,
 rotinas:[],
 total:0,
 ok:0
 }
+
 }
 
 pacientes[r.paciente].total++
@@ -258,6 +420,7 @@ pacientes[r.paciente].ok++
 }
 
 if(r.status==="pendente")pendentes++
+
 if(r.status==="atrasado")atrasadas++
 
 let status="⏳"
@@ -274,7 +437,7 @@ classe="status-atrasado"
 }
 
 let linha=`
-<tr onclick="executarRotina('${r.id}')" style="cursor:pointer">
+<tr onclick="executarRotina('${r.id}')">
 <td>${r.rotina}</td>
 <td class="${classe}">${status}</td>
 </tr>
@@ -286,300 +449,39 @@ pacientes[r.paciente].rotinas.push(linha)
 
 let html=""
 
-Object.keys(pacientes).forEach(p=>{
+Object.keys(pacientes)
+
+.sort((a,b)=>{
+
+let pa=pacientes[a]
+let pb=pacientes[b]
+
+let progA=pa.ok/pa.total
+let progB=pb.ok/pb.total
+
+if(progA===1&&progB!==1)return 1
+if(progB===1&&progA!==1)return -1
+
+if(progA<progB)return -1
+if(progA>progB)return 1
+
+return a.localeCompare(b)
+
+})
+
+.forEach(p=>{
 
 let total=pacientes[p].total
+
 let ok=pacientes[p].ok
 
 let progresso=Math.round((ok/total)*100)
 
 let cor="#f39c12"
+
 if(progresso>=80)cor="#2ecc71"
+
 if(progresso<40)cor="#e74c3c"
-
-let barra=`
-<div style="width:150px">
-<div style="font-size:12px">${progresso}%</div>
-<div style="background:#eee;height:8px;border-radius:6px">
-<div style="width:${progresso}%;background:${cor};height:8px;border-radius:6px"></div>
-</div>
-</div>
-`
-
-let tabelaRotinas=`
-<table style="width:100%">
-${pacientes[p].rotinas.join("")}
-</table>
-`
-
-html+=`
-<tr>
-
-<td style="font-weight:600">
-${p}
-</td>
-
-<td>
-${barra}
-</td>
-
-<td>
-${tabelaRotinas}
-</td>
-
-</tr>
-`
-
-})
-
-const tabela = document.getElementById("rotinas")
-
-if(tabela){
-tabela.innerHTML = html
-}
-
-document.getElementById("contadorExecutadas").innerText=executadas
-document.getElementById("contadorPendentes").innerText=pendentes
-document.getElementById("contadorAtrasadas").innerText=atrasadas
-
-}
-  
-async function executarRotina(id){
-
-const usuario_id=localStorage.getItem("usuario_id")
-
-const {error}=await db
-.from("rotinas_execucao")
-.update({
-status:"executado",
-executado_por:usuario_id
-})
-.eq("id",id)
-
-if(error){
-alert(error.message)
-return
-}
-
-carregarRotinas()
-
-}
-
-async function pesquisarPaciente(){
-
-const pacienteSelecionado = document.querySelector(".busca select").value
-
-const {data,error}=await db
-.from("vw_rotinas_painel")
-.select("*")
-.eq("paciente",pacienteSelecionado)
-.order("rotina",{ascending:true})
-
-if(error){
-console.log(error)
-return
-}
-
-if(!data || data.length===0){
-document.getElementById("rotinas").innerHTML="<tr><td colspan='3'>Nenhum registro encontrado</td></tr>"
-return
-}
-
-let executadas=0
-let pendentes=0
-let atrasadas=0
-
-let rotinasHTML=""
-
-data.forEach(r=>{
-
-if(r.status==="executado")executadas++
-if(r.status==="pendente")pendentes++
-if(r.status==="atrasado")atrasadas++
-
-let statusIcon="⏳"
-let classe="status-pendente"
-
-if(r.status==="executado"){
-statusIcon="✔"
-classe="status-executado"
-}
-
-if(r.status==="atrasado"){
-statusIcon="⚠"
-classe="status-atrasado"
-}
-
-let dataFormatada = new Date(r.data)
-.toLocaleDateString("pt-BR")
-.replace(/\//g,"-")
-
-rotinasHTML+=`
-<tr onclick="executarRotina('${r.id}')" style="cursor:pointer">
-<td>${r.rotina}</td>
-<td class="${classe}">${statusIcon}</td>
-<td>${dataFormatada}</td>
-</tr>
-`
-
-})
-
-let progresso=Math.round((executadas/data.length)*100)
-
-let cor="#f39c12"
-if(progresso>=80)cor="#2ecc71"
-if(progresso<40)cor="#e74c3c"
-
-let barra=`
-<div style="width:180px">
-<div style="font-size:12px">${progresso}%</div>
-<div style="background:#eee;height:8px;border-radius:6px">
-<div style="width:${progresso}%;background:${cor};height:8px;border-radius:6px"></div>
-</div>
-</div>
-`
-
-let html = `
-<tr>
-<td style="font-weight:600">${pacienteSelecionado}</td>
-<td>${barra}</td>
-<td>${rotinasHTML}</td>
-</tr>
-`
-document.getElementById("rotinas").innerHTML = html
-
-document.getElementById("contadorExecutadas").innerText=executadas
-document.getElementById("contadorPendentes").innerText=pendentes
-document.getElementById("contadorAtrasadas").innerText=atrasadas
-
-}
-
-async function carregarPacientesBusca(){
-const {data}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).order("nome_completo")
-let opt="<option value=''>Todos</option>"
-data?.forEach(p=>{opt+=`<option value="${p.id}">${p.nome_completo}</option>`})
-document.getElementById("buscaPaciente").innerHTML=opt
-}
-
-async function mostrarPaciente(id){
-const {data,error}=await db
-.from("pacientes")
-.select("*")
-.eq("id",id)
-.single()
-if(error)return
-let box=document.getElementById("detalhePaciente")
-box.style.display="block"
-box.innerHTML=`
-<b>${data.nome_completo}</b><br>
-Idade: ${data.idade ?? "-"}<br>
-Sexo: ${data.sexo ?? "-"}<br>
-Quarto: ${data.quarto ?? "-"}<br>
-Observação: ${data.observacao ?? "-"}
-`
-}
-
-async function buscarHistorico(){
-
-const paciente = document.getElementById("buscaPaciente").value
-const dataInicio = document.getElementById("dataInicio").value
-const dataFim = document.getElementById("dataFim").value
-
-let query = db
-.from("vw_rotinas_painel")
-.select("*")
-.order("paciente",{ascending:true})
-
-/* FILTRO PACIENTE */
-if(paciente !== "Todos"){
-query = query.eq("paciente",paciente)
-}
-
-/* FILTRO DATA */
-if(dataInicio){
-query = query.gte("data",dataInicio)
-}
-
-if(dataFim){
-query = query.lte("data",dataFim)
-}
-
-const {data,error} = await query
-
-if(error){
-console.log(error)
-alert(error.message)
-return
-}
-
-if(!data || data.length===0){
-document.getElementById("rotinas").innerHTML =
-"<tr><td colspan='3'>Nenhum registro encontrado</td></tr>"
-return
-}
-
-/* AGRUPAR PACIENTES */
-let pacientes={}
-let executadas=0
-let pendentes=0
-let atrasadas=0
-
-data.forEach(r=>{
-
-if(!pacientes[r.paciente]){
-pacientes[r.paciente]={
-rotinas:[],
-total:0,
-ok:0
-}
-}
-
-pacientes[r.paciente].total++
-
-if(r.status==="executado"){
-executadas++
-pacientes[r.paciente].ok++
-}
-
-if(r.status==="pendente") pendentes++
-if(r.status==="atrasado") atrasadas++
-
-let status="⏳"
-let classe="status-pendente"
-
-if(r.status==="executado"){
-status="✔"
-classe="status-executado"
-}
-
-if(r.status==="atrasado"){
-status="⚠"
-classe="status-atrasado"
-}
-
-let linha=`
-<tr onclick="executarRotina('${r.id}')" style="cursor:pointer">
-<td>${r.rotina}</td>
-<td class="${classe}">${status}</td>
-</tr>
-`
-
-pacientes[r.paciente].rotinas.push(linha)
-
-})
-
-let html=""
-
-Object.keys(pacientes).sort().forEach(p=>{
-
-let total = pacientes[p].total
-let ok = pacientes[p].ok
-
-let progresso = Math.round((ok/total)*100)
-
-let cor="#f39c12"
-if(progresso>=80) cor="#2ecc71"
-if(progresso<40) cor="#e74c3c"
 
 let barra=`
 <div style="width:160px">
@@ -606,107 +508,56 @@ html+=`
 
 })
 
-let tabela = document.getElementById("rotinas")
+document.getElementById("rotinas").innerHTML=html
 
-if(tabela){
-tabela.innerHTML = html
-}
+document.getElementById("contadorExecutadas").innerText=executadas
 
-document.getElementById("contadorExecutadas").innerText = executadas
-document.getElementById("contadorPendentes").innerText = pendentes
-document.getElementById("contadorAtrasadas").innerText = atrasadas
+document.getElementById("contadorPendentes").innerText=pendentes
+
+document.getElementById("contadorAtrasadas").innerText=atrasadas
 
 }
 
-async function carregarClinico(){
-try{
-const {data,error}=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID)
-if(error){console.log(error);return}
-let html=""
-let has=0
-let dm=0
-let dem=0
-data?.forEach(p=>{
-if(p.has)has++
-if(p.dm)dm++
-if(p.demencia)dem++
-html+=`<tr><td>${p.nome_completo}</td><td>${p.idade ?? ""}</td><td>${p.has?"✔":""}</td><td>${p.dm?"✔":""}</td><td>${p.demencia?"✔":""}</td><td>${p.cardio?"✔":""}</td><td>${p.acamado?"✔":""}</td><td>${p.outras ?? ""}</td></tr>`
+/* ======================================================
+013 EXECUTAR ROTINA
+====================================================== */
+
+async function executarRotina(id){
+
+const usuario_id=localStorage.getItem("usuario_id")
+
+const {error}=await db
+.from("rotinas_execucao")
+.update({
+status:"executado",
+executado_por:usuario_id
 })
-document.getElementById("quadroClinico").innerHTML=html
-document.getElementById("totalPacientes").innerText=data?.length ?? 0
-document.getElementById("totalHas").innerText=has
-document.getElementById("totalDm").innerText=dm
-document.getElementById("totalDemencia").innerText=dem
-}catch(e){console.log(e)}
+.eq("id",id)
+
+if(error){
+alert(error.message)
+return
 }
 
-async function carregarRotinaModelos(){
-const {data,error}=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).order("titulo")
-if(error){console.log(error);return}
-let html=""
-data.forEach(r=>{
-html+=`<tr>
-<td contenteditable="true" onblur="editarRotina('${r.id}',this.innerText)">${r.titulo}</td>
-<td>${r.turno}</td>
-<td>${r.tipo}</td>
-<td>
-<button onclick="excluirRotina('${r.id}')" class="btn-danger">Excluir</button>
-</td>
-</tr>`
-})
-document.getElementById("listaRotinas").innerHTML=html
-}
-
-async function inserirRotina(){
-const titulo=document.getElementById("novaRotinaNome").value
-const turno=document.getElementById("novoTurno").value
-if(!titulo){alert("Digite o nome da rotina");return}
-const {error}=await db.from("rotina_modelos").insert([{empresa_id:EMPRESA_ID,titulo:titulo,turno:turno,tipo:"geral"}])
-if(error){console.log(error);alert("Erro ao inserir");return}
-document.getElementById("novaRotinaNome").value=""
-carregarRotinaModelos()
-}
-
-async function editarRotina(id,titulo){
-const {error}=await db.from("rotina_modelos").update({titulo:titulo}).eq("id",id)
-if(error){console.log(error);alert("Erro ao atualizar")}
-}
-
-async function excluirRotina(id){
-if(!confirm("Excluir rotina?"))return
-const {error}=await db.from("rotina_modelos").delete().eq("id",id)
-if(error){console.log(error);alert("Erro ao excluir")}
-carregarRotinaModelos()
-}
-
-  
-function carregarTudo(){
 carregarRotinas()
+
+}
+
+/* ======================================================
+014 CARREGAR TUDO
+====================================================== */
+
+function carregarTudo(){
+
+carregarRotinas()
+
 carregarClinico()
+
 carregarPacientesBusca()
-carregarRotinaModelos()
+
 }
 
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
