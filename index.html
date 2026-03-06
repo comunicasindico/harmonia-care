@@ -191,6 +191,7 @@ Painel Clínico
 </div>
 <div class="busca">
 <select id="buscaPaciente"></select>
+<select id="buscaRotina"></select>
 <input type="date" id="dataInicio">
 <input type="date" id="dataFim">
 <button onclick="buscarHistorico()" class="btn-primary">Pesquisar</button>
@@ -412,6 +413,7 @@ return
 }
 
 let pacientes={}
+let ordemPacientes=[]
 let executadas=0
 let pendentes=0
 let atrasadas=0
@@ -419,6 +421,7 @@ let atrasadas=0
 data.forEach(r=>{
 
 if(!pacientes[r.paciente]){
+ordemPacientes.push(r.paciente)
 
 pacientes[r.paciente]={
 id:r.paciente_id,
@@ -462,38 +465,18 @@ let linha=`
 pacientes[r.paciente].rotinas.push(linha)
 
 })
-
 let html=""
 
-Object.keys(pacientes)
-
-.sort((a,b)=>{
-
-let pa=pacientes[a]
-let pb=pacientes[b]
-
-let progA=pa.ok/pa.total
-let progB=pb.ok/pb.total
-
-if(progA===1&&progB!==1)return 1
-if(progB===1&&progA!==1)return -1
-
-if(progA<progB)return -1
-if(progA>progB)return 1
-
-return a.localeCompare(b)
-
-})
-
-.forEach(p=>{
+ordemPacientes.forEach(p=>{
 
 let total=pacientes[p].total
 let ok=pacientes[p].ok
 
 let progresso=Math.round((ok/total)*100)
 
-let cor="#f39c12"
+let nomePaciente=p
 
+let cor="#f39c12"
 if(progresso>=80)cor="#2ecc71"
 if(progresso<40)cor="#e74c3c"
 
@@ -512,14 +495,9 @@ ${pacientes[p].rotinas.join("")}
 </table>
 `
 
-let corLinha="#fff"
-if(pacientes[p].ok===pacientes[p].total)corLinha="#eafaf1"
-if(pacientes[p].ok<pacientes[p].total)corLinha="#fff8e1"
-if(pacientes[p].rotinas.join("").includes("⚠"))corLinha="#fdecea"
-
 html+=`
-<tr style="background:${corLinha}">
-<td style="font-weight:600">${p}</td>
+<tr>
+<td style="font-weight:600">${nomePaciente}</td>
 <td>${barra}</td>
 <td>${tabela}</td>
 </tr>
@@ -570,13 +548,12 @@ carregarRotinas()
 /* ======================================================
 016 BUSCAR HISTÓRICO
 ====================================================== */
-
 async function buscarHistorico(){
 
 const paciente=document.getElementById("buscaPaciente").value
 const dataInicio=document.getElementById("dataInicio").value
 const dataFim=document.getElementById("dataFim").value
-
+const rotina=document.getElementById("buscaRotina").value
 let query=db
 .from("vw_rotinas_painel")
 .select("*")
@@ -585,7 +562,9 @@ let query=db
 if(paciente && paciente!==""){
 query=query.eq("paciente_id",paciente)
 }
-
+if(rotina){
+query=query.eq("rotina",rotina)
+}
 if(dataInicio){
 query=query.gte("data",dataInicio)
 }
@@ -712,7 +691,6 @@ document.getElementById("contadorAtrasadas").innerText=atrasadas
 /* ======================================================
 018 CARREGAR CLÍNICO
 ====================================================== */
-
 async function carregarClinico(){
 
 const {data,error}=await db
@@ -762,19 +740,43 @@ document.getElementById("totalDemencia").innerText=dem
 /* ======================================================
 019 CARREGAR TUDO
 ====================================================== */
-
 function carregarTudo(){
 
 carregarPacientesBusca()
+carregarTiposRotina()
 carregarRotinas()
 carregarClinico()
+}
+/* ======================================================
+020 CARREGAR TIPOS ROTINA
+====================================================== */
+async function carregarTiposRotina(){
 
+const {data,error}=await db
+.from("rotina_modelos")
+.select("titulo")
+.eq("empresa_id",EMPRESA_ID)
+.order("titulo")
+
+if(error){
+console.log(error)
+return
 }
 
+let opt=`<option value="">TODAS ROTINAS</option>`
+
+data?.forEach(r=>{
+opt+=`<option value="${r.titulo}">${r.titulo}</option>`
+})
+
+document.getElementById("buscaRotina").innerHTML=opt
+
+}
 
 </script>
 
 </body>
 </html>
+
 
 
