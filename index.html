@@ -162,17 +162,17 @@ carregarTudo()
 }
 }
 
-function login(){
+async function login(){
 const u=document.getElementById("usuario").value.trim()
 const s=document.getElementById("senha").value.trim()
-if(u==="admin"&&s==="123456"){
+const {data,error}=await db.from("usuarios").select("id,nome_completo").eq("email",u).eq("senha",s).eq("ativo",true).limit(1).single()
+if(error||!data){alert("Usuário ou senha inválidos");return}
 localStorage.setItem("hc_login","ok")
+localStorage.setItem("usuario_id",data.id)
+localStorage.setItem("usuario_nome",data.nome_completo||u)
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 carregarTudo()
-}else{
-alert("Usuário ou senha inválidos")
-}
 }
 
 document.addEventListener("keydown",function(e){
@@ -248,12 +248,13 @@ async function executarRotina(id,el){
 el.style.pointerEvents="none"
 el.classList.remove("badge-pendente","badge-atrasado")
 el.classList.add("badge-executado")
-const usuario=localStorage.getItem("usuario_nome")||"enfermagem"
-const {error}=await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),executado_por:usuario}).eq("id",id)
+const usuario_id=localStorage.getItem("usuario_id")
+const {error}=await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),executado_por:usuario_id}).eq("id",id)
 if(error){console.log(error);alert(error.message);el.style.pointerEvents="auto";el.classList.remove("badge-executado");el.classList.add("badge-pendente");return}
 let c=document.getElementById("contadorExecutadas")
 if(c)c.innerText=parseInt(c.innerText||0)+1
 }
+
   
 async function carregarPacientesBusca(){
 const {data}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).order("nome_completo")
@@ -352,6 +353,7 @@ carregarRotinaModelos()
 
 </body>
 </html>
+
 
 
 
