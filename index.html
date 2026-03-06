@@ -30,6 +30,9 @@ th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left;}
 .status-executado{color:#2ecc71;font-weight:bold}
 .status-atrasado{color:#e74c3c;font-weight:bold}
 .turnos{display:flex;gap:10px;margin-bottom:15px}
+.turno-manha{background:#3498db;color:#fff}
+.turno-tarde{background:#f39c12;color:#fff}
+.turno-noite{background:#2c3e50;color:#fff}
 .busca{display:flex;gap:10px;margin-bottom:15px}
 .busca input,.busca select{padding:8px;border-radius:6px;border:1px solid #ccc}
 .rotinasPaciente{display:flex;flex-wrap:wrap;gap:6px}
@@ -69,9 +72,9 @@ Harmonia Care
 <h3>Rotinas do Turno</h3>
 
 <div class="turnos">
-<button onclick="mudarTurno('manha')" class="btn-primary">Manhã</button>
-<button onclick="mudarTurno('tarde')" class="btn-secondary">Tarde</button>
-<button onclick="mudarTurno('noite')" class="btn-secondary">Noite</button>
+<button class="turno-manha" onclick="mudarTurno('manha')">Manhã</button>
+<button class="turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
+<button class="turno-noite" onclick="mudarTurno('noite')">Noite</button>
 </div>
 
 <div class="busca">
@@ -233,17 +236,29 @@ let pendentes=0
 let atrasadas=0
 data?.forEach(r=>{
 if(!pacientes[r.paciente]){
-pacientes[r.paciente]={id:r.paciente_id,rotinas:[],atrasado:false}
+pacientes[r.paciente]={id:r.paciente_id,manha:[],tarde:[],noite:[],atrasado:false,total:0,ok:0}
 }
 if(r.status==="executado")executadas++
 if(r.status==="pendente")pendentes++
 if(r.status==="atrasado")atrasadas++
+pacientes[r.paciente].total++
+if(r.status==="executado")pacientes[r.paciente].ok++
 let classe="badge-pendente"
 if(r.status==="executado")classe="badge-executado"
 if(r.status==="atrasado")classe="badge-atrasado"
 if(r.status==="atrasado")pacientes[r.paciente].atrasado=true
 let statusIcon = r.status==="executado" ? "✔ OK" : "⏳"
-pacientes[r.paciente].rotinas.push(
+
+let badge=
+`<span class="badge ${classe}"
+onclick="executarRotina('${r.id}',this)"
+>
+${r.rotina}<br>
+<small>${statusIcon}</small>
+</span>`
+if(r.turno==="manha")pacientes[r.paciente].manha.push(badge)
+if(r.turno==="tarde")pacientes[r.paciente].tarde.push(badge)
+if(r.turno==="noite")pacientes[r.paciente].noite.push(badge)
 `<span class="badge ${classe}" 
 onclick="executarRotina('${r.id}',this)"
 >
@@ -254,9 +269,24 @@ ${r.rotina}<br>
 })
 let html=""
 Object.keys(pacientes).forEach(p=>{
+let total=pacientes[p].total
+let ok=pacientes[p].ok
+let progresso=Math.round((ok/total)*100)
+let cor="#f39c12"
+if(progresso>=80)cor="#2ecc71"
+if(progresso<40)cor="#e74c3c"
 html+=`<tr>
-<td onclick="mostrarPaciente('${pacientes[p].id}')" style="cursor:pointer;font-weight:600">${p}</td>
-<td><div class="rotinasPaciente">${pacientes[p].rotinas.join("")}</div></td>
+<td onclick="mostrarPaciente('${pacientes[p].id}')" style="cursor:pointer;font-weight:600">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+<span>${p}</span>
+${painelClinico}
+</div>
+</td>
+<td><div class="rotinasPaciente">
+<div style="margin-bottom:6px"><b style="color:#3498db">Manhã</b><br>${pacientes[p].manha.join("")}</div>
+<div style="margin-bottom:6px"><b style="color:#f39c12">Tarde</b><br>${pacientes[p].tarde.join("")}</div>
+<div><b style="color:#2c3e50">Noite</b><br>${pacientes[p].noite.join("")}</div>
+</div></td>
 <td></td>
 <td></td>
 </tr>
@@ -266,6 +296,14 @@ document.getElementById("rotinas").innerHTML=html
 document.getElementById("contadorExecutadas").innerText=executadas
 document.getElementById("contadorPendentes").innerText=pendentes
 document.getElementById("contadorAtrasadas").innerText=atrasadas
+
+let painelClinico=
+`<div style="width:160px">
+<div style="font-size:12px;margin-bottom:2px">${progresso}% cuidados</div>
+<div style="background:#eee;border-radius:6px;height:8px">
+<div style="width:${progresso}%;background:${cor};height:8px;border-radius:6px"></div>
+</div>
+</div>`
 }
 
 async function executarRotina(id,el){
@@ -440,6 +478,7 @@ carregarRotinaModelos()
 
 </body>
 </html>
+
 
 
 
