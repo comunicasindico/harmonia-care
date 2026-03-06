@@ -543,7 +543,16 @@ html:`
 
 let html=""
 
-Object.keys(pacientes).forEach(p=>{
+let listaPacientes = Object.keys(pacientes)
+
+listaPacientes.sort((a,b)=>{
+let pa = pacientes[a].ok === pacientes[a].total ? 1 : 0
+let pb = pacientes[b].ok === pacientes[b].total ? 1 : 0
+if(pa !== pb) return pa - pb
+return a.localeCompare(b)
+})
+
+listaPacientes.forEach(p=>{
 
 let total=pacientes[p].total
 let ok=pacientes[p].ok
@@ -724,6 +733,7 @@ document.getElementById("painelCritico").innerHTML=html
 
 </body>
 </html>
+
 
 
 
