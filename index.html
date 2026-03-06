@@ -195,10 +195,38 @@ Painel Clínico
 </div>
 <div class="busca">
 <select id="buscaPaciente"></select>
-<select id="buscaRotina"></select>
+<select id="buscaRotina">
+
+<option value="">TODAS ROTINAS</option>
+
+<optgroup label="MANHÃ">
+<option value="Alimentação">Alimentação</option>
+<option value="Banho">Banho</option>
+<option value="Café">Café</option>
+<option value="Higiene Bucal">Higiene Bucal</option>
+<option value="Medicação">Medicação</option>
+<option value="Oferta de Água">Oferta de Água</option>
+</optgroup>
+
+<optgroup label="TARDE">
+<option value="Almoço">Almoço</option>
+<option value="Lanche">Lanche</option>
+<option value="Higiene">Higiene</option>
+</optgroup>
+
+<optgroup label="NOITE">
+<option value="Higiene Noturna">Higiene Noturna</option>
+<option value="Jantar">Jantar</option>
+<option value="Troca de Fralda">Troca de Fralda</option>
+</optgroup>
+
+</select>
 <input type="date" id="dataInicio">
 <input type="date" id="dataFim">
 <button onclick="buscarHistorico()" class="btn-primary">Pesquisar</button>
+<button onclick="gerarPDF()" class="btn-primary">
+Gerar PDF
+</button>
 </div>
 <table>
 <thead>
@@ -649,12 +677,28 @@ document.getElementById("totalDm").innerText=dm
 document.getElementById("totalDemencia").innerText=dem
 
 }
+/* ======================================================
+018A DATA PADRÃO DO DIA
+====================================================== */
+function definirDataHoje(){
 
+const hoje = new Date()
+
+const ano = hoje.getFullYear()
+const mes = String(hoje.getMonth()+1).padStart(2,"0")
+const dia = String(hoje.getDate()).padStart(2,"0")
+
+const dataHoje = `${ano}-${mes}-${dia}`
+
+document.getElementById("dataInicio").value = dataHoje
+document.getElementById("dataFim").value = dataHoje
+
+}
 /* ======================================================
 019 CARREGAR TUDO
 ====================================================== */
 function carregarTudo(){
-
+definirDataHoje()
 carregarPacientesBusca()
 carregarTiposRotina()
 carregarRotinas()
@@ -728,11 +772,66 @@ document.getElementById("painelCritico").innerHTML=html
 
 }
 
-  
+/* ======================================================
+024 GERAR PDF
+====================================================== */
+async function gerarPDF(){
+
+const { jsPDF } = window.jspdf
+
+let linhas = []
+
+const tabela = document.querySelectorAll("#rotinas tr")
+
+tabela.forEach(tr=>{
+
+let colunas = tr.querySelectorAll("td")
+
+if(colunas.length>=3){
+
+let paciente = colunas[0].innerText.trim()
+
+let rotinas = colunas[2].innerText
+.replace(/\n/g," | ")
+.trim()
+
+linhas.push([paciente,rotinas])
+
+}
+
+})
+
+const doc = new jsPDF()
+
+doc.setFontSize(16)
+doc.text("Relatório de Rotinas - Harmonia Care",20,20)
+
+let y = 40
+
+linhas.forEach(l=>{
+
+doc.setFontSize(10)
+
+doc.text(l[0],20,y)
+doc.text(l[1],80,y)
+
+y+=10
+
+if(y>280){
+doc.addPage()
+y=20
+}
+
+})
+
+doc.save("relatorio-rotinas.pdf")
+
+} 
 </script>
 
 </body>
 </html>
+
 
 
 
