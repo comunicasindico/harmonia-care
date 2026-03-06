@@ -202,29 +202,65 @@ document.getElementById("painelClinico").style.display="block"
 }
 
 async function carregarRotinas(){
-const {data,error}=await db.from("vw_rotinas_painel").select("*").eq("turno",TURNO_ATUAL).order("paciente",{ascending:true})
-if(error){console.log(error);return}
+
+const {data,error}=await db
+.from("vw_rotinas_painel")
+.select("*")
+.eq("turno",TURNO_ATUAL)
+.order("paciente",{ascending:true})
+
+if(error){
+console.log(error)
+return
+}
+
+if(!data || data.length===0){
+document.getElementById("rotinas").innerHTML="<tr><td colspan='4'>Nenhuma rotina encontrada</td></tr>"
+return
+}
+
 let pacientes={}
 let executadas=0
-data.forEach(r=>{
+
+data?.forEach(r=>{
+
 if(!pacientes[r.paciente])pacientes[r.paciente]=[]
+
 if(r.status==="executado")executadas++
+
 let classe="badge-pendente"
 if(r.status==="executado")classe="badge-executado"
 if(r.status==="atrasado")classe="badge-atrasado"
-pacientes[r.paciente].push(`<span class="badge ${classe}" onclick="executarRotina('${r.id}')">${r.rotina}</span>`)
+
+pacientes[r.paciente].push(
+`<span class="badge ${classe}" onclick="executarRotina('${r.id}')">${r.rotina}</span>`
+)
+
 })
+
 let html=""
+
 Object.keys(pacientes).forEach(p=>{
-html+=`<tr><td>${p}</td><td><div class="rotinasPaciente">${pacientes[p].join("")}</div></td><td></td><td></td></tr>`
+
+html+=`
+<tr>
+<td>${p}</td>
+<td><div class="rotinasPaciente">${pacientes[p].join("")}</div></td>
+<td></td>
+<td></td>
+</tr>
+`
+
 })
+
 document.getElementById("rotinas").innerHTML=html
 document.getElementById("contadorExecutadas").innerText=executadas
+
 }
 
 async function executarRotina(id){
 if(!confirm("Confirmar execução da rotina?"))return
-const {error}=await db.from("rotinas_execucao").update({status:"executado",horario_execucao:new Date()}).eq("id",id)
+const {error}=await db.from("rotinas_execucao").update({status:"executado",horario_execucao:new Date().toISOString()}).eq("id",id)
 if(error){console.log(error);alert("Erro ao registrar execução");return}
 carregarRotinas()
 }
@@ -247,7 +283,7 @@ if(df)q=q.lte("data",df)
 const {data,error}=await q.order("data",{ascending:false})
 if(error){console.log(error);return}
 let html=""
-data.forEach(r=>{
+data?.forEach(r=>{
 html+=`<tr><td>${r.paciente}</td><td>${r.rotina}</td><td class="status-${r.status}">${r.status}</td><td>${r.data}</td></tr>`
 })
 document.getElementById("rotinas").innerHTML=html
@@ -275,13 +311,55 @@ document.getElementById("totalDemencia").innerText=dem
 }catch(e){console.log(e)}
 }
 
+async function carregarRotinaModelos(){
+const {data,error}=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).order("titulo")
+if(error){console.log(error);return}
+let html=""
+data.forEach(r=>{
+html+=`<tr>
+<td contenteditable="true" onblur="editarRotina('${r.id}',this.innerText)">${r.titulo}</td>
+<td>${r.turno}</td>
+<td>${r.tipo}</td>
+<td>
+<button onclick="excluirRotina('${r.id}')" class="btn-danger">Excluir</button>
+</td>
+</tr>`
+})
+document.getElementById("listaRotinas").innerHTML=html
+}
+
+async function inserirRotina(){
+const titulo=document.getElementById("novaRotinaNome").value
+const turno=document.getElementById("novoTurno").value
+if(!titulo){alert("Digite o nome da rotina");return}
+const {error}=await db.from("rotina_modelos").insert([{empresa_id:EMPRESA_ID,titulo:titulo,turno:turno,tipo:"geral"}])
+if(error){console.log(error);alert("Erro ao inserir");return}
+document.getElementById("novaRotinaNome").value=""
+carregarRotinaModelos()
+}
+
+async function editarRotina(id,titulo){
+const {error}=await db.from("rotina_modelos").update({titulo:titulo}).eq("id",id)
+if(error){console.log(error);alert("Erro ao atualizar")}
+}
+
+async function excluirRotina(id){
+if(!confirm("Excluir rotina?"))return
+const {error}=await db.from("rotina_modelos").delete().eq("id",id)
+if(error){console.log(error);alert("Erro ao excluir")}
+carregarRotinaModelos()
+}
+
+  
 function carregarTudo(){
 carregarRotinas()
 carregarClinico()
 carregarPacientesBusca()
+carregarRotinaModelos()
 }
 
 </script>
 
 </body>
 </html>
+
