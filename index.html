@@ -414,7 +414,6 @@ document.getElementById("rotinas").innerHTML="<tr><td colspan='3'>Nenhuma rotina
 return
 }
 
-atualizarPainelHospital(data)
 atualizarPainelCritico(data)
 
 renderizarRotinas(data)
@@ -719,36 +718,13 @@ html+=`
 document.getElementById("painelCritico").innerHTML=html
 
 }
-/* ======================================================
-022 MODO HOSPITAL
-====================================================== */
-function atualizarPainelHospital(data){
-let mapa={}
-data.forEach(r=>{
-if(!mapa[r.rotina]){
-mapa[r.rotina]=0
-}
-if(r.status!=="executado"){
-mapa[r.rotina]++
-}
-})
-let html=""
-Object.keys(mapa).forEach(r=>{
-if(mapa[r]>0){
-html+=`
-<div style="background:#e74c3c;color:#fff;padding:2px 6px;border-radius:5px">
-⚠ ${r} ${mapa[r]}
-</div>
-`
-}
-})
-document.getElementById("painelHospital").innerHTML=html
-}
+
   
 </script>
 
 </body>
 </html>
+
 
 
 
