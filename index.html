@@ -390,9 +390,7 @@ let opt=`<option value="">TODOS</option>`
 data?.forEach(p=>{
 opt+=`<option value="${p.id}">${p.nome_completo}</option>`
 })
-
 document.getElementById("buscaPaciente").innerHTML=opt
-
 }
 /* ======================================================
 014 CARREGAR ROTINAS  "✔"
@@ -410,12 +408,15 @@ return
 }
 
 if(!data||data.length===0){
-atualizarPainelHospital(data)
-atualizarPainelCritico(data)
-document.getElementById("rotinas").innerHTML=
-"<tr><td colspan='3'>Nenhuma rotina encontrada</td></tr>"
+atualizarPainelHospital([])
+atualizarPainelCritico([])
+document.getElementById("rotinas").innerHTML="<tr><td colspan='3'>Nenhuma rotina encontrada</td></tr>"
 return
 }
+
+/* atualizar painéis */
+atualizarPainelHospital(data)
+atualizarPainelCritico(data)
 
 let pacientes={}
 let ordemPacientes=[]
@@ -426,6 +427,7 @@ let atrasadas=0
 data.forEach(r=>{
 
 if(!pacientes[r.paciente]){
+
 ordemPacientes.push(r.paciente)
 
 pacientes[r.paciente]={
@@ -449,10 +451,11 @@ if(r.status==="atrasado")atrasadas++
 
 let status="🟥"
 let classe="status-pendente"
+
 if(r.status==="executado"){status="✔";classe="status-executado"}
 if(r.status==="pendente"){status="🟥";classe="status-pendente"}
 if(r.status==="atrasado"){status="🟥";classe="status-atrasado"}
- 
+
 pacientes[r.paciente].rotinas.push({
 nome:r.rotina,
 html:`
@@ -462,7 +465,9 @@ html:`
 </tr>
 `
 })
+
 })
+
 let html=""
 
 ordemPacientes.forEach(p=>{
@@ -471,8 +476,6 @@ let total=pacientes[p].total
 let ok=pacientes[p].ok
 
 let progresso=Math.round((ok/total)*100)
-
-let nomePaciente=p
 
 let cor="#f39c12"
 if(progresso>=80)cor="#2ecc71"
@@ -486,24 +489,28 @@ let barra=`
 </div>
 </div>
 `
+
 let listaRotinas=pacientes[p].rotinas
+
+/* ordenar alfabeticamente somente quando concluir tudo */
 if(ok===total){
-listaRotinas=[...pacientes[p].rotinas].sort((a,b)=>{
-return a.localeCompare(b)
-})
+listaRotinas=[...listaRotinas].sort((a,b)=>a.nome.localeCompare(b.nome))
 }
+
 let tabela=`
 <table style="width:100%">
-${listaRotinas.join("")}
+${listaRotinas.map(r=>r.html).join("")}
 </table>
 `
+
 html+=`
 <tr>
-<td style="font-weight:600">${nomePaciente}</td>
+<td style="font-weight:600">${p}</td>
 <td>${barra}</td>
 <td>${tabela}</td>
 </tr>
 `
+
 })
 
 document.getElementById("rotinas").innerHTML=html
@@ -855,6 +862,7 @@ document.getElementById("painelHospital").innerHTML=html
 
 </body>
 </html>
+
 
 
 
