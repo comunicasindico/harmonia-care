@@ -663,38 +663,37 @@ let ok=pacientes[p].ok
 
 let progresso=Math.round((ok/total)*100)
 
-let barra=`
+let barra = `
 <div style="width:140px">
 <div style="font-size:11px">${progresso}%</div>
 <div style="background:#eee;height:6px;border-radius:6px">
 <div style="width:${progresso}%;background:#3498db;height:6px;border-radius:6px"></div>
 </div>
 </div>
-`
+`;
 
-let tabela=`
-<table style="width:100%">
-let listaRotinas=pacientes[p].rotinas
+/* lista de rotinas */
+let listaRotinas = pacientes[p].rotinas;
 
-if(ok===total){
-listaRotinas=[...listaRotinas].sort((a,b)=>a.nome.localeCompare(b.nome))
+/* ordenar alfabeticamente quando concluir tudo */
+if(ok === total){
+listaRotinas = [...listaRotinas].sort((a,b)=>a.nome.localeCompare(b.nome));
 }
 
-let tabela=`
+/* montar tabela */
+let tabela = `
 <table style="width:100%">
 ${listaRotinas.map(r=>r.html).join("")}
 </table>
-`
-</table>
-`
+`;
 
-html+=`
+html += `
 <tr>
 <td style="font-weight:600">${p}</td>
 <td>${barra}</td>
 <td>${tabela}</td>
 </tr>
-`
+`;
 
 })
 
@@ -861,6 +860,7 @@ document.getElementById("painelHospital").innerHTML=html
 
 </body>
 </html>
+
 
 
 
