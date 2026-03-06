@@ -163,13 +163,15 @@ carregarTudo()
 }
 
 async function login(){
-const u=document.getElementById("usuario").value.trim()
-const s=document.getElementById("senha").value.trim()
-const {data,error}=await db.from("usuarios").select("id,nome_completo").eq("email",u).eq("senha",s).eq("ativo",true).limit(1).single()
-if(error||!data){alert("Usuário ou senha inválidos");return}
-localStorage.setItem("hc_login","ok")
+const email=document.getElementById("usuario").value.trim()
+const senha=document.getElementById("senha").value.trim()
+const {data,error}=await db.from("usuarios").select("id,nome_completo,perfil,senha_hash,ativo").eq("email",email).single()
+if(error||!data){alert("Usuário não encontrado");return}
+if(!data.ativo){alert("Usuário inativo");return}
+if(senha!==data.senha_hash){alert("Senha incorreta");return}
 localStorage.setItem("usuario_id",data.id)
-localStorage.setItem("usuario_nome",data.nome_completo||u)
+localStorage.setItem("usuario_nome",data.nome_completo)
+localStorage.setItem("usuario_perfil",data.perfil)
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 carregarTudo()
@@ -353,6 +355,7 @@ carregarRotinaModelos()
 
 </body>
 </html>
+
 
 
 
