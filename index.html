@@ -90,9 +90,11 @@ margin-top:20px;
 }
 
 table{width:100%;border-collapse:collapse;}
-
 th,td{
-padding:10px;
+padding:4px 6px;
+font-size:13px;
+line-height:1.2;
+}
 border-bottom:1px solid #ddd;
 text-align:left;
 }
@@ -177,6 +179,7 @@ Painel Clínico
 <div id="painelEnfermagem">
 <div class="box">
 <h3>Rotinas do Turno</h3>
+<div id="painelHospital" style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;font-size:12px"></div>
 <div id="painelCritico" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"></div>
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
 <div class="turnos">
@@ -391,7 +394,6 @@ opt+=`<option value="${p.id}">${p.nome_completo}</option>`
 document.getElementById("buscaPaciente").innerHTML=opt
 
 }
-
 /* ======================================================
 014 CARREGAR ROTINAS
 ====================================================== */
@@ -408,6 +410,7 @@ return
 }
 
 if(!data||data.length===0){
+atualizarPainelHospital(data)
 atualizarPainelCritico(data)
 document.getElementById("rotinas").innerHTML=
 "<tr><td colspan='3'>Nenhuma rotina encontrada</td></tr>"
@@ -452,7 +455,7 @@ if(r.status==="atrasado"){status="🟥";classe="status-atrasado"}
  
 let linha=`
 <tr onclick="executarRotina('${r.id}')">
-<td>${r.rotina}</td>
+<td style="padding:3px 6px">${r.rotina}</td>
 <td class="${classe}">${status}</td>
 </tr>
 `
@@ -812,12 +815,37 @@ html+=`
 document.getElementById("painelCritico").innerHTML=html
 
 }
-
+/* ======================================================
+022 MODO HOSPITAL
+====================================================== */
+function atualizarPainelHospital(data){
+let mapa={}
+data.forEach(r=>{
+if(!mapa[r.rotina]){
+mapa[r.rotina]=0
+}
+if(r.status!=="executado"){
+mapa[r.rotina]++
+}
+})
+let html=""
+Object.keys(mapa).forEach(r=>{
+if(mapa[r]>0){
+html+=`
+<div style="background:#e74c3c;color:#fff;padding:2px 6px;border-radius:5px">
+⚠ ${r} ${mapa[r]}
+</div>
+`
+}
+})
+document.getElementById("painelHospital").innerHTML=html
+}
   
 </script>
 
 </body>
 </html>
+
 
 
 
