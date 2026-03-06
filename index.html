@@ -481,15 +481,14 @@ let cor="#f39c12"
 if(progresso>=80)cor="#2ecc71"
 if(progresso<40)cor="#e74c3c"
 
-let barra=`
+let barra = `
 <div style="width:140px">
 <div style="font-size:11px">${progresso}%</div>
 <div style="background:#eee;height:6px;border-radius:6px">
 <div style="width:${progresso}%;background:${cor};height:6px;border-radius:6px"></div>
 </div>
 </div>
-`
-
+`;
 let listaRotinas=pacientes[p].rotinas
 
 /* ordenar alfabeticamente somente quando concluir tudo */
@@ -497,19 +496,19 @@ if(ok===total){
 listaRotinas=[...listaRotinas].sort((a,b)=>a.nome.localeCompare(b.nome))
 }
 
-let tabela=`
+let tabela = `
 <table style="width:100%">
 ${listaRotinas.map(r=>r.html).join("")}
 </table>
-`
+`;
 
-html+=`
+html += `
 <tr>
 <td style="font-weight:600">${p}</td>
 <td>${barra}</td>
 <td>${tabela}</td>
 </tr>
-`
+`;
 
 })
 
@@ -862,6 +861,7 @@ document.getElementById("painelHospital").innerHTML=html
 
 </body>
 </html>
+
 
 
 
