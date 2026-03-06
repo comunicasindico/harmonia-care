@@ -81,10 +81,20 @@ Harmonia Care
 <button onclick="buscarHistorico()" class="btn-primary">Pesquisar</button>
 </div>
 
-<div style="margin-bottom:10px;font-weight:bold">
+<div style="margin-bottom:12px;display:flex;gap:10px;font-weight:bold">
+<div style="background:#2ecc71;color:white;padding:6px 10px;border-radius:6px">
 Executadas: <span id="contadorExecutadas">0</span>
 </div>
-
+<div style="background:#f39c12;color:white;padding:6px 10px;border-radius:6px">
+Pendentes: <span id="contadorPendentes">0</span>
+</div>
+<div style="background:#e74c3c;color:white;padding:6px 10px;border-radius:6px">
+Atrasadas: <span id="contadorAtrasadas">0</span>
+</div>
+</div>
+  
+<div id="detalhePaciente" style="margin-top:12px;padding:12px;background:#eef3f8;border-radius:8px;display:none;font-size:14px"></div>
+    
 <table>
 <thead>
 <tr>
@@ -219,24 +229,34 @@ return
 }
 let pacientes={}
 let executadas=0
+let pendentes=0
+let atrasadas=0
 data?.forEach(r=>{
-if(!pacientes[r.paciente])pacientes[r.paciente]=[]
+if(!pacientes[r.paciente]){
+pacientes[r.paciente]={id:r.paciente_id,rotinas:[],atrasado:false}
+}
 if(r.status==="executado")executadas++
+if(r.status==="pendente")pendentes++
+if(r.status==="atrasado")atrasadas++
 let classe="badge-pendente"
 if(r.status==="executado")classe="badge-executado"
 if(r.status==="atrasado")classe="badge-atrasado"
-pacientes[r.paciente].push(
+if(r.status==="atrasado")pacientes[r.paciente].atrasado=true
+let statusIcon = r.status==="executado" ? "✔ OK" : "⏳"
+pacientes[r.paciente].rotinas.push(
 `<span class="badge ${classe}" 
 onclick="executarRotina('${r.id}',this)"
->${r.rotina}</span>`
+>
+${r.rotina}<br>
+<small>${statusIcon}</small>
+</span>`
 )
 })
 let html=""
 Object.keys(pacientes).forEach(p=>{
-html+=`
-<tr>
-<td>${p}</td>
-<td><div class="rotinasPaciente">${pacientes[p].join("")}</div></td>
+html+=`<tr>
+<td onclick="mostrarPaciente('${pacientes[p].id}')" style="cursor:pointer;font-weight:600">${p}</td>
+<td><div class="rotinasPaciente">${pacientes[p].rotinas.join("")}</div></td>
 <td></td>
 <td></td>
 </tr>
@@ -244,21 +264,17 @@ html+=`
 })
 document.getElementById("rotinas").innerHTML=html
 document.getElementById("contadorExecutadas").innerText=executadas
+document.getElementById("contadorPendentes").innerText=pendentes
+document.getElementById("contadorAtrasadas").innerText=atrasadas
 }
 
 async function executarRotina(id,el){
-
 const usuario_id = localStorage.getItem("usuario_id")
 const usuario_nome = localStorage.getItem("usuario_nome")
-
 let executado = el.classList.contains("badge-executado")
-
 if(!executado){
-
 /* EXECUTAR */
-
 const agora = new Date()
-
 const {error} = await db
 .from("rotinas_execucao")
 .update({
@@ -303,14 +319,10 @@ console.log(error)
 alert(error.message)
 return
 }
-
 el.classList.remove("badge-executado")
 el.classList.add("badge-pendente")
-
 el.innerHTML = "Pendente"
-
 }
-
 }
   
 async function carregarPacientesBusca(){
@@ -318,6 +330,24 @@ const {data}=await db.from("pacientes").select("id,nome_completo").eq("empresa_i
 let opt="<option value=''>Todos</option>"
 data?.forEach(p=>{opt+=`<option value="${p.id}">${p.nome_completo}</option>`})
 document.getElementById("buscaPaciente").innerHTML=opt
+}
+
+async function mostrarPaciente(id){
+const {data,error}=await db
+.from("pacientes")
+.select("*")
+.eq("id",id)
+.single()
+if(error)return
+let box=document.getElementById("detalhePaciente")
+box.style.display="block"
+box.innerHTML=`
+<b>${data.nome_completo}</b><br>
+Idade: ${data.idade ?? "-"}<br>
+Sexo: ${data.sexo ?? "-"}<br>
+Quarto: ${data.quarto ?? "-"}<br>
+Observação: ${data.observacao ?? "-"}
+`
 }
 
 async function buscarHistorico(){
@@ -410,6 +440,7 @@ carregarRotinaModelos()
 
 </body>
 </html>
+
 
 
 
