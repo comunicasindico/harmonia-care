@@ -453,12 +453,15 @@ if(r.status==="executado"){status="✔";classe="status-executado"}
 if(r.status==="pendente"){status="🟥";classe="status-pendente"}
 if(r.status==="atrasado"){status="🟥";classe="status-atrasado"}
  
-let linha=`
+pacientes[r.paciente].rotinas.push({
+nome:r.rotina,
+html:`
 <tr onclick="executarRotina('${r.id}')">
-<td style="padding:3px 6px">${r.rotina}</td>
+<td>${r.rotina}</td>
 <td class="${classe}">${status}</td>
 </tr>
 `
+})
 
 pacientes[r.paciente].rotinas.push(linha)
 
@@ -668,7 +671,17 @@ let barra=`
 
 let tabela=`
 <table style="width:100%">
-${pacientes[p].rotinas.join("")}
+let listaRotinas=pacientes[p].rotinas
+
+if(ok===total){
+listaRotinas=[...listaRotinas].sort((a,b)=>a.nome.localeCompare(b.nome))
+}
+
+let tabela=`
+<table style="width:100%">
+${listaRotinas.map(r=>r.html).join("")}
+</table>
+`
 </table>
 `
 
@@ -845,6 +858,7 @@ document.getElementById("painelHospital").innerHTML=html
 
 </body>
 </html>
+
 
 
 
