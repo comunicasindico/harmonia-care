@@ -177,6 +177,7 @@ Painel Clínico
 <div id="painelEnfermagem">
 <div class="box">
 <h3>Rotinas do Turno</h3>
+<div id="painelCritico" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"></div>
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
 <div class="turnos">
 <button class="turno-manha" onclick="mudarTurno('manha')">Manhã</button>
@@ -407,6 +408,7 @@ return
 }
 
 if(!data||data.length===0){
+atualizarPainelCritico(data)
 document.getElementById("rotinas").innerHTML=
 "<tr><td colspan='3'>Nenhuma rotina encontrada</td></tr>"
 return
@@ -770,13 +772,57 @@ opt+=`<option value="${r.titulo}">${r.titulo}</option>`
 })
 
 document.getElementById("buscaRotina").innerHTML=opt
+}
+
+/* ======================================================
+021 PAINEL ROTINAS CRÍTICAS
+====================================================== */
+function atualizarPainelCritico(data){
+
+let rotinas={}
+
+data.forEach(r=>{
+
+if(!rotinas[r.rotina]){
+rotinas[r.rotina]={pendente:0,executado:0}
+}
+
+if(r.status==="executado"){
+rotinas[r.rotina].executado++
+}else{
+rotinas[r.rotina].pendente++
+}
+
+})
+
+let html=""
+
+Object.keys(rotinas).forEach(r=>{
+
+let faltam=rotinas[r].pendente
+
+if(faltam>0){
+
+html+=`
+<div style="background:#e74c3c;color:#fff;padding:4px 8px;border-radius:6px;font-size:12px">
+⚠ ${r} → faltam ${faltam}
+</div>
+`
 
 }
 
+})
+
+document.getElementById("painelCritico").innerHTML=html
+
+}
+
+  
 </script>
 
 </body>
 </html>
+
 
 
 
