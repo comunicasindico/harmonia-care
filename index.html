@@ -174,72 +174,39 @@ Painel Clínico
 <!-- ======================================================
 006 PAINEL ENFERMAGEM
 ====================================================== -->
-
 <div id="painelEnfermagem">
-
 <div class="box">
-
 <h3>Rotinas do Turno</h3>
-
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
 <div class="turnos">
-
 <button class="turno-manha" onclick="mudarTurno('manha')">Manhã</button>
-
 <button class="turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
-
 <button class="turno-noite" onclick="mudarTurno('noite')">Noite</button>
-
 </div>
-
+<div style="display:flex;gap:8px;font-size:13px;font-weight:bold">
+<div style="background:#2ecc71;color:#fff;padding:4px 8px;border-radius:6px">✔ <span id="contadorExecutadas">0</span></div>
+<div style="background:#f39c12;color:#fff;padding:4px 8px;border-radius:6px">⏳ <span id="contadorPendentes">0</span></div>
+<div style="background:#e74c3c;color:#fff;padding:4px 8px;border-radius:6px">⚠ <span id="contadorAtrasadas">0</span></div>
+</div>
+</div>
 <div class="busca">
-
 <select id="buscaPaciente"></select>
-
 <input type="date" id="dataInicio">
-
 <input type="date" id="dataFim">
-
-<button onclick="buscarHistorico()" class="btn-primary">
-Pesquisar
-</button>
-
+<button onclick="buscarHistorico()" class="btn-primary">Pesquisar</button>
 </div>
-
-<div style="margin-bottom:12px;display:flex;gap:10px;font-weight:bold">
-
-<div style="background:#2ecc71;color:white;padding:6px 10px;border-radius:6px">
-Executadas: <span id="contadorExecutadas">0</span>
-</div>
-
-<div style="background:#f39c12;color:white;padding:6px 10px;border-radius:6px">
-Pendentes: <span id="contadorPendentes">0</span>
-</div>
-
-<div style="background:#e74c3c;color:white;padding:6px 10px;border-radius:6px">
-Atrasadas: <span id="contadorAtrasadas">0</span>
-</div>
-
-</div>
-
 <table>
-
 <thead>
-
 <tr>
 <th>Paciente</th>
 <th>Progresso</th>
 <th>Rotinas</th>
 </tr>
-
 </thead>
-
 <tbody id="rotinas"></tbody>
-
 </table>
-
 </div>
 </div>
-
 <!-- ======================================================
 007 PAINEL CLÍNICO
 ====================================================== -->
@@ -316,6 +283,17 @@ const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co"
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e"
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+/* ======================================================
+009A INICIALIZAÇÃO
+====================================================== */
+window.onload=function(){
+const loginSalvo=localStorage.getItem("usuario_id")
+if(loginSalvo){
+document.getElementById("login").style.display="none"
+document.getElementById("app").style.display="block"
+carregarTudo()
+}
+}
 /* ======================================================
 010 LOGIN
 ====================================================== */
@@ -415,7 +393,6 @@ document.getElementById("buscaPaciente").innerHTML=opt
 /* ======================================================
 014 CARREGAR ROTINAS
 ====================================================== */
-
 async function carregarRotinas(){
 
 const {data,error}=await db
@@ -535,8 +512,13 @@ ${pacientes[p].rotinas.join("")}
 </table>
 `
 
+let corLinha="#fff"
+if(pacientes[p].ok===pacientes[p].total)corLinha="#eafaf1"
+if(pacientes[p].ok<pacientes[p].total)corLinha="#fff8e1"
+if(pacientes[p].rotinas.join("").includes("⚠"))corLinha="#fdecea"
+
 html+=`
-<tr>
+<tr style="background:${corLinha}">
 <td style="font-weight:600">${p}</td>
 <td>${barra}</td>
 <td>${tabela}</td>
@@ -552,14 +534,22 @@ document.getElementById("contadorPendentes").innerText=pendentes
 document.getElementById("contadorAtrasadas").innerText=atrasadas
 
 }
-
 /* ======================================================
 015 EXECUTAR ROTINA
 ====================================================== */
-
 async function executarRotina(id){
-
 const usuario_id=localStorage.getItem("usuario_id")
+
+const {data}=await db
+.from("rotinas_execucao")
+.select("status")
+.eq("id",id)
+.single()
+
+if(data?.status==="executado"){
+alert("Rotina já executada.")
+return
+}
 
 const {error}=await db
 .from("rotinas_execucao")
@@ -577,7 +567,6 @@ return
 carregarRotinas()
 
 }
-
 /* ======================================================
 016 BUSCAR HISTÓRICO
 ====================================================== */
@@ -625,7 +614,6 @@ renderizarRotinas(data)
 /* ======================================================
 017 RENDERIZAR ROTINAS
 ====================================================== */
-
 function renderizarRotinas(data){
 
 let pacientes={}
@@ -653,14 +641,74 @@ pacientes[r.paciente].ok++
 }
 
 if(r.status==="pendente")pendentes++
+
 if(r.status==="atrasado")atrasadas++
+
+let status="⏳"
+let classe="status-pendente"
+
+if(r.status==="executado"){
+status="✔"
+classe="status-executado"
+}
+
+if(r.status==="atrasado"){
+status="⚠"
+classe="status-atrasado"
+}
+
+let linha=`
+<tr onclick="executarRotina('${r.id}')">
+<td>${r.rotina}</td>
+<td class="${classe}">${status}</td>
+</tr>
+`
+
+pacientes[r.paciente].rotinas.push(linha)
 
 })
 
-carregarRotinas()
+let html=""
+
+Object.keys(pacientes).sort().forEach(p=>{
+
+let total=pacientes[p].total
+let ok=pacientes[p].ok
+
+let progresso=Math.round((ok/total)*100)
+
+let barra=`
+<div style="width:140px">
+<div style="font-size:11px">${progresso}%</div>
+<div style="background:#eee;height:6px;border-radius:6px">
+<div style="width:${progresso}%;background:#3498db;height:6px;border-radius:6px"></div>
+</div>
+</div>
+`
+
+let tabela=`
+<table style="width:100%">
+${pacientes[p].rotinas.join("")}
+</table>
+`
+
+html+=`
+<tr>
+<td style="font-weight:600">${p}</td>
+<td>${barra}</td>
+<td>${tabela}</td>
+</tr>
+`
+
+})
+
+document.getElementById("rotinas").innerHTML=html
+
+document.getElementById("contadorExecutadas").innerText=executadas
+document.getElementById("contadorPendentes").innerText=pendentes
+document.getElementById("contadorAtrasadas").innerText=atrasadas
 
 }
-
 /* ======================================================
 018 CARREGAR CLÍNICO
 ====================================================== */
@@ -728,4 +776,5 @@ carregarClinico()
 
 </body>
 </html>
+
 
