@@ -196,7 +196,10 @@ Painel Clínico
 <div class="busca">
 <select id="buscaPaciente"></select>
 <select id="buscaRotina">
-
+<label>Profissional</label>
+<select id="buscaProfissional">
+<option value="">TODOS PROFISSIONAIS</option>
+</select>
 <option value="">TODAS ROTINAS</option>
 
 <optgroup label="MANHÃ">
@@ -484,11 +487,11 @@ carregarRotinas()
 016 BUSCAR HISTÓRICO
 ====================================================== */
 async function buscarHistorico(){
-
 const paciente=document.getElementById("buscaPaciente").value
 const dataInicio=document.getElementById("dataInicio").value
 const dataFim=document.getElementById("dataFim").value
 const rotina=document.getElementById("buscaRotina").value
+const profissional=document.getElementById("buscaProfissional").value
 let query=db
 .from("vw_rotinas_painel")
 .select("*")
@@ -500,21 +503,20 @@ query=query.eq("paciente_id",paciente)
 if(rotina){
 query=query.eq("rotina",rotina)
 }
+if(profissional){
+query=query.eq("executado_por",profissional)
+}
 if(dataInicio){
 query=query.gte("data",dataInicio)
 }
-
 if(dataFim){
 query=query.lte("data",dataFim)
 }
-
 const {data,error}=await query
-
 if(error){
 console.log(error)
 return
 }
-
 if(!data||data.length===0){
 document.getElementById("rotinas").innerHTML=
 "<tr><td colspan='3'>Nenhum registro encontrado</td></tr>"
@@ -633,24 +635,19 @@ document.getElementById("contadorAtrasadas").innerText=atrasadas
 018 CARREGAR CLÍNICO
 ====================================================== */
 async function carregarClinico(){
-
 const {data,error}=await db
 .from("pacientes")
 .select("*")
 .eq("empresa_id",EMPRESA_ID)
-
 if(error){
 console.log(error)
 return
 }
-
 let html=""
 let has=0
 let dm=0
 let dem=0
-
 data?.forEach(p=>{
-
 if(p.has)has++
 if(p.dm)dm++
 if(p.demencia)dem++
@@ -667,9 +664,7 @@ html+=`
 <td>${p.outras??""}</td>
 </tr>
 `
-
 })
-
 document.getElementById("quadroClinico").innerHTML=html
 document.getElementById("totalPacientes").innerText=data?.length??0
 document.getElementById("totalHas").innerText=has
@@ -692,7 +687,6 @@ const dataHoje = `${ano}-${mes}-${dia}`
 
 document.getElementById("dataInicio").value = dataHoje
 document.getElementById("dataFim").value = dataHoje
-
 }
 /* ======================================================
 019 CARREGAR TUDO
@@ -701,6 +695,7 @@ function carregarTudo(){
 definirDataHoje()
 carregarPacientesBusca()
 carregarTiposRotina()
+carregarProfissionais()
 carregarRotinas()
 carregarClinico()
 }
@@ -747,29 +742,19 @@ rotinas[r.rotina].executado++
 }else{
 rotinas[r.rotina].pendente++
 }
-
 })
-
 let html=""
-
 Object.keys(rotinas).forEach(r=>{
-
 let faltam=rotinas[r].pendente
-
 if(faltam>0){
-
 html+=`
 <div style="background:#e74c3c;color:#fff;padding:4px 8px;border-radius:6px;font-size:12px">
 ⚠ ${r} → faltam ${faltam}
 </div>
 `
-
 }
-
 })
-
 document.getElementById("painelCritico").innerHTML=html
-
 }
 
 /* ======================================================
@@ -827,10 +812,37 @@ y=20
 doc.save("relatorio-rotinas.pdf")
 
 } 
+/* ======================================================
+025 CARREGAR PROFISSIONAIS
+====================================================== */
+async function carregarProfissionais(){
+
+const {data,error}=await db
+.from("usuarios")
+.select("id,nome")
+.eq("empresa_id",EMPRESA_ID)
+.order("nome")
+
+if(error){
+console.log(error)
+return
+}
+
+let opt=`<option value="">TODOS PROFISSIONAIS</option>`
+
+data?.forEach(p=>{
+opt+=`<option value="${p.id}">${p.nome}</option>`
+})
+
+document.getElementById("buscaProfissional").innerHTML=opt
+
+}
+  
 </script>
 
 </body>
 </html>
+
 
 
 
