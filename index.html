@@ -90,6 +90,7 @@ margin-top:20px;
 }
 
 table{width:100%;border-collapse:collapse;}
+
 th,td{
 padding:4px 6px;
 font-size:13px;
@@ -192,22 +193,30 @@ Painel Clínico
 006 PAINEL ENFERMAGEM
 ====================================================== -->
 <div id="painelEnfermagem">
+
 <div class="box">
+
 <h3>Rotinas do Turno</h3>
+
 <div id="painelHospital" style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;font-size:12px"></div>
 <div id="painelCritico" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"></div>
+
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+
 <div class="turnos">
 <button class="turno-manha" onclick="mudarTurno('manha')">Manhã</button>
 <button class="turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
 <button class="turno-noite" onclick="mudarTurno('noite')">Noite</button>
 </div>
+
 <div style="display:flex;gap:8px;font-size:13px;font-weight:bold">
 <div style="background:#2ecc71;color:#fff;padding:4px 8px;border-radius:6px">✔ <span id="contadorExecutadas">0</span></div>
 <div style="background:#f39c12;color:#fff;padding:4px 8px;border-radius:6px">🔴 <span id="contadorPendentes">0</span></div>
 <div style="background:#e74c3c;color:#fff;padding:4px 8px;border-radius:6px">⚠ <span id="contadorAtrasadas">0</span></div>
 </div>
+
 </div>
+
 <div class="busca">
 
 <div>
@@ -281,6 +290,11 @@ Painel Clínico
 <tbody id="rotinas"></tbody>
 
 </table>
+
+</div> <!-- fecha box -->
+</div> <!-- fecha painelEnfermagem -->
+
+
 <!-- ======================================================
 007 PAINEL CLÍNICO
 ====================================================== -->
@@ -318,7 +332,6 @@ Demência
 <table>
 
 <thead>
-
 <tr>
 <th>Paciente</th>
 <th>Idade</th>
@@ -329,7 +342,6 @@ Demência
 <th>Acamado</th>
 <th>Observações</th>
 </tr>
-
 </thead>
 
 <tbody id="quadroClinico"></tbody>
@@ -339,9 +351,6 @@ Demência
 </div>
 
 </div>
-
-</div>
-
 <!-- ======================================================
 008 SCRIPT
 ====================================================== -->
@@ -880,6 +889,7 @@ document.getElementById("buscaProfissional").innerHTML=opt
 
 </body>
 </html>
+
 
 
 
