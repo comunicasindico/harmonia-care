@@ -413,9 +413,7 @@ Demência
 <select id="adminPaciente"></select>
 <label>Data</label>
 <input type="date" id="adminData">
-<button onclick="salvarEscala()" class="btn-success">
-Salvar Escala
-</button>
+<button onclick="salvarEscala()" class="btn-success">Salvar Escala</button>
 <table>
 <thead>
 <tr>
@@ -436,9 +434,7 @@ Salvar Escala
 <option value="tarde">Tarde</option>
 <option value="noite">Noite</option>
 </select>
-<button onclick="criarRotina()" class="btn-primary">
-Criar Rotina
-</button>
+<button onclick="criarRotina()" class="btn-primary">Criar Rotina</button>
 <table>
 <thead>
 <tr>
@@ -450,8 +446,6 @@ Criar Rotina
 <tbody id="listaRotinasAdmin"></tbody>
 </table>
 </div>
-</div>
-
 <div class="box">
 <h3>Escala do Dia (arrastar pacientes)</h3>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
@@ -462,6 +456,7 @@ Criar Rotina
 <div>
 <h4>Profissionais</h4>
 <div id="listaProfissionaisDrag"></div>
+</div>
 </div>
 </div>
 </div>
@@ -498,6 +493,8 @@ function abrirAdmin(){
 document.getElementById("painelEnfermagem").style.display="none"
 document.getElementById("painelClinico").style.display="none"
 document.getElementById("painelAdmin").style.display="block"
+carregarProfissionaisAdmin()
+carregarPacientesAdmin()
 carregarEscala()
 carregarRotinasAdmin()
 carregarPacientesDrag()
@@ -657,6 +654,55 @@ document.getElementById("novaRotina").value=nome
 document.getElementById("turnoRotina").value=turno
 
 window.rotinaEditando=id
+}
+/* ======================================================
+009I CARREGAR PROFISSIONAIS ADMIN
+====================================================== */
+async function carregarProfissionaisAdmin(){
+const {data,error}=await db.from("usuarios").select("id,nome").eq("empresa_id",EMPRESA_ID).order("nome",{ascending:true})
+if(error){console.log(error);return}
+let opt=`<option value="">Selecione</option>`
+data?.forEach(p=>{opt+=`<option value="${p.id}">${p.nome}</option>`})
+document.getElementById("adminProfissional").innerHTML=opt
+}
+/* ======================================================
+009J CARREGAR PACIENTES ADMIN
+====================================================== */
+async function carregarPacientesAdmin(){
+const {data,error}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).order("nome_completo",{ascending:true})
+if(error){console.log(error);return}
+let opt=`<option value="">Selecione</option>`
+data?.forEach(p=>{opt+=`<option value="${p.id}">${p.nome_completo}</option>`})
+document.getElementById("adminPaciente").innerHTML=opt
+}
+/* ======================================================
+009K Salvar escala ADMIN
+====================================================== */
+async function salvarEscala(){
+const profissional=document.getElementById("adminProfissional").value
+const paciente=document.getElementById("adminPaciente").value
+const data=document.getElementById("adminData").value
+if(!profissional||!paciente||!data){alert("Preencha todos os campos");return}
+await db.from("escala_cuidados").insert({profissional_id:profissional,idoso_id:paciente,data:data})
+carregarEscala()
+}
+/* ======================================================
+009L Carregar escala ADMIN
+====================================================== */
+async function carregarEscala(){
+const {data,error}=await db.from("escala_cuidados").select("id,data,usuarios(nome),pacientes(nome_completo)").order("data",{ascending:false})
+if(error){console.log(error);return}
+let html=""
+data?.forEach(e=>{html+=`<tr><td>${e.data}</td><td>${e.usuarios?.nome??""}</td><td>${e.pacientes?.nome_completo??""}</td><td><button onclick="excluirEscala('${e.id}')" class="btn-danger">Excluir</button></td></tr>`})
+document.getElementById("listaEscala").innerHTML=html
+}
+/* ======================================================
+009M Excluir escala ADMIN
+====================================================== */
+async function excluirEscala(id){
+if(!confirm("Excluir escala?"))return
+await db.from("escala_cuidados").delete().eq("id",id)
+carregarEscala()
 }
 /* ======================================================
 010 LOGIN
@@ -1336,4 +1382,5 @@ doc.save("paciente.pdf")
 
 </body>
 </html>
+
 
