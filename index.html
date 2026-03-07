@@ -14,6 +14,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <!-- ======================================================
 002 STYLE
@@ -827,6 +828,9 @@ document.getElementById("painelCritico").innerHTML=html
 ====================================================== */
 async function gerarPDF(){
 const { jsPDF } = window.jspdf
+const doc = new jsPDF()
+doc.setFontSize(16)
+doc.text("Relatório de Rotinas dos Pacientes - Harmonia Care",14,20)
 let linhas = []
 const tabela = document.querySelectorAll("#rotinas tr")
 tabela.forEach(tr=>{
@@ -834,27 +838,28 @@ let colunas = tr.querySelectorAll("td")
 if(colunas.length>=3){
 let paciente = colunas[0].innerText.trim()
 let rotinas = colunas[2].innerText
-.replace(/\n/g," | ")
+.replace(/\n/g,", ")
 .trim()
-linhas.push([paciente,rotinas])
+linhas.push([
+paciente,
+rotinas
+])
 }
 })
-const doc = new jsPDF()
-doc.setFontSize(16)
-doc.text("Relatório de Rotinas dos Pacientes- Harmonia Care",20,20)
-let y = 40
-linhas.forEach(l=>{
-doc.setFontSize(10)
-doc.text(l[0],20,y)
-doc.text(l[1],80,y)
-y+=10
-if(y>280){
-doc.addPage()
-y=20
+doc.autoTable({
+startY:30,
+head:[["Paciente","Rotinas Executadas"]],
+body:linhas,
+styles:{
+fontSize:9
+},
+columnStyles:{
+0:{cellWidth:50},
+1:{cellWidth:130}
 }
 })
 doc.save("relatorio-rotinas.pdf")
-} 
+}
 /* ======================================================
 025 CARREGAR PROFISSIONAIS
 ====================================================== */
@@ -885,6 +890,7 @@ document.getElementById("buscaProfissional").innerHTML=opt
 
 </body>
 </html>
+
 
 
 
