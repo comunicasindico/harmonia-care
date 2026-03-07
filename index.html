@@ -307,6 +307,7 @@ Painel Clínico
 <div style="display:flex;gap:6px;align-items:end">
 <button onclick="buscarHistorico()" class="btn-primary">Pesquisar</button>
 <button onclick="gerarPDF()" class="btn-primary">Gerar PDF</button>
+<button onclick="abrirAdmin()" class="btn-success">Painel Admin</button>
 </div>
 
 </div>
@@ -385,6 +386,75 @@ Demência
 
 </div>
 <!-- ======================================================
+007A PAINEL ADMIN
+====================================================== -->
+<div id="painelAdmin" style="display:none">
+
+<div class="box">
+
+<h3>Escala de Profissionais</h3>
+
+<label>Profissional</label>
+<select id="adminProfissional"></select>
+
+<label>Paciente</label>
+<select id="adminPaciente"></select>
+
+<label>Data</label>
+<input type="date" id="adminData">
+
+<button onclick="salvarEscala()" class="btn-success">
+Salvar Escala
+</button>
+
+<table>
+<thead>
+<tr>
+<th>Data</th>
+<th>Profissional</th>
+<th>Paciente</th>
+<th>Ação</th>
+</tr>
+</thead>
+
+<tbody id="listaEscala"></tbody>
+</table>
+
+</div>
+
+<div class="box">
+
+<h3>Gestão de Rotinas</h3>
+
+<input id="novaRotina" placeholder="Nome da rotina">
+
+<select id="turnoRotina">
+<option value="manha">Manhã</option>
+<option value="tarde">Tarde</option>
+<option value="noite">Noite</option>
+</select>
+
+<button onclick="criarRotina()" class="btn-primary">
+Criar Rotina
+</button>
+
+<table>
+<thead>
+<tr>
+<th>Rotina</th>
+<th>Turno</th>
+<th>Ação</th>
+</tr>
+</thead>
+
+<tbody id="listaRotinasAdmin"></tbody>
+</table>
+
+</div>
+
+</div>
+  
+<!-- ======================================================
 008 SCRIPT
 ====================================================== -->
 
@@ -409,6 +479,141 @@ document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 carregarTudo()
 }
+}
+/* ======================================================
+009B ABRIR ADMIN - NAVEGAÇÃO
+====================================================== */
+function abrirAdmin(){
+
+document.getElementById("painelEnfermagem").style.display="none"
+document.getElementById("painelClinico").style.display="none"
+document.getElementById("painelAdmin").style.display="block"
+
+carregarEscala()
+carregarRotinasAdmin()
+
+}
+/* ======================================================
+009C SALVAR ESCALA
+====================================================== */
+async function salvarEscala(){
+
+const profissional=document.getElementById("adminProfissional").value
+const paciente=document.getElementById("adminPaciente").value
+const data=document.getElementById("adminData").value
+
+await db
+.from("escala_cuidados")
+.insert({
+profissional_id:profissional,
+idoso_id:paciente,
+data:data
+})
+
+carregarEscala()
+
+}
+/* ======================================================
+009D LISTAR ESCALA
+====================================================== */
+async function carregarEscala(){
+
+const {data}=await db
+.from("escala_cuidados")
+.select(`
+id,
+data,
+usuarios(nome),
+pacientes(nome_completo)
+`)
+.order("data",{ascending:false})
+
+let html=""
+
+data?.forEach(e=>{
+
+html+=`
+<tr>
+<td>${e.data}</td>
+<td>${e.usuarios?.nome}</td>
+<td>${e.pacientes?.nome_completo}</td>
+<td>
+<button onclick="excluirEscala('${e.id}')" class="btn-danger">
+Excluir
+</button>
+</td>
+</tr>
+`
+
+})
+
+document.getElementById("listaEscala").innerHTML=html
+
+}
+/* ======================================================
+009E CRIAR ROTINA
+====================================================== */
+async function criarRotina(){
+
+const nome=document.getElementById("novaRotina").value
+const turno=document.getElementById("turnoRotina").value
+
+await db
+.from("rotina_modelos")
+.insert({
+titulo:nome,
+turno:turno,
+empresa_id:EMPRESA_ID
+})
+
+carregarRotinasAdmin()
+
+}
+/* ======================================================
+009F LISTAR ROTINAS
+====================================================== */
+async function carregarRotinasAdmin(){
+
+const {data}=await db
+.from("rotina_modelos")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+
+let html=""
+
+data?.forEach(r=>{
+
+html+=`
+<tr>
+<td>${r.titulo}</td>
+<td>${r.turno}</td>
+<td>
+<button onclick="excluirRotina('${r.id}')" class="btn-danger">
+Excluir
+</button>
+</td>
+</tr>
+`
+
+})
+
+document.getElementById("listaRotinasAdmin").innerHTML=html
+
+}
+/* ======================================================
+009G EXCLUIR ROTINA
+====================================================== */
+async function excluirRotina(id){
+
+if(!confirm("Excluir rotina?"))return
+
+await db
+.from("rotina_modelos")
+.delete()
+.eq("id",id)
+
+carregarRotinasAdmin()
+
 }
 /* ======================================================
 010 LOGIN
@@ -958,6 +1163,7 @@ document.getElementById("buscaProfissional").innerHTML=opt
 
 </body>
 </html>
+
 
 
 
