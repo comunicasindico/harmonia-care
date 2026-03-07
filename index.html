@@ -854,19 +854,17 @@ let linhas=[]
 document.querySelectorAll("#rotinas tr").forEach(tr=>{
 
 let paciente=tr.children[0]?.innerText.trim()
+let rotinasTexto=tr.children[2]?.innerText
 
-if(!paciente)return
+if(!paciente||!rotinasTexto)return
 
-let rotinas=tr.querySelectorAll("td:nth-child(3) div")
+let lista=rotinasTexto.split("\n")
 
-rotinas.forEach(r=>{
-
-let nome=r.querySelector("span")?.innerText || r.children[0]?.innerText
-
-if(nome){
-linhas.push([paciente,nome.trim()])
+lista.forEach(r=>{
+let rotina=r.replace("✔","").trim()
+if(rotina){
+linhas.push([paciente,rotina])
 }
-
 })
 
 })
@@ -921,6 +919,7 @@ document.getElementById("buscaProfissional").innerHTML=opt
 
 </body>
 </html>
+
 
 
 
