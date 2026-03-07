@@ -834,42 +834,62 @@ document.getElementById("painelCritico").innerHTML=html
 024 GERAR PDF PROFISSIONAL HARMONIA CARE
 ====================================================== */
 async function gerarPDF(){
-const{jsPDF}=window.jspdf
-const doc=new jsPDF("p","mm","a4")
+const { jsPDF } = window.jspdf
+const doc = new jsPDF("p","mm","a4")
+
 const dataInicio=document.getElementById("dataInicio").value
 const dataFim=document.getElementById("dataFim").value
-doc.setFont("helvetica","bold")
+
 doc.setFontSize(16)
 doc.text("HARMONIA CARE",14,15)
+
 doc.setFontSize(12)
-doc.setFont("helvetica","normal")
 doc.text("Relatório de Rotinas dos Pacientes",14,22)
+
 doc.setFontSize(10)
 doc.text(`Período: ${dataInicio} até ${dataFim}`,14,28)
+
 let linhas=[]
+
 document.querySelectorAll("#rotinas tr").forEach(tr=>{
+
 let paciente=tr.children[0]?.innerText.trim()
+
 if(!paciente)return
+
 let rotinas=tr.querySelectorAll("td:nth-child(3) div")
+
 rotinas.forEach(r=>{
-let nome=r.children[0]?.innerText.trim()
-if(nome)linhas.push([paciente,nome])
+
+let nome=r.querySelector("span")?.innerText || r.children[0]?.innerText
+
+if(nome){
+linhas.push([paciente,nome.trim()])
+}
+
 })
+
 })
+
 doc.autoTable({
 startY:35,
 head:[["Paciente","Rotina"]],
 body:linhas,
-styles:{fontSize:9,cellPadding:2},
-headStyles:{fillColor:[52,152,219]},
-columnStyles:{0:{cellWidth:80},1:{cellWidth:100}},
-didDrawPage:function(data){
+styles:{fontSize:10,cellPadding:3},
+headStyles:{fillColor:[41,128,185]},
+columnStyles:{
+0:{cellWidth:90},
+1:{cellWidth:90}
+},
+margin:{left:14,right:14},
+didDrawPage:function(){
 doc.setFontSize(8)
 doc.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`,14,290)
 doc.text(`Página ${doc.internal.getNumberOfPages()}`,200,290,{align:"right"})
 }
 })
-doc.save("relatorio-rotinas-harmonia-care.pdf")
+
+doc.save("relatorio-rotinas.pdf")
 }
 /* ======================================================
 025 CARREGAR PROFISSIONAIS
@@ -901,6 +921,7 @@ document.getElementById("buscaProfissional").innerHTML=opt
 
 </body>
 </html>
+
 
 
 
