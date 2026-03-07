@@ -267,7 +267,7 @@ Painel Clínico
 <label>Rotina</label>
 <select id="buscaRotina">
 
-<option value="" selected disabled>TODAS ROTINAS</option>
+<option value="">TODAS ROTINAS</option>
 
 <optgroup label="MANHÃ">
 <option value="Alimentação">Alimentação</option>
@@ -506,28 +506,25 @@ document.getElementById("buscaPaciente").innerHTML=opt
 014 CARREGAR ROTINAS
 ====================================================== */
 async function carregarRotinas(){
-
 const {data,error}=await db
 .from("vw_rotinas_painel")
 .select("*")
 .eq("turno",TURNO_ATUAL)
+.order("paciente",{ascending:true})
 
 if(error){
 console.log(error)
 return
 }
 
-if(!data || data.length===0){
-atualizarPainelHospital([])
-atualizarPainelCritico([])
+if(!data||data.length===0){
 document.getElementById("rotinas").innerHTML="<tr><td colspan='3'>Nenhuma rotina encontrada</td></tr>"
+atualizarPainelCritico([])
 return
 }
 
 atualizarPainelCritico(data)
-
 renderizarRotinas(data)
-
 }
 /* ======================================================
 015 EXECUTAR ROTINA
@@ -561,46 +558,36 @@ linha.querySelector(".status").className="status status-executado"
 016 BUSCAR HISTÓRICO
 ====================================================== */
 async function buscarHistorico(){
+
 const paciente=document.getElementById("buscaPaciente").value
+const profissional=document.getElementById("buscaProfissional").value
+const rotina=document.getElementById("buscaRotina").value
 const dataInicio=document.getElementById("dataInicio").value
 const dataFim=document.getElementById("dataFim").value
-const rotina=document.getElementById("buscaRotina").value
-const profissional=document.getElementById("buscaProfissional").value
+
 let query=db
 .from("vw_rotinas_painel")
 .select("*")
 .order("paciente",{ascending:true})
 
-if(paciente && paciente!==""){
-query=query.eq("paciente_id",paciente)
-}
-if(rotina && rotina !== "TODAS ROTINAS"){
-query=query.eq("rotina",rotina)
-}
-if(profissional && profissional !== "PROFISSIONAIS"){
-query=query.eq("executado_por",profissional)
-}
-if(dataInicio){
-query=query.gte("data",dataInicio)
-}
-if(dataFim){
-query=query.lte("data",dataFim)
-}
+if(paciente)query=query.eq("paciente_id",paciente)
+if(profissional)query=query.eq("executado_por",profissional)
+if(rotina)query=query.eq("rotina",rotina)
+
+if(dataInicio)query=query.gte("data",dataInicio)
+if(dataFim)query=query.lte("data",dataFim)
+
 const {data,error}=await query
 if(error){
 console.log(error)
 return
 }
 if(!data||data.length===0){
-document.getElementById("rotinas").innerHTML=
-"<tr><td colspan='3'>Nenhum registro encontrado</td></tr>"
+document.getElementById("rotinas").innerHTML="<tr><td colspan='3'>Nenhum registro encontrado</td></tr>"
 return
 }
-
 renderizarRotinas(data)
-
 }
-
 /* ======================================================
 017 RENDERIZAR ROTINAS
 ====================================================== */
@@ -777,25 +764,10 @@ carregarClinico()
 020 CARREGAR TIPOS ROTINA
 ====================================================== */
 async function carregarTiposRotina(){
-
-const {data,error}=await db
-.from("rotina_modelos")
-.select("titulo")
-.eq("empresa_id",EMPRESA_ID)
-.order("titulo")
-
-if(error){
-console.log(error)
+/* NÃO FAZ NADA
+Mantemos o select fixo do HTML
+Evita apagar MANHÃ/TARDE/NOITE */
 return
-}
-
-let opt=`<option value="">TODAS ROTINAS</option>`
-
-data?.forEach(r=>{
-opt+=`<option value="${r.titulo}">${r.titulo}</option>`
-})
-
-document.getElementById("buscaRotina").innerHTML=opt
 }
 /* ======================================================
 021 PAINEL ROTINAS CRÍTICAS
@@ -834,6 +806,7 @@ document.getElementById("painelCritico").innerHTML=html
 024 GERAR PDF PROFISSIONAL HARMONIA CARE
 ====================================================== */
 async function gerarPDF(){
+
 const { jsPDF } = window.jspdf
 const doc = new jsPDF("p","mm","a4")
 
@@ -858,16 +831,22 @@ let rotinasTexto=tr.children[2]?.innerText
 
 if(!paciente||!rotinasTexto)return
 
-let lista=rotinasTexto.split("\n")
+rotinasTexto.split("\n").forEach(r=>{
 
-lista.forEach(r=>{
-let rotina=r.replace("✔","").trim()
+let rotina=r.replace("✔","").replace("⚠","").replace("🔴","").trim()
+
 if(rotina){
 linhas.push([paciente,rotina])
 }
+
 })
 
 })
+
+if(linhas.length===0){
+alert("Nenhuma rotina encontrada para gerar PDF")
+return
+}
 
 doc.autoTable({
 startY:35,
@@ -875,10 +854,7 @@ head:[["Paciente","Rotina"]],
 body:linhas,
 styles:{fontSize:10,cellPadding:3},
 headStyles:{fillColor:[41,128,185]},
-columnStyles:{
-0:{cellWidth:90},
-1:{cellWidth:90}
-},
+columnStyles:{0:{cellWidth:90},1:{cellWidth:90}},
 margin:{left:14,right:14},
 didDrawPage:function(){
 doc.setFontSize(8)
@@ -888,6 +864,7 @@ doc.text(`Página ${doc.internal.getNumberOfPages()}`,200,290,{align:"right"})
 })
 
 doc.save("relatorio-rotinas.pdf")
+
 }
 /* ======================================================
 025 CARREGAR PROFISSIONAIS
@@ -919,6 +896,7 @@ document.getElementById("buscaProfissional").innerHTML=opt
 
 </body>
 </html>
+
 
 
 
