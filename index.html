@@ -19,13 +19,9 @@
 <!-- ======================================================
 002 STYLE
 ====================================================== -->
-
 <style>
-
 body{margin:0;font-family:Arial;background:#f4f6f9;}
-
 #login{display:flex;justify-content:center;align-items:center;height:100vh;}
-
 .login-box{
 background:#fff;
 padding:40px;
@@ -33,7 +29,6 @@ border-radius:12px;
 box-shadow:0 4px 12px rgba(0,0,0,0.1);
 width:320px;
 }
-
 .login-box h2{text-align:center;margin-bottom:20px;}
 
 .login-box input{
@@ -176,6 +171,26 @@ z-index:20;
 .busca button{height:36px}
 table{width:100%;border-collapse:collapse}
 th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px}
+
+.drag-container{
+min-height:120px;
+border:2px dashed #ccc;
+border-radius:10px;
+padding:10px;
+margin-bottom:10px;
+background:#fafafa;
+}
+
+.drag-item{
+background:#3498db;
+color:#fff;
+padding:6px 10px;
+border-radius:6px;
+margin-bottom:6px;
+cursor:grab;
+font-size:13px;
+}
+
   
 </style>
 
@@ -307,6 +322,7 @@ Painel Clínico
 <div style="display:flex;gap:6px;align-items:end">
 <button onclick="buscarHistorico()" class="btn-primary">Pesquisar</button>
 <button onclick="gerarPDF()" class="btn-primary">Gerar PDF</button>
+<button onclick="pdfPaciente()" class="btn-primary">PDF do Paciente</button>
 <button onclick="abrirAdmin()" class="btn-success">Painel Admin</button>
 </div>
 
@@ -389,24 +405,17 @@ Demência
 007A PAINEL ADMIN
 ====================================================== -->
 <div id="painelAdmin" style="display:none">
-
 <div class="box">
-
 <h3>Escala de Profissionais</h3>
-
 <label>Profissional</label>
 <select id="adminProfissional"></select>
-
 <label>Paciente</label>
 <select id="adminPaciente"></select>
-
 <label>Data</label>
 <input type="date" id="adminData">
-
 <button onclick="salvarEscala()" class="btn-success">
 Salvar Escala
 </button>
-
 <table>
 <thead>
 <tr>
@@ -416,28 +425,20 @@ Salvar Escala
 <th>Ação</th>
 </tr>
 </thead>
-
 <tbody id="listaEscala"></tbody>
 </table>
-
 </div>
-
 <div class="box">
-
 <h3>Gestão de Rotinas</h3>
-
 <input id="novaRotina" placeholder="Nome da rotina">
-
 <select id="turnoRotina">
 <option value="manha">Manhã</option>
 <option value="tarde">Tarde</option>
 <option value="noite">Noite</option>
 </select>
-
 <button onclick="criarRotina()" class="btn-primary">
 Criar Rotina
 </button>
-
 <table>
 <thead>
 <tr>
@@ -446,14 +447,24 @@ Criar Rotina
 <th>Ação</th>
 </tr>
 </thead>
-
 <tbody id="listaRotinasAdmin"></tbody>
 </table>
-
+</div>
 </div>
 
+<div class="box">
+<h3>Escala do Dia (arrastar pacientes)</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+<div>
+<h4>Pacientes</h4>
+<div id="listaPacientesDrag"></div>
 </div>
-  
+<div>
+<h4>Profissionais</h4>
+<div id="listaProfissionaisDrag"></div>
+</div>
+</div>
+</div>
 <!-- ======================================================
 008 SCRIPT
 ====================================================== -->
@@ -491,6 +502,8 @@ document.getElementById("painelAdmin").style.display="block"
 
 carregarEscala()
 carregarRotinasAdmin()
+carregarPacientesDrag()
+carregarProfissionaisDrag()
 
 }
 /* ======================================================
@@ -687,9 +700,7 @@ carregarRotinas()
 /* ======================================================
 013 CARREGAR PACIENTES BUSCA
 ====================================================== */
-
 async function carregarPacientesBusca(){
-
 const {data,error}=await db
 .from("pacientes")
 .select("id,nome_completo")
@@ -708,6 +719,29 @@ opt+=`<option value="${p.id}">${p.nome_completo}</option>`
 })
 document.getElementById("buscaPaciente").innerHTML=opt
 }
+/* ======================================================
+013A CARREGAR PACIENTES DRAG
+====================================================== */
+async function carregarPacientesDrag(){
+const {data}=await db
+.from("pacientes")
+.select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
+.order("nome_completo")
+let html=""
+data?.forEach(p=>{
+html+=`
+<div class="drag-item"
+draggable="true"
+data-id="${p.id}"
+ondragstart="dragPaciente(event)">
+${p.nome_completo}
+</div>
+`
+})
+document.getElementById("listaPacientesDrag").innerHTML=html
+}
+
 /* ======================================================
 014 CARREGAR ROTINAS
 ====================================================== */
@@ -1158,11 +1192,134 @@ opt+=`<option value="${p.id}">${p.nome}</option>`
 document.getElementById("buscaProfissional").innerHTML=opt
 
 }
+
+/* ======================================================
+025 CARREGAR PROFISSIONAIS DRAG
+====================================================== */
+async function carregarProfissionaisDrag(){
+
+const {data}=await db
+.from("usuarios")
+.select("id,nome")
+.eq("empresa_id",EMPRESA_ID)
+
+let html=""
+
+data?.forEach(p=>{
+
+html+=`
+<div class="drag-container"
+ondrop="dropPaciente(event)"
+ondragover="allowDrop(event)"
+data-prof="${p.id}">
+
+<b>${p.nome}</b>
+
+<div id="prof-${p.id}"></div>
+
+</div>
+`
+
+})
+
+document.getElementById("listaProfissionaisDrag").innerHTML=html
+
+}
+
+function allowDrop(ev){
+ev.preventDefault()
+}
+
+function dragPaciente(ev){
+ev.dataTransfer.setData("paciente",ev.target.dataset.id)
+ev.dataTransfer.setData("nome",ev.target.innerText)
+}
+
+  async function dropPaciente(ev){
+
+ev.preventDefault()
+
+const paciente=ev.dataTransfer.getData("paciente")
+const nome=ev.dataTransfer.getData("nome")
+
+const profissional=ev.currentTarget.dataset.prof
+
+const hoje=new Date().toISOString().split("T")[0]
+
+await db
+.from("escala_cuidados")
+.insert({
+idoso_id:paciente,
+profissional_id:profissional,
+data:hoje
+})
+
+const div=ev.currentTarget.querySelector("div")
+
+div.innerHTML+=`
+<div class="drag-item">${nome}</div>
+`
+
+}
+
+
+async function pdfPaciente(){
+
+const paciente=document.getElementById("buscaPaciente").value
+
+const {data}=await db
+.from("vw_rotinas_painel")
+.select("*")
+.eq("paciente_id",paciente)
+.order("data")
+
+const { jsPDF } = window.jspdf
+
+const doc=new jsPDF()
+
+doc.setFontSize(16)
+doc.text("HARMONIA CARE",14,15)
+
+doc.setFontSize(12)
+doc.text("Relatório do Paciente",14,22)
+
+let linhas=[]
+
+data?.forEach(r=>{
+
+linhas.push([
+r.data,
+r.rotina,
+r.status
+])
+
+})
+
+doc.autoTable({
+
+startY:30,
+
+head:[["Data","Rotina","Status"]],
+
+body:linhas,
+
+styles:{fontSize:10},
+
+headStyles:{fillColor:[41,128,185]}
+
+})
+
+doc.save("paciente.pdf")
+
+}
+
+  
   
 </script>
 
 </body>
 </html>
+
 
 
 
