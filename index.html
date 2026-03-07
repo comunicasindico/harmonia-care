@@ -169,6 +169,13 @@ position:relative;
 z-index:20;
 }
 
+.busca{display:grid;grid-template-columns:1.2fr 1fr 1fr 120px 120px auto;gap:10px;align-items:end;margin-bottom:10px}
+.busca label{font-weight:bold;font-size:13px}
+.busca select,.busca input{height:36px;font-size:13px}
+.busca button{height:36px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px}
+  
 </style>
 
 </head>
@@ -824,41 +831,45 @@ document.getElementById("painelCritico").innerHTML=html
 }
 
 /* ======================================================
-024 GERAR PDF
+024 GERAR PDF PROFISSIONAL HARMONIA CARE
 ====================================================== */
 async function gerarPDF(){
-const { jsPDF } = window.jspdf
-const doc = new jsPDF()
+const{jsPDF}=window.jspdf
+const doc=new jsPDF("p","mm","a4")
+const dataInicio=document.getElementById("dataInicio").value
+const dataFim=document.getElementById("dataFim").value
+doc.setFont("helvetica","bold")
 doc.setFontSize(16)
-doc.text("Relatório de Rotinas dos Pacientes - Harmonia Care",14,20)
-let linhas = []
-const tabela = document.querySelectorAll("#rotinas tr")
-tabela.forEach(tr=>{
-let colunas = tr.querySelectorAll("td")
-if(colunas.length>=3){
-let paciente = colunas[0].innerText.trim()
-let rotinas = colunas[2].innerText
-.replace(/\n/g,", ")
-.trim()
-linhas.push([
-paciente,
-rotinas
-])
-}
+doc.text("HARMONIA CARE",14,15)
+doc.setFontSize(12)
+doc.setFont("helvetica","normal")
+doc.text("Relatório de Rotinas dos Pacientes",14,22)
+doc.setFontSize(10)
+doc.text(`Período: ${dataInicio} até ${dataFim}`,14,28)
+let linhas=[]
+document.querySelectorAll("#rotinas tr").forEach(tr=>{
+let paciente=tr.children[0]?.innerText.trim()
+if(!paciente)return
+let rotinas=tr.querySelectorAll("td:nth-child(3) div")
+rotinas.forEach(r=>{
+let nome=r.children[0]?.innerText.trim()
+if(nome)linhas.push([paciente,nome])
+})
 })
 doc.autoTable({
-startY:30,
-head:[["Paciente","Rotinas Executadas"]],
+startY:35,
+head:[["Paciente","Rotina"]],
 body:linhas,
-styles:{
-fontSize:9
-},
-columnStyles:{
-0:{cellWidth:50},
-1:{cellWidth:130}
+styles:{fontSize:9,cellPadding:2},
+headStyles:{fillColor:[52,152,219]},
+columnStyles:{0:{cellWidth:80},1:{cellWidth:100}},
+didDrawPage:function(data){
+doc.setFontSize(8)
+doc.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`,14,290)
+doc.text(`Página ${doc.internal.getNumberOfPages()}`,200,290,{align:"right"})
 }
 })
-doc.save("relatorio-rotinas.pdf")
+doc.save("relatorio-rotinas-harmonia-care.pdf")
 }
 /* ======================================================
 025 CARREGAR PROFISSIONAIS
@@ -890,6 +901,7 @@ document.getElementById("buscaProfissional").innerHTML=opt
 
 </body>
 </html>
+
 
 
 
