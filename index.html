@@ -751,10 +751,66 @@ document.getElementById("dataInicio").value = dataHoje
 document.getElementById("dataFim").value = dataHoje
 }
 /* ======================================================
+018B GERAR ROTINAS DO DIA
+====================================================== */
+async function gerarRotinasDoDia(){
+const hoje = new Date().toISOString().split("T")[0]
+
+/* busca pacientes */
+
+const {data:pacientes} = await db
+.from("pacientes")
+.select("id")
+.eq("empresa_id",EMPRESA_ID)
+
+if(!pacientes || pacientes.length===0)return
+
+/* busca modelos */
+
+const {data:modelos} = await db
+.from("rotina_modelos")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+
+if(!modelos || modelos.length===0)return
+
+for(const paciente of pacientes){
+
+for(const modelo of modelos){
+
+/* verifica se já existe */
+
+const {data:existe}=await db
+.from("rotinas_execucao")
+.select("id")
+.eq("paciente_id",paciente.id)
+.eq("modelo_id",modelo.id)
+.eq("data",hoje)
+.maybeSingle()
+
+if(!existe){
+
+await db
+.from("rotinas_execucao")
+.insert({
+empresa_id:EMPRESA_ID,
+paciente_id:paciente.id,
+modelo_id:modelo.id,
+rotina:modelo.titulo,
+turno:modelo.turno,
+data:hoje,
+status:"pendente"
+})
+}
+}
+}
+}
+/* ======================================================
 019 CARREGAR TUDO
 ====================================================== */
-function carregarTudo(){
+async function carregarTudo(){
 definirDataHoje()
+await gerarRotinasDoDia()
 carregarPacientesBusca()
 carregarTiposRotina()
 carregarProfissionais()
@@ -902,6 +958,7 @@ document.getElementById("buscaProfissional").innerHTML=opt
 
 </body>
 </html>
+
 
 
 
