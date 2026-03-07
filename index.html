@@ -501,18 +501,8 @@ renderizarRotinas(data)
 015 EXECUTAR ROTINA
 ====================================================== */
 async function executarRotina(id){
-const usuario_id=localStorage.getItem("usuario_id")
 
-const {data}=await db
-.from("rotinas_execucao")
-.select("status")
-.eq("id",id)
-.single()
-
-if(data?.status==="executado"){
-alert("Rotina já executada.")
-return
-}
+const usuario_id = localStorage.getItem("usuario_id")
 
 const {error}=await db
 .from("rotinas_execucao")
@@ -527,7 +517,12 @@ alert(error.message)
 return
 }
 
-carregarRotinas()
+/* ATUALIZA SOMENTE A LINHA */
+let linha=document.querySelector(`[data-id="${id}"]`)
+if(linha){
+linha.querySelector(".status").innerHTML="✔"
+linha.querySelector(".status").className="status status-executado"
+}
 
 }
 /* ======================================================
@@ -609,9 +604,9 @@ if(r.status==="atrasado"){status="⚠";classe="status-atrasado"}
 pacientes[r.paciente].rotinas.push({
 nome:r.rotina,
 html:`
-<tr onclick="executarRotina('${r.id}')">
+<tr data-id="${r.id}" onclick="executarRotina('${r.id}')">
 <td>${r.rotina}</td>
-<td class="${classe}">${status}</td>
+<td class="status ${classe}">${status}</td>
 </tr>
 `
 })
@@ -889,6 +884,7 @@ document.getElementById("buscaProfissional").innerHTML=opt
 
 </body>
 </html>
+
 
 
 
