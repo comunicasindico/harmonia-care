@@ -13,6 +13,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <!-- ======================================================
 002 STYLE
@@ -565,7 +566,7 @@ let query=db
 if(paciente && paciente!==""){
 query=query.eq("paciente_id",paciente)
 }
-if(rotina && rotina !== "ROTINAS"){
+if(rotina && rotina !== "TODAS ROTINAS"){
 query=query.eq("rotina",rotina)
 }
 if(profissional && profissional !== "PROFISSIONAIS"){
@@ -780,7 +781,7 @@ console.log(error)
 return
 }
 
-let opt=`<option value="">ROTINAS</option>`
+let opt=`<option value="">TODAS ROTINAS</option>`
 
 data?.forEach(r=>{
 opt+=`<option value="${r.titulo}">${r.titulo}</option>`
@@ -788,7 +789,6 @@ opt+=`<option value="${r.titulo}">${r.titulo}</option>`
 
 document.getElementById("buscaRotina").innerHTML=opt
 }
-
 /* ======================================================
 021 PAINEL ROTINAS CRÍTICAS
 ====================================================== */
@@ -885,6 +885,7 @@ document.getElementById("buscaProfissional").innerHTML=opt
 
 </body>
 </html>
+
 
 
 
