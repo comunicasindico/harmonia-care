@@ -724,7 +724,7 @@ console.log(error)
 return
 }
 
-let opt=`<option value="">TODAS ROTINAS</option>`
+let opt=`<option value="">ROTINAS</option>`
 
 data?.forEach(r=>{
 opt+=`<option value="${r.titulo}">${r.titulo}</option>`
@@ -837,7 +837,7 @@ console.log(error)
 return
 }
 
-let opt=`<option value="">TODOS PROFISSIONAIS</option>`
+let opt=`<option value="">PROFISSIONAIS</option>`
 
 data?.forEach(p=>{
 opt+=`<option value="${p.id}">${p.nome}</option>`
@@ -851,6 +851,7 @@ document.getElementById("buscaProfissional").innerHTML=opt
 
 </body>
 </html>
+
 
 
 
