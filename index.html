@@ -805,6 +805,12 @@ document.getElementById("painelCritico").innerHTML=html
 /* ======================================================
 024 GERAR PDF PROFISSIONAL HARMONIA CARE
 ====================================================== */
+function formatarDataBR(data){
+if(!data)return ""
+let [ano,mes,dia]=data.split("-")
+return `${dia}-${mes}-${ano}`
+}
+
 async function gerarPDF(){
 
 const { jsPDF } = window.jspdf
@@ -820,8 +826,7 @@ doc.setFontSize(12)
 doc.text("Relatório de Rotinas dos Pacientes",14,22)
 
 doc.setFontSize(10)
-doc.text(`Período: ${dataInicio} até ${dataFim}`,14,28)
-
+doc.text(`Período: ${formatarDataBR(dataInicio)} até ${formatarDataBR(dataFim)}`,14,28)
 let linhas=[]
 
 document.querySelectorAll("#rotinas tr").forEach(tr=>{
@@ -858,7 +863,7 @@ columnStyles:{0:{cellWidth:90},1:{cellWidth:90}},
 margin:{left:14,right:14},
 didDrawPage:function(){
 doc.setFontSize(8)
-doc.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`,14,290)
+doc.text(`Gerado em: ${new Date().toLocaleDateString("pt-BR")}`,14,290)
 doc.text(`Página ${doc.internal.getNumberOfPages()}`,200,290,{align:"right"})
 }
 })
@@ -896,6 +901,7 @@ document.getElementById("buscaProfissional").innerHTML=opt
 
 </body>
 </html>
+
 
 
 
