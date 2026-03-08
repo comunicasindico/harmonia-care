@@ -38,6 +38,9 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left}
 .turno-noite{background:#2c3e50;color:#fff}
 .drag-container{min-height:120px;border:2px dashed #ccc;border-radius:10px;padding:10px;background:#fafafa}
 .drag-item{background:#3498db;color:#fff;padding:6px;border-radius:6px;margin-bottom:6px;cursor:grab;font-size:13px}
+.turno-btn{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;opacity:0.6;}
+.turno-ativo{opacity:1;box-shadow:0 0 0 3px rgba(0,0,0,0.15) inset;}
+  
 </style>
 </head>
 
@@ -125,9 +128,9 @@ Fone:(81)3461-3109
 
 </div>
 <div class="turnos">
-<button class="turno-manha" onclick="mudarTurno('manha')">Manhã</button>
-<button class="turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
-<button class="turno-noite" onclick="mudarTurno('noite')">Noite</button>
+<button id="btnManha" class="turno-btn turno-manha" onclick="mudarTurno('manha')">Manhã</button>
+<button id="btnTarde" class="turno-btn turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
+<button id="btnNoite" class="turno-btn turno-noite" onclick="mudarTurno('noite')">Noite</button>
 </div>
 
 <table>
@@ -239,6 +242,7 @@ await carregarRotinas()
 await carregarClinico()
 setInterval(()=>{carregarRotinas()},30000)
 abrirEnfermagem()
+mudarTurno("manha")
 }
 /* ====================================================
 013 GERAR ROTINAS DO DIA (PROTEÇÃO DUPLICIDADE)
@@ -289,8 +293,18 @@ await db.from("rotinas_execucao").insert(inserts)
   /* ====================================================
 014 MUDAR TURNO
 ==================================================== */
-function mudarTurno(t){TURNO_ATUAL=t;carregarRotinas()}
+function mudarTurno(turno){
+TURNO_ATUAL=turno
+document.getElementById("btnManha").classList.remove("turno-ativo")
+document.getElementById("btnTarde").classList.remove("turno-ativo")
+document.getElementById("btnNoite").classList.remove("turno-ativo")
 
+if(turno==="manha")document.getElementById("btnManha").classList.add("turno-ativo")
+if(turno==="tarde")document.getElementById("btnTarde").classList.add("turno-ativo")
+if(turno==="noite")document.getElementById("btnNoite").classList.add("turno-ativo")
+
+carregarRotinas()
+}
 /* ====================================================
 015 CARREGAR ROTINAS
 ==================================================== */
@@ -609,6 +623,7 @@ document.getElementById("painelAdmin").style.display="block"
 </script>
 </body>
 </html>
+
 
 
 
