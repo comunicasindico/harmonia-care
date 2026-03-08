@@ -214,7 +214,15 @@ font-size:13px;
 <button onclick="login()" class="btn-primary" style="width:100%">
 Entrar
 </button>
+<div style="margin-top:15px;font-size:12px;text-align:center;color:#666">
+<b>Lar Geriátrico HARMONIA</b><br>
+CNPJ: 11.197.111/0001-56<br>
+Rua Doutor Manoel Benício Fontinele, 38 – Piedade<br>
+Jaboatão dos Guararapes – PE – CEP: 54400-390<br>
+lar.geriatrico.harmonia@hotmail.com<br>
+Fone: (81) 3461-3109
 
+</div>
 </div>
 </div>
 
@@ -1175,10 +1183,17 @@ const dataInicio=document.getElementById("dataInicio").value
 const dataFim=document.getElementById("dataFim").value
 
 doc.setFontSize(16)
-doc.text("HARMONIA CARE",14,15)
+doc.text("Lar Geriátrico HARMONIA",14,15)
+
+doc.setFontSize(9)
+doc.text("CNPJ: 11.197.111/0001-56",14,22)
+doc.text("Rua Doutor Manoel Benício Fontinele, 38 – Piedade",14,27)
+doc.text("Jaboatão dos Guararapes – PE – CEP: 54400-390",14,32)
+doc.text("Email: lar.geriatrico.harmonia@hotmail.com",14,37)
+doc.text("Fone: (81) 3461-3109",14,42)
 
 doc.setFontSize(12)
-doc.text("Relatório de Rotinas dos Pacientes",14,22)
+doc.text("Relatório de Rotinas dos Pacientes",14,52)
 
 doc.setFontSize(10)
 doc.text(`Período: ${formatarDataBR(dataInicio)} até ${formatarDataBR(dataFim)}`,14,28)
@@ -1209,7 +1224,7 @@ return
 }
 
 doc.autoTable({
-startY:35,
+startY:60,
 head:[["Paciente","Rotina"]],
 body:linhas,
 styles:{fontSize:10,cellPadding:3},
@@ -1380,6 +1395,7 @@ doc.save("paciente.pdf")
 
 </body>
 </html>
+
 
 
 
