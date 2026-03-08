@@ -199,13 +199,10 @@ font-size:13px;
 <!-- ======================================================
 003 BODY
 ====================================================== -->
-
 <body>
-
 <!-- ======================================================
 004 LOGIN
 ====================================================== -->
-
 <div id="login">
 <div class="login-box">
 <h2>Harmonia Care</h2>
@@ -348,7 +345,6 @@ Painel Clínico
 <!-- ======================================================
 007 PAINEL CLÍNICO
 ====================================================== -->
-
 <div id="painelClinico" style="display:none">
 
 <div class="dashboard">
@@ -463,11 +459,8 @@ Demência
 <!-- ======================================================
 008 SCRIPT
 ====================================================== -->
-
 <script>
-
 let TURNO_ATUAL="manha"
-
 /* ======================================================
 009 SUPABASE
 ====================================================== */
@@ -499,6 +492,7 @@ carregarEscala()
 carregarRotinasAdmin()
 carregarPacientesDrag()
 carregarProfissionaisDrag()
+carregarEscalaDrag()
 }
 /* ======================================================
 009C SALVAR ESCALA
@@ -707,7 +701,6 @@ carregarEscala()
 /* ======================================================
 010 LOGIN
 ====================================================== */
-
 async function login(){
 
 const email=document.getElementById("usuario").value.trim()
@@ -811,23 +804,22 @@ document.getElementById("listaPacientesDrag").innerHTML=html
 014 CARREGAR ROTINAS
 ====================================================== */
 async function carregarRotinas(){
+const hoje=new Date().toISOString().split("T")[0]
 const {data,error}=await db
 .from("vw_rotinas_painel")
 .select("*")
 .eq("turno",TURNO_ATUAL)
+.eq("data",hoje)
 .order("paciente",{ascending:true})
-
 if(error){
 console.log(error)
 return
 }
-
 if(!data||data.length===0){
 document.getElementById("rotinas").innerHTML="<tr><td colspan='3'>Nenhuma rotina encontrada</td></tr>"
 atualizarPainelCritico([])
 return
 }
-
 atualizarPainelCritico(data)
 renderizarRotinas(data)
 }
@@ -853,6 +845,7 @@ return
 let linha=document.querySelector(`[data-id="${id}"]`)
 if(linha){
 linha.querySelector(".status").innerHTML="✔"
+carregarRotinas()
 linha.querySelector(".status").className="status status-executado"
 }
 
@@ -1118,6 +1111,9 @@ carregarTiposRotina()
 carregarProfissionais()
 carregarRotinas()
 carregarClinico()
+setInterval(()=>{
+carregarRotinas()
+},30000)
 }
 /* ======================================================
 020 CARREGAR TIPOS ROTINA
@@ -1296,35 +1292,37 @@ ev.preventDefault()
 function dragPaciente(ev){
 ev.dataTransfer.setData("paciente",ev.target.dataset.id)
 ev.dataTransfer.setData("nome",ev.target.innerText)
+ev.dataTransfer.setData("origem",ev.target.parentElement.id)
 }
 
-  async function dropPaciente(ev){
-
+async function dropPaciente(ev){
 ev.preventDefault()
-
 const paciente=ev.dataTransfer.getData("paciente")
 const nome=ev.dataTransfer.getData("nome")
-
 const profissional=ev.currentTarget.dataset.prof
-
 const hoje=new Date().toISOString().split("T")[0]
-
 await db
 .from("escala_cuidados")
-.insert({
-idoso_id:paciente,
-profissional_id:profissional,
-data:hoje
-})
-
+.update({profissional_id:profissional})
+.eq("idoso_id",paciente)
+.eq("data",hoje)
 const div=ev.currentTarget.querySelector("div")
-
-div.innerHTML+=`
-<div class="drag-item">${nome}</div>
-`
-
+div.innerHTML+=`<div class="drag-item" draggable="true" data-id="${paciente}" ondragstart="dragPaciente(event)">${nome}</div>`
 }
 
+async function carregarEscalaDrag(){
+const hoje=new Date().toISOString().split("T")[0]
+const {data}=await db
+.from("escala_cuidados")
+.select("idoso_id,usuarios(nome),pacientes(nome_completo),profissional_id")
+.eq("data",hoje)
+data?.forEach(e=>{
+const box=document.querySelector(`[data-prof="${e.profissional_id}"] div`)
+if(box){
+box.innerHTML+=`<div class="drag-item">${e.pacientes?.nome_completo}</div>`
+}
+})
+}
 
 async function pdfPaciente(){
 
@@ -1382,5 +1380,6 @@ doc.save("paciente.pdf")
 
 </body>
 </html>
+
 
 
