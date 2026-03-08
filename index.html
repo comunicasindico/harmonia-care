@@ -376,8 +376,25 @@ document.getElementById("rotinas").innerHTML=html
 017 EXECUTAR ROTINA
 ==================================================== */
 async function executarRotina(id){
-const usuario=localStorage.getItem("usuario_id")
-await db.from("rotinas_execucao").update({status:"executado",executado_por:usuario,horario_execucao:new Date().toISOString()}).eq("id",id)
+const usuario = localStorage.getItem("usuario_id")
+const { data, error } = await db
+.from("rotinas_execucao")
+.update({
+status:"executado",
+executado_por:usuario,
+horario_execucao:new Date().toISOString()
+})
+.eq("id",id)
+.select()
+if(error){
+console.error("Erro ao executar rotina:",error)
+alert("Erro ao marcar rotina.")
+return
+}
+if(!data || data.length===0){
+alert("Rotina não encontrada para atualizar.")
+return
+}
 carregarRotinas()
 }
 /* ====================================================
@@ -588,5 +605,6 @@ await carregarEscalaDrag()
 </script>
 </body>
 </html>
+
 
 
