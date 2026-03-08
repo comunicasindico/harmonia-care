@@ -1,222 +1,66 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>Harmonia Care</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Harmonia Care 2.0</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-
 <style>
-
-body{
-margin:0;
-font-family:Arial;
-background:#f4f6f9;
-}
-
-#login{
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-}
-
-.login-box{
-background:#fff;
-padding:40px;
-border-radius:12px;
-box-shadow:0 4px 12px rgba(0,0,0,0.1);
-width:320px;
-}
-
-.login-box input{
-width:100%;
-padding:10px;
-margin-bottom:15px;
-border-radius:8px;
-border:1px solid #ccc;
-}
-
-button{
-padding:10px 16px;
-border:0;
-border-radius:8px;
-font-weight:bold;
-cursor:pointer;
-}
-
+body{margin:0;font-family:Arial;background:#f4f6f9}
+#login{display:flex;justify-content:center;align-items:center;height:100vh}
+.login-box{background:#fff;padding:40px;border-radius:12px;width:320px;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.login-box input{width:100%;padding:10px;margin-bottom:12px;border-radius:6px;border:1px solid #ccc}
+button{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
 .btn-primary{background:#3498db;color:#fff}
-.btn-secondary{background:#555;color:#fff}
 .btn-danger{background:#e74c3c;color:#fff}
+.btn-secondary{background:#555;color:#fff}
 .btn-success{background:#2ecc71;color:#fff}
-
-#app{
-display:none;
-padding:30px;
-max-width:1200px;
-margin:auto;
-}
-
-.dashboard{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:15px;
-margin-bottom:20px;
-}
-
-.card{
-background:#fff;
-padding:20px;
-border-radius:12px;
-text-align:center;
-box-shadow:0 2px 8px rgba(0,0,0,0.08)
-}
-
-.box{
-background:#fff;
-padding:20px;
-border-radius:12px;
-box-shadow:0 2px 8px rgba(0,0,0,0.08);
-margin-top:20px
-}
-
-table{
-width:100%;
-border-collapse:collapse
-}
-
-th,td{
-padding:6px;
-border-bottom:1px solid #ddd;
-font-size:13px;
-text-align:left
-}
-
-.turnos{
-display:flex;
-gap:10px;
-margin-bottom:15px
-}
-
-.turno-btn{
-padding:10px 16px;
-border-radius:8px;
-font-weight:bold;
-cursor:pointer;
-opacity:0.5
-}
-
-.turno-ativo{
-opacity:1;
-box-shadow:0 0 0 3px rgba(0,0,0,0.15) inset
-}
-
-.drag-container{
-min-height:120px;
-border:2px dashed #ccc;
-border-radius:10px;
-padding:10px;
-margin-bottom:15px
-}
-
-.drag-item{
-background:#3498db;
-color:#fff;
-padding:6px;
-border-radius:6px;
-margin-bottom:6px;
-cursor:grab
-}
-
+#app{display:none;padding:30px;max-width:1200px;margin:auto}
+.menu{margin-bottom:20px}
+.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px}
+.card{background:#fff;padding:20px;border-radius:10px;text-align:center}
+.box{background:#fff;padding:20px;border-radius:10px;margin-top:20px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #ddd;font-size:13px}
+.turnos{display:flex;gap:10px;margin-bottom:15px}
+.turno-btn{padding:8px 12px;border-radius:6px;opacity:.5}
+.turno-ativo{opacity:1;box-shadow:0 0 0 2px rgba(0,0,0,0.15) inset}
+.rotina{padding:4px;border-radius:4px;margin-bottom:3px;cursor:pointer}
+.executado{color:#2ecc71}
+.pendente{color:#e74c3c}
+.progresso{background:#eee;height:6px;border-radius:3px}
+.progresso-bar{background:#2ecc71;height:6px;border-radius:3px}
 </style>
 </head>
-
 <body>
-
-<!-- LOGIN -->
-
 <div id="login">
-
 <div class="login-box">
-
 <h2>Harmonia Care</h2>
-
 <input id="usuario" placeholder="Usuário">
-
 <input id="senha" type="password" placeholder="Senha">
-
-<button onclick="login()" class="btn-primary" style="width:100%">
-Entrar
-</button>
-
+<button onclick="login()" class="btn-primary" style="width:100%">Entrar</button>
 </div>
-
 </div>
-
-<!-- APP -->
-
 <div id="app">
-
 <h1 style="display:flex;justify-content:space-between">
-
 <span>Harmonia Care</span>
-
-<button onclick="logout()" class="btn-danger">
-Sair
-</button>
-
+<button onclick="logout()" class="btn-danger">Sair</button>
 </h1>
-
-<div style="margin-bottom:20px">
-
-<button onclick="abrirEnfermagem()" class="btn-primary">
-Painel Enfermagem
-</button>
-
-<button onclick="abrirClinico()" class="btn-secondary">
-Painel Clínico
-</button>
-
-<button onclick="abrirAdmin()" class="btn-success">
-Admin
-</button>
-
+<div class="menu">
+<button onclick="abrirEnfermagem()" class="btn-primary">Enfermagem</button>
+<button onclick="abrirClinico()" class="btn-secondary">Clínico</button>
+<button onclick="abrirAdmin()" class="btn-success">Admin</button>
 </div>
-
-<!-- ENFERMAGEM -->
-
 <div id="painelEnfermagem">
-
 <div class="box">
-
 <h3>Rotinas do Turno</h3>
-
 <div class="turnos">
-
-<button id="btnManha" class="turno-btn" onclick="mudarTurno('manha')">
-Manhã
-</button>
-
-<button id="btnTarde" class="turno-btn" onclick="mudarTurno('tarde')">
-Tarde
-</button>
-
-<button id="btnNoite" class="turno-btn" onclick="mudarTurno('noite')">
-Noite
-</button>
-
+<button id="btnManha" class="turno-btn btn-primary" onclick="mudarTurno('manha')">Manhã</button>
+<button id="btnTarde" class="turno-btn btn-primary" onclick="mudarTurno('tarde')">Tarde</button>
+<button id="btnNoite" class="turno-btn btn-primary" onclick="mudarTurno('noite')">Noite</button>
 </div>
-
 <table>
-
 <thead>
 <tr>
 <th>Paciente</th>
@@ -224,49 +68,20 @@ Noite
 <th>Rotinas</th>
 </tr>
 </thead>
-
 <tbody id="rotinas"></tbody>
-
 </table>
-
 </div>
-
 </div>
-
-<!-- CLINICO -->
-
 <div id="painelClinico" style="display:none">
-
 <div class="dashboard">
-
-<div class="card">
-<h3 id="totalPacientes">0</h3>
-Pacientes
+<div class="card"><h3 id="totalPacientes">0</h3>Pacientes</div>
+<div class="card"><h3 id="totalHas">0</h3>HAS</div>
+<div class="card"><h3 id="totalDm">0</h3>DM</div>
+<div class="card"><h3 id="totalDem">0</h3>Demência</div>
 </div>
-
-<div class="card">
-<h3 id="totalHas">0</h3>
-HAS
-</div>
-
-<div class="card">
-<h3 id="totalDm">0</h3>
-DM
-</div>
-
-<div class="card">
-<h3 id="totalDemencia">0</h3>
-Demência
-</div>
-
-</div>
-
 <div class="box">
-
 <table>
-
 <thead>
-
 <tr>
 <th>Paciente</th>
 <th>Idade</th>
@@ -274,408 +89,130 @@ Demência
 <th>DM</th>
 <th>Demência</th>
 </tr>
-
 </thead>
-
-<tbody id="quadroClinico"></tbody>
-
+<tbody id="clinico"></tbody>
 </table>
-
 </div>
-
 </div>
-
-<!-- ADMIN -->
-
 <div id="painelAdmin" style="display:none">
-
 <div class="box">
-
-<h3>Escala Profissionais</h3>
-
-<div id="listaProfissionaisDrag"></div>
-
+<h3>Administração</h3>
+<p>Painel administrativo ativo.</p>
 </div>
-
-<div class="box">
-
-<h3>Pacientes</h3>
-
-<div id="listaPacientesDrag"></div>
-
 </div>
-
 </div>
-
 <script>
-
-/* CONFIG */
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co"
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e"
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
-
 let TURNO_ATUAL="manha"
-
-/* LOGIN */
-
 async function login(){
-
 const email=document.getElementById("usuario").value
-
 const senha=document.getElementById("senha").value
-
-const{data}=await db
-.from("usuarios")
-.select("*")
-.eq("email",email)
-.single()
-
-if(!data){
-alert("Usuário não encontrado")
-return
-}
-
-if(senha!==data.senha_hash){
-alert("Senha incorreta")
-return
-}
-
+const{data}=await db.from("usuarios").select("*").eq("email",email).single()
+if(!data){alert("Usuário não encontrado");return}
+if(senha!==data.senha_hash){alert("Senha incorreta");return}
 localStorage.setItem("usuario_id",data.id)
-
 document.getElementById("login").style.display="none"
-
 document.getElementById("app").style.display="block"
-
-carregarTudo()
-
+init()
 }
-
-function logout(){
-localStorage.clear()
-location.reload()
-}
-
-/* INIT */
-
+function logout(){localStorage.clear();location.reload()}
 window.onload=function(){
-
 if(localStorage.getItem("usuario_id")){
-
 document.getElementById("login").style.display="none"
-
 document.getElementById("app").style.display="block"
-
-carregarTudo()
-
-}
-
-}
-
-/* LOAD */
-
-async function carregarTudo(){
-
+init()
+}}
+async function init(){
 await gerarRotinasDoDia()
-
 await carregarRotinas()
-
 await carregarClinico()
-
+setInterval(()=>carregarRotinas(),30000)
 mudarTurno("manha")
-
 }
-
-/* ROTINAS */
-
 async function gerarRotinasDoDia(){
-
 const hoje=new Date().toISOString().slice(0,10)
-
-const{count}=await db
-.from("rotinas_execucao")
-.select("*",{count:"exact",head:true})
-.eq("data",hoje)
-.eq("empresa_id",EMPRESA_ID)
-
+const{count}=await db.from("rotinas_execucao").select("*",{count:"exact",head:true}).eq("data",hoje).eq("empresa_id",EMPRESA_ID)
 if(count>0)return
-
-const{data:pacientes}=await db
-.from("pacientes")
-.select("id")
-.eq("empresa_id",EMPRESA_ID)
-
-const{data:modelos}=await db
-.from("rotina_modelos")
-.select("titulo,turno")
-.eq("empresa_id",EMPRESA_ID)
-
+const{data:pacientes}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID)
+const{data:modelos}=await db.from("rotina_modelos").select("titulo,turno").eq("empresa_id",EMPRESA_ID)
 let inserts=[]
-
 pacientes.forEach(p=>{
-
 modelos.forEach(r=>{
-
-inserts.push({
-
-empresa_id:EMPRESA_ID,
-paciente_id:p.id,
-rotina:r.titulo,
-turno:r.turno,
-data:hoje,
-status:"pendente"
-
+inserts.push({empresa_id:EMPRESA_ID,paciente_id:p.id,rotina:r.titulo,turno:r.turno,data:hoje,status:"pendente"})
 })
-
 })
-
-})
-
-await db.from("rotinas_execucao").insert(inserts)
-
+if(inserts.length>0)await db.from("rotinas_execucao").insert(inserts)
 }
-
-/* CARREGAR ROTINAS */
-
 async function carregarRotinas(){
-
-let {data}=await db
-.from("vw_rotinas_painel")
-.select("*")
-.eq("turno",TURNO_ATUAL)
-.order("paciente",{ascending:true})
-
+let{data}=await db.from("vw_rotinas_painel").select("*").eq("turno",TURNO_ATUAL).order("paciente",{ascending:true})
 renderizarRotinas(data)
-
 }
-
-/* RENDER */
-
 function renderizarRotinas(data){
-
 let pacientes={}
-
 data.forEach(r=>{
-
-if(!pacientes[r.paciente]){
-
-pacientes[r.paciente]={rotinas:[],ok:0,total:0}
-
-}
-
+if(!pacientes[r.paciente])pacientes[r.paciente]={rotinas:[],ok:0,total:0}
 pacientes[r.paciente].total++
-
 if(r.status==="executado")pacientes[r.paciente].ok++
-
-let icon="🔴"
-
-if(r.status==="executado")icon="✔"
-
-pacientes[r.paciente].rotinas.push(
-
-`<div onclick="executarRotina('${r.id}')">
-${r.rotina} ${icon}
-</div>`
-
-)
-
+let classe=r.status==="executado"?"executado":"pendente"
+let icon=r.status==="executado"?"✔":"🔴"
+pacientes[r.paciente].rotinas.push(`<div class="rotina ${classe}" onclick="executarRotina('${r.id}')">${r.rotina} ${icon}</div>`)
 })
-
 let html=""
-
 Object.keys(pacientes).forEach(p=>{
-
 let total=pacientes[p].total
-
 let ok=pacientes[p].ok
-
 let progresso=Math.round((ok/total)*100)
-
-html+=`
-
-<tr>
-
-<td><b>${p}</b></td>
-
-<td>${progresso}%</td>
-
-<td>${pacientes[p].rotinas.join("")}</td>
-
-</tr>
-
-`
-
+html+=`<tr><td><b>${p}</b></td><td>${progresso}%<div class="progresso"><div class="progresso-bar" style="width:${progresso}%"></div></div></td><td>${pacientes[p].rotinas.join("")}</td></tr>`
 })
-
 document.getElementById("rotinas").innerHTML=html
-
 }
-
-/* EXECUTAR */
-
 async function executarRotina(id){
-
 const usuario=localStorage.getItem("usuario_id")
-
-await db
-.from("rotinas_execucao")
-.update({
-status:"executado",
-executado_por:usuario,
-horario_execucao:new Date()
-})
-.eq("id",id)
-
+await db.from("rotinas_execucao").update({status:"executado",executado_por:usuario,horario_execucao:new Date()}).eq("id",id)
 carregarRotinas()
-
 }
-
-/* CLINICO */
-
 async function carregarClinico(){
-
 const{data}=await db.from("pacientes").select("*")
-
 let html=""
-
+let has=0,dm=0,dem=0
 data.forEach(p=>{
-
-html+=`
-
-<tr>
-
-<td>${p.nome_completo}</td>
-
-<td>${p.idade||""}</td>
-
-<td>${p.has?"✔":""}</td>
-
-<td>${p.dm?"✔":""}</td>
-
-<td>${p.demencia?"✔":""}</td>
-
-</tr>
-
-`
-
+if(p.has)has++
+if(p.dm)dm++
+if(p.demencia)dem++
+html+=`<tr><td>${p.nome_completo}</td><td>${p.idade||""}</td><td>${p.has?"✔":""}</td><td>${p.dm?"✔":""}</td><td>${p.demencia?"✔":""}</td></tr>`
 })
-
-document.getElementById("quadroClinico").innerHTML=html
-
+document.getElementById("clinico").innerHTML=html
 document.getElementById("totalPacientes").innerText=data.length
-
+document.getElementById("totalHas").innerText=has
+document.getElementById("totalDm").innerText=dm
+document.getElementById("totalDem").innerText=dem
 }
-
-/* TURNOS */
-
 function mudarTurno(turno){
-
 TURNO_ATUAL=turno
-
-document.querySelectorAll(".turno-btn")
-.forEach(b=>b.classList.remove("turno-ativo"))
-
+document.querySelectorAll(".turno-btn").forEach(b=>b.classList.remove("turno-ativo"))
 if(turno==="manha")document.getElementById("btnManha").classList.add("turno-ativo")
-
 if(turno==="tarde")document.getElementById("btnTarde").classList.add("turno-ativo")
-
 if(turno==="noite")document.getElementById("btnNoite").classList.add("turno-ativo")
-
 carregarRotinas()
-
 }
-
-/* ADMIN */
-
-async function abrirAdmin(){
-
-document.getElementById("painelEnfermagem").style.display="none"
-
+function abrirEnfermagem(){
+document.getElementById("painelEnfermagem").style.display="block"
 document.getElementById("painelClinico").style.display="none"
-
+document.getElementById("painelAdmin").style.display="none"
+}
+function abrirClinico(){
+document.getElementById("painelEnfermagem").style.display="none"
+document.getElementById("painelClinico").style.display="block"
+document.getElementById("painelAdmin").style.display="none"
+}
+function abrirAdmin(){
+document.getElementById("painelEnfermagem").style.display="none"
+document.getElementById("painelClinico").style.display="none"
 document.getElementById("painelAdmin").style.display="block"
-
-await carregarPacientesDrag()
-
-await carregarProfissionaisDrag()
-
 }
-
-/* DRAG */
-
-async function carregarPacientesDrag(){
-
-const{data}=await db.from("pacientes").select("id,nome_completo")
-
-let html=""
-
-data.forEach(p=>{
-
-html+=`<div class="drag-item" draggable="true" data-id="${p.id}" ondragstart="dragPaciente(event)">
-${p.nome_completo}
-</div>`
-
-})
-
-document.getElementById("listaPacientesDrag").innerHTML=html
-
-}
-
-async function carregarProfissionaisDrag(){
-
-const{data}=await db.from("usuarios").select("id,nome")
-
-let html=""
-
-data.forEach(p=>{
-
-html+=`
-
-<div class="drag-container"
-ondrop="dropPaciente(event)"
-ondragover="event.preventDefault()"
-data-prof="${p.id}">
-
-<b>${p.nome}</b>
-
-</div>
-
-`
-
-})
-
-document.getElementById("listaProfissionaisDrag").innerHTML=html
-
-}
-
-function dragPaciente(ev){
-
-ev.dataTransfer.setData("paciente",ev.target.dataset.id)
-
-}
-
-async function dropPaciente(ev){
-
-ev.preventDefault()
-
-const paciente=ev.dataTransfer.getData("paciente")
-
-const prof=ev.currentTarget.dataset.prof
-
-const hoje=new Date().toISOString().split("T")[0]
-
-await db.from("escala_cuidados")
-.upsert({
-idoso_id:paciente,
-profissional_id:prof,
-data:hoje
-})
-
-alert("Paciente atribuído")
-
-}
-
 </script>
-
 </body>
 </html>
