@@ -205,7 +205,10 @@ font-size:13px;
 ====================================================== -->
 <div id="login">
 <div class="login-box">
-<h2>Harmonia Care</h2>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+<img src="logo-harmonia.png" style="height:38px">
+<h2 style="margin:0">Harmonia Care</h2>
+</div>
 
 <input id="usuario" placeholder="Usuário">
 
@@ -230,9 +233,15 @@ Fone: (81) 3461-3109
 005 APP
 ====================================================== -->
 <div id="app">
-<h1>
-Harmonia Care
+<h1 style="display:flex;align-items:center;justify-content:space-between">
+
+<div style="display:flex;align-items:center;gap:10px">
+<img src="logo-harmonia.png" style="height:32px">
+<span>Harmonia Care</span>
+</div>
+
 <button onclick="logout()" class="btn-danger">Sair</button>
+
 </h1>
 <div class="menu">
 <button onclick="abrirEnfermagem()" class="btn-primary">
@@ -1178,13 +1187,14 @@ async function gerarPDF(){
 
 const { jsPDF } = window.jspdf
 const doc = new jsPDF("p","mm","a4")
-
+const img=new Image()
+img.src="logo-harmonia.png"
+doc.addImage(img,"PNG",14,10,28,18)
 const dataInicio=document.getElementById("dataInicio").value
 const dataFim=document.getElementById("dataFim").value
 
 doc.setFontSize(16)
-doc.text("Lar Geriátrico HARMONIA",14,15)
-
+doc.text("Lar Geriátrico HARMONIA",48,18)
 doc.setFontSize(9)
 doc.text("CNPJ: 11.197.111/0001-56",14,22)
 doc.text("Rua Doutor Manoel Benício Fontinele, 38 – Piedade",14,27)
@@ -1395,6 +1405,7 @@ doc.save("paciente.pdf")
 
 </body>
 </html>
+
 
 
 
