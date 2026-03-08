@@ -290,7 +290,12 @@ const dataInicio=document.getElementById("dataInicio")?.value
 const dataFim=document.getElementById("dataFim")?.value
 const hoje=new Date().toISOString().split("T")[0]
 
-let query=db.from("vw_rotinas_painel").select("*").eq("turno",TURNO_ATUAL)
+let query=db
+.from("vw_rotinas_painel")
+.select("*")
+.eq("turno",TURNO_ATUAL)
+.order("paciente")
+.order("rotina")
 /* filtro por paciente */
 if(paciente)query=query.eq("idoso_id",paciente)
 /* filtro por período */
@@ -306,34 +311,42 @@ renderizarRotinas(data)
 016 RENDERIZAR ROTINAS (AGRUPADO POR PACIENTE)
 ==================================================== */
 function renderizarRotinas(data){
+
 let pacientes={}
-/* agrupa rotinas por paciente */
+
 data.forEach(r=>{
-if(!pacientes[r.paciente_nome]){
-pacientes[r.paciente_nome]={
-rotinas:[],
-ok:0,
-total:0
+
+if(!pacientes[r.paciente]){
+pacientes[r.paciente]={rotinas:[],ok:0,total:0}
 }
-}
-pacientes[r.paciente_nome].total++
-if(r.status==="executado")pacientes[r.paciente_nome].ok++
+
+pacientes[r.paciente].total++
+
+if(r.status==="executado")pacientes[r.paciente].ok++
+
 let statusIcon="🔴"
+
 if(r.status==="executado")statusIcon="✔"
-if(r.status==="atrasado")statusIcon="⚠"
-pacientes[r.paciente_nome].rotinas.push(
-`<tr onclick="executarRotina('${r.id}')">
-<td>${r.rotina_nome}</td>
+if(r.status==="pendente")statusIcon="🔴"
+
+pacientes[r.paciente].rotinas.push(`
+<tr onclick="executarRotina('${r.id}')">
+<td>${r.rotina}</td>
 <td style="text-align:center">${statusIcon}</td>
-</tr>`
-)
+</tr>
+`)
+
 })
+
 let html=""
-/* monta tabela final */
+
 Object.keys(pacientes).forEach(p=>{
+
 let total=pacientes[p].total
 let ok=pacientes[p].ok
+
 let progresso=Math.round((ok/total)*100)
+
 let barra=`
 <div style="width:120px">
 <div style="font-size:11px">${progresso}%</div>
@@ -342,11 +355,13 @@ let barra=`
 </div>
 </div>
 `
+
 let tabela=`
 <table style="width:100%">
 ${pacientes[p].rotinas.join("")}
 </table>
 `
+
 html+=`
 <tr>
 <td style="font-weight:bold">${p}</td>
@@ -354,10 +369,12 @@ html+=`
 <td>${tabela}</td>
 </tr>
 `
-})
-document.getElementById("rotinas").innerHTML=html
-}
 
+})
+
+document.getElementById("rotinas").innerHTML=html
+
+}
 /* ====================================================
 017 EXECUTAR ROTINA
 ==================================================== */
@@ -534,4 +551,5 @@ document.getElementById("buscaPaciente").innerHTML=html
 </script>
 </body>
 </html>
+
 
