@@ -255,6 +255,7 @@ const{count}=await db
 .from("rotinas_execucao")
 .select("*",{count:"exact",head:true})
 .eq("data",hoje)
+.eq("empresa_id",EMPRESA_ID)
 
 if(count>0)return
 
@@ -276,6 +277,7 @@ let inserts=[]
 for(const p of pacientes){
 for(const r of rotinas){
 inserts.push({
+empresa_id:EMPRESA_ID,
 paciente_id:p.id,
 rotina:r.titulo,
 turno:r.turno,
@@ -302,49 +304,34 @@ document.getElementById("btnNoite").classList.remove("turno-ativo")
 if(turno==="manha")document.getElementById("btnManha").classList.add("turno-ativo")
 if(turno==="tarde")document.getElementById("btnTarde").classList.add("turno-ativo")
 if(turno==="noite")document.getElementById("btnNoite").classList.add("turno-ativo")
-
 carregarRotinas()
 }
 /* ====================================================
 015 CARREGAR ROTINAS
 ==================================================== */
 async function carregarRotinas(){
-
 const paciente=document.getElementById("buscaPaciente")?.value
 const dataInicio=document.getElementById("dataInicio")?.value
 const dataFim=document.getElementById("dataFim")?.value
-
 let query=db
 .from("vw_rotinas_painel")
 .select("*")
 .eq("turno",TURNO_ATUAL)
-
 if(paciente && paciente!=="")query=query.eq("paciente_id",paciente)
-
 if(dataInicio)query=query.gte("data",dataInicio)
-
 if(dataFim)query=query.lte("data",dataFim)
-
-query=query.order("paciente").order("rotina")
-
+query=query.order("paciente",{ascending:true}).order("rotina",{ascending:true})
 const {data}=await query
-
 if(!data)return
-
 calcularIndicadores(data)
-
 renderizarRotinas(data)
-
 }
 /* ====================================================
 016 RENDERIZAR ROTINAS (AGRUPADO POR PACIENTE)
 ==================================================== */
 function renderizarRotinas(data){
-
 let pacientes={}
-
 data.forEach(r=>{
-
 if(!pacientes[r.paciente]){
 pacientes[r.paciente]={rotinas:[],ok:0,total:0}
 }
@@ -365,9 +352,7 @@ Object.keys(pacientes).forEach(p=>{
 
 let total=pacientes[p].total
 let ok=pacientes[p].ok
-
 let progresso=Math.round((ok/total)*100)
-
 let barra=`
 <div style="width:120px">
 <div style="font-size:11px">${progresso}%</div>
@@ -376,13 +361,7 @@ let barra=`
 </div>
 </div>
 `
-
-let tabela=`
-<table style="width:100%">
-${pacientes[p].rotinas.join("")}
-</table>
-`
-
+let tabela=pacientes[p].rotinas.join("")
 html+=`
 <tr>
 <td style="font-weight:bold">${p}</td>
@@ -391,7 +370,6 @@ html+=`
 </tr>
 `
 })
-
 document.getElementById("rotinas").innerHTML=html
 }
 /* ====================================================
@@ -463,7 +441,7 @@ async function carregarEscalaDrag(){
 const hoje=new Date().toISOString().split("T")[0]
 const{data}=await db.from("escala_cuidados").select("idoso_id,profissional_id,pacientes(nome_completo)").eq("data",hoje)
 data.forEach(e=>{
-const box=document.querySelector(`[data-prof="${e.profissional_id}"] div`)
+const box=document.querySelector(`[data-prof="${e.profissional_id}"]`)
 if(box)box.innerHTML+=`<div class="drag-item">${e.pacientes?.nome_completo}</div>`
 })
 }
@@ -501,10 +479,10 @@ if(rotina)linhas.push([paciente,rotina,status])
 })
 doc.autoTable({startY:45,head:[["Paciente","Rotina","Status"]],body:linhas,styles:{fontSize:10},headStyles:{fillColor:[41,128,185]},didParseCell:function(data){if(data.column.index===0)data.cell.styles.fontStyle="bold"}})
 doc.setFontSize(8)
-doc.text("Lar Geriátrico Harmonia",105,285,{align:"center"})
-doc.text("CNPJ 11.197.111/0001-56",105,289,{align:"center"})
-doc.text("Rua Doutor Manoel Benício Fontinele, 38 – Piedade",105,293,{align:"center"})
-doc.text("Jaboatão dos Guararapes – PE – CEP: 54400-390",105,297,{align:"center"})
+doc.text("Lar Geriátrico Harmonia",105,270,{align:"center"})
+doc.text("CNPJ 11.197.111/0001-56",105,274,{align:"center"})
+doc.text("Rua Doutor Manoel Benício Fontinele, 38 – Piedade",105,278,{align:"center"})
+doc.text("Jaboatão dos Guararapes – PE – CEP: 54400-390",105,282,{align:"center"})
 doc.save("relatorio-geral-harmonia.pdf")
 }
 /* ====================================================
@@ -598,13 +576,17 @@ document.getElementById("painelEnfermagem").style.display="none"
 document.getElementById("painelClinico").style.display="block"
 document.getElementById("painelAdmin").style.display="none"
 }
-function abrirAdmin(){
+async function abrirAdmin(){
 document.getElementById("painelEnfermagem").style.display="none"
 document.getElementById("painelClinico").style.display="none"
 document.getElementById("painelAdmin").style.display="block"
+await carregarPacientesDrag()
+await carregarProfissionaisDrag()
+await carregarEscalaDrag()
 }
 
 </script>
 </body>
 </html>
+
 
