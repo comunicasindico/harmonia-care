@@ -314,8 +314,8 @@ if(dataFim)query=query.lte("data",dataFim)
 /* se não houver filtro, mostra hoje */
 if(!dataInicio&&!dataFim)query=query.eq("data",hoje)
 const{data}=await query
-calcularIndicadores(data)
 if(!data)return
+calcularIndicadores(data)
 renderizarRotinas(data)
 }
 /* ====================================================
@@ -579,6 +579,7 @@ document.getElementById("indicadorAtrasado").innerHTML="⚠ "+atrasado
 </script>
 </body>
 </html>
+
 
 
 
