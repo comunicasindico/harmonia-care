@@ -82,11 +82,21 @@ Fone:(81)3461-3109
 </h1>
 
 <div class="menu">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+<div style="display:flex;gap:10px">
 <button onclick="abrirEnfermagem()" class="btn-primary">Painel Enfermagem</button>
 <button onclick="abrirClinico()" class="btn-secondary">Painel Clínico</button>
 <button onclick="abrirAdmin()" class="btn-success">Admin</button>
 <button onclick="gerarPDFGeral()" class="btn-primary">Gerar PDF</button>
 <button onclick="gerarPDFPaciente()" class="btn-primary">PDF do Paciente</button>
+</div>
+<div style="display:flex;gap:10px;font-weight:bold">
+<div id="indicadorExecutado" style="background:#2ecc71;color:#fff;padding:6px 10px;border-radius:8px">✔ 0</div>
+<div id="indicadorPendente" style="background:#f39c12;color:#fff;padding:6px 10px;border-radius:8px">🔴 0</div>
+<div id="indicadorAtrasado" style="background:#e74c3c;color:#fff;padding:6px 10px;border-radius:8px">⚠ 0</div>
+</div>
+
+</div>
 </div>
 
 <div id="painelEnfermagem">
@@ -304,6 +314,7 @@ if(dataFim)query=query.lte("data",dataFim)
 /* se não houver filtro, mostra hoje */
 if(!dataInicio&&!dataFim)query=query.eq("data",hoje)
 const{data}=await query
+calcularIndicadores(data)
 if(!data)return
 renderizarRotinas(data)
 }
@@ -548,8 +559,26 @@ html+=`<option value="${p.id}">${p.nome_completo}</option>`
 
 document.getElementById("buscaPaciente").innerHTML=html
 }
+/* ====================================================
+026 INDICADORES DO PAINEL
+==================================================== */
+function calcularIndicadores(data){
+let executado=0
+let pendente=0
+let atrasado=0
+data.forEach(r=>{
+if(r.status==="executado")executado++
+if(r.status==="pendente")pendente++
+if(r.status==="atrasado")atrasado++
+})
+document.getElementById("indicadorExecutado").innerHTML="✔ "+executado
+document.getElementById("indicadorPendente").innerHTML="🔴 "+pendente
+document.getElementById("indicadorAtrasado").innerHTML="⚠ "+atrasado
+}
+
 </script>
 </body>
 </html>
+
 
 
