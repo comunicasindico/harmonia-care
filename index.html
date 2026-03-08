@@ -341,7 +341,7 @@ let statusIcon="🔴"
 if(r.status==="executado")statusIcon="✔"
 if(r.status==="pendente")statusIcon="🔴"
 pacientes[r.paciente].rotinas.push(`
-<tr onclick="executarRotina('${r.id}')">
+<tr onclick="executarRotina('${r.id}',this)">
 <td>${r.rotina}</td>
 <td style="text-align:center">${statusIcon}</td>
 </tr>
@@ -381,18 +381,18 @@ const { data, error } = await db
 .from("rotinas_execucao")
 .update({
 status:"executado",
-executado_por:usuario,
-horario_execucao:new Date().toISOString()
+executado_por_nome:usuario,
+horario_executado:new Date().toISOString()
 })
 .eq("id",id)
 .select()
 if(error){
-console.error("Erro ao executar rotina:",error)
-alert("Erro ao marcar rotina.")
+console.error("Erro ao atualizar rotina:",error)
+alert("Erro ao executar rotina.")
 return
 }
 if(!data || data.length===0){
-alert("Rotina não encontrada para atualizar.")
+alert("Rotina não encontrada para atualização.")
 return
 }
 carregarRotinas()
@@ -605,6 +605,7 @@ await carregarEscalaDrag()
 </script>
 </body>
 </html>
+
 
 
 
