@@ -92,7 +92,28 @@ Fone:(81)3461-3109
 <div id="painelEnfermagem">
 <div class="box">
 <h3>Rotinas do Turno</h3>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px">
 
+<div>
+<label>Paciente</label><br>
+<select id="buscaPaciente" style="padding:6px;border-radius:6px"></select>
+</div>
+
+<div>
+<label>Data início</label><br>
+<input type="date" id="dataInicio">
+</div>
+
+<div>
+<label>Data fim</label><br>
+<input type="date" id="dataFim">
+</div>
+
+<div style="display:flex;align-items:end">
+<button onclick="carregarRotinas()" class="btn-primary">Pesquisar</button>
+</div>
+
+</div>
 <div class="turnos">
 <button class="turno-manha" onclick="mudarTurno('manha')">Manhã</button>
 <button class="turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
@@ -200,6 +221,7 @@ carregarTudo()
 ==================================================== */
 async function carregarTudo(){
 await gerarRotinasDoDia()
+await carregarPacientesBusca()
 await carregarRotinas()
 await carregarClinico()
 await carregarPacientesDrag()
@@ -207,7 +229,6 @@ await carregarProfissionaisDrag()
 await carregarEscalaDrag()
 setInterval(()=>{carregarRotinas()},30000)
 }
-
 /* ====================================================
 013 GERAR ROTINAS DO DIA (PROTEÇÃO DUPLICIDADE)
 ==================================================== */
@@ -263,34 +284,76 @@ function mudarTurno(t){TURNO_ATUAL=t;carregarRotinas()}
 015 CARREGAR ROTINAS
 ==================================================== */
 async function carregarRotinas(){
+
+const paciente=document.getElementById("buscaPaciente")?.value
+const dataInicio=document.getElementById("dataInicio")?.value
+const dataFim=document.getElementById("dataFim")?.value
 const hoje=new Date().toISOString().split("T")[0]
-const{data}=await db.from("vw_rotinas_painel").select("*").eq("turno",TURNO_ATUAL).eq("data",hoje)
+
+let query=db.from("vw_rotinas_painel").select("*").eq("turno",TURNO_ATUAL)
+/* filtro por paciente */
+if(paciente)query=query.eq("idoso_id",paciente)
+/* filtro por período */
+if(dataInicio)query=query.gte("data",dataInicio)
+if(dataFim)query=query.lte("data",dataFim)
+/* se não houver filtro, mostra hoje */
+if(!dataInicio&&!dataFim)query=query.eq("data",hoje)
+const{data}=await query
 if(!data)return
 renderizarRotinas(data)
 }
-
 /* ====================================================
-016 RENDERIZAR
+016 RENDERIZAR ROTINAS (AGRUPADO POR PACIENTE)
 ==================================================== */
 function renderizarRotinas(data){
 let pacientes={}
+/* agrupa rotinas por paciente */
 data.forEach(r=>{
-if(!pacientes[r.paciente])pacientes[r.paciente]={rotinas:[],ok:0,total:0}
-pacientes[r.paciente].total++
-if(r.status==="executado")pacientes[r.paciente].ok++
-let s="🔴"
-if(r.status==="executado")s="✔"
-if(r.status==="atrasado")s="⚠"
-pacientes[r.paciente].rotinas.push(`<tr onclick="executarRotina('${r.id}')"><td>${r.rotina}</td><td>${s}</td></tr>`)
+if(!pacientes[r.paciente_nome]){
+pacientes[r.paciente_nome]={
+rotinas:[],
+ok:0,
+total:0
+}
+}
+pacientes[r.paciente_nome].total++
+if(r.status==="executado")pacientes[r.paciente_nome].ok++
+let statusIcon="🔴"
+if(r.status==="executado")statusIcon="✔"
+if(r.status==="atrasado")statusIcon="⚠"
+pacientes[r.paciente_nome].rotinas.push(
+`<tr onclick="executarRotina('${r.id}')">
+<td>${r.rotina_nome}</td>
+<td style="text-align:center">${statusIcon}</td>
+</tr>`
+)
 })
 let html=""
+/* monta tabela final */
 Object.keys(pacientes).forEach(p=>{
-let t=pacientes[p].total
+let total=pacientes[p].total
 let ok=pacientes[p].ok
-let prog=Math.round((ok/t)*100)
-let barra=`<div style="width:120px"><div style="font-size:11px">${prog}%</div><div style="background:#eee;height:6px"><div style="width:${prog}%;background:#2ecc71;height:6px"></div></div></div>`
-let tabela=`<table>${pacientes[p].rotinas.join("")}</table>`
-html+=`<tr><td>${p}</td><td>${barra}</td><td>${tabela}</td></tr>`
+let progresso=Math.round((ok/total)*100)
+let barra=`
+<div style="width:120px">
+<div style="font-size:11px">${progresso}%</div>
+<div style="background:#eee;height:6px;border-radius:4px">
+<div style="width:${progresso}%;background:#2ecc71;height:6px;border-radius:4px"></div>
+</div>
+</div>
+`
+let tabela=`
+<table style="width:100%">
+${pacientes[p].rotinas.join("")}
+</table>
+`
+html+=`
+<tr>
+<td style="font-weight:bold">${p}</td>
+<td>${barra}</td>
+<td>${tabela}</td>
+</tr>
+`
 })
 document.getElementById("rotinas").innerHTML=html
 }
@@ -451,7 +514,24 @@ doc.text("Rua Doutor Manoel Benício Fontinele, 38 – Piedade",105,293,{align:"
 doc.text("Jaboatão dos Guararapes – PE – CEP: 54400-390",105,297,{align:"center"})
 doc.save("relatorio-paciente-harmonia.pdf")
 }
+/* ====================================================
+025 CARREGAR PACIENTES BUSCA
+==================================================== */
+async function carregarPacientesBusca(){
+const{data}=await db
+.from("pacientes")
+.select("id,nome_completo")
+.order("nome_completo")
 
+let html='<option value="">Todos</option>'
+
+data.forEach(p=>{
+html+=`<option value="${p.id}">${p.nome_completo}</option>`
+})
+
+document.getElementById("buscaPaciente").innerHTML=html
+}
 </script>
 </body>
 </html>
+
