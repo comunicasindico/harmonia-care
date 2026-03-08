@@ -1063,57 +1063,47 @@ document.getElementById("dataFim").value = dataHoje
 /* ======================================================
 018B GERAR ROTINAS DO DIA
 ====================================================== */
+/* ======================================================
+018 GERAR ROTINAS DO DIA
+====================================================== */
 async function gerarRotinasDoDia(){
-const hoje = new Date().toISOString().split("T")[0]
 
-/* busca pacientes */
+const hoje=new Date().toISOString().slice(0,10)
 
-const {data:pacientes} = await db
-.from("pacientes")
-.select("id")
-.eq("empresa_id",EMPRESA_ID)
-
-if(!pacientes || pacientes.length===0)return
-
-/* busca modelos */
-
-const {data:modelos} = await db
-.from("rotina_modelos")
-.select("*")
-.eq("empresa_id",EMPRESA_ID)
-
-if(!modelos || modelos.length===0)return
-
-for(const paciente of pacientes){
-
-for(const modelo of modelos){
-
-/* verifica se já existe */
-
-const {data:existe}=await db
+const{data:rotinasExistentes}=await db
 .from("rotinas_execucao")
 .select("id")
-.eq("paciente_id",paciente.id)
-.eq("modelo_id",modelo.id)
 .eq("data",hoje)
-.maybeSingle()
+.limit(1)
 
-if(!existe){
+if(rotinasExistentes&&rotinasExistentes.length>0)return
+
+const{data:pacientes}=await db
+.from("pacientes")
+.select("id")
+
+const{data:rotinas}=await db
+.from("rotinas_modelo")
+.select("*")
+
+for(const p of pacientes){
+
+for(const r of rotinas){
 
 await db
 .from("rotinas_execucao")
 .insert({
-empresa_id:EMPRESA_ID,
-paciente_id:paciente.id,
-modelo_id:modelo.id,
-rotina:modelo.titulo,
-turno:modelo.turno,
+paciente_id:p.id,
+rotina:r.nome,
+turno:r.turno,
 data:hoje,
 status:"pendente"
 })
+
 }
+
 }
-}
+
 }
 /* ======================================================
 019 CARREGAR TUDO
@@ -1413,6 +1403,7 @@ box.innerHTML+=`<div class="drag-item">${e.pacientes?.nome_completo}</div>`
 
 </body>
 </html>
+
 
 
 
