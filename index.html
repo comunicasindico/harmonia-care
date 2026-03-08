@@ -89,7 +89,6 @@ Fone:(81)3461-3109
 <button onclick="abrirAdmin()" class="btn-success">Admin</button>
 <button onclick="gerarPDFGeral()" class="btn-primary">Gerar PDF</button>
 <button onclick="gerarPDFPaciente()" class="btn-primary">PDF do Paciente</button>
-<button onclick="carregarRotinas()" class="btn-primary">Pesquisar</button>
 </div>
 <div style="display:flex;gap:10px;font-weight:bold">
 <div id="indicadorExecutado" style="background:#2ecc71;color:#fff;padding:6px 10px;border-radius:8px">✔ 0</div>
@@ -239,6 +238,7 @@ await carregarProfissionais()
 await carregarRotinas()
 await carregarClinico()
 setInterval(()=>{carregarRotinas()},30000)
+abrirEnfermagem()
 }
 /* ====================================================
 013 GERAR ROTINAS DO DIA (PROTEÇÃO DUPLICIDADE)
@@ -587,10 +587,29 @@ const hoje=new Date().toISOString().split("T")[0]
 document.getElementById("dataInicio").value=hoje
 document.getElementById("dataFim").value=hoje
 }
+/* ====================================================
+028 ABRIR PAINÉIS
+==================================================== */
+function abrirEnfermagem(){
+document.getElementById("painelEnfermagem").style.display="block"
+document.getElementById("painelClinico").style.display="none"
+document.getElementById("painelAdmin").style.display="none"
+}
+function abrirClinico(){
+document.getElementById("painelEnfermagem").style.display="none"
+document.getElementById("painelClinico").style.display="block"
+document.getElementById("painelAdmin").style.display="none"
+}
+function abrirAdmin(){
+document.getElementById("painelEnfermagem").style.display="none"
+document.getElementById("painelClinico").style.display="none"
+document.getElementById("painelAdmin").style.display="block"
+}
 
 </script>
 </body>
 </html>
+
 
 
 
