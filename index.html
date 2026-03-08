@@ -844,28 +844,26 @@ renderizarRotinas(data)
 015 EXECUTAR ROTINA
 ====================================================== */
 async function executarRotina(id){
-const usuario_id = localStorage.getItem("usuario_id")
+const usuario_id=localStorage.getItem("usuario_id")
 const {error}=await db
 .from("rotinas_execucao")
 .update({
 status:"executado",
-executado_por:usuario_id
+executado_por:usuario_id,
+horario_execucao:new Date().toISOString()
 })
 .eq("id",id)
-
 if(error){
 alert(error.message)
 return
 }
-
-/* ATUALIZA SOMENTE A LINHA */
 let linha=document.querySelector(`[data-id="${id}"]`)
 if(linha){
 linha.querySelector(".status").innerHTML="✔"
-carregarRotinas()
 linha.querySelector(".status").className="status status-executado"
 }
-
+await carregarRotinas()
+await atualizarIndicadores()
 }
 /* ======================================================
 016 BUSCAR HISTÓRICO
@@ -1175,71 +1173,103 @@ document.getElementById("painelCritico").innerHTML=html
 }
 
 /* ======================================================
-024 GERAR PDF PROFISSIONAL HARMONIA CARE
+025 PDF PRONTUÁRIO CLÍNICO DO PACIENTE
 ====================================================== */
 function formatarDataBR(data){
-if(!data)return ""
-let [ano,mes,dia]=data.split("-")
-return `${dia}-${mes}-${ano}`
+if(!data)return""
+let[ano,mes,dia]=data.split("-")
+return`${dia}-${mes}-${ano}`
 }
 
-async function gerarPDF(){
+async function gerarPDFPaciente(){
 
-const { jsPDF } = window.jspdf
-const doc = new jsPDF("p","mm","a4")
-const img=new Image()
-img.src="logo-harmonia.png"
-doc.addImage(img,"PNG",14,10,28,18)
+const{jsPDF}=window.jspdf
+const doc=new jsPDF("p","mm","a4")
+
+const pacienteSel=document.getElementById("paciente").selectedOptions[0]?.text||"Não informado"
+const profissionalSel=document.getElementById("profissional").selectedOptions[0]?.text||"Equipe"
 const dataInicio=document.getElementById("dataInicio").value
 const dataFim=document.getElementById("dataFim").value
 
-doc.setFontSize(16)
-doc.text("Lar Geriátrico HARMONIA",48,18)
-doc.setFontSize(9)
-doc.text("CNPJ: 11.197.111/0001-56",14,22)
-doc.text("Rua Doutor Manoel Benício Fontinele, 38 – Piedade",14,27)
-doc.text("Jaboatão dos Guararapes – PE – CEP: 54400-390",14,32)
-doc.text("Email: lar.geriatrico.harmonia@hotmail.com",14,37)
-doc.text("Fone: (81) 3461-3109",14,42)
+const img=new Image()
+img.src="logo-harmonia.png"
+doc.addImage(img,"PNG",14,10,28,18)
 
-doc.setFontSize(12)
-doc.text("Relatório de Rotinas dos Pacientes",14,52)
+doc.setFontSize(16)
+doc.text("Lar Geriátrico HARMONIA",50,18)
+
+doc.setFontSize(9)
+doc.text("CNPJ: 11.197.111/0001-56",50,24)
+doc.text("Rua Doutor Manoel Benício Fontinele, 38 – Piedade",50,29)
+doc.text("Jaboatão dos Guararapes – PE – CEP: 54400-390",50,34)
+doc.text("Email: lar.geriatrico.harmonia@hotmail.com",50,39)
+doc.text("Fone: (81) 3461-3109",50,44)
+
+doc.setFontSize(13)
+doc.text("PRONTUÁRIO DE ROTINAS ASSISTENCIAIS",14,60)
 
 doc.setFontSize(10)
-doc.text(`Período: ${formatarDataBR(dataInicio)} até ${formatarDataBR(dataFim)}`,14,28)
+doc.text(`Paciente: ${pacienteSel}`,14,70)
+doc.text(`Profissional responsável: ${profissionalSel}`,14,76)
+doc.text(`Período: ${formatarDataBR(dataInicio)} até ${formatarDataBR(dataFim)}`,14,82)
+
 let linhas=[]
+let executado=0
+let pendente=0
+let atrasado=0
 
 document.querySelectorAll("#rotinas tr").forEach(tr=>{
 
 let paciente=tr.children[0]?.innerText.trim()
 let rotinasTexto=tr.children[2]?.innerText
 
-if(!paciente||!rotinasTexto)return
+if(!paciente||paciente!==pacienteSel||!rotinasTexto)return
 
 rotinasTexto.split("\n").forEach(r=>{
 
+let status="Executado"
+let horario=""
+
+if(r.includes("🔴")){status="Pendente";pendente++}
+else if(r.includes("⚠")){status="Atrasado";atrasado++}
+else if(r.includes("✔")){status="Executado";executado++}
+
 let rotina=r.replace("✔","").replace("⚠","").replace("🔴","").trim()
 
+let agora=new Date()
+horario=agora.getHours()+":"+String(agora.getMinutes()).padStart(2,"0")
+
 if(rotina){
-linhas.push([paciente,rotina])
+linhas.push([formatarDataBR(dataInicio),horario,rotina,status])
 }
 
 })
 
 })
 
-if(linhas.length===0){
-alert("Nenhuma rotina encontrada para gerar PDF")
-return
-}
+let total=executado+pendente+atrasado
+let percentual=Math.round((executado/total)*100)||0
+
+doc.setFontSize(11)
+doc.text(`Execuções concluídas: ${executado}`,140,70)
+doc.text(`Pendentes: ${pendente}`,140,76)
+doc.text(`Atrasadas: ${atrasado}`,140,82)
+doc.text(`Conclusão: ${percentual}%`,140,88)
 
 doc.autoTable({
-startY:60,
-head:[["Paciente","Rotina"]],
+startY:95,
+head:[["Data","Hora","Rotina","Status"]],
 body:linhas,
 styles:{fontSize:10,cellPadding:3},
 headStyles:{fillColor:[41,128,185]},
-columnStyles:{0:{cellWidth:90},1:{cellWidth:90}},
+columnStyles:{0:{cellWidth:30},1:{cellWidth:25},2:{cellWidth:80},3:{cellWidth:40}},
+didParseCell:function(data){
+if(data.column.index===3){
+if(data.cell.raw==="Executado"){data.cell.styles.textColor=[0,150,0]}
+if(data.cell.raw==="Pendente"){data.cell.styles.textColor=[220,0,0]}
+if(data.cell.raw==="Atrasado"){data.cell.styles.textColor=[200,120,0]}
+}
+},
 margin:{left:14,right:14},
 didDrawPage:function(){
 doc.setFontSize(8)
@@ -1248,7 +1278,15 @@ doc.text(`Página ${doc.internal.getNumberOfPages()}`,200,290,{align:"right"})
 }
 })
 
-doc.save("relatorio-rotinas.pdf")
+doc.setFontSize(9)
+doc.text("Assinatura do responsável técnico:",14,260)
+doc.line(14,265,120,265)
+
+let qr=`HARMONIA CARE\nPaciente:${pacienteSel}\nPeriodo:${dataInicio}-${dataFim}`
+doc.text("Validação do relatório",150,250)
+doc.text(qr,150,256)
+
+doc.save("prontuario-rotinas-"+pacienteSel+".pdf")
 
 }
 /* ======================================================
@@ -1350,9 +1388,7 @@ box.innerHTML+=`<div class="drag-item">${e.pacientes?.nome_completo}</div>`
 }
 
 async function pdfPaciente(){
-
 const paciente=document.getElementById("buscaPaciente").value
-
 const {data}=await db
 .from("vw_rotinas_painel")
 .select("*")
@@ -1405,6 +1441,7 @@ doc.save("paciente.pdf")
 
 </body>
 </html>
+
 
 
 
