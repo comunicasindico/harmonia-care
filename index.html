@@ -218,9 +218,7 @@ document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 carregarTudo()
 }
-
 function logout(){localStorage.clear();location.reload()}
-
 /* ====================================================
 011 INIT
 ==================================================== */
@@ -232,13 +230,12 @@ document.getElementById("app").style.display="block"
 carregarTudo()
 }
 }
-
+setInterval(()=>{carregarRotinas()},10000)
 /* ====================================================
 012 CARREGAR TUDO
 ==================================================== */
 async function carregarTudo(){
 definirDataHoje()
-await gerarRotinasDoDia()
 await carregarPacientesBusca()
 await carregarTiposRotina()
 await carregarProfissionais()
@@ -249,50 +246,9 @@ abrirEnfermagem()
 mudarTurno("manha")
 }
 /* ====================================================
-013 GERAR ROTINAS DO DIA (PROTEÇÃO DUPLICIDADE)
+013 GERAR ROTINAS DO DIA (PROTEÇÃO DUPLICIDADE)-foi apagado está somente no supabase
 ==================================================== */
-async function gerarRotinasDoDia(){
-const agora=new Date()
-const yyyy=agora.getFullYear()
-const mm=String(agora.getMonth()+1).padStart(2,"0")
-const dd=String(agora.getDate()).padStart(2,"0")
-const hoje=`${yyyy}-${mm}-${dd}`
-/* 1️⃣ VERIFICA SE JÁ EXISTE ROTINA HOJE */
-const{count}=await db
-.from("rotinas_execucao")
-.select("*",{count:"exact",head:true})
-.eq("data",hoje)
-.eq("empresa_id",EMPRESA_ID)
-if(count>0)return
-/* 2️⃣ CARREGA PACIENTES */
-const{data:pacientes}=await db
-.from("pacientes")
-.select("id")
-.eq("empresa_id",EMPRESA_ID)
-/* 3️⃣ CARREGA MODELOS DE ROTINA */
-const{data:rotinas}=await db
-.from("rotina_modelos")
-.select("titulo,turno")
-.eq("empresa_id",EMPRESA_ID)
-/* 4️⃣ CRIA ROTINAS */
-let inserts=[]
-for(const p of pacientes){
-for(const r of rotinas){
-inserts.push({
-empresa_id:EMPRESA_ID,
-paciente_id:p.id,
-rotina:r.titulo,
-turno:r.turno,
-data:hoje,
-status:"pendente"
-})
-}
-}
-/* 5️⃣ INSERÇÃO ÚNICA */
-if(inserts.length>0){
-await db.from("rotinas_execucao").insert(inserts)
-}
-}
+
   /* ====================================================
 014 MUDAR TURNO
 ==================================================== */
@@ -334,8 +290,11 @@ function renderizarRotinas(data){
 let pacientes={}
 data.forEach(r=>{
 if(!pacientes[r.paciente]){
-pacientes[r.paciente]={rotinas:[],ok:0,total:0}
+pacientes[r.paciente]={rotinas:[],ok:0,total:0,controle:{}}
 }
+const chave=r.rotina+"_"+r.turno+"_"+r.data
+if(pacientes[r.paciente].controle[chave])return
+pacientes[r.paciente].controle[chave]=true
 pacientes[r.paciente].total++
 if(r.status==="executado")pacientes[r.paciente].ok++
 let statusIcon="🔴"
@@ -353,7 +312,8 @@ let html=""
 Object.keys(pacientes).forEach(p=>{
 let total=pacientes[p].total
 let ok=pacientes[p].ok
-let progresso=Math.round((ok/total)*100)
+let progresso=0
+if(total>0)progresso=Math.round((ok/total)*100)
 let barra=`
 <div style="width:120px">
 <div style="font-size:11px">${progresso}%</div>
@@ -610,6 +570,7 @@ await carregarEscalaDrag()
 </script>
 </body>
 </html>
+
 
 
 
