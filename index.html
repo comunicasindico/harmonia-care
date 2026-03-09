@@ -294,8 +294,8 @@ query=query
 .order("paciente",{ascending:true})
 .order("rotina",{ascending:true})
 const {data,error}=await query
-if(error){console.error(error)alert("Erro ao carregar rotinas")return}
-if(!data || data.length===0){document.getElementById("rotinas").innerHTML=""return}
+if(error){console.error(error);alert("Erro ao carregar rotinas");return}
+if(!data || data.length===0){document.getElementById("rotinas").innerHTML="";return}
 /* indicadores */
 calcularIndicadores(data)
 /* renderizar */
@@ -311,7 +311,7 @@ if(!pacientes[r.paciente]){
 pacientes[r.paciente]={rotinas:[],ok:0,total:0,controle:{}}
 }
 const chave=r.rotina+"_"+r.turno+"_"+r.data
-if(pacientes[r.paciente].controle[chave])return
+if(pacientes[r.paciente].controle[chave]);return
 pacientes[r.paciente].controle[chave]=true
 pacientes[r.paciente].total++
 if(r.status==="executado")pacientes[r.paciente].ok++
@@ -446,7 +446,7 @@ if(box)box.innerHTML+=`<div class="drag-item">${e.pacientes?.nome_completo}</div
 /* ====================================================
 023 PDF GERAL ROTINAS HARMONIA CARE
 ==================================================== */
-function formatarDataBR(data){if(!data)return"";let[a,b,c]=data.split("-");return`${c}-${b}-${a}`}
+function formatarDataBR(data){if(!data);return"";let[a,b,c]=data.split("-");return`${c}-${b}-${a}`}
 async function gerarPDFGeral(){
 const{jsPDF}=window.jspdf
 const doc=new jsPDF("p","mm","a4")
@@ -466,7 +466,7 @@ let linhas=[]
 document.querySelectorAll("#rotinas > tr").forEach(tr=>{
 let paciente=tr.children[0]?.innerText.trim()
 let rotinasTexto=tr.children[2]?.innerText
-if(!paciente||!rotinasTexto)return
+if(!paciente||!rotinasTexto);return
 rotinasTexto.split("\n").forEach(r=>{
 let status="Executado"
 if(r.includes("🔴"))status="Pendente"
@@ -603,5 +603,6 @@ await carregarEscalaDrag()
 </script>
 </body>
 </html>
+
 
 
