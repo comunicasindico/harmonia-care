@@ -74,12 +74,10 @@ Fone:(81)3461-3109
 </div>
 </div>
 </div>
-
 <!-- ====================================================
 005 APP
 ==================================================== -->
 <div id="app">
-
 <h1 style="display:flex;justify-content:space-between;align-items:center">
 <div style="display:flex;gap:10px;align-items:center">
 <img src="logo-harmonia.png" style="height:32px">
@@ -87,7 +85,6 @@ Fone:(81)3461-3109
 </div>
 <button onclick="logout()" class="btn-danger">Sair</button>
 </h1>
-
 <div class="menu">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
 <div style="display:flex;gap:10px">
@@ -102,34 +99,27 @@ Fone:(81)3461-3109
 <div id="indicadorPendente" style="background:#f39c12;color:#fff;padding:6px 10px;border-radius:8px">🔴 0</div>
 <div id="indicadorAtrasado" style="background:#e74c3c;color:#fff;padding:6px 10px;border-radius:8px">⚠ 0</div>
 </div>
-
 </div>
 </div>
-
 <div id="painelEnfermagem">
 <div class="box">
 <h3>Rotinas do Turno</h3>
 <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px">
-
 <div>
 <label>Paciente</label><br>
 <select id="buscaPaciente" style="padding:6px;border-radius:6px"></select>
 </div>
-
 <div>
 <label>Data início</label><br>
 <input type="date" id="dataInicio">
 </div>
-
 <div>
 <label>Data fim</label><br>
 <input type="date" id="dataFim">
 </div>
-
 <div style="display:flex;align-items:end">
 <button onclick="carregarRotinas()" class="btn-primary">Pesquisar</button>
 </div>
-
 </div>
 <div class="turnos">
 <button id="btnManha" class="turno-btn turno-manha" onclick="mudarTurno('manha')">Manhã</button>
@@ -208,15 +198,25 @@ const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 010 LOGIN
 ==================================================== */
 async function login(){
-const email=document.getElementById("usuario").value
-const senha=document.getElementById("senha").value
-const {data,error}=await db.from("usuarios").select("*").eq("email",email)
+const usuarioDigitado=document.getElementById("usuario").value.trim()
+const senhaDigitada=document.getElementById("senha").value.trim()
+/* LOGIN PADRÃO ADMIN */
+if(usuarioDigitado==="admin" && senhaDigitada==="123456"){
+localStorage.setItem("usuario_id","admin")
+localStorage.setItem("usuario_nome","Administrador")
+document.getElementById("login").style.display="none"
+document.getElementById("app").style.display="block"
+carregarTudo()
+return
+}
+/* LOGIN USUÁRIOS DO BANCO */
+const{data,error}=await db.from("usuarios").select("*").eq("usuario",usuarioDigitado)
 if(error||!data||data.length===0){
 alert("Usuário não encontrado")
 return
 }
 const usuario=data[0]
-if(senha!==usuario.senha_hash){
+if(senhaDigitada!==usuario.senha_hash){
 alert("Senha incorreta")
 return
 }
@@ -226,6 +226,9 @@ document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 carregarTudo()
 }
+/* ====================================================
+010A LOGOUT
+==================================================== */
 function logout(){localStorage.clear();location.reload()}
 /* ====================================================
 011 INIT
@@ -469,10 +472,10 @@ let status="Executado"
 if(r.includes("🔴"))status="Pendente"
 if(r.includes("⚠"))status="Atrasado"
 let rotina=r.replace("✔","").replace("⚠","").replace("🔴","").trim()
-if(rotina)linhas.push([paciente,rotina,status])
+if(rotina)linhas.push([formatarDataBR(dataInicio),paciente,rotina,"",status,"",""])
 })
 })
-doc.autoTable({startY:45,head:[["Data","Paciente","Rotina","Turno","Status","Executado por","Horário"]],body:linhas,styles:{fontSize:10},headStyles:{fillColor:[41,128,185]},didParseCell:function(data){if(data.column.index===0)data.cell.styles.fontStyle="bold"}})
+doc.autoTable({startY:45,head:[["Data","Paciente","Rotina","Turno","Status","Executado por","Horário"]],body:linhas,styles:{fontSize:10},headStyles:{fillColor:[41,128,185]}})
 doc.setFontSize(8)
 doc.text("Lar Geriátrico Harmonia",105,270,{align:"center"})
 doc.text("CNPJ 11.197.111/0001-56",105,274,{align:"center"})
@@ -486,37 +489,44 @@ doc.save("relatorio-geral-harmonia.pdf")
 async function gerarPDFPaciente(){
 const{jsPDF}=window.jspdf
 const doc=new jsPDF("p","mm","a4")
+const pacienteId=document.getElementById("buscaPaciente")?.value
 const pacienteNome=document.getElementById("buscaPaciente")?.selectedOptions[0]?.text||"Paciente"
+const dataInicio=document.getElementById("dataInicio")?.value
+const dataFim=document.getElementById("dataFim")?.value
 const hoje=new Date().toLocaleDateString("pt-BR")
 const img=new Image()
 img.src="logo-harmonia.png"
 doc.addImage(img,"PNG",14,10,25,18)
 doc.setFontSize(10)
-doc.text(`Data: ${hoje}`,195,15,{align:"right"})
+doc.text(`Data emissão: ${hoje}`,195,15,{align:"right"})
 doc.setFontSize(16)
 doc.text("Relatório de Rotinas do Paciente",105,30,{align:"center"})
 doc.setFontSize(12)
 doc.text(`Paciente: ${pacienteNome}`,105,38,{align:"center"})
+const{data,error}=await db.from("vw_rotinas_painel").select("*").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim).order("data",{ascending:true}).order("rotina",{ascending:true})
+if(error||!data){alert("Erro ao carregar dados");return}
 let linhas=[]
-document.querySelectorAll("#rotinas > tr").forEach(tr=>{
-let paciente=tr.children[0]?.innerText.trim()
-let rotinasTexto=tr.children[2]?.innerText
-if(paciente!==pacienteNome||!rotinasTexto)return
-rotinasTexto.split("\n").forEach(r=>{
-let status="Executado"
-if(r.includes("🔴"))status="Pendente"
-if(r.includes("⚠"))status="Atrasado"
-let rotina=r.replace("✔","").replace("⚠","").replace("🔴","").trim()
-if(rotina)linhas.push([
-r.data,
-r.rotina,
-r.turno,
-r.status,
-r.executado_por_nome || "",
-r.horario_executado || ""])
+data.forEach(r=>{
+let dataBR=""
+if(r.data){let[a,b,c]=r.data.split("-");dataBR=`${c}-${b}-${a}`}
+let horario=""
+if(r.horario_executado)horario=new Date(r.horario_executado).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})
+linhas.push([
+dataBR,
+r.rotina||"",
+r.turno||"",
+r.status||"",
+r.executado_por_nome||"",
+horario
+])
 })
+doc.autoTable({
+startY:45,
+head:[["Data","Rotina","Turno","Status","Executado por","Horário"]],
+body:linhas,
+styles:{fontSize:10},
+headStyles:{fillColor:[41,128,185]}
 })
-doc.autoTable({startY:45,head:[["Rotina","Status"]],body:linhas,styles:{fontSize:10},headStyles:{fillColor:[41,128,185]}})
 doc.setFontSize(8)
 doc.text("Lar Geriátrico Harmonia",105,285,{align:"center"})
 doc.text("CNPJ 11.197.111/0001-56",105,289,{align:"center"})
@@ -593,3 +603,4 @@ await carregarEscalaDrag()
 </script>
 </body>
 </html>
+
