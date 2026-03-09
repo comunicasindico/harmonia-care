@@ -45,7 +45,9 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 .btn-rotina{background:#f4f6f9;border:1px solid #dcdcdc;border-radius:6px;padding:6px 10px;font-size:13px;cursor:pointer;transition:0.2s;}
 .btn-rotina:hover{background:#e8f2fb;border-color:#3498db;}
 .status-rotina{font-size:16px;margin-left:6px;}
-  
+.btn-rotina{background:#f1f1f1;border:1px solid #ccc;border-radius:8px;padding:6px 10px;margin:3px;font-size:12px;cursor:pointer}
+.btn-rotina:hover{background:#d8ecff}
+
 </style>
 </head>
 <!-- ====================================================
@@ -311,6 +313,25 @@ query=query
 const {data,error}=await query
 if(error){console.error(error);alert("Erro ao carregar rotinas");return}
 if(!data || data.length===0){
+html+=`<tr>
+<td><b>Todos</b></td>
+<td></td>
+<td>
+<button onclick="executarTodos('Alimentação')" class="btn-rotina">Alimentação</button>
+<button onclick="executarTodos('Troca de Fralda-Manhã')" class="btn-rotina">Fralda-Manhã</button>
+<button onclick="executarTodos('Banho')" class="btn-rotina">Banho</button>
+<button onclick="executarTodos('Café')" class="btn-rotina">Café</button>
+<button onclick="executarTodos('Higiene Bucal')" class="btn-rotina">Higiene Bucal</button>
+<button onclick="executarTodos('Medicação')" class="btn-rotina">Medicação</button>
+<button onclick="executarTodos('Oferta de Água')" class="btn-rotina">Oferta de Água</button>
+<button onclick="executarTodos('Almoço')" class="btn-rotina">Almoço</button>
+<button onclick="executarTodos('Higiene Tarde')" class="btn-rotina">Higiene Tarde</button>
+<button onclick="executarTodos('Lanche')" class="btn-rotina">Lanche</button>
+<button onclick="executarTodos('Higiene Noturna')" class="btn-rotina">Higiene Noturna</button>
+<button onclick="executarTodos('Jantar')" class="btn-rotina">Jantar</button>
+<button onclick="executarTodos('Troca de Fralda-Noite')" class="btn-rotina">Fralda-Noite</button>
+</td>
+</tr>`
 document.getElementById("rotinas").innerHTML="";
 return;
 }
@@ -782,9 +803,34 @@ carregarRotinas();
 }
 },15000);
 
+/*====================================================
+029 EXECUTAR ROTINA PARA TODOS
+====================================================*/
+async function executarTodos(rotinaNome){
+const dataInicio=document.getElementById("dataInicio").value
+const usuario=localStorage.getItem("usuario_id")
+if(!confirm("Executar '"+rotinaNome+"' para TODOS os pacientes?"))return
+try{
+const{data,error}=await db
+.from("vw_rotinas_painel")
+.select("id")
+.eq("rotina",rotinaNome)
+.eq("data",dataInicio)
+if(error){console.error(error);alert("Erro ao localizar rotinas");return}
+for(const r of data){
+await db.from("rotina_execucao").update({status:"executado",executado_por:usuario,horario_execucao:new Date().toISOString()}).eq("id",r.id)
+}
+carregarRotinas()
+}catch(e){
+console.error(e)
+alert("Erro ao executar rotina")
+}
+}
+
 </script>
 </body>
 </html>
+
 
 
 
