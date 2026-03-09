@@ -211,7 +211,7 @@ return
 }
 /* LOGIN USUÁRIOS DO BANCO */
 const{data,error}=await db.from("usuarios").select("*").eq("usuario",usuarioDigitado)
-if(error||!data||data.length===0){
+if(!data?.length){
 alert("Usuário não encontrado")
 return
 }
@@ -603,4 +603,5 @@ await carregarEscalaDrag()
 </script>
 </body>
 </html>
+
 
