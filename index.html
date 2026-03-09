@@ -313,15 +313,19 @@ data.forEach(r=>{
 if(!pacientes[r.paciente]){
 pacientes[r.paciente]={rotinas:[],ok:0,total:0,controle:{}}
 }
-const chave=r.rotina+"_"+r.turno+"_"+r.data
+const chave=r.rotina+"_"+r.turno+"_"+r.data;
+
 if(pacientes[r.paciente].controle[chave]){
 return;
 }
-pacientes[r.paciente].controle[chave]=true
-pacientes[r.paciente].total++
-if(r.status==="executado")pacientes[r.paciente].ok++
-let statusIcon="🔴"
-if(r.status==="executado")statusIcon="✔"
+
+pacientes[r.paciente].controle[chave]=true;
+pacientes[r.paciente].total++;
+
+if(r.status==="executado") pacientes[r.paciente].ok++;
+
+let statusIcon="🔴";
+if(r.status==="executado") statusIcon="✔";
 pacientes[r.paciente].rotinas.push(`
 <div class="linha-rotina">
 <button class="btn-rotina" onclick="executarRotina('${r.id}',this)">
@@ -492,10 +496,13 @@ if(rotina)linhas.push([formatarDataBR(dataInicio),paciente,rotina,"",status,"","
 })
 doc.autoTable({startY:45,head:[["Data","Paciente","Rotina","Turno","Status","Executado por","Horário"]],body:linhas,styles:{fontSize:10},headStyles:{fillColor:[41,128,185]}})
 doc.setFontSize(8)
-doc.text("Lar Geriátrico Harmonia",105,270,{align:"center"})
-doc.text("CNPJ 11.197.111/0001-56",105,274,{align:"center"})
-doc.text("Rua Doutor Manoel Benício Fontinele, 38 – Piedade",105,278,{align:"center"})
-doc.text("Jaboatão dos Guararapes – PE – CEP: 54400-390",105,282,{align:"center"})
+let finalY = doc.lastAutoTable.finalY || 45;
+
+doc.setFontSize(8);
+doc.text("Lar Geriátrico Harmonia",105,finalY+10,{align:"center"});
+doc.text("CNPJ 11.197.111/0001-56",105,finalY+14,{align:"center"});
+doc.text("Rua Doutor Manoel Benício Fontinele, 38 – Piedade",105,finalY+18,{align:"center"});
+doc.text("Jaboatão dos Guararapes – PE – CEP: 54400-390",105,finalY+22,{align:"center"});
 doc.save("relatorio-geral-harmonia.pdf")
 }
 /* ====================================================
@@ -518,6 +525,25 @@ doc.setFontSize(16)
 doc.text("Relatório de Rotinas do Paciente",105,30,{align:"center"})
 doc.setFontSize(12)
 doc.text(`Paciente: ${pacienteNome}`,105,38,{align:"center"})
+/* buscar dados clínicos */
+const {data:clinico} = await db
+.from("pacientes")
+.select("has,dm,demencia,cardio,acamado,outras")
+.eq("id",pacienteId)
+.single();
+
+let comorbidades=[];
+
+if(clinico?.has) comorbidades.push("HAS");
+if(clinico?.dm) comorbidades.push("DM");
+if(clinico?.demencia) comorbidades.push("Demência");
+if(clinico?.cardio) comorbidades.push("Cardiopatia");
+if(clinico?.acamado) comorbidades.push("Acamado");
+
+let textoComorbidades = comorbidades.length ? comorbidades.join(" | ") : "Nenhuma registrada";
+
+doc.setFontSize(10);
+doc.text(`Comorbidades: ${textoComorbidades}`,105,44,{align:"center"});
 const{data,error}=await db.from("vw_rotinas_painel").select("*").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim).order("data",{ascending:true}).order("rotina",{ascending:true})
 if(error||!data){alert("Erro ao carregar dados");return}
 let linhas=[]
@@ -536,7 +562,7 @@ horario
 ])
 })
 doc.autoTable({
-startY:45,
+startY:55,
 head:[["Data","Rotina","Turno","Status","Executado por","Horário"]],
 body:linhas,
 styles:{fontSize:10},
@@ -624,6 +650,7 @@ carregarRotinas();
 </script>
 </body>
 </html>
+
 
 
 
