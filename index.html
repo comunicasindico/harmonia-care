@@ -270,6 +270,12 @@ display:flex;
 flex-wrap:wrap;
 gap:6px;
 }
+.col-rotinas{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+align-items:center;
+}
 
 </style>
 </head>
@@ -594,7 +600,7 @@ let total=pacientes[p].total
 let ok=pacientes[p].ok
 let progresso=Math.round((ok/total)*100)||0
 let barra=`<div style="width:120px"><div style="font-size:11px">${progresso}%</div><div style="background:#eee;height:6px;border-radius:4px"><div style="width:${progresso}%;background:#2ecc71;height:6px;border-radius:4px"></div></div></div>`
-let rotinas=`<div class="linha-rotina">${pacientes[p].rotinas.join("")}</div>`
+let rotinas=`<div class="col-rotinas">${pacientes[p].rotinas.join("")}</div>`
 html+=`<tr><td style="font-weight:bold">${p}</td><td>${barra}</td><td>${rotinas}</td></tr>`
 })
 html+=`
@@ -1062,6 +1068,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
