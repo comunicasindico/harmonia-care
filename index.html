@@ -328,7 +328,7 @@ let statusIcon="🔴";
 if(r.status==="executado") statusIcon="✔";
 pacientes[r.paciente].rotinas.push(`
 <div class="linha-rotina">
-<button class="btn-rotina" onclick="executarRotina('${r.id_uuid}',this)">
+<button class="btn-rotina" onclick="executarRotina('${r.id}',this)">
 ${r.rotina}
 </button>
 <span class="status-rotina">${statusIcon}</span>
@@ -376,7 +376,7 @@ status:"executado",
 usuario_id:usuarioId,
 horario_executado:new Date().toISOString()
 })
-.eq("id_uuid",id)
+.eq("id",id)
 .select()
 
 if(error){
@@ -653,6 +653,7 @@ carregarRotinas();
 </script>
 </body>
 </html>
+
 
 
 
