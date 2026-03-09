@@ -572,7 +572,7 @@ const dataAtual=document.getElementById("dataInicio").value
 const {data,error}=await db
 .from("rotinas_execucao")
 .select("id")
-.eq("rotina_modelo_id",rotinaId)
+.eq("rotina_id",rotinaId)
 .eq("data",dataAtual)
 if(error){
 console.error(error)
@@ -601,4 +601,5 @@ carregarRotinas()
 </script>
 </body>
 </html>
+
 
