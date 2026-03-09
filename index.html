@@ -461,6 +461,26 @@ alert("Erro ao carregar painel clínico")
 }
 }
 /* ====================================================
+019 CARREGAR PACIENTES NO SELECT
+==================================================== */
+async function carregarPacientesBusca(){
+const {data,error}=await db
+.from("pacientes")
+.select("id,nome_completo")
+.order("nome_completo",{ascending:true})
+if(error){
+console.error(error)
+return
+}
+const select=document.getElementById("buscaPaciente")
+if(!select) return
+let html=`<option value="">Todos</option>`
+data.forEach(p=>{
+html+=`<option value="${p.id}">${p.nome_completo}</option>`
+})
+select.innerHTML=html
+}
+/* ====================================================
 026 INDICADORES
 ==================================================== */
 function calcularIndicadores(data){
@@ -601,5 +621,6 @@ carregarRotinas()
 </script>
 </body>
 </html>
+
 
 
