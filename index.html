@@ -279,11 +279,19 @@ carregarTudo()
 ==================================================== */
 async function carregarTudo(){
 definirDataHoje()
+if(typeof carregarPacientesBusca==="function"){
 await carregarPacientesBusca()
+}
+if(typeof carregarTiposRotina==="function"){
 await carregarTiposRotina()
+}
+if(typeof carregarProfissionais==="function"){
 await carregarProfissionais()
+}
 await carregarRotinas()
+if(typeof carregarClinico==="function"){
 await carregarClinico()
+}
 setInterval(()=>{carregarRotinas()},30000)
 abrirEnfermagem()
 mudarTurno("manha")
@@ -347,8 +355,7 @@ let html=""
 Object.keys(pacientes).forEach(p=>{
 let total=pacientes[p].total
 let ok=pacientes[p].ok
-let progresso=0
-if(total>0)progresso=Math.round((ok/total)*100)
+let progresso=Math.round((ok/total)*100)||0
 let barra=`<div style="width:120px"><div style="font-size:11px">${progresso}%</div><div style="background:#eee;height:6px;border-radius:4px"><div style="width:${progresso}%;background:#2ecc71;height:6px;border-radius:4px"></div></div></div>`
 let rotinas=pacientes[p].rotinas.join("")
 html+=`<tr><td style="font-weight:bold">${p}</td><td>${barra}</td><td>${rotinas}</td></tr>`
@@ -383,8 +390,7 @@ return
 }
 btn.style.background="#2ecc71"
 btn.innerText="Executado"
-carregarRotinas()
-}
+setTimeout(()=>{carregarRotinas()},200)}
 /* ====================================================
 018 CLÍNICO
 ==================================================== */
@@ -577,15 +583,13 @@ if(!data || data.length===0){
 alert("Nenhuma rotina encontrada")
 return
 }
-for(const r of data){
 await db
 .from("rotinas_execucao")
 .update({
 status:"executado",
 horario_executado:new Date().toISOString()
 })
-.eq("id",r.id)
-}
+.in("id",data.map(r=>r.id))
 if(btn){
 btn.innerHTML="✔ "+btn.innerText
 btn.style.background="#2ecc71"
@@ -597,3 +601,4 @@ carregarRotinas()
 </script>
 </body>
 </html>
+
