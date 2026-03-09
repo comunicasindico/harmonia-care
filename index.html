@@ -210,7 +210,7 @@ carregarTudo()
 return
 }
 /* LOGIN USUÁRIOS DO BANCO */
-const{data,error}=await db.from("usuarios").select("*").eq("usuario",usuarioDigitado)
+const {data,error}=await db.from("usuarios").select("*").eq("usuario",usuarioDigitado).limit(1);
 if(!data?.length){
 alert("Usuário não encontrado")
 return
@@ -295,7 +295,10 @@ query=query
 .order("rotina",{ascending:true})
 const {data,error}=await query
 if(error){console.error(error);alert("Erro ao carregar rotinas");return}
-if(!data || data.length===0){document.getElementById("rotinas").innerHTML="";return}
+if(!data || data.length===0){
+document.getElementById("rotinas").innerHTML="";
+return;
+}
 /* indicadores */
 calcularIndicadores(data)
 /* renderizar */
@@ -311,7 +314,9 @@ if(!pacientes[r.paciente]){
 pacientes[r.paciente]={rotinas:[],ok:0,total:0,controle:{}}
 }
 const chave=r.rotina+"_"+r.turno+"_"+r.data
-if(pacientes[r.paciente].controle[chave]);return
+if(pacientes[r.paciente].controle[chave]){
+return;
+}
 pacientes[r.paciente].controle[chave]=true
 pacientes[r.paciente].total++
 if(r.status==="executado")pacientes[r.paciente].ok++
@@ -354,7 +359,8 @@ document.getElementById("rotinas").innerHTML=html
 /* ====================================================
 017 EXECUTAR ROTINA
 ==================================================== */
-async function executarRotina(id){
+async function executarRotina(id,btn){
+btn.disabled=true;
 const usuarioId=localStorage.getItem("usuario_id")
 const usuarioNome=localStorage.getItem("usuario_nome")
 const { data, error } = await db
@@ -377,12 +383,17 @@ alert("Rotina não encontrada para atualização.")
 return
 }
 carregarRotinas()
+btn.disabled=false;
 }
 /* ====================================================
 018 CLÍNICO
 ==================================================== */
 async function carregarClinico(){
-const{data}=await db.from("pacientes").select("*")
+const {data,error}=await db.from("pacientes").select("*");
+if(error){
+console.error(error);
+return;
+}
 let html=""
 let has=0,dm=0,dem=0
 data.forEach(p=>{
@@ -446,7 +457,11 @@ if(box)box.innerHTML+=`<div class="drag-item">${e.pacientes?.nome_completo}</div
 /* ====================================================
 023 PDF GERAL ROTINAS HARMONIA CARE
 ==================================================== */
-function formatarDataBR(data){if(!data);return"";let[a,b,c]=data.split("-");return`${c}-${b}-${a}`}
+function formatarDataBR(data){
+if(!data) return "";
+let [a,b,c] = data.split("-");
+return `${c}-${b}-${a}`;
+}
 async function gerarPDFGeral(){
 const{jsPDF}=window.jspdf
 const doc=new jsPDF("p","mm","a4")
@@ -466,7 +481,7 @@ let linhas=[]
 document.querySelectorAll("#rotinas > tr").forEach(tr=>{
 let paciente=tr.children[0]?.innerText.trim()
 let rotinasTexto=tr.children[2]?.innerText
-if(!paciente||!rotinasTexto);return
+if(!paciente||!rotinasTexto) return;
 rotinasTexto.split("\n").forEach(r=>{
 let status="Executado"
 if(r.includes("🔴"))status="Pendente"
@@ -600,9 +615,16 @@ await carregarProfissionaisDrag()
 await carregarEscalaDrag()
 }
 
+setInterval(()=>{
+if(document.getElementById("painelEnfermagem").style.display==="block"){
+carregarRotinas();
+}
+},15000);
+
 </script>
 </body>
 </html>
+
 
 
 
