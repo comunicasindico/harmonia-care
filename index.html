@@ -289,10 +289,6 @@ abrirEnfermagem()
 mudarTurno("manha")
 }
 /* ====================================================
-013 GERAR ROTINAS DO DIA (PROTEÇÃO DUPLICIDADE)-foi apagado está somente no supabase
-==================================================== */
-
-/* ====================================================
 014 MUDAR TURNO
 ==================================================== */
 function mudarTurno(turno){
@@ -300,7 +296,6 @@ TURNO_ATUAL=turno
 document.getElementById("btnManha").classList.remove("turno-ativo")
 document.getElementById("btnTarde").classList.remove("turno-ativo")
 document.getElementById("btnNoite").classList.remove("turno-ativo")
-
 if(turno==="manha")document.getElementById("btnManha").classList.add("turno-ativo")
 if(turno==="tarde")document.getElementById("btnTarde").classList.add("turno-ativo")
 if(turno==="noite")document.getElementById("btnNoite").classList.add("turno-ativo")
@@ -317,12 +312,9 @@ let query=db
 .from("vw_rotinas_painel")
 .select("*")
 .eq("turno",TURNO_ATUAL)
-/* filtro por paciente */
 if(paciente && paciente!==""){query=query.eq("paciente_id",paciente)}
-/* filtro por data */
 if(dataInicio){query=query.gte("data",dataInicio)}
 if(dataFim){query=query.lte("data",dataFim)}
-/* ordenação */
 query=query.order("paciente",{ascending:true}).order("rotina",{ascending:true})
 const {data,error}=await query
 if(error){console.error(error);alert("Erro ao carregar rotinas");return}
@@ -330,13 +322,11 @@ if(!data || data.length===0){
 document.getElementById("rotinas").innerHTML=""
 return
 }
-/* indicadores */
 calcularIndicadores(data)
-/* renderizar */
 renderizarRotinas(data)
 }
 /* ====================================================
-016 RENDERIZAR ROTINAS (AGRUPADO POR PACIENTE)
+016 RENDERIZAR ROTINAS
 ==================================================== */
 function renderizarRotinas(data){
 let pacientes={}
@@ -363,12 +353,7 @@ let barra=`<div style="width:120px"><div style="font-size:11px">${progresso}%</d
 let rotinas=pacientes[p].rotinas.join("")
 html+=`<tr><td style="font-weight:bold">${p}</td><td>${barra}</td><td>${rotinas}</td></tr>`
 })
-html+=`<tr style="background:#f5f5f5;border-top:2px solid #ccc">
-<td style="font-weight:bold">Todos</td>
-<td></td>
-<td id="rotinasTodos"></td>
-</tr>`
-
+html+=`<tr style="background:#f5f5f5;border-top:2px solid #ccc"><td style="font-weight:bold">Todos</td><td></td><td id="rotinasTodos"></td></tr>`
 document.getElementById("rotinas").innerHTML=html
 carregarRotinasTodos()
 }
@@ -376,47 +361,35 @@ carregarRotinasTodos()
 017 EXECUTAR ROTINA
 ==================================================== */
 async function executarRotina(id,btn){
-
-btn.disabled=true;
-
+btn.disabled=true
 const usuarioId=localStorage.getItem("usuario_id")
-
 const updateData={
 status:"executado",
 horario_executado:new Date().toISOString()
 }
-
-/* só grava usuário se for uuid válido */
 if(usuarioId && usuarioId.length===36){
 updateData.executado_por=usuarioId
 }
-
 const {data,error}=await db
 .from("rotinas_execucao")
 .update(updateData)
 .eq("id",id)
 .select()
-
 if(error){
-console.error("Erro ao atualizar rotina:",error)
+console.error(error)
 alert("Erro ao executar rotina: "+error.message)
 btn.disabled=false
 return
 }
-
 btn.style.background="#2ecc71"
 btn.innerText="Executado"
-
 carregarRotinas()
-
 }
 /* ====================================================
 018 CLÍNICO
 ==================================================== */
 async function carregarClinico(){
-
 try{
-
 const {data,error}=await db
 .from("pacientes")
 .select(`
@@ -433,14 +406,11 @@ pressao_arterial,
 outras_comorbidades
 `)
 .order("nome_completo",{ascending:true})
-
 if(error){
 console.error(error)
 alert("Erro ao carregar painel clínico")
 return
 }
-
-/* calcular idade */
 function calcularIdade(data){
 if(!data) return ""
 const nasc=new Date(data)
@@ -450,19 +420,14 @@ const m=hoje.getMonth()-nasc.getMonth()
 if(m<0||(m===0&&hoje.getDate()<nasc.getDate()))idade--
 return idade
 }
-
 let html=""
-
 let totalHas=0
 let totalDm=0
 let totalDa=0
-
 data.forEach(p=>{
-
 if(p.has) totalHas++
 if(p.dm) totalDm++
 if(p.da) totalDa++
-
 html+=`
 <tr>
 <td>${p.nome_completo}</td>
@@ -479,203 +444,18 @@ html+=`
 </tr>
 `
 })
-
 document.getElementById("quadroClinico").innerHTML=html
-
 document.getElementById("totalPacientes").innerText=data.length
 document.getElementById("totalHas").innerText=totalHas
 document.getElementById("totalDm").innerText=totalDm
 document.getElementById("totalDemencia").innerText=totalDa
-
 }catch(err){
-
 console.error("Erro clínico:",err)
 alert("Erro ao carregar painel clínico")
-
 }
-
 }
 /* ====================================================
-019 DRAG DROP
-==================================================== */
-function allowDrop(ev){ev.preventDefault()}
-function dragPaciente(ev){ev.dataTransfer.setData("paciente",ev.target.dataset.id)}
-async function dropPaciente(ev){
-ev.preventDefault()
-const paciente=ev.dataTransfer.getData("paciente")
-const prof=ev.currentTarget.dataset.prof
-const hoje=new Date().toISOString().split("T")[0]
-await db.from("escala_cuidados").update({profissional_id:prof}).eq("idoso_id",paciente).eq("data",hoje)
-carregarEscalaDrag()
-}
-/* ====================================================
-020 PACIENTES DRAG
-==================================================== */
-async function carregarPacientesDrag(){
-const{data}=await db.from("pacientes").select("id,nome_completo")
-let html=""
-data.forEach(p=>{
-html+=`<div class="drag-item" draggable="true" data-id="${p.id}" ondragstart="dragPaciente(event)">${p.nome_completo}</div>`
-})
-document.getElementById("listaPacientesDrag").innerHTML=html
-}
-/* ====================================================
-021 PROFISSIONAIS DRAG
-==================================================== */
-async function carregarProfissionaisDrag(){
-const{data}=await db.from("usuarios").select("id,nome")
-let html=""
-data.forEach(p=>{
-html+=`<div class="drag-container" ondrop="dropPaciente(event)" ondragover="allowDrop(event)" data-prof="${p.id}"><b>${p.nome}</b><div></div></div>`
-})
-document.getElementById("listaProfissionaisDrag").innerHTML=html
-}
-/* ====================================================
-022 ESCALA DRAG
-==================================================== */
-async function carregarEscalaDrag(){
-const hoje=new Date().toISOString().split("T")[0]
-const{data}=await db.from("escala_cuidados").select("idoso_id,profissional_id,pacientes(nome_completo)").eq("data",hoje)
-data.forEach(e=>{
-const box=document.querySelector(`[data-prof="${e.profissional_id}"]`)
-if(box)box.innerHTML+=`<div class="drag-item">${e.pacientes?.nome_completo}</div>`
-})
-}
-/* ====================================================
-023 PDF GERAL ROTINAS HARMONIA CARE
-==================================================== */
-function formatarDataBR(data){
-if(!data) return "";
-let [a,b,c] = data.split("-");
-return `${c}-${b}-${a}`;
-}
-async function gerarPDFGeral(){
-const{jsPDF}=window.jspdf
-const doc=new jsPDF("p","mm","a4")
-const hoje=new Date().toLocaleDateString("pt-BR")
-const img=new Image()
-img.src="logo-harmonia.png"
-doc.addImage(img,"PNG",14,10,25,18)
-doc.setFontSize(10)
-doc.text(`Data: ${hoje}`,195,15,{align:"right"})
-doc.setFontSize(16)
-doc.text("Relatório Geral de Rotinas",105,30,{align:"center"})
-const dataInicio=document.getElementById("dataInicio")?.value
-const dataFim=document.getElementById("dataFim")?.value
-doc.setFontSize(10)
-doc.text(`Período: ${formatarDataBR(dataInicio)} até ${formatarDataBR(dataFim)}`,105,38,{align:"center"})
-let linhas=[]
-document.querySelectorAll("#rotinas > tr").forEach(tr=>{
-let paciente=tr.children[0]?.innerText.trim()
-let rotinasTexto=tr.children[2]?.innerText
-if(!paciente||!rotinasTexto) return;
-rotinasTexto.split("\n").forEach(r=>{
-let status="Executado"
-if(r.includes("🔴"))status="Pendente"
-if(r.includes("⚠"))status="Atrasado"
-let rotina=r.replace("✔","").replace("⚠","").replace("🔴","").trim()
-if(rotina)linhas.push([formatarDataBR(dataInicio),paciente,rotina,"",status,"",""])
-})
-})
-doc.autoTable({startY:45,head:[["Data","Paciente","Rotina","Turno","Status","Executado por","Horário"]],body:linhas,styles:{fontSize:10},headStyles:{fillColor:[41,128,185]}})
-doc.setFontSize(8)
-let finalY = doc.lastAutoTable.finalY || 45;
-
-doc.setFontSize(8);
-doc.text("Lar Geriátrico Harmonia",105,finalY+10,{align:"center"});
-doc.text("CNPJ 11.197.111/0001-56",105,finalY+14,{align:"center"});
-doc.text("Rua Doutor Manoel Benício Fontinele, 38 – Piedade",105,finalY+18,{align:"center"});
-doc.text("Jaboatão dos Guararapes – PE – CEP: 54400-390",105,finalY+22,{align:"center"});
-doc.save("relatorio-geral-harmonia.pdf")
-}
-/* ====================================================
-024 PDF INDIVIDUAL PACIENTE HARMONIA CARE
-==================================================== */
-async function gerarPDFPaciente(){
-const{jsPDF}=window.jspdf
-const doc=new jsPDF("p","mm","a4")
-const pacienteId=document.getElementById("buscaPaciente")?.value
-const pacienteNome=document.getElementById("buscaPaciente")?.selectedOptions[0]?.text||"Paciente"
-const dataInicio=document.getElementById("dataInicio")?.value
-const dataFim=document.getElementById("dataFim")?.value
-const hoje=new Date().toLocaleDateString("pt-BR")
-const img=new Image()
-img.src="logo-harmonia.png"
-doc.addImage(img,"PNG",14,10,25,18)
-doc.setFontSize(10)
-doc.text(`Data emissão: ${hoje}`,195,15,{align:"right"})
-doc.setFontSize(16)
-doc.text("Relatório de Rotinas do Paciente",105,30,{align:"center"})
-doc.setFontSize(12)
-doc.text(`Paciente: ${pacienteNome}`,105,38,{align:"center"})
-/* buscar dados clínicos */
-const {data:clinico} = await db
-.from("pacientes")
-.select("has,dm,demencia,cardio,acamado,outras")
-.eq("id",pacienteId)
-.single();
-
-let comorbidades=[];
-
-if(clinico?.has) comorbidades.push("HAS");
-if(clinico?.dm) comorbidades.push("DM");
-if(clinico?.demencia) comorbidades.push("Demência");
-if(clinico?.cardio) comorbidades.push("Cardiopatia");
-if(clinico?.acamado) comorbidades.push("Acamado");
-
-let textoComorbidades = comorbidades.length ? comorbidades.join(" | ") : "Nenhuma registrada";
-
-doc.setFontSize(10);
-doc.text(`Comorbidades: ${textoComorbidades}`,105,44,{align:"center"});
-const{data,error}=await db.from("vw_rotinas_painel").select("*").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim).order("data",{ascending:true}).order("rotina",{ascending:true})
-if(error||!data){alert("Erro ao carregar dados");return}
-let linhas=[]
-data.forEach(r=>{
-let dataBR=""
-if(r.data){let[a,b,c]=r.data.split("-");dataBR=`${c}-${b}-${a}`}
-let horario=""
-if(r.horario_executado)horario=new Date(r.horario_executado).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})
-linhas.push([
-dataBR,
-r.rotina||"",
-r.turno||"",
-r.status||"",
-r.executado_por_nome||"",
-horario
-])
-})
-doc.autoTable({
-startY:55,
-head:[["Data","Rotina","Turno","Status","Executado por","Horário"]],
-body:linhas,
-styles:{fontSize:10},
-headStyles:{fillColor:[41,128,185]}
-})
-doc.setFontSize(8)
-doc.text("Lar Geriátrico Harmonia",105,285,{align:"center"})
-doc.text("CNPJ 11.197.111/0001-56",105,289,{align:"center"})
-doc.text("Rua Doutor Manoel Benício Fontinele, 38 – Piedade",105,293,{align:"center"})
-doc.text("Jaboatão dos Guararapes – PE – CEP: 54400-390",105,297,{align:"center"})
-doc.save("relatorio-paciente-harmonia.pdf")
-}
-/* ====================================================
-025 CARREGAR PACIENTES BUSCA
-==================================================== */
-async function carregarPacientesBusca(){
-const{data}=await db
-.from("pacientes")
-.select("id,nome_completo")
-.order("nome_completo")
-
-let html='<option value="">Todos</option>'
-
-data.forEach(p=>{
-html+=`<option value="${p.id}">${p.nome_completo}</option>`
-})
-document.getElementById("buscaPaciente").innerHTML=html
-}
-/* ====================================================
-026 INDICADORES DO PAINEL
+026 INDICADORES
 ==================================================== */
 function calcularIndicadores(data){
 let executado=0
@@ -691,7 +471,7 @@ document.getElementById("indicadorPendente").innerHTML="🔴 "+pendente
 document.getElementById("indicadorAtrasado").innerHTML="⚠ "+atrasado
 }
 /* ====================================================
-027 DEFINIR DATA HOJE NOS FILTROS
+027 DATA HOJE
 ==================================================== */
 function definirDataHoje(){
 const hoje = new Date()
@@ -703,67 +483,19 @@ document.getElementById("dataInicio").value = dataLocal
 document.getElementById("dataFim").value = dataLocal
 }
 /* ====================================================
-028 ABRIR PAINÉIS
+028 PAINÉIS
 ==================================================== */
 function abrirEnfermagem(){
 document.getElementById("painelEnfermagem").style.display="block"
 document.getElementById("painelClinico").style.display="none"
 document.getElementById("painelAdmin").style.display="none"
 }
-/* ====================================================
-ABRIR PAINEL CLÍNICO
-==================================================== */
 function abrirClinico(){
 document.getElementById("painelEnfermagem").style.display="none"
 document.getElementById("painelAdmin").style.display="none"
 document.getElementById("painelClinico").style.display="block"
 carregarClinico()
 }
-/* ====================================================
-CARREGAR PAINEL CLÍNICO
-==================================================== */
-async function carregarPainelClinico(){
-
-const {data,error}=await db
-.from("pacientes")
-.select("nome_completo,idade,has,dm,demencia,cardio,acamado,outras")
-.order("nome_completo")
-
-if(error){
-alert("Erro ao carregar painel clínico")
-console.error(error)
-return
-}
-
-let html=""
-
-data.forEach(p=>{
-
-let comorbidades=[]
-
-if(p.has)comorbidades.push("HAS")
-if(p.dm)comorbidades.push("DM")
-if(p.demencia)comorbidades.push("Demência")
-if(p.cardio)comorbidades.push("Cardiopatia")
-if(p.acamado)comorbidades.push("Acamado")
-
-let lista=comorbidades.length?comorbidades.join(", "):"-"
-
-html+=`
-<div style="background:#fff;padding:15px;border-radius:10px;margin-bottom:10px;border-left:6px solid #3498db">
-<b>${p.nome_completo}</b><br>
-Idade: ${p.idade || "-"}<br>
-Comorbidades: ${lista}<br>
-Outras: ${p.outras || "-"}
-</div>
-`
-
-})
-
-document.getElementById("rotinas").innerHTML=html
-
-}
-
 async function abrirAdmin(){
 document.getElementById("painelEnfermagem").style.display="none"
 document.getElementById("painelClinico").style.display="none"
@@ -772,65 +504,13 @@ await carregarPacientesDrag()
 await carregarProfissionaisDrag()
 await carregarEscalaDrag()
 }
-
 setInterval(()=>{
 if(document.getElementById("painelEnfermagem").style.display==="block"){
 carregarRotinas();
 }
-},15000);
-
-/*====================================================
-029 EXECUTAR ROTINA PARA TODOS
-====================================================*/
-async function executarTodos(rotinaNome){
-
-const dataInicio=document.getElementById("dataInicio").value
-const usuario=localStorage.getItem("usuario_id")
-
-if(!confirm("Executar '"+rotinaNome+"' para TODOS os pacientes?"))return
-
-try{
-
-const {data,error}=await db
-.from("vw_rotinas_painel")
-.select("id")
-.eq("rotina",rotinaNome)
-.eq("data",dataInicio)
-
-if(error){
-console.error(error)
-alert("Erro ao localizar rotinas")
-return
-}
-
-if(!data || data.length===0){
-alert("Nenhuma rotina encontrada para executar")
-return
-}
-
-for(const r of data){
-
-await db
-.from("rotinas_execucao")
-.update({
-status:"executado",
-executado_por:usuario,
-horario_execucao:new Date().toISOString()
-})
-.eq("id",r.id)
-
-}
-
-carregarRotinas()
-
-}catch(e){
-console.error(e)
-alert("Erro ao executar rotina: " + e.message)
-}
-
-}
+},15000)
 /* ====================================================
-030 CARREGAR ROTINAS PARA LINHA TODOS
+030 ROTINAS LINHA TODOS
 ==================================================== */
 async function carregarRotinasTodos(){
 const {data,error}=await db
@@ -847,17 +527,9 @@ let turnoAtual=""
 data.forEach(r=>{
 if(r.turno!==turnoAtual){
 turnoAtual=r.turno
-html+=`
-<div style="width:100%;font-weight:bold;margin-top:10px">
-${turnoAtual.toUpperCase()}
-</div>
-`
+html+=`<div style="width:100%;font-weight:bold;margin-top:10px">${turnoAtual.toUpperCase()}</div>`
 }
-html+=`
-<button onclick="executarTodos('${r.id}',this)" class="btn-rotina">
-${r.titulo}
-</button>
-`
+html+=`<button onclick="executarTodos('${r.id}',this)" class="btn-rotina">${r.titulo}</button>`
 })
 const el=document.getElementById("rotinasTodos")
 if(el){
@@ -887,80 +559,41 @@ document.getElementById("novaRotinaNome").value=""
 carregarRotinasTodos()
 }
 /* ====================================================
-032 EXECUTAR ROTINA PARA TODOS
+032 EXECUTAR TODOS
 ==================================================== */
 async function executarTodos(rotinaId,btn){
-
 const dataAtual=document.getElementById("dataInicio").value
-
 const {data,error}=await db
 .from("rotinas_execucao")
 .select("id")
 .eq("rotina_modelo_id",rotinaId)
 .eq("data",dataAtual)
-
 if(error){
 console.error(error)
-alert("Erro ao executar rotina: " + e.message)
+alert("Erro ao executar rotina")
 return
 }
-
 if(!data || data.length===0){
-alert("Nenhuma rotina encontrada para executar")
+alert("Nenhuma rotina encontrada")
 return
 }
-
-/* atualizar todas */
 for(const r of data){
-
 await db
 .from("rotinas_execucao")
 .update({
 status:"executado",
-horario_execucao:new Date().toISOString()
+horario_executado:new Date().toISOString()
 })
 .eq("id",r.id)
-
 }
-
-/* feedback visual */
 if(btn){
 btn.innerHTML="✔ "+btn.innerText
 btn.style.background="#2ecc71"
 btn.style.color="#fff"
 }
-
-/* atualizar painel */
 carregarRotinas()
-
 }
   
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
