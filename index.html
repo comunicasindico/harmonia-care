@@ -373,7 +373,7 @@ const {data,error}=await db
 .from("rotinas_execucao")
 .update({
 status:"executado",
-executado_por:usuarioId,
+usuario_id:usuarioId,
 horario_executado:new Date().toISOString()
 })
 .eq("id_uuid",id)
@@ -381,7 +381,7 @@ horario_executado:new Date().toISOString()
 
 if(error){
 console.error("Erro ao atualizar rotina:",error)
-alert("Erro ao executar rotina.")
+alert("Erro ao executar rotina: " + error.message)
 btn.disabled=false
 return
 }
@@ -653,6 +653,7 @@ carregarRotinas();
 </script>
 </body>
 </html>
+
 
 
 
