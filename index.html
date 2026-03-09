@@ -259,7 +259,7 @@ mudarTurno("manha")
 013 GERAR ROTINAS DO DIA (PROTEÇÃO DUPLICIDADE)-foi apagado está somente no supabase
 ==================================================== */
 
-  /* ====================================================
+/* ====================================================
 014 MUDAR TURNO
 ==================================================== */
 function mudarTurno(turno){
@@ -369,19 +369,25 @@ btn.disabled=true;
 
 const usuarioId=localStorage.getItem("usuario_id")
 
+const updateData={
+status:"executado",
+horario_executado:new Date().toISOString()
+}
+
+/* só grava usuário se for uuid válido */
+if(usuarioId && usuarioId.length===36){
+updateData.executado_por=usuarioId
+}
+
 const {data,error}=await db
 .from("rotinas_execucao")
-.update({
-status:"executado",
-usuario_id:usuarioId,
-horario_executado:new Date().toISOString()
-})
+.update(updateData)
 .eq("id",id)
 .select()
 
 if(error){
 console.error("Erro ao atualizar rotina:",error)
-alert("Erro ao executar rotina: " + error.message)
+alert("Erro ao executar rotina: "+error.message)
 btn.disabled=false
 return
 }
@@ -643,28 +649,49 @@ document.getElementById("rotinas").innerHTML=`
 `
 carregarPainelClinico()
 }
-
+/* ====================================================
+CARREGAR PAINEL CLÍNICO
+==================================================== */
 async function carregarPainelClinico(){
+
 const {data,error}=await db
 .from("pacientes")
-.select("nome,idade,diagnostico,comorbidades")
-.order("nome")
+.select("nome_completo,idade,has,dm,demencia,cardio,acamado,outras")
+.order("nome_completo")
+
 if(error){
 alert("Erro ao carregar painel clínico")
+console.error(error)
 return
 }
+
 let html=""
+
 data.forEach(p=>{
+
+let comorbidades=[]
+
+if(p.has)comorbidades.push("HAS")
+if(p.dm)comorbidades.push("DM")
+if(p.demencia)comorbidades.push("Demência")
+if(p.cardio)comorbidades.push("Cardiopatia")
+if(p.acamado)comorbidades.push("Acamado")
+
+let lista=comorbidades.length?comorbidades.join(", "):"-"
+
 html+=`
 <div style="background:#fff;padding:15px;border-radius:10px;margin-bottom:10px;border-left:6px solid #3498db">
-<b>${p.nome}</b><br>
+<b>${p.nome_completo}</b><br>
 Idade: ${p.idade || "-"}<br>
-Diagnóstico: ${p.diagnostico || "-"}<br>
-Comorbidades: ${p.comorbidades || "-"}
+Comorbidades: ${lista}<br>
+Outras: ${p.outras || "-"}
 </div>
 `
+
 })
+
 document.getElementById("rotinas").innerHTML=html
+
 }
 
 async function abrirAdmin(){
@@ -685,6 +712,7 @@ carregarRotinas();
 </script>
 </body>
 </html>
+
 
 
 
