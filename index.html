@@ -274,13 +274,21 @@ let query=db
 .from("vw_rotinas_painel")
 .select("*")
 .eq("turno",TURNO_ATUAL)
-if(paciente && paciente!=="")query=query.eq("paciente_id",paciente)
-if(dataInicio)query=query.gte("data",dataInicio)
-if(dataFim)query=query.lte("data",dataFim)
-query=query.order("paciente",{ascending:true}).order("rotina",{ascending:true})
-const {data}=await query
-if(!data)return
+/* filtro por paciente */
+if(paciente && paciente!==""){query=query.eq("paciente_id",paciente)}
+/* filtro por data */
+if(dataInicio){query=query.gte("data",dataInicio)}
+if(dataFim){query=query.lte("data",dataFim)}
+/* ordenação */
+query=query
+.order("paciente",{ascending:true})
+.order("rotina",{ascending:true})
+const {data,error}=await query
+if(error){console.error(error)alert("Erro ao carregar rotinas")return}
+if(!data || data.length===0){document.getElementById("rotinas").innerHTML=""return}
+/* indicadores */
 calcularIndicadores(data)
+/* renderizar */
 renderizarRotinas(data)
 }
 /* ====================================================
@@ -570,6 +578,7 @@ await carregarEscalaDrag()
 </script>
 </body>
 </html>
+
 
 
 
