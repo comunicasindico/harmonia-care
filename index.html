@@ -790,7 +790,7 @@ try{
 const{data,error}=await db.from("vw_rotinas_painel").select("id,paciente").eq("rotina",rotinaNome).eq("data",dataInicio)
 if(error){console.error(error);alert("Erro ao localizar rotinas");return}
 for(const r of data){
-await db.from("rotina_execucao").update({status:"executado",executado_por:usuario,horario_execucao:new Date().toISOString()}).eq("id",r.id)
+await db.from("rotinas_execucao").update({status:"executado",executado_por:usuario,horario_execucao:new Date().toISOString()}).eq("id",r.id)
 }
 carregarRotinas()
 }catch(e){
@@ -845,7 +845,7 @@ return
 }
 const {error}=await db
 .from("rotina_modelos")
-.insert([{nome:nome,turno:turno}])
+.insert([{titulo:nome,turno:turno}])
 if(error){
 console.error(error)
 alert("Erro ao criar rotina")
@@ -859,11 +859,11 @@ carregarRotinasTodos()
 032 EXECUTAR ROTINA PARA TODOS
 ==================================================== */
 async function executarTodos(rotinaId,btn){
+
 const dataAtual=document.getElementById("dataInicio").value
 
-/* buscar todas execuções da rotina no dia */
 const {data,error}=await db
-.from("rotina_execucao")
+.from("rotinas_execucao")
 .select("id")
 .eq("rotina_modelo_id",rotinaId)
 .eq("data",dataAtual)
@@ -883,23 +883,23 @@ return
 for(const r of data){
 
 await db
-.from("rotina_execucao")
+.from("rotinas_execucao")
 .update({
 status:"executado",
-horario_execucao:new Date()
+horario_execucao:new Date().toISOString()
 })
 .eq("id",r.id)
 
 }
 
-/* marcar botão visualmente */
+/* feedback visual */
 if(btn){
 btn.innerHTML="✔ "+btn.innerText
 btn.style.background="#2ecc71"
 btn.style.color="#fff"
 }
 
-/* recarregar painel */
+/* atualizar painel */
 carregarRotinas()
 
 }
@@ -907,6 +907,7 @@ carregarRotinas()
 </script>
 </body>
 </html>
+
 
 
 
