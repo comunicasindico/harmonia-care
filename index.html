@@ -823,7 +823,7 @@ ${turnoAtual.toUpperCase()}
 `
 }
 html+=`
-<button onclick="executarTodos('${r.id}')" class="btn-rotina">
+<button onclick="executarTodos('${r.id}',this)" class="btn-rotina">
 ${r.titulo}
 </button>
 `
@@ -858,25 +858,30 @@ carregarRotinasTodos()
 /* ====================================================
 032 EXECUTAR ROTINA PARA TODOS
 ==================================================== */
-async function executarTodos(rotinaId){
+async function executarTodos(rotinaId,btn){
 const dataAtual=document.getElementById("dataInicio").value
-const {data:pacientes,error}=await db
-.from("pacientes")
+const {data:registros,error}=await db
+.from("rotina_execucao")
 .select("id")
+.eq("modelo_id",rotinaId)
+.eq("data",dataAtual)
 if(error){
 console.error(error)
 return
 }
-for(const p of pacientes){
+for(const r of registros){
 await db
 .from("rotina_execucao")
 .update({
 status:"executado",
 horario_execucao:new Date()
 })
-.eq("paciente_id",p.id)
-.eq("modelo_id",rotinaId)
-.eq("data",dataAtual)
+.eq("id",r.id)
+}
+/* atualizar botão */
+if(btn){
+btn.style.background="#2ecc71"
+btn.style.color="#fff"
 }
 carregarRotinas()
 }
@@ -884,6 +889,7 @@ carregarRotinas()
 </script>
 </body>
 </html>
+
 
 
 
