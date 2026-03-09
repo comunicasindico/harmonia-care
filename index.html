@@ -16,34 +16,38 @@
 002 STYLE
 ==================================================== -->
 <style>
-body{margin:0;font-family:Arial;background:#f4f6f9}
-#login{display:flex;justify-content:center;align-items:center;height:100vh}
-.login-box{background:#fff;padding:40px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);width:320px}
-.login-box input{width:100%;padding:10px;margin-bottom:15px;border-radius:8px;border:1px solid #ccc}
-button{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
-.btn-primary{background:#3498db;color:#fff}
-.btn-secondary{background:#555;color:#fff}
-.btn-danger{background:#e74c3c;color:#fff}
-.btn-success{background:#2ecc71;color:#fff}
-#app{display:none;padding:30px;max-width:1200px;margin:auto}
-.menu{margin-bottom:20px}
-.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px}
-.card{background:#fff;padding:20px;border-radius:12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
-.box{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-top:20px}
-table{width:100%;border-collapse:collapse}
-th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left}
-.turnos{display:flex;gap:10px;margin-bottom:15px}
-.turno-manha{background:#3498db;color:#fff}
-.turno-tarde{background:#f39c12;color:#fff}
-.turno-noite{background:#2c3e50;color:#fff}
-.drag-container{min-height:120px;border:2px dashed #ccc;border-radius:10px;padding:10px;background:#fafafa}
-.drag-item{background:#3498db;color:#fff;padding:6px;border-radius:6px;margin-bottom:6px;cursor:grab;font-size:13px}
+body{margin:0;font-family:Arial;background:#f4f6f9;}
+#login{display:flex;justify-content:center;align-items:center;height:100vh;}
+.login-box{background:#fff;padding:40px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);width:320px;}
+.login-box input{width:100%;padding:10px;margin-bottom:15px;border-radius:8px;border:1px solid #ccc;}
+button{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;}
+.btn-primary{background:#3498db;color:#fff;}
+.btn-secondary{background:#555;color:#fff;}
+.btn-danger{background:#e74c3c;color:#fff;}
+.btn-success{background:#2ecc71;color:#fff;}
+#app{display:none;padding:30px;max-width:1200px;margin:auto;}
+.menu{margin-bottom:20px;}
+.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;}
+.card{background:#fff;padding:20px;border-radius:12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.box{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-top:20px;}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
+.turnos{display:flex;gap:10px;margin-bottom:15px;}
+.turno-manha{background:#3498db;color:#fff;}
+.turno-tarde{background:#f39c12;color:#fff;}
+.turno-noite{background:#2c3e50;color:#fff;}
 .turno-btn{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;opacity:0.6;}
 .turno-ativo{opacity:1;box-shadow:0 0 0 3px rgba(0,0,0,0.15) inset;}
+.drag-container{min-height:120px;border:2px dashed #ccc;border-radius:10px;padding:10px;background:#fafafa;}
+.drag-item{background:#3498db;color:#fff;padding:6px;border-radius:6px;margin-bottom:6px;cursor:grab;font-size:13px;}
+.grid-rotinas{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;}
+.item-rotina{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #eee;padding:4px 0;}
+.btn-rotina{background:#f4f6f9;border:1px solid #dcdcdc;border-radius:6px;padding:6px 10px;font-size:13px;cursor:pointer;transition:0.2s;}
+.btn-rotina:hover{background:#e8f2fb;border-color:#3498db;}
+.status-rotina{font-size:16px;margin-left:6px;}
   
 </style>
 </head>
-
 <!-- ====================================================
 003 BODY
 ==================================================== -->
@@ -339,17 +343,17 @@ pacientes[r.paciente].total++
 if(r.status==="executado")pacientes[r.paciente].ok++
 let statusIcon="🔴"
 if(r.status==="executado")statusIcon="✔"
-if(r.status==="pendente")statusIcon="🔴"
 pacientes[r.paciente].rotinas.push(`
-<tr onclick="executarRotina('${r.id}',this)">
-<td>${r.rotina}</td>
-<td style="text-align:center">${statusIcon}</td>
-</tr>
+<div class="linha-rotina">
+<button class="btn-rotina" onclick="executarRotina('${r.id}',this)">
+${r.rotina}
+</button>
+<span class="status-rotina">${statusIcon}</span>
+</div>
 `)
 })
 let html=""
 Object.keys(pacientes).forEach(p=>{
-
 let total=pacientes[p].total
 let ok=pacientes[p].ok
 let progresso=Math.round((ok/total)*100)
@@ -361,12 +365,12 @@ let barra=`
 </div>
 </div>
 `
-let tabela=pacientes[p].rotinas.join("")
+let rotinas=pacientes[p].rotinas.join("")
 html+=`
 <tr>
 <td style="font-weight:bold">${p}</td>
 <td>${barra}</td>
-<td>${tabela}</td>
+<td>${rotinas}</td>
 </tr>
 `
 })
@@ -576,9 +580,13 @@ document.getElementById("indicadorAtrasado").innerHTML="⚠ "+atrasado
 027 DEFINIR DATA HOJE NOS FILTROS
 ==================================================== */
 function definirDataHoje(){
-const hoje=new Date().toISOString().split("T")[0]
-document.getElementById("dataInicio").value=hoje
-document.getElementById("dataFim").value=hoje
+const hoje = new Date()
+const ano = hoje.getFullYear()
+const mes = String(hoje.getMonth()+1).padStart(2,'0')
+const dia = String(hoje.getDate()).padStart(2,'0')
+const dataLocal = `${ano}-${mes}-${dia}`
+document.getElementById("dataInicio").value = dataLocal
+document.getElementById("dataFim").value = dataLocal
 }
 /* ====================================================
 028 ABRIR PAINÉIS
@@ -605,6 +613,7 @@ await carregarEscalaDrag()
 </script>
 </body>
 </html>
+
 
 
 
