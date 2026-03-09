@@ -811,7 +811,7 @@ return
 for(const r of data){
 
 await db
-.from("rotinas_execucao")   // ✔ tabela correta
+.from("rotinas_execucao")
 .update({
 status:"executado",
 executado_por:usuario,
@@ -938,6 +938,7 @@ carregarRotinas()
 </script>
 </body>
 </html>
+
 
 
 
