@@ -402,10 +402,14 @@ carregarRotinas()
 018 CLÍNICO
 ==================================================== */
 async function carregarClinico(){
-const {data,error}=await db.from("pacientes").select("*");
+const {data,error}=await db
+.from("pacientes")
+.select("nome_completo,idade,has,dm,demencia,cardio,acamado,outras")
+.order("nome_completo")
 if(error){
-console.error(error);
-return;
+console.error(error)
+alert("Erro ao carregar painel clínico")
+return
 }
 let html=""
 let has=0,dm=0,dem=0
@@ -413,9 +417,21 @@ data.forEach(p=>{
 if(p.has)has++
 if(p.dm)dm++
 if(p.demencia)dem++
-html+=`<tr><td>${p.nome_completo}</td><td>${p.idade??""}</td><td>${p.has?"✔":""}</td><td>${p.dm?"✔":""}</td><td>${p.demencia?"✔":""}</td><td>${p.cardio?"✔":""}</td><td>${p.acamado?"✔":""}</td><td>${p.outras??""}</td></tr>`
+html+=`
+<tr>
+<td>${p.nome_completo}</td>
+<td>${p.idade ?? ""}</td>
+<td>${p.has?"✔":""}</td>
+<td>${p.dm?"✔":""}</td>
+<td>${p.demencia?"✔":""}</td>
+<td>${p.cardio?"✔":""}</td>
+<td>${p.acamado?"✔":""}</td>
+<td>${p.outras ?? ""}</td>
+</tr>
+`
 })
 document.getElementById("quadroClinico").innerHTML=html
+
 document.getElementById("totalPacientes").innerText=data.length
 document.getElementById("totalHas").innerText=has
 document.getElementById("totalDm").innerText=dm
@@ -637,17 +653,13 @@ document.getElementById("painelClinico").style.display="none"
 document.getElementById("painelAdmin").style.display="none"
 }
 /* ====================================================
-PAINEL CLÍNICO
+ABRIR PAINEL CLÍNICO
 ==================================================== */
 function abrirClinico(){
-document.getElementById("tituloTurno").innerText="Painel Clínico"
-document.getElementById("rotinas").innerHTML=`
-<div style="padding:20px">
-<h3>Painel Clínico</h3>
-<p>Carregando dados clínicos...</p>
-</div>
-`
-carregarPainelClinico()
+document.getElementById("painelEnfermagem").style.display="none"
+document.getElementById("painelAdmin").style.display="none"
+document.getElementById("painelClinico").style.display="block"
+carregarClinico()
 }
 /* ====================================================
 CARREGAR PAINEL CLÍNICO
@@ -712,6 +724,7 @@ carregarRotinas();
 </script>
 </body>
 </html>
+
 
 
 
