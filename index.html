@@ -859,10 +859,10 @@ carregarRotinasTodos()
 032 EXECUTAR ROTINA PARA TODOS
 ==================================================== */
 async function executarTodos(rotinaId,btn){
-
 const dataAtual=document.getElementById("dataInicio").value
 
-const {data:registros,error}=await db
+/* buscar todas execuções da rotina no dia */
+const {data,error}=await db
 .from("rotina_execucao")
 .select("id")
 .eq("rotina_modelo_id",rotinaId)
@@ -870,10 +870,17 @@ const {data:registros,error}=await db
 
 if(error){
 console.error(error)
+alert("Erro ao executar rotina")
 return
 }
 
-for(const r of registros){
+if(!data || data.length===0){
+alert("Nenhuma rotina encontrada para executar")
+return
+}
+
+/* atualizar todas */
+for(const r of data){
 
 await db
 .from("rotina_execucao")
@@ -885,20 +892,22 @@ horario_execucao:new Date()
 
 }
 
-/* marcar botão */
+/* marcar botão visualmente */
 if(btn){
 btn.innerHTML="✔ "+btn.innerText
 btn.style.background="#2ecc71"
 btn.style.color="#fff"
 }
 
+/* recarregar painel */
 carregarRotinas()
 
 }
- 
+  
 </script>
 </body>
 </html>
+
 
 
 
