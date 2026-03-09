@@ -307,33 +307,12 @@ if(paciente && paciente!==""){query=query.eq("paciente_id",paciente)}
 if(dataInicio){query=query.gte("data",dataInicio)}
 if(dataFim){query=query.lte("data",dataFim)}
 /* ordenação */
-query=query
-.order("paciente",{ascending:true})
-.order("rotina",{ascending:true})
+query=query.order("paciente",{ascending:true}).order("rotina",{ascending:true})
 const {data,error}=await query
 if(error){console.error(error);alert("Erro ao carregar rotinas");return}
 if(!data || data.length===0){
-html+=`<tr>
-<td><b>Todos</b></td>
-<td></td>
-<td>
-<button onclick="executarTodos('Alimentação')" class="btn-rotina">Alimentação</button>
-<button onclick="executarTodos('Troca de Fralda-Manhã')" class="btn-rotina">Fralda-Manhã</button>
-<button onclick="executarTodos('Banho')" class="btn-rotina">Banho</button>
-<button onclick="executarTodos('Café')" class="btn-rotina">Café</button>
-<button onclick="executarTodos('Higiene Bucal')" class="btn-rotina">Higiene Bucal</button>
-<button onclick="executarTodos('Medicação')" class="btn-rotina">Medicação</button>
-<button onclick="executarTodos('Oferta de Água')" class="btn-rotina">Oferta de Água</button>
-<button onclick="executarTodos('Almoço')" class="btn-rotina">Almoço</button>
-<button onclick="executarTodos('Higiene Tarde')" class="btn-rotina">Higiene Tarde</button>
-<button onclick="executarTodos('Lanche')" class="btn-rotina">Lanche</button>
-<button onclick="executarTodos('Higiene Noturna')" class="btn-rotina">Higiene Noturna</button>
-<button onclick="executarTodos('Jantar')" class="btn-rotina">Jantar</button>
-<button onclick="executarTodos('Troca de Fralda-Noite')" class="btn-rotina">Fralda-Noite</button>
-</td>
-</tr>`
-document.getElementById("rotinas").innerHTML="";
-return;
+document.getElementById("rotinas").innerHTML=""
+return
 }
 /* indicadores */
 calcularIndicadores(data)
@@ -349,27 +328,14 @@ data.forEach(r=>{
 if(!pacientes[r.paciente]){
 pacientes[r.paciente]={rotinas:[],ok:0,total:0,controle:{}}
 }
-const chave=r.rotina+"_"+r.turno+"_"+r.data;
-
-if(pacientes[r.paciente].controle[chave]){
-return;
-}
-
-pacientes[r.paciente].controle[chave]=true;
-pacientes[r.paciente].total++;
-
-if(r.status==="executado") pacientes[r.paciente].ok++;
-
-let statusIcon="🔴";
-if(r.status==="executado") statusIcon="✔";
-pacientes[r.paciente].rotinas.push(`
-<div class="linha-rotina">
-<button class="btn-rotina" onclick="executarRotina('${r.id}',this)">
-${r.rotina}
-</button>
-<span class="status-rotina">${statusIcon}</span>
-</div>
-`)
+const chave=r.rotina+"_"+r.turno+"_"+r.data
+if(pacientes[r.paciente].controle[chave]){return}
+pacientes[r.paciente].controle[chave]=true
+pacientes[r.paciente].total++
+if(r.status==="executado") pacientes[r.paciente].ok++
+let statusIcon="🔴"
+if(r.status==="executado") statusIcon="✔"
+pacientes[r.paciente].rotinas.push(`<div class="linha-rotina"><button class="btn-rotina" onclick="executarRotina('${r.id}',this)">${r.rotina} ${statusIcon}</button></div>`)
 })
 let html=""
 Object.keys(pacientes).forEach(p=>{
@@ -377,23 +343,25 @@ let total=pacientes[p].total
 let ok=pacientes[p].ok
 let progresso=0
 if(total>0)progresso=Math.round((ok/total)*100)
-let barra=`
-<div style="width:120px">
-<div style="font-size:11px">${progresso}%</div>
-<div style="background:#eee;height:6px;border-radius:4px">
-<div style="width:${progresso}%;background:#2ecc71;height:6px;border-radius:4px"></div>
-</div>
-</div>
-`
+let barra=`<div style="width:120px"><div style="font-size:11px">${progresso}%</div><div style="background:#eee;height:6px;border-radius:4px"><div style="width:${progresso}%;background:#2ecc71;height:6px;border-radius:4px"></div></div></div>`
 let rotinas=pacientes[p].rotinas.join("")
-html+=`
-<tr>
-<td style="font-weight:bold">${p}</td>
-<td>${barra}</td>
-<td>${rotinas}</td>
-</tr>
-`
+html+=`<tr><td style="font-weight:bold">${p}</td><td>${barra}</td><td>${rotinas}</td></tr>`
 })
+html+=`<tr style="background:#f5f5f5;border-top:2px solid #ccc"><td style="font-weight:bold">Todos</td><td></td><td>
+<button onclick="executarTodos('Alimentação')" class="btn-rotina">Alimentação</button>
+<button onclick="executarTodos('Troca de Fralda-Manhã')" class="btn-rotina">Fralda-Manhã</button>
+<button onclick="executarTodos('Banho')" class="btn-rotina">Banho</button>
+<button onclick="executarTodos('Café')" class="btn-rotina">Café</button>
+<button onclick="executarTodos('Higiene Bucal')" class="btn-rotina">Higiene Bucal</button>
+<button onclick="executarTodos('Medicação')" class="btn-rotina">Medicação</button>
+<button onclick="executarTodos('Oferta de Água')" class="btn-rotina">Oferta de Água</button>
+<button onclick="executarTodos('Almoço')" class="btn-rotina">Almoço</button>
+<button onclick="executarTodos('Higiene Tarde')" class="btn-rotina">Higiene Tarde</button>
+<button onclick="executarTodos('Lanche')" class="btn-rotina">Lanche</button>
+<button onclick="executarTodos('Higiene Noturna')" class="btn-rotina">Higiene Noturna</button>
+<button onclick="executarTodos('Jantar')" class="btn-rotina">Jantar</button>
+<button onclick="executarTodos('Troca de Fralda-Noite')" class="btn-rotina">Fralda-Noite</button>
+</td></tr>`
 document.getElementById("rotinas").innerHTML=html
 }
 /* ====================================================
@@ -830,6 +798,7 @@ alert("Erro ao executar rotina")
 </script>
 </body>
 </html>
+
 
 
 
