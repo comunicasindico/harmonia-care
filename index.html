@@ -365,41 +365,31 @@ document.getElementById("rotinas").innerHTML=html
 ==================================================== */
 async function executarRotina(id,btn){
 
-btn.disabled = true;
+btn.disabled=true;
 
-const usuarioId = localStorage.getItem("usuario_id");
-const usuarioNome = localStorage.getItem("usuario_nome");
+const usuarioId=localStorage.getItem("usuario_id")
 
-const { data, error } = await db
+const {data,error}=await db
 .from("rotinas_execucao")
 .update({
-status: "executado",
-executado_por: usuarioId,
-executado_por_nome: usuarioNome,
-horario_executado: new Date().toISOString()
+status:"executado",
+executado_por:usuarioId,
+horario_executado:new Date().toISOString()
 })
-.eq("id_uuid", id)
-.select();
+.eq("id_uuid",id)
+.select()
 
 if(error){
-console.error("Erro ao atualizar rotina:", error);
-alert("Erro ao executar rotina.");
-btn.disabled = false;
-return;
+console.error("Erro ao atualizar rotina:",error)
+alert("Erro ao executar rotina.")
+btn.disabled=false
+return
 }
 
-if(!data || data.length === 0){
-alert("Rotina não encontrada para atualização.");
-btn.disabled = false;
-return;
-}
+btn.style.background="#2ecc71"
+btn.innerText="Executado"
 
-/* feedback visual */
-btn.style.background = "#2ecc71";
-btn.innerText = "Executado";
-
-/* recarrega painel */
-carregarRotinas();
+carregarRotinas()
 
 }
 /* ====================================================
@@ -663,6 +653,7 @@ carregarRotinas();
 </script>
 </body>
 </html>
+
 
 
 
