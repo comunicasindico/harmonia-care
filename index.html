@@ -160,7 +160,10 @@ Fone:(81)3461-3109
 <th>Demência</th>
 <th>Cardio</th>
 <th>Acamado</th>
-<th>Obs</th>
+<th>Pressão PA</th>
+<th>Dieta</th>
+<th>Risco</th>
+<th>Outras</th>
 </tr>
 </thead>
 <tbody id="quadroClinico"></tbody>
@@ -416,9 +419,9 @@ da,
 cardiopatia,
 acamado,
 dieta_especial,
-outras_comorbidades,
 grau_risco,
-pressao_arterial
+pressao_arterial,
+outras_comorbidades
 `)
 .order("nome_completo",{ascending:true})
 
@@ -460,6 +463,9 @@ html+=`
 <td>${p.da ? "✔" : ""}</td>
 <td>${p.cardiopatia ? "✔" : ""}</td>
 <td>${p.acamado ? "✔" : ""}</td>
+<td>${p.pressao_arterial ?? ""}</td>
+<td>${p.dieta_especial ? "✔" : ""}</td>
+<td>${p.grau_risco ?? ""}</td>
 <td>${p.outras_comorbidades ?? ""}</td>
 </tr>
 `
@@ -767,6 +773,7 @@ carregarRotinas();
 </script>
 </body>
 </html>
+
 
 
 
