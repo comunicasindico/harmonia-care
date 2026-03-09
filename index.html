@@ -765,10 +765,166 @@ btn.style.color="#fff"
 }
 carregarRotinas()
 }
-  
+/* ====================================================
+033 GERAR PDF GERAL PROFISSIONAL
+==================================================== */
+async function gerarPDFGeral(){
+
+const { jsPDF } = window.jspdf
+const doc = new jsPDF()
+
+const {data,error}=await db
+.from("vw_rotinas_painel")
+.select("*")
+.order("paciente",{ascending:true})
+.order("data",{ascending:true})
+
+if(error){
+alert("Erro ao gerar PDF")
+return
+}
+
+/* LOGO */
+const logo=new Image()
+logo.src="logo-harmonia.png"
+doc.addImage(logo,"PNG",14,8,25,25)
+
+doc.setFontSize(16)
+doc.text("HARMONIA CARE",45,15)
+
+doc.setFontSize(11)
+doc.text("Relatório Geral de Rotinas",45,22)
+
+doc.setFontSize(10)
+doc.text("Emitido em: "+new Date().toLocaleDateString("pt-BR"),14,40)
+
+/* TABELA */
+
+let linhas=[]
+
+data.forEach(r=>{
+linhas.push([
+r.paciente,
+r.data,
+r.turno,
+r.rotina,
+r.status==="executado"?"✔":"Pendente"
+])
+})
+
+doc.autoTable({
+startY:45,
+head:[["Paciente","Data","Turno","Rotina","Status"]],
+body:linhas,
+styles:{fontSize:9},
+headStyles:{fillColor:[52,152,219]}
+})
+
+doc.save("relatorio_geral_rotinas.pdf")
+
+}
+/* ====================================================
+034 GERAR PDF PACIENTE PROFISSIONAL
+==================================================== */
+async function gerarPDFPaciente(){
+
+const pacienteId=document.getElementById("buscaPaciente").value
+const dataInicio=document.getElementById("dataInicio").value
+const dataFim=document.getElementById("dataFim").value
+
+if(!pacienteId){
+alert("Selecione um paciente")
+return
+}
+
+const { jsPDF } = window.jspdf
+const doc = new jsPDF()
+
+/* BUSCAR DADOS */
+let query=db
+.from("vw_rotinas_painel")
+.select("*")
+.eq("paciente_id",pacienteId)
+
+if(dataInicio){query=query.gte("data",dataInicio)}
+if(dataFim){query=query.lte("data",dataFim)}
+
+const {data,error}=await query
+.order("data",{ascending:true})
+
+if(error){
+alert("Erro ao gerar PDF")
+return
+}
+
+if(!data || data.length===0){
+alert("Nenhum registro encontrado")
+return
+}
+
+/* NOME DO PACIENTE */
+const pacienteNome=data[0].paciente
+
+/* LOGO */
+const logo=new Image()
+logo.src="logo-harmonia.png"
+
+/* CABEÇALHO */
+doc.addImage(logo,"PNG",14,8,25,25)
+
+doc.setFontSize(16)
+doc.text("HARMONIA CARE",45,15)
+
+doc.setFontSize(11)
+doc.text("Relatório de Rotinas de Enfermagem",45,22)
+
+doc.setFontSize(10)
+doc.text("Paciente: "+pacienteNome,14,40)
+doc.text("Período: "+dataInicio+" até "+dataFim,14,46)
+doc.text("Emitido em: "+new Date().toLocaleDateString("pt-BR"),14,52)
+
+/* TABELA */
+
+let linhas=[]
+
+data.forEach(r=>{
+linhas.push([
+r.data,
+r.turno,
+r.rotina,
+r.status==="executado"?"✔ Executado":"Pendente"
+])
+})
+
+doc.autoTable({
+startY:60,
+head:[["Data","Turno","Rotina","Status"]],
+body:linhas,
+styles:{fontSize:9},
+headStyles:{fillColor:[52,152,219]}
+})
+
+/* ASSINATURA */
+
+let finalY=doc.lastAutoTable.finalY+20
+
+doc.text("_______________________________",14,finalY)
+doc.text("Profissional Responsável",14,finalY+6)
+
+doc.text("_______________________________",120,finalY)
+doc.text("Responsável Técnico",120,finalY+6)
+
+/* SALVAR */
+
+doc.save("relatorio_"+pacienteNome+".pdf")
+
+}
+
+
 </script>
 </body>
 </html>
+
 
 
 
