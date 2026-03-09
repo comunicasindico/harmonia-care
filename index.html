@@ -211,10 +211,17 @@ async function login(){
 const email=document.getElementById("usuario").value
 const senha=document.getElementById("senha").value
 const {data,error}=await db.from("usuarios").select("*").eq("email",email)
-if(error||!data||data.length===0){alert("Usuário não encontrado");return}
+if(error||!data||data.length===0){
+alert("Usuário não encontrado")
+return
+}
 const usuario=data[0]
-if(senha!==usuario.senha_hash){alert("Senha incorreta");return}
+if(senha!==usuario.senha_hash){
+alert("Senha incorreta")
+return
+}
 localStorage.setItem("usuario_id",usuario.id)
+localStorage.setItem("usuario_nome",usuario.nome)
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 carregarTudo()
@@ -345,12 +352,14 @@ document.getElementById("rotinas").innerHTML=html
 017 EXECUTAR ROTINA
 ==================================================== */
 async function executarRotina(id){
-const usuario = localStorage.getItem("usuario_id")
+const usuarioId=localStorage.getItem("usuario_id")
+const usuarioNome=localStorage.getItem("usuario_nome")
 const { data, error } = await db
 .from("rotinas_execucao")
 .update({
 status:"executado",
-executado_por_nome:usuario,
+executado_por:usuarioId,
+executado_por_nome:usuarioNome,
 horario_executado:new Date().toISOString()
 })
 .eq("id",id)
@@ -463,7 +472,7 @@ let rotina=r.replace("✔","").replace("⚠","").replace("🔴","").trim()
 if(rotina)linhas.push([paciente,rotina,status])
 })
 })
-doc.autoTable({startY:45,head:[["Paciente","Rotina","Status"]],body:linhas,styles:{fontSize:10},headStyles:{fillColor:[41,128,185]},didParseCell:function(data){if(data.column.index===0)data.cell.styles.fontStyle="bold"}})
+doc.autoTable({startY:45,head:[["Data","Paciente","Rotina","Turno","Status","Executado por","Horário"]],body:linhas,styles:{fontSize:10},headStyles:{fillColor:[41,128,185]},didParseCell:function(data){if(data.column.index===0)data.cell.styles.fontStyle="bold"}})
 doc.setFontSize(8)
 doc.text("Lar Geriátrico Harmonia",105,270,{align:"center"})
 doc.text("CNPJ 11.197.111/0001-56",105,274,{align:"center"})
@@ -498,7 +507,13 @@ let status="Executado"
 if(r.includes("🔴"))status="Pendente"
 if(r.includes("⚠"))status="Atrasado"
 let rotina=r.replace("✔","").replace("⚠","").replace("🔴","").trim()
-if(rotina)linhas.push([rotina,status])
+if(rotina)linhas.push([
+r.data,
+r.rotina,
+r.turno,
+r.status,
+r.executado_por_nome || "",
+r.horario_executado || ""])
 })
 })
 doc.autoTable({startY:45,head:[["Rotina","Status"]],body:linhas,styles:{fontSize:10},headStyles:{fillColor:[41,128,185]}})
@@ -578,12 +593,3 @@ await carregarEscalaDrag()
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
