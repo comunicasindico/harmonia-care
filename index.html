@@ -859,17 +859,22 @@ carregarRotinasTodos()
 032 EXECUTAR ROTINA PARA TODOS
 ==================================================== */
 async function executarTodos(rotinaId,btn){
+
 const dataAtual=document.getElementById("dataInicio").value
+
 const {data:registros,error}=await db
 .from("rotina_execucao")
 .select("id")
-.eq("modelo_id",rotinaId)
+.eq("rotina_modelo_id",rotinaId)
 .eq("data",dataAtual)
+
 if(error){
 console.error(error)
 return
 }
+
 for(const r of registros){
+
 await db
 .from("rotina_execucao")
 .update({
@@ -877,18 +882,24 @@ status:"executado",
 horario_execucao:new Date()
 })
 .eq("id",r.id)
+
 }
-/* atualizar botão */
+
+/* marcar botão */
 if(btn){
+btn.innerHTML="✔ "+btn.innerText
 btn.style.background="#2ecc71"
 btn.style.color="#fff"
 }
+
 carregarRotinas()
+
 }
  
 </script>
 </body>
 </html>
+
 
 
 
