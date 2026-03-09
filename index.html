@@ -252,32 +252,30 @@ mudarTurno("manha")
 013 GERAR ROTINAS DO DIA (PROTEÇÃO DUPLICIDADE)
 ==================================================== */
 async function gerarRotinasDoDia(){
-const hoje=new Date().toISOString().slice(0,10)
-
+const agora=new Date()
+const yyyy=agora.getFullYear()
+const mm=String(agora.getMonth()+1).padStart(2,"0")
+const dd=String(agora.getDate()).padStart(2,"0")
+const hoje=`${yyyy}-${mm}-${dd}`
 /* 1️⃣ VERIFICA SE JÁ EXISTE ROTINA HOJE */
 const{count}=await db
 .from("rotinas_execucao")
 .select("*",{count:"exact",head:true})
 .eq("data",hoje)
 .eq("empresa_id",EMPRESA_ID)
-
 if(count>0)return
-
 /* 2️⃣ CARREGA PACIENTES */
 const{data:pacientes}=await db
 .from("pacientes")
 .select("id")
 .eq("empresa_id",EMPRESA_ID)
-
 /* 3️⃣ CARREGA MODELOS DE ROTINA */
 const{data:rotinas}=await db
 .from("rotina_modelos")
 .select("titulo,turno")
 .eq("empresa_id",EMPRESA_ID)
-
 /* 4️⃣ CRIA ROTINAS */
 let inserts=[]
-
 for(const p of pacientes){
 for(const r of rotinas){
 inserts.push({
@@ -290,7 +288,6 @@ status:"pendente"
 })
 }
 }
-
 /* 5️⃣ INSERÇÃO ÚNICA */
 if(inserts.length>0){
 await db.from("rotinas_execucao").insert(inserts)
@@ -613,6 +610,7 @@ await carregarEscalaDrag()
 </script>
 </body>
 </html>
+
 
 
 
