@@ -180,13 +180,29 @@ align-items:start;
 
 #rotinasTodos{
 display:flex;
-flex-direction:column;
+flex-wrap:wrap;
 gap:6px;
 }
 
 #rotinasTodos .btn-rotina{
 width:100%;
 text-align:left;
+}
+.rotina-ok{
+background:#2ecc71;
+color:#fff;
+border:1px solid #27ae60;
+}
+
+.rotina-pendente{
+background:#f1f1f1;
+color:#333;
+border:1px solid #ccc;
+}
+
+.rotina-pendente:hover{
+background:#ffecec;
+border-color:#e74c3c;
 }
 
 </style>
@@ -487,8 +503,16 @@ pacientes[r.paciente].controle[chave]=true
 pacientes[r.paciente].total++
 if(r.status==="executado") pacientes[r.paciente].ok++
 let statusIcon="🔴"
-if(r.status==="executado") statusIcon="✔"
-pacientes[r.paciente].rotinas.push(`<div class="linha-rotina"><button class="btn-rotina" onclick="executarRotina('${r.id}',this)">${r.rotina} <span class="icone-status">${statusIcon}</span></button></div>`)
+let classe="rotina-pendente"
+if(r.status==="executado"){
+statusIcon="✔"
+classe="rotina-ok"
+}
+pacientes[r.paciente].rotinas.push(`
+<button class="btn-rotina ${classe}" onclick="executarRotina('${r.id}',this)">
+${r.rotina} ${statusIcon}
+</button>
+`)
 })
 let html=""
 Object.keys(pacientes).forEach(p=>{
@@ -924,6 +948,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
