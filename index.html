@@ -17,266 +17,42 @@
 ==================================================== -->
 <style>
 body{margin:0;font-family:Arial;background:#f4f6f9;}
-
 #login{display:flex;justify-content:center;align-items:center;height:100vh;}
-
-.login-box{
-background:#fff;
-padding:40px;
-border-radius:12px;
-box-shadow:0 4px 12px rgba(0,0,0,0.1);
-width:320px;
-}
-
-.login-box input{
-width:100%;
-padding:10px;
-margin-bottom:15px;
-border-radius:8px;
-border:1px solid #ccc;
-}
-
-button{
-padding:10px 16px;
-border:0;
-border-radius:8px;
-font-weight:bold;
-cursor:pointer;
-}
-
+.login-box{background:#fff;padding:40px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);width:320px;}
+.login-box input{width:100%;padding:10px;margin-bottom:15px;border-radius:8px;border:1px solid #ccc;}
+button{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;}
 .btn-primary{background:#3498db;color:#fff;}
 .btn-secondary{background:#555;color:#fff;}
 .btn-danger{background:#e74c3c;color:#fff;}
 .btn-success{background:#2ecc71;color:#fff;}
-
-#app{
-display:none;
-padding:30px;
-max-width:1200px;
-margin:auto;
-}
-
+#app{display:none;padding:30px;max-width:1200px;margin:auto;}
 .menu{margin-bottom:20px;}
-
-.dashboard{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:15px;
-margin-bottom:20px;
-}
-
-.card{
-background:#fff;
-padding:20px;
-border-radius:12px;
-text-align:center;
-box-shadow:0 2px 8px rgba(0,0,0,0.08);
-}
-
-.box{
-background:#fff;
-padding:20px;
-border-radius:12px;
-box-shadow:0 2px 8px rgba(0,0,0,0.08);
-margin-top:20px;
-}
-
+.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;}
+.card{background:#fff;padding:20px;border-radius:12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.box{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-top:20px;}
 table{width:100%;border-collapse:collapse;}
-
-th,td{
-padding:6px;
-border-bottom:1px solid #ddd;
-font-size:13px;
-text-align:left;
-}
-
-.turnos{
-display:flex;
-gap:10px;
-margin-bottom:15px;
-}
-
+th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;vertical-align:top;}
+.turnos{display:flex;gap:10px;margin-bottom:10px;}
 .turno-manha{background:#3498db;color:#fff;}
 .turno-tarde{background:#f39c12;color:#fff;}
 .turno-noite{background:#2c3e50;color:#fff;}
-
-.turno-btn{
-padding:10px 16px;
-border:0;
-border-radius:8px;
-font-weight:bold;
-cursor:pointer;
-opacity:0.6;
-}
-
-.turno-ativo{
-opacity:1;
-box-shadow:0 0 0 3px rgba(0,0,0,0.15) inset;
-}
-
-.drag-container{
-min-height:120px;
-border:2px dashed #ccc;
-border-radius:10px;
-padding:10px;
-background:#fafafa;
-}
-
-.drag-item{
-background:#3498db;
-color:#fff;
-padding:6px;
-border-radius:6px;
-margin-bottom:6px;
-cursor:grab;
-font-size:13px;
-}
-
-.grid-rotinas{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:6px 20px;
-}
-
-.item-rotina{
-display:flex;
-align-items:center;
-justify-content:space-between;
-border-bottom:1px solid #eee;
-padding:4px 0;
-}
-
-/* BOTÕES DE ROTINA */
-.btn-rotina{
-background:#f1f1f1;
-border:1px solid #ccc;
-border-radius:8px;
-padding:6px 10px;
-margin:3px;
-font-size:12px;
-cursor:pointer;
-white-space:nowrap;
-}
-
-.btn-rotina:hover{
-background:#d8ecff;
-border-color:#3498db;
-}
-
-.icone-status{
-margin-left:6px;
-font-weight:bold;
-}
-
-/* LINHA TODOS */
-
-.layout-todos{
-display:grid;
-grid-template-columns:200px 1fr;
-gap:10px;
-align-items:start;
-}
-
-#rotinasTodos{
-display:flex;
-flex-wrap:wrap;
-gap:6px;
-}
-
-#rotinasTodos .btn-rotina{
-width:100%;
-text-align:left;
-}
-.rotina-ok{
-background:#e8f5ec;
-color:#000;
-border:1px solid #cfe9d8;
-box-shadow:0 1px 0 rgba(0,0,0,0.03);
-}
-
-.rotina-pendente{
-background:#f4f4f4;
-color:#000;
-border:1px solid #ddd;
-}
-
-.rotina-pendente:hover{
-background:#ffecec;
-border-color:#e74c3c;
-}
-.turnos-barra{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:10px;
-}
-
-#indicadoresRotina{
-display:flex;
-flex-wrap:wrap;
-gap:12px;
-font-size:12px;
-}
-
-.badge-rotina{
-background:#f6f6f6;
-border:1px solid #ddd;
-border-radius:8px;
-padding:4px 8px;
-display:flex;
-gap:6px;
-align-items:center;
-}
-
-.badge-ok{
-color:#2ecc71;
-font-weight:bold;
-}
-
-.badge-pend{
-color:#e74c3c;
-font-weight:bold;
-}
-.linha-indicadores{
-display:flex;
-flex-wrap:wrap;
-gap:14px;
-margin-left:260px; /* largura Paciente + Progresso */
-margin-bottom:6px;
-}
-
-.indicador-rotina{
-width:140px;   /* MESMA largura dos botões */
-text-align:center;
-font-size:12px;
-}
-
-.indicador-nome{
-font-weight:bold;
-margin-bottom:2px;
-}
-
-.indicador-ok{
-color:#2ecc71;
-font-weight:bold;
-}
-
-.indicador-pend{
-color:#e74c3c;
-font-weight:bold;
-}
-.linha-rotina{
-display:flex;
-flex-wrap:wrap;
-gap:6px;
-}
-.col-rotinas{
-display:flex;
-flex-wrap:wrap;
-gap:8px;
-align-items:center;
-}
-
+.turno-btn{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;opacity:0.6;}
+.turno-ativo{opacity:1;box-shadow:0 0 0 3px rgba(0,0,0,0.15) inset;}
+.drag-container{min-height:120px;border:2px dashed #ccc;border-radius:10px;padding:10px;background:#fafafa;}
+.drag-item{background:#3498db;color:#fff;padding:6px;border-radius:6px;margin-bottom:6px;cursor:grab;font-size:13px;}
+.btn-rotina{background:#f1f1f1;border:1px solid #ccc;border-radius:8px;padding:6px 10px;margin:3px;font-size:12px;cursor:pointer;white-space:nowrap;}
+.btn-rotina:hover{background:#d8ecff;border-color:#3498db;}
+.rotina-ok{background:#e8f5ec;color:#000;border:1px solid #cfe9d8;box-shadow:0 1px 0 rgba(0,0,0,0.03);}
+.rotina-pendente{background:#f4f4f4;color:#000;border:1px solid #ddd;}
+.rotina-pendente:hover{background:#ffecec;border-color:#e74c3c;}
+.turnos-barra{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.linha-indicadores{display:flex;flex-wrap:wrap;gap:14px;margin-left:260px;margin-bottom:6px;}
+.indicador-rotina{width:140px;text-align:center;font-size:12px;}
+.indicador-nome{font-weight:bold;margin-bottom:2px;}
+.indicador-ok{color:#2ecc71;font-weight:bold;}
+.indicador-pend{color:#e74c3c;font-weight:bold;}
+.col-rotinas{display:flex;flex-wrap:wrap;gap:8px;}
+  
 </style>
 </head>
 <!-- ====================================================
@@ -362,8 +138,6 @@ Fone:(81)3461-3109
 </div>
 
 <div id="indicadoresRotina" class="linha-indicadores"></div>
-<table>
-</div>
 
 <table>
 <thead>
@@ -1068,6 +842,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
