@@ -47,6 +47,8 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 .status-rotina{font-size:16px;margin-left:6px;}
 .btn-rotina{background:#f1f1f1;border:1px solid #ccc;border-radius:8px;padding:6px 10px;margin:3px;font-size:12px;cursor:pointer}
 .btn-rotina:hover{background:#d8ecff}
+.icone-status{margin-left:6px;font-weight:bold}
+#rotinasTodos{display:flex;flex-wrap:wrap;gap:6px}
 
 </style>
 </head>
@@ -172,19 +174,33 @@ Fone:(81)3461-3109
 </table>
 </div>
 </div>
-
 <div id="painelAdmin" style="display:none">
-
 <div class="box">
 <h3>Escala Profissionais</h3>
 <div id="listaProfissionaisDrag"></div>
 </div>
-
 <div class="box">
 <h3>Pacientes</h3>
 <div id="listaPacientesDrag"></div>
 </div>
-
+<!-- ====================================================
+ADMIN ROTINAS
+==================================================== -->
+<div class="box">
+<h3>Rotinas do Sistema</h3>
+<div id="listaRotinasAdmin"></div>
+<div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+<input id="novaRotinaNome" placeholder="Nova rotina" style="padding:6px;border-radius:6px">
+<select id="novoTurno" style="padding:6px;border-radius:6px">
+<option value="Manhã">Manhã</option>
+<option value="Tarde">Tarde</option>
+<option value="Noite">Noite</option>
+</select>
+<button onclick="adicionarRotina()" class="btn-primary">
+Adicionar
+</button>
+</div>
+</div>
 </div>
 <!-- ====================================================
 008 SCRIPT
@@ -335,7 +351,7 @@ pacientes[r.paciente].total++
 if(r.status==="executado") pacientes[r.paciente].ok++
 let statusIcon="🔴"
 if(r.status==="executado") statusIcon="✔"
-pacientes[r.paciente].rotinas.push(`<div class="linha-rotina"><button class="btn-rotina" onclick="executarRotina('${r.id}',this)">${r.rotina} ${statusIcon}</button></div>`)
+pacientes[r.paciente].rotinas.push(`<div class="linha-rotina"><button class="btn-rotina" onclick="executarRotina('${r.id}',this)">${r.rotina} <span class="icone-status">${statusIcon}</span></button></div>`)
 })
 let html=""
 Object.keys(pacientes).forEach(p=>{
@@ -347,22 +363,14 @@ let barra=`<div style="width:120px"><div style="font-size:11px">${progresso}%</d
 let rotinas=pacientes[p].rotinas.join("")
 html+=`<tr><td style="font-weight:bold">${p}</td><td>${barra}</td><td>${rotinas}</td></tr>`
 })
-html+=`<tr style="background:#f5f5f5;border-top:2px solid #ccc"><td style="font-weight:bold">Todos</td><td></td><td>
-<button onclick="executarTodos('Alimentação')" class="btn-rotina">Alimentação</button>
-<button onclick="executarTodos('Troca de Fralda-Manhã')" class="btn-rotina">Fralda-Manhã</button>
-<button onclick="executarTodos('Banho')" class="btn-rotina">Banho</button>
-<button onclick="executarTodos('Café')" class="btn-rotina">Café</button>
-<button onclick="executarTodos('Higiene Bucal')" class="btn-rotina">Higiene Bucal</button>
-<button onclick="executarTodos('Medicação')" class="btn-rotina">Medicação</button>
-<button onclick="executarTodos('Oferta de Água')" class="btn-rotina">Oferta de Água</button>
-<button onclick="executarTodos('Almoço')" class="btn-rotina">Almoço</button>
-<button onclick="executarTodos('Higiene Tarde')" class="btn-rotina">Higiene Tarde</button>
-<button onclick="executarTodos('Lanche')" class="btn-rotina">Lanche</button>
-<button onclick="executarTodos('Higiene Noturna')" class="btn-rotina">Higiene Noturna</button>
-<button onclick="executarTodos('Jantar')" class="btn-rotina">Jantar</button>
-<button onclick="executarTodos('Troca de Fralda-Noite')" class="btn-rotina">Fralda-Noite</button>
-</td></tr>`
+html+=`<tr style="background:#f5f5f5;border-top:2px solid #ccc">
+<td style="font-weight:bold">Todos</td>
+<td></td>
+<td id="rotinasTodos"></td>
+</tr>`
+
 document.getElementById("rotinas").innerHTML=html
+carregarRotinasTodos()
 }
 /* ====================================================
 017 EXECUTAR ROTINA
@@ -779,11 +787,7 @@ const dataInicio=document.getElementById("dataInicio").value
 const usuario=localStorage.getItem("usuario_id")
 if(!confirm("Executar '"+rotinaNome+"' para TODOS os pacientes?"))return
 try{
-const{data,error}=await db
-.from("vw_rotinas_painel")
-.select("id")
-.eq("rotina",rotinaNome)
-.eq("data",dataInicio)
+const{data,error}=await db.from("vw_rotinas_painel").select("id,paciente").eq("rotina",rotinaNome).eq("data",dataInicio)
 if(error){console.error(error);alert("Erro ao localizar rotinas");return}
 for(const r of data){
 await db.from("rotina_execucao").update({status:"executado",executado_por:usuario,horario_execucao:new Date().toISOString()}).eq("id",r.id)
@@ -794,10 +798,55 @@ console.error(e)
 alert("Erro ao executar rotina")
 }
 }
+/* ====================================================
+030 CARREGAR ROTINAS PARA LINHA TODOS
+==================================================== */
+async function carregarRotinasTodos(){
+const turno=TURNO_ATUAL
+const{data,error}=await db
+.from("rotina_modelos")
+.select("id,nome")
+.eq("turno",turno)
+.order("nome",{ascending:true})
+if(error){console.error(error);return}
+let html=""
+data.forEach(r=>{
+html+=`<button onclick="executarTodos('${r.nome}')" class="btn-rotina">${r.nome}</button>`
+})
+const el=document.getElementById("rotinasTodos")
+if(el)el.innerHTML=html
+}
+async function adicionarRotina(){
+
+const nome=document.getElementById("novaRotinaNome").value
+const turno=document.getElementById("novoTurno").value
+
+if(!nome){
+alert("Informe o nome da rotina")
+return
+}
+
+const {error}=await db
+.from("rotina_modelos")
+.insert([{nome:nome,turno:turno}])
+
+if(error){
+console.error(error)
+alert("Erro ao criar rotina")
+return
+}
+
+alert("Rotina criada com sucesso")
+
+document.getElementById("novaRotinaNome").value=""
+
+carregarRotinasTodos()
+}
 
 </script>
 </body>
 </html>
+
 
 
 
