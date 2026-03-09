@@ -147,7 +147,6 @@ padding:4px 0;
 }
 
 /* BOTÕES DE ROTINA */
-
 .btn-rotina{
 background:#f1f1f1;
 border:1px solid #ccc;
@@ -156,7 +155,8 @@ padding:6px 10px;
 margin:3px;
 font-size:12px;
 cursor:pointer;
-transition:0.2s;
+width:140px;   /* MESMA largura */
+text-align:center;
 }
 
 .btn-rotina:hover{
@@ -239,19 +239,17 @@ color:#e74c3c;
 font-weight:bold;
 }
 .linha-indicadores{
-display:grid;
-grid-auto-flow:column;
-grid-auto-columns:max-content;
+display:flex;
+flex-wrap:wrap;
 gap:14px;
-justify-content:start;
-margin-left:260px; /* largura aproximada das colunas Paciente + Progresso */
+margin-left:260px; /* largura Paciente + Progresso */
 margin-bottom:6px;
 }
 
 .indicador-rotina{
+width:140px;   /* MESMA largura dos botões */
 text-align:center;
 font-size:12px;
-min-width:120px;
 }
 
 .indicador-nome{
@@ -1060,6 +1058,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
