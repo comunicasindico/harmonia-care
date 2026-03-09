@@ -1,169 +1,439 @@
 <!DOCTYPE html>
+
 <!-- ====================================================
-001 HEAD
+001 HTML
 ==================================================== -->
 <html lang="pt-BR">
+
+<!-- ====================================================
+002 HEAD
+==================================================== -->
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Harmonia Care</title>
+
+<!-- ====================================================
+003 LIBS
+==================================================== -->
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <!-- ====================================================
-002 STYLE
+004 STYLE
 ==================================================== -->
 <style>
-body{margin:0;font-family:Arial;background:#f4f6f9;}
-#login{display:flex;justify-content:center;align-items:center;height:100vh;}
-.login-box{background:#fff;padding:40px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);width:320px;}
-.login-box input{width:100%;padding:10px;margin-bottom:15px;border-radius:8px;border:1px solid #ccc;}
-button{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;}
+
+/* ====================================================
+005 BASE
+==================================================== */
+
+body{
+margin:0;
+font-family:Arial;
+background:#f4f6f9;
+}
+
+#app{
+display:none;
+padding:30px;
+max-width:1400px;
+margin:auto;
+}
+
+/* ====================================================
+006 LOGIN
+==================================================== */
+
+#login{
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.login-box{
+background:#fff;
+padding:40px;
+border-radius:12px;
+box-shadow:0 4px 12px rgba(0,0,0,0.1);
+width:320px;
+}
+
+.login-box input{
+width:100%;
+padding:10px;
+margin-bottom:15px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+/* ====================================================
+007 BOTÕES
+==================================================== */
+
+button{
+padding:10px 16px;
+border:0;
+border-radius:8px;
+font-weight:bold;
+cursor:pointer;
+}
+
 .btn-primary{background:#3498db;color:#fff;}
 .btn-secondary{background:#555;color:#fff;}
 .btn-danger{background:#e74c3c;color:#fff;}
 .btn-success{background:#2ecc71;color:#fff;}
-#app{display:none;padding:30px;max-width:1200px;margin:auto;}
-.menu{margin-bottom:20px;}
-.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;}
-.card{background:#fff;padding:20px;border-radius:12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-.box{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-top:20px;}
-table{width:100%;border-collapse:collapse;}
-th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;vertical-align:top;}
-.turnos{display:flex;gap:10px;margin-bottom:10px;}
+
+/* ====================================================
+008 MENU
+==================================================== */
+
+.menu{
+margin-bottom:20px;
+}
+
+/* ====================================================
+009 DASHBOARD
+==================================================== */
+
+.dashboard{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:15px;
+margin-bottom:20px;
+}
+
+.card{
+background:#fff;
+padding:20px;
+border-radius:12px;
+text-align:center;
+box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ====================================================
+010 BOX
+==================================================== */
+
+.box{
+background:#fff;
+padding:20px;
+border-radius:12px;
+box-shadow:0 2px 8px rgba(0,0,0,0.08);
+margin-top:20px;
+}
+
+/* ====================================================
+011 FILTROS BUSCA (CORRIGIDO)
+==================================================== */
+
+.filtros-busca{
+
+display:grid;
+
+grid-template-columns:
+260px
+160px
+160px
+120px;
+
+gap:12px;
+
+align-items:end;
+
+margin-bottom:15px;
+
+}
+
+.filtros-busca label{
+font-size:12px;
+font-weight:bold;
+display:block;
+margin-bottom:3px;
+}
+
+.filtros-busca select,
+.filtros-busca input{
+
+width:100%;
+padding:6px;
+border-radius:6px;
+border:1px solid #ccc;
+
+}
+
+/* ====================================================
+012 TABELA
+==================================================== */
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:6px;
+border-bottom:1px solid #ddd;
+font-size:13px;
+text-align:left;
+vertical-align:top;
+}
+
+/* ====================================================
+013 TURNOS
+==================================================== */
+
+.turnos{
+display:flex;
+gap:10px;
+margin-bottom:10px;
+}
+
 .turno-manha{background:#3498db;color:#fff;}
 .turno-tarde{background:#f39c12;color:#fff;}
 .turno-noite{background:#2c3e50;color:#fff;}
-.turno-btn{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;opacity:0.6;}
-.turno-ativo{opacity:1;box-shadow:0 0 0 3px rgba(0,0,0,0.15) inset;}
-.drag-container{min-height:120px;border:2px dashed #ccc;border-radius:10px;padding:10px;background:#fafafa;}
-.drag-item{background:#3498db;color:#fff;padding:6px;border-radius:6px;margin-bottom:6px;cursor:grab;font-size:13px;}
-.btn-rotina{background:#f1f1f1;border:1px solid #ccc;border-radius:8px;padding:6px 10px;margin:3px;font-size:12px;cursor:pointer;white-space:nowrap;}
-.btn-rotina:hover{background:#d8ecff;border-color:#3498db;}
-.rotina-ok{background:#e8f5ec;color:#000;border:1px solid #cfe9d8;box-shadow:0 1px 0 rgba(0,0,0,0.03);}
-.rotina-pendente{background:#f4f4f4;color:#000;border:1px solid #ddd;}
-.rotina-pendente:hover{background:#ffecec;border-color:#e74c3c;}
-.turnos-barra{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
-.linha-indicadores{display:flex;flex-wrap:wrap;gap:14px;margin-left:260px;margin-bottom:6px;}
-.indicador-rotina{width:140px;text-align:center;font-size:12px;}
-.indicador-nome{font-weight:bold;margin-bottom:2px;}
-.indicador-ok{color:#2ecc71;font-weight:bold;}
-.indicador-pend{color:#e74c3c;font-weight:bold;}
+
+.turno-btn{
+padding:10px 16px;
+border:0;
+border-radius:8px;
+font-weight:bold;
+cursor:pointer;
+opacity:0.6;
+}
+
+.turno-ativo{
+opacity:1;
+box-shadow:0 0 0 3px rgba(0,0,0,0.15) inset;
+}
+
+/* ====================================================
+014 ROTINAS
+==================================================== */
+
+.btn-rotina{
+background:#f1f1f1;
+border:1px solid #ccc;
+border-radius:8px;
+padding:6px 10px;
+margin:3px;
+font-size:12px;
+cursor:pointer;
+}
+
+.rotina-ok{
+background:#e8f5ec;
+border:1px solid #cfe9d8;
+}
+
+.rotina-pendente{
+background:#f4f4f4;
+border:1px solid #ddd;
+}
+
+.col-paciente{width:260px;font-weight:bold;}
+.col-progresso{width:180px;}
 .col-rotinas{display:flex;flex-wrap:wrap;gap:8px;}
-  
+
 </style>
 </head>
+
 <!-- ====================================================
-003 BODY
+015 BODY
 ==================================================== -->
 <body>
 
 <!-- ====================================================
-004 LOGIN
+016 LOGIN
 ==================================================== -->
+
 <div id="login">
+
 <div class="login-box">
+
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+
 <img src="logo-harmonia.png" style="height:38px">
+
 <h2 style="margin:0">Harmonia Care</h2>
+
 </div>
+
 <input id="usuario" placeholder="Usuário">
+
 <input id="senha" type="password" placeholder="Senha">
-<button onclick="login()" class="btn-primary" style="width:100%">Entrar</button>
-<div style="margin-top:15px;font-size:12px;text-align:center;color:#666">
-<b>Lar Geriátrico HARMONIA</b><br>
-CNPJ:11.197.111/0001-56<br>
-Rua Doutor Manoel Benício Fontinele,38 – Piedade<br>
-Jaboatão dos Guararapes – PE<br>
-Fone:(81)3461-3109
+
+<button onclick="login()" class="btn-primary" style="width:100%">
+Entrar
+</button>
+
 </div>
 </div>
+
+<!-- ====================================================
+017 APP
+==================================================== -->
+
+<div id="app">
+
+<h1 style="display:flex;justify-content:space-between;align-items:center">
+
+<div style="display:flex;gap:10px;align-items:center">
+
+<img src="logo-harmonia.png" style="height:32px">
+
+<span>Harmonia Care</span>
+
+</div>
+
+<button onclick="logout()" class="btn-danger">Sair</button>
+
+</h1>
+
+<div class="menu">
+
+<button onclick="abrirEnfermagem()" class="btn-primary">Painel Enfermagem</button>
+
+<button onclick="abrirClinico()" class="btn-secondary">Painel Clínico</button>
+
+<button onclick="abrirAdmin()" class="btn-success">Admin</button>
+
+<button onclick="gerarPDFGeral()" class="btn-primary">Gerar PDF</button>
+
+<button onclick="gerarPDFPaciente()" class="btn-primary">PDF do Paciente</button>
+
 </div>
 <!-- ====================================================
-005 APP
+018 PAINEL ENFERMAGEM
 ==================================================== -->
-<div id="app">
-<h1 style="display:flex;justify-content:space-between;align-items:center">
-<div style="display:flex;gap:10px;align-items:center">
-<img src="logo-harmonia.png" style="height:32px">
-<span>Harmonia Care</span>
-</div>
-<button onclick="logout()" class="btn-danger">Sair</button>
-</h1>
-<div class="menu">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-<div style="display:flex;gap:10px">
-<button onclick="abrirEnfermagem()" class="btn-primary">Painel Enfermagem</button>
-<button onclick="abrirClinico()" class="btn-secondary">Painel Clínico</button>
-<button onclick="abrirAdmin()" class="btn-success">Admin</button>
-<button onclick="gerarPDFGeral()" class="btn-primary">Gerar PDF</button>
-<button onclick="gerarPDFPaciente()" class="btn-primary">PDF do Paciente</button>
-</div>
-<div style="display:flex;gap:10px;font-weight:bold">
-<div id="indicadorExecutado" style="background:#2ecc71;color:#fff;padding:6px 10px;border-radius:8px">✔ 0</div>
-<div id="indicadorPendente" style="background:#f39c12;color:#fff;padding:6px 10px;border-radius:8px">🔴 0</div>
-<div id="indicadorAtrasado" style="background:#e74c3c;color:#fff;padding:6px 10px;border-radius:8px">⚠ 0</div>
-</div>
-</div>
-</div>
+
 <div id="painelEnfermagem">
+
 <div class="box">
+
 <h3>Rotinas do Turno</h3>
-<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px">
+
+<!-- ====================================================
+019 FILTROS
+==================================================== -->
+
+<div class="filtros-busca">
+
 <div>
-<label>Paciente</label><br>
-<select id="buscaPaciente" style="padding:6px;border-radius:6px"></select>
+<label>Paciente</label>
+<select id="buscaPaciente"></select>
 </div>
+
 <div>
-<label>Data início</label><br>
+<label>Data início</label>
 <input type="date" id="dataInicio">
 </div>
+
 <div>
-<label>Data fim</label><br>
+<label>Data fim</label>
 <input type="date" id="dataFim">
 </div>
-<div style="display:flex;align-items:end">
-<button onclick="carregarRotinas()" class="btn-primary">Pesquisar</button>
-</div>
+
+<div>
+<button onclick="carregarRotinas()" class="btn-primary">
+Pesquisar
+</button>
 </div>
 
-<div class="turnos-barra">
+</div>
+
+<!-- ====================================================
+020 TURNOS
+==================================================== -->
 
 <div class="turnos">
-<button id="btnManha" class="turno-btn turno-manha" onclick="mudarTurno('manha')">Manhã</button>
-<button id="btnTarde" class="turno-btn turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
-<button id="btnNoite" class="turno-btn turno-noite" onclick="mudarTurno('noite')">Noite</button>
+
+<button id="btnManha" class="turno-btn turno-manha" onclick="mudarTurno('manha')">
+Manhã
+</button>
+
+<button id="btnTarde" class="turno-btn turno-tarde" onclick="mudarTurno('tarde')">
+Tarde
+</button>
+
+<button id="btnNoite" class="turno-btn turno-noite" onclick="mudarTurno('noite')">
+Noite
+</button>
+
 </div>
+
+<!-- ====================================================
+021 INDICADORES POR ROTINA
+==================================================== -->
 
 <div id="indicadoresRotina" class="linha-indicadores"></div>
 
+<!-- ====================================================
+022 TABELA ROTINAS
+==================================================== -->
+
 <table>
+
 <thead>
+
 <tr>
-<th>Paciente</th>
-<th>Progresso</th>
+<th class="col-paciente">Paciente</th>
+<th class="col-progresso">Progresso</th>
 <th>Rotinas</th>
 </tr>
+
 </thead>
+
 <tbody id="rotinas"></tbody>
+
 </table>
 
 </div>
+
 </div>
 
+<!-- ====================================================
+023 PAINEL CLÍNICO
+==================================================== -->
+
 <div id="painelClinico" style="display:none">
+
 <div class="dashboard">
-<div class="card"><h3 id="totalPacientes">0</h3>Pacientes</div>
-<div class="card"><h3 id="totalHas">0</h3>HAS</div>
-<div class="card"><h3 id="totalDm">0</h3>DM</div>
-<div class="card"><h3 id="totalDemencia">0</h3>Demência</div>
+
+<div class="card">
+<h3 id="totalPacientes">0</h3>
+Pacientes
+</div>
+
+<div class="card">
+<h3 id="totalHas">0</h3>
+HAS
+</div>
+
+<div class="card">
+<h3 id="totalDm">0</h3>
+DM
+</div>
+
+<div class="card">
+<h3 id="totalDemencia">0</h3>
+Demência
+</div>
+
 </div>
 
 <div class="box">
+
 <table>
+
 <thead>
+
 <tr>
 <th>Paciente</th>
 <th>Idade</th>
@@ -177,514 +447,410 @@ Fone:(81)3461-3109
 <th>Risco</th>
 <th>Outras</th>
 </tr>
+
 </thead>
+
 <tbody id="quadroClinico"></tbody>
+
 </table>
+
 </div>
+
 </div>
-<div id="painelAdmin" style="display:none">
-<div class="box">
-<h3>Escala Profissionais</h3>
-<div id="listaProfissionaisDrag"></div>
-</div>
-<div class="box">
-<h3>Pacientes</h3>
-<div id="listaPacientesDrag"></div>
-</div>
+
 <!-- ====================================================
-ADMIN ROTINAS
+024 PAINEL ADMIN
 ==================================================== -->
+
+<div id="painelAdmin" style="display:none">
+
+<!-- ====================================================
+025 ESCALA PROFISSIONAIS
+==================================================== -->
+
 <div class="box">
+
+<h3>Escala Profissionais</h3>
+
+<div id="listaProfissionaisDrag"></div>
+
+</div>
+
+<!-- ====================================================
+026 PACIENTES
+==================================================== -->
+
+<div class="box">
+
+<h3>Pacientes</h3>
+
+<div id="listaPacientesDrag"></div>
+
+</div>
+
+<!-- ====================================================
+027 ADMIN ROTINAS
+==================================================== -->
+
+<div class="box">
+
 <h3>Rotinas do Sistema</h3>
+
 <div id="listaRotinasAdmin"></div>
+
 <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
-<input id="novaRotinaNome" placeholder="Nova rotina" style="padding:6px;border-radius:6px">
+
+<input
+id="novaRotinaNome"
+placeholder="Nova rotina"
+style="padding:6px;border-radius:6px"
+>
+
 <select id="novoTurno" style="padding:6px;border-radius:6px">
+
 <option value="Manhã">Manhã</option>
 <option value="Tarde">Tarde</option>
 <option value="Noite">Noite</option>
+
 </select>
+
 <button onclick="adicionarRotina()" class="btn-primary">
 Adicionar
 </button>
+
 </div>
+
 </div>
+
 </div>
 <!-- ====================================================
-008 SCRIPT
+030 SCRIPT PRINCIPAL
 ==================================================== -->
 <script>
 
 /* ====================================================
-009 CONFIG
+031 CONFIG
 ==================================================== */
+
 let TURNO_ATUAL="manha"
+
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co"
-const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU";
+
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU"
+
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e"
+
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
-/* =========================================
-SUPABASE KEEP ALIVE
-evita pausa do projeto free
-========================================= */
-setInterval(async () => {
-  try {
-    await db.from("pacientes").select("id").limit(1)
-    console.log("Supabase ativo")
-  } catch(e) {
-    console.log("keep alive erro")
-  }
-}, 3600000)
+
 /* ====================================================
-010 LOGIN
+032 KEEP ALIVE SUPABASE
 ==================================================== */
+
+setInterval(async()=>{
+
+try{
+
+await db.from("pacientes").select("id").limit(1)
+
+}catch(e){}
+
+},3600000)
+
+/* ====================================================
+033 LOGIN
+==================================================== */
+
 async function login(){
-const usuarioDigitado=document.getElementById("usuario").value.trim()
-const senhaDigitada=document.getElementById("senha").value.trim()
-/* LOGIN PADRÃO ADMIN */
-if(usuarioDigitado==="admin" && senhaDigitada==="123456"){
+
+const usuario=document.getElementById("usuario").value.trim()
+
+const senha=document.getElementById("senha").value.trim()
+
+if(usuario==="admin" && senha==="123456"){
+
 localStorage.setItem("usuario_id","admin")
-localStorage.setItem("usuario_nome","Administrador")
+
 document.getElementById("login").style.display="none"
+
 document.getElementById("app").style.display="block"
+
 carregarTudo()
+
 return
+
 }
-/* LOGIN USUÁRIOS DO BANCO */
-const {data,error}=await db.from("usuarios").select("*").eq("usuario",usuarioDigitado).limit(1);
-if(!data?.length){
-alert("Usuário não encontrado")
-return
+
+alert("Usuário inválido")
+
 }
-const usuario=data[0]
-if(senhaDigitada!==usuario.senha_hash){
-alert("Senha incorreta")
-return
-}
-localStorage.setItem("usuario_id",usuario.id)
-localStorage.setItem("usuario_nome",usuario.nome)
-document.getElementById("login").style.display="none"
-document.getElementById("app").style.display="block"
-carregarTudo()
-}
+
 /* ====================================================
-010A LOGOUT
+034 LOGOUT
 ==================================================== */
-function logout(){localStorage.clear();location.reload()}
+
+function logout(){
+
+localStorage.clear()
+
+location.reload()
+
+}
+
 /* ====================================================
-011 INIT
+035 INIT
 ==================================================== */
+
 window.onload=function(){
+
 const loginSalvo=localStorage.getItem("usuario_id")
+
 if(loginSalvo){
+
 document.getElementById("login").style.display="none"
+
 document.getElementById("app").style.display="block"
+
 carregarTudo()
+
 }
+
 }
+
 /* ====================================================
-012 CARREGAR TUDO
+036 CARREGAR SISTEMA
 ==================================================== */
+
 async function carregarTudo(){
+
 definirDataHoje()
-if(typeof carregarPacientesBusca==="function"){
+
 await carregarPacientesBusca()
-}
-if(typeof carregarTiposRotina==="function"){
-await carregarTiposRotina()
-}
-if(typeof carregarProfissionais==="function"){
-await carregarProfissionais()
-}
+
 await carregarRotinas()
-if(typeof carregarClinico==="function"){
-await carregarClinico()
+
+setInterval(()=>{
+
+carregarRotinas()
+
+},30000)
+
 }
-setInterval(()=>{carregarRotinas()},30000)
-abrirEnfermagem()
-mudarTurno("manha")
-}
+
 /* ====================================================
-014 MUDAR TURNO
+037 MUDAR TURNO
 ==================================================== */
+
 function mudarTurno(turno){
+
 TURNO_ATUAL=turno
+
 document.getElementById("btnManha").classList.remove("turno-ativo")
 document.getElementById("btnTarde").classList.remove("turno-ativo")
 document.getElementById("btnNoite").classList.remove("turno-ativo")
+
 if(turno==="manha")document.getElementById("btnManha").classList.add("turno-ativo")
 if(turno==="tarde")document.getElementById("btnTarde").classList.add("turno-ativo")
 if(turno==="noite")document.getElementById("btnNoite").classList.add("turno-ativo")
+
 carregarRotinas()
+
 }
+
 /* ====================================================
-015 CARREGAR ROTINAS
+038 DATA HOJE
 ==================================================== */
-async function carregarRotinas(){
-const paciente=document.getElementById("buscaPaciente")?.value
-const dataInicio=document.getElementById("dataInicio")?.value
-const dataFim=document.getElementById("dataFim")?.value
-let query=db
-.from("vw_rotinas_painel")
-.select("*")
-.eq("turno",TURNO_ATUAL)
-if(paciente && paciente!==""){query=query.eq("paciente_id",paciente)}
-if(dataInicio){query=query.gte("data",dataInicio)}
-if(dataFim){query=query.lte("data",dataFim)}
-query=query.order("paciente",{ascending:true}).order("rotina",{ascending:true})
-const {data,error}=await query
-if(error){console.error(error);alert("Erro ao carregar rotinas");return}
-if(!data || data.length===0){
-document.getElementById("rotinas").innerHTML=""
-return
-}
-calcularIndicadores(data)
-calcularIndicadoresPorRotina(data)
-renderizarRotinas(data)
-}
-/* ====================================================
-016 RENDERIZAR ROTINAS
-==================================================== */
-function renderizarRotinas(data){
-let pacientes={}
-data.forEach(r=>{
-if(!pacientes[r.paciente]){
-pacientes[r.paciente]={rotinas:[],ok:0,total:0,controle:{}}
-}
-const chave=r.rotina+"_"+r.turno+"_"+r.data
-if(pacientes[r.paciente].controle[chave]){return}
-pacientes[r.paciente].controle[chave]=true
-pacientes[r.paciente].total++
-if(r.status==="executado") pacientes[r.paciente].ok++
-let statusIcon="🔴"
-let classe="rotina-pendente"
-if(r.status==="executado"){
-statusIcon="✔"
-classe="rotina-ok"
-}
-pacientes[r.paciente].rotinas.push(`
-<button class="btn-rotina ${classe}" onclick="executarRotina('${r.id}',this)">
-${r.rotina} ${statusIcon}
-</button>
-`)
-})
-let html=""
-Object.keys(pacientes).forEach(p=>{
-let total=pacientes[p].total
-let ok=pacientes[p].ok
-let progresso=Math.round((ok/total)*100)||0
-let barra=`<div style="width:120px"><div style="font-size:11px">${progresso}%</div><div style="background:#eee;height:6px;border-radius:4px"><div style="width:${progresso}%;background:#2ecc71;height:6px;border-radius:4px"></div></div></div>`
-let rotinas=`<div class="col-rotinas">${pacientes[p].rotinas.join("")}</div>`
-html+=`<tr><td style="font-weight:bold">${p}</td><td>${barra}</td><td>${rotinas}</td></tr>`
-})
-html+=`
-<tr style="background:#f5f5f5;border-top:2px solid #ccc">
-<td style="font-weight:bold">Todos</td>
-<td></td>
-<td>
-<div class="layout-todos">
-<div id="rotinasTodos"></div>
-</div>
-</td>
-</tr>`
-document.getElementById("rotinas").innerHTML=html
-carregarRotinasTodos()
-}
-/* ====================================================
-017 EXECUTAR ROTINA
-==================================================== */
-async function executarRotina(id,btn){
-btn.disabled=true
-const usuarioId=localStorage.getItem("usuario_id")
-const updateData={
-status:"executado",
-horario_executado:new Date().toISOString()
-}
-if(usuarioId && usuarioId.length===36){
-updateData.executado_por=usuarioId
-}
-const {data,error}=await db
-.from("rotinas_execucao")
-.update(updateData)
-.eq("id",id)
-.select()
-if(error){
-console.error(error)
-alert("Erro ao executar rotina: "+error.message)
-btn.disabled=false
-return
-}
-btn.style.background="#2ecc71"
-btn.innerText="Executado"
-setTimeout(()=>{carregarRotinas()},200)}
-/* ====================================================
-018 CLÍNICO
-==================================================== */
-async function carregarClinico(){
-try{
-const {data,error}=await db
-.from("pacientes")
-.select(`
-nome_completo,
-data_nascimento,
-has,
-dm,
-da,
-cardiopatia,
-acamado,
-dieta_especial,
-grau_risco,
-pressao_arterial,
-outras_comorbidades
-`)
-.order("nome_completo",{ascending:true})
-if(error){
-console.error(error)
-alert("Erro ao carregar painel clínico")
-return
-}
-function calcularIdade(data){
-if(!data) return ""
-const nasc=new Date(data)
-const hoje=new Date()
-let idade=hoje.getFullYear()-nasc.getFullYear()
-const m=hoje.getMonth()-nasc.getMonth()
-if(m<0||(m===0&&hoje.getDate()<nasc.getDate()))idade--
-return idade
-}
-let html=""
-let totalHas=0
-let totalDm=0
-let totalDa=0
-data.forEach(p=>{
-if(p.has) totalHas++
-if(p.dm) totalDm++
-if(p.da) totalDa++
-html+=`
-<tr>
-<td>${p.nome_completo}</td>
-<td>${calcularIdade(p.data_nascimento)}</td>
-<td>${p.has ? "✔" : ""}</td>
-<td>${p.dm ? "✔" : ""}</td>
-<td>${p.da ? "✔" : ""}</td>
-<td>${p.cardiopatia ? "✔" : ""}</td>
-<td>${p.acamado ? "✔" : ""}</td>
-<td>${p.pressao_arterial ?? ""}</td>
-<td>${p.dieta_especial ? "✔" : ""}</td>
-<td>${p.grau_risco ?? ""}</td>
-<td>${p.outras_comorbidades ?? ""}</td>
-</tr>
-`
-})
-document.getElementById("quadroClinico").innerHTML=html
-document.getElementById("totalPacientes").innerText=data.length
-document.getElementById("totalHas").innerText=totalHas
-document.getElementById("totalDm").innerText=totalDm
-document.getElementById("totalDemencia").innerText=totalDa
-}catch(err){
-console.error("Erro clínico:",err)
-alert("Erro ao carregar painel clínico")
-}
-}
-/* ====================================================
-019 CARREGAR PACIENTES NO SELECT
-==================================================== */
-async function carregarPacientesBusca(){
-const {data,error}=await db
-.from("pacientes")
-.select("id,nome_completo")
-.order("nome_completo",{ascending:true})
-if(error){
-console.error(error)
-return
-}
-const select=document.getElementById("buscaPaciente")
-if(!select) return
-let html=`<option value="">Todos</option>`
-data.forEach(p=>{
-html+=`<option value="${p.id}">${p.nome_completo}</option>`
-})
-select.innerHTML=html
-}
-/* ====================================================
-026 INDICADORES
-==================================================== */
-function calcularIndicadores(data){
-let executado=0
-let pendente=0
-let atrasado=0
-data.forEach(r=>{
-if(r.status==="executado")executado++
-if(r.status==="pendente")pendente++
-if(r.status==="atrasado")atrasado++
-})
-document.getElementById("indicadorExecutado").innerHTML="✔ "+executado
-document.getElementById("indicadorPendente").innerHTML="🔴 "+pendente
-document.getElementById("indicadorAtrasado").innerHTML="⚠ "+atrasado
-}
-/* ====================================================
-026A CALCULAR INDICADORES
-==================================================== */
-function calcularIndicadoresPorRotina(data){
 
-let rotinas={}
-
-data.forEach(r=>{
-
-if(!rotinas[r.rotina]){
-rotinas[r.rotina]={ok:0,pend:0}
-}
-
-if(r.status==="executado"){
-rotinas[r.rotina].ok++
-}else{
-rotinas[r.rotina].pend++
-}
-
-})
-
-let html=""
-
-Object.keys(rotinas).forEach(nome=>{
-
-html+=`
-<div class="indicador-rotina">
-<div class="indicador-nome">${nome}</div>
-<div>
-<span class="indicador-ok">✔${rotinas[nome].ok}</span>
-<span class="indicador-pend"> ●${rotinas[nome].pend}</span>
-</div>
-</div>
-`
-
-})
-
-document.getElementById("indicadoresRotina").innerHTML=html
-
-}
-/* ====================================================
-027 DATA HOJE
-==================================================== */
 function definirDataHoje(){
-const hoje = new Date()
-const ano = hoje.getFullYear()
-const mes = String(hoje.getMonth()+1).padStart(2,'0')
-const dia = String(hoje.getDate()).padStart(2,'0')
-const dataLocal = `${ano}-${mes}-${dia}`
-document.getElementById("dataInicio").value = dataLocal
-document.getElementById("dataFim").value = dataLocal
+
+const hoje=new Date()
+
+const ano=hoje.getFullYear()
+
+const mes=String(hoje.getMonth()+1).padStart(2,"0")
+
+const dia=String(hoje.getDate()).padStart(2,"0")
+
+const data=`${ano}-${mes}-${dia}`
+
+document.getElementById("dataInicio").value=data
+
+document.getElementById("dataFim").value=data
+
 }
+
 /* ====================================================
-028 PAINÉIS
+039 CARREGAR PACIENTES
 ==================================================== */
-function abrirEnfermagem(){
-document.getElementById("painelEnfermagem").style.display="block"
-document.getElementById("painelClinico").style.display="none"
-document.getElementById("painelAdmin").style.display="none"
-}
-function abrirClinico(){
-document.getElementById("painelEnfermagem").style.display="none"
-document.getElementById("painelAdmin").style.display="none"
-document.getElementById("painelClinico").style.display="block"
-carregarClinico()
-}
-async function abrirAdmin(){
-document.getElementById("painelEnfermagem").style.display="none"
-document.getElementById("painelClinico").style.display="none"
-document.getElementById("painelAdmin").style.display="block"
-await carregarPacientesDrag()
-await carregarProfissionaisDrag()
-await carregarEscalaDrag()
-}
-setInterval(()=>{
-if(document.getElementById("painelEnfermagem").style.display==="block"){
-carregarRotinas();
-}
-},15000)
-/* ====================================================
-030 ROTINAS LINHA TODOS
-==================================================== */
-async function carregarRotinasTodos(){
+
+async function carregarPacientesBusca(){
+
 const {data,error}=await db
-.from("rotina_modelos")
-.select("id,titulo,turno")
-.order("turno",{ascending:true})
-.order("titulo",{ascending:true})
-if(error){
-console.error(error)
-return
+
+.from("pacientes")
+
+.select("id,nome_completo")
+
+.order("nome_completo",{ascending:true})
+
+if(error)return
+
+const select=document.getElementById("buscaPaciente")
+
+let html=`<option value="">Todos</option>`
+
+data.forEach(p=>{
+
+html+=`<option value="${p.id}">${p.nome_completo}</option>`
+
+})
+
+select.innerHTML=html
+
 }
-let html=""
-let turnoAtual=""
+
+/* ====================================================
+040 CARREGAR ROTINAS
+==================================================== */
+
+async function carregarRotinas(){
+
+const paciente=document.getElementById("buscaPaciente").value
+
+const dataInicio=document.getElementById("dataInicio").value
+
+const dataFim=document.getElementById("dataFim").value
+
+let query=db
+
+.from("vw_rotinas_painel")
+
+.select("*")
+
+.eq("turno",TURNO_ATUAL)
+
+if(paciente)query=query.eq("paciente_id",paciente)
+
+if(dataInicio)query=query.gte("data",dataInicio)
+
+if(dataFim)query=query.lte("data",dataFim)
+
+query=query.order("paciente",{ascending:true})
+
+const {data,error}=await query
+
+if(error){
+
+console.error(error)
+
+return
+
+}
+
+renderizarRotinas(data)
+
+}
+
+/* ====================================================
+041 RENDERIZAR ROTINAS
+==================================================== */
+
+function renderizarRotinas(data){
+
+let pacientes={}
+
 data.forEach(r=>{
-if(r.turno!==turnoAtual){
-turnoAtual=r.turno
-html+=`<div style="width:100%;font-weight:bold;margin-top:10px;border-bottom:1px solid #ddd;padding-bottom:4px">${turnoAtual.toUpperCase()}</div>`
+
+if(!pacientes[r.paciente]){
+
+pacientes[r.paciente]={rotinas:[],ok:0,total:0}
+
 }
-html+=`<button onclick="executarTodos('${r.id}',this)" class="btn-rotina">${r.titulo}</button>`
+
+pacientes[r.paciente].total++
+
+if(r.status==="executado")pacientes[r.paciente].ok++
+
+let classe=r.status==="executado"?"rotina-ok":"rotina-pendente"
+
+let icon=r.status==="executado"?"✔":"🔴"
+
+pacientes[r.paciente].rotinas.push(
+
+`<button class="btn-rotina ${classe}" onclick="executarRotina('${r.id}',this)">${r.rotina} ${icon}</button>`
+
+)
+
 })
-const el=document.getElementById("rotinasTodos")
-if(el){
-el.innerHTML=html
+
+let html=""
+
+Object.keys(pacientes).forEach(p=>{
+
+let total=pacientes[p].total
+
+let ok=pacientes[p].ok
+
+let progresso=Math.round((ok/total)*100)||0
+
+let barra=`<div style="width:120px">
+<div style="font-size:11px">${progresso}%</div>
+<div style="background:#eee;height:6px;border-radius:4px">
+<div style="width:${progresso}%;background:#2ecc71;height:6px;border-radius:4px"></div>
+</div>
+</div>`
+
+let rotinas=`<div class="col-rotinas">${pacientes[p].rotinas.join("")}</div>`
+
+html+=`<tr>
+<td>${p}</td>
+<td>${barra}</td>
+<td>${rotinas}</td>
+</tr>`
+
+})
+
+document.getElementById("rotinas").innerHTML=html
+
 }
-}
+
 /* ====================================================
-031 ADICIONAR ROTINA
+042 EXECUTAR ROTINA
 ==================================================== */
-async function adicionarRotina(){
-const nome=document.getElementById("novaRotinaNome").value
-const turno=document.getElementById("novoTurno").value
-if(!nome){
-alert("Informe o nome da rotina")
-return
-}
-const {error}=await db
-.from("rotina_modelos")
-.insert([{titulo:nome,turno:turno}])
-if(error){
-console.error(error)
-alert("Erro ao criar rotina")
-return
-}
-alert("Rotina criada com sucesso")
-document.getElementById("novaRotinaNome").value=""
-carregarRotinasTodos()
-}
-/* ====================================================
-032 EXECUTAR TODOS
-==================================================== */
-async function executarTodos(rotinaId,btn){
-const dataAtual=document.getElementById("dataInicio").value
-const {data,error}=await db
-.from("rotinas_execucao")
-.select("id")
-.eq("rotina_id",rotinaId)
-.eq("data",dataAtual)
-if(error){
-console.error(error)
-alert("Erro ao executar rotina")
-return
-}
-if(!data || data.length===0){
-alert("Nenhuma rotina encontrada")
-return
-}
+
+async function executarRotina(id,btn){
+
+btn.disabled=true
+
 await db
+
 .from("rotinas_execucao")
+
 .update({
+
 status:"executado",
+
 horario_executado:new Date().toISOString()
+
 })
-.in("id",data.map(r=>r.id))
-if(btn){
-btn.innerHTML="✔ "+btn.innerText
-btn.style.background="#2ecc71"
-btn.style.color="#fff"
-}
+
+.eq("id",id)
+
+btn.classList.remove("rotina-pendente")
+
+btn.classList.add("rotina-ok")
+
+btn.innerText="Executado"
+
+setTimeout(()=>{
+
 carregarRotinas()
+
+},300)
+
 }
+
 /* ====================================================
-033 GERAR PDF GERAL PROFISSIONAL
+043 PDF GERAL
 ==================================================== */
 async function gerarPDFGeral(){
 
@@ -742,7 +908,7 @@ doc.save("relatorio_geral_rotinas.pdf")
 
 }
 /* ====================================================
-034 GERAR PDF PACIENTE PROFISSIONAL
+044 PDF PACIENTE
 ==================================================== */
 async function gerarPDFPaciente(){
 
@@ -837,23 +1003,8 @@ doc.text("Responsável Técnico",120,finalY+6)
 doc.save("relatorio_"+pacienteNome+".pdf")
 
 }
-
-
 </script>
+
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
