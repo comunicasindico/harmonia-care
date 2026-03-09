@@ -802,50 +802,89 @@ alert("Erro ao executar rotina")
 030 CARREGAR ROTINAS PARA LINHA TODOS
 ==================================================== */
 async function carregarRotinasTodos(){
-const turno=TURNO_ATUAL
-const{data,error}=await db
+const {data,error}=await db
 .from("rotina_modelos")
-.select("id,nome")
-.eq("turno",turno)
-.order("nome",{ascending:true})
-if(error){console.error(error);return}
+.select("id,titulo,turno")
+.order("turno",{ascending:true})
+.order("titulo",{ascending:true})
+if(error){
+console.error(error)
+return
+}
 let html=""
+let turnoAtual=""
 data.forEach(r=>{
-html+=`<button onclick="executarTodos('${r.nome}')" class="btn-rotina">${r.nome}</button>`
+if(r.turno!==turnoAtual){
+turnoAtual=r.turno
+html+=`
+<div style="width:100%;font-weight:bold;margin-top:10px">
+${turnoAtual.toUpperCase()}
+</div>
+`
+}
+html+=`
+<button onclick="executarTodos('${r.id}')" class="btn-rotina">
+${r.titulo}
+</button>
+`
 })
 const el=document.getElementById("rotinasTodos")
-if(el)el.innerHTML=html
+if(el){
+el.innerHTML=html
 }
+}
+/* ====================================================
+031 ADICIONAR ROTINA
+==================================================== */
 async function adicionarRotina(){
-
 const nome=document.getElementById("novaRotinaNome").value
 const turno=document.getElementById("novoTurno").value
-
 if(!nome){
 alert("Informe o nome da rotina")
 return
 }
-
 const {error}=await db
 .from("rotina_modelos")
 .insert([{nome:nome,turno:turno}])
-
 if(error){
 console.error(error)
 alert("Erro ao criar rotina")
 return
 }
-
 alert("Rotina criada com sucesso")
-
 document.getElementById("novaRotinaNome").value=""
-
 carregarRotinasTodos()
 }
-
+/* ====================================================
+032 EXECUTAR ROTINA PARA TODOS
+==================================================== */
+async function executarTodos(rotinaId){
+const dataAtual=document.getElementById("dataInicio").value
+const {data:pacientes,error}=await db
+.from("pacientes")
+.select("id")
+if(error){
+console.error(error)
+return
+}
+for(const p of pacientes){
+await db
+.from("rotina_execucao")
+.update({
+status:"executado",
+horario_execucao:new Date()
+})
+.eq("paciente_id",p.id)
+.eq("modelo_id",rotinaId)
+.eq("data",dataAtual)
+}
+carregarRotinas()
+}
+ 
 </script>
 </body>
 </html>
+
 
 
 
