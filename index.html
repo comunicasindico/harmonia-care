@@ -155,8 +155,7 @@ padding:6px 10px;
 margin:3px;
 font-size:12px;
 cursor:pointer;
-width:140px;   /* MESMA largura */
-text-align:center;
+white-space:nowrap;
 }
 
 .btn-rotina:hover{
@@ -266,7 +265,12 @@ font-weight:bold;
 color:#e74c3c;
 font-weight:bold;
 }
-  
+.linha-rotina{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+}
+
 </style>
 </head>
 <!-- ====================================================
@@ -343,7 +347,7 @@ Fone:(81)3461-3109
 </div>
 </div>
 
-<<div class="turnos-barra">
+<div class="turnos-barra">
 
 <div class="turnos">
 <button id="btnManha" class="turno-btn turno-manha" onclick="mudarTurno('manha')">Manhã</button>
@@ -590,7 +594,7 @@ let total=pacientes[p].total
 let ok=pacientes[p].ok
 let progresso=Math.round((ok/total)*100)||0
 let barra=`<div style="width:120px"><div style="font-size:11px">${progresso}%</div><div style="background:#eee;height:6px;border-radius:4px"><div style="width:${progresso}%;background:#2ecc71;height:6px;border-radius:4px"></div></div></div>`
-let rotinas=pacientes[p].rotinas.join("")
+let rotinas=`<div class="linha-rotina">${pacientes[p].rotinas.join("")}</div>`
 html+=`<tr><td style="font-weight:bold">${p}</td><td>${barra}</td><td>${rotinas}</td></tr>`
 })
 html+=`
@@ -1058,6 +1062,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
