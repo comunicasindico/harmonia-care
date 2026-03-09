@@ -210,10 +210,11 @@ const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 async function login(){
 const email=document.getElementById("usuario").value
 const senha=document.getElementById("senha").value
-const{data,error}=await db.from("usuarios").select("*").eq("email",email).single()
-if(error||!data){alert("Usuário não encontrado");return}
-if(senha!==data.senha_hash){alert("Senha incorreta");return}
-localStorage.setItem("usuario_id",data.id)
+const {data,error}=await db.from("usuarios").select("*").eq("email",email)
+if(error||!data||data.length===0){alert("Usuário não encontrado");return}
+const usuario=data[0]
+if(senha!==usuario.senha_hash){alert("Senha incorreta");return}
+localStorage.setItem("usuario_id",usuario.id)
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 carregarTudo()
@@ -230,7 +231,6 @@ document.getElementById("app").style.display="block"
 carregarTudo()
 }
 }
-setInterval(()=>{carregarRotinas()},10000)
 /* ====================================================
 012 CARREGAR TUDO
 ==================================================== */
@@ -578,6 +578,7 @@ await carregarEscalaDrag()
 </script>
 </body>
 </html>
+
 
 
 
