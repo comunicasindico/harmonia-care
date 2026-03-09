@@ -238,7 +238,37 @@ font-weight:bold;
 color:#e74c3c;
 font-weight:bold;
 }
+.linha-indicadores{
+display:flex;
+justify-content:flex-start;
+gap:14px;
+margin-left:320px; /* alinha com início das rotinas */
+margin-bottom:6px;
+}
 
+.indicador-rotina{
+display:flex;
+flex-direction:column;
+align-items:center;
+font-size:12px;
+min-width:120px;
+}
+
+.indicador-nome{
+font-weight:bold;
+margin-bottom:2px;
+}
+
+.indicador-ok{
+color:#2ecc71;
+font-weight:bold;
+}
+
+.indicador-pend{
+color:#e74c3c;
+font-weight:bold;
+}
+  
 </style>
 </head>
 <!-- ====================================================
@@ -323,8 +353,7 @@ Fone:(81)3461-3109
 <button id="btnNoite" class="turno-btn turno-noite" onclick="mudarTurno('noite')">Noite</button>
 </div>
 
-<div id="indicadoresRotina"></div>
-
+<div id="indicadoresRotina" class="linha-indicadores"></div>
 </div>
 
 <table>
@@ -736,10 +765,12 @@ let html=""
 Object.keys(rotinas).forEach(nome=>{
 
 html+=`
-<div class="badge-rotina">
-${nome}
-<span class="badge-ok">✔${rotinas[nome].ok}</span>
-<span class="badge-pend">●${rotinas[nome].pend}</span>
+<div class="indicador-rotina">
+<div class="indicador-nome">${nome}</div>
+<div>
+<span class="indicador-ok">✔${rotinas[nome].ok}</span>
+<span class="indicador-pend"> ●${rotinas[nome].pend}</span>
+</div>
 </div>
 `
 
@@ -1028,6 +1059,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
