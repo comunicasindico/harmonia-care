@@ -205,6 +205,39 @@ border:1px solid #ddd;
 background:#ffecec;
 border-color:#e74c3c;
 }
+.turnos-barra{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px;
+}
+
+#indicadoresRotina{
+display:flex;
+flex-wrap:wrap;
+gap:12px;
+font-size:12px;
+}
+
+.badge-rotina{
+background:#f6f6f6;
+border:1px solid #ddd;
+border-radius:8px;
+padding:4px 8px;
+display:flex;
+gap:6px;
+align-items:center;
+}
+
+.badge-ok{
+color:#2ecc71;
+font-weight:bold;
+}
+
+.badge-pend{
+color:#e74c3c;
+font-weight:bold;
+}
 
 </style>
 </head>
@@ -281,10 +314,17 @@ Fone:(81)3461-3109
 <button onclick="carregarRotinas()" class="btn-primary">Pesquisar</button>
 </div>
 </div>
+
+<<div class="turnos-barra">
+
 <div class="turnos">
 <button id="btnManha" class="turno-btn turno-manha" onclick="mudarTurno('manha')">Manhã</button>
 <button id="btnTarde" class="turno-btn turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
 <button id="btnNoite" class="turno-btn turno-noite" onclick="mudarTurno('noite')">Noite</button>
+</div>
+
+<div id="indicadoresRotina"></div>
+
 </div>
 
 <table>
@@ -487,6 +527,7 @@ document.getElementById("rotinas").innerHTML=""
 return
 }
 calcularIndicadores(data)
+calcularIndicadoresPorRotina(data)
 renderizarRotinas(data)
 }
 /* ====================================================
@@ -668,6 +709,44 @@ if(r.status==="atrasado")atrasado++
 document.getElementById("indicadorExecutado").innerHTML="✔ "+executado
 document.getElementById("indicadorPendente").innerHTML="🔴 "+pendente
 document.getElementById("indicadorAtrasado").innerHTML="⚠ "+atrasado
+}
+/* ====================================================
+026A CALCULAR INDICADORES
+==================================================== */
+function calcularIndicadoresPorRotina(data){
+
+let rotinas={}
+
+data.forEach(r=>{
+
+if(!rotinas[r.rotina]){
+rotinas[r.rotina]={ok:0,pend:0}
+}
+
+if(r.status==="executado"){
+rotinas[r.rotina].ok++
+}else{
+rotinas[r.rotina].pend++
+}
+
+})
+
+let html=""
+
+Object.keys(rotinas).forEach(nome=>{
+
+html+=`
+<div class="badge-rotina">
+${nome}
+<span class="badge-ok">✔${rotinas[nome].ok}</span>
+<span class="badge-pend">●${rotinas[nome].pend}</span>
+</div>
+`
+
+})
+
+document.getElementById("indicadoresRotina").innerHTML=html
+
 }
 /* ====================================================
 027 DATA HOJE
@@ -949,6 +1028,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
