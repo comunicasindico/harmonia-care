@@ -239,17 +239,17 @@ color:#e74c3c;
 font-weight:bold;
 }
 .linha-indicadores{
-display:flex;
-justify-content:flex-start;
+display:grid;
+grid-auto-flow:column;
+grid-auto-columns:max-content;
 gap:14px;
-margin-left:320px; /* alinha com início das rotinas */
+justify-content:start;
+margin-left:260px; /* largura aproximada das colunas Paciente + Progresso */
 margin-bottom:6px;
 }
 
 .indicador-rotina{
-display:flex;
-flex-direction:column;
-align-items:center;
+text-align:center;
 font-size:12px;
 min-width:120px;
 }
@@ -354,6 +354,7 @@ Fone:(81)3461-3109
 </div>
 
 <div id="indicadoresRotina" class="linha-indicadores"></div>
+<table>
 </div>
 
 <table>
@@ -1059,6 +1060,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
