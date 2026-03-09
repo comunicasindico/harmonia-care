@@ -47,8 +47,9 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 .status-rotina{font-size:16px;margin-left:6px;}
 .btn-rotina{background:#f1f1f1;border:1px solid #ccc;border-radius:8px;padding:6px 10px;margin:3px;font-size:12px;cursor:pointer}
 .btn-rotina:hover{background:#d8ecff}
+#rotinasTodos .btn-rotina{width:200px;text-align:left;}
 .icone-status{margin-left:6px;font-weight:bold}
-#rotinasTodos{display:flex;flex-wrap:wrap;gap:6px}
+#rotinasTodos{display:flex;flex-direction:column;align-items:flex-start;gap:6px;}
 
 </style>
 </head>
@@ -553,7 +554,7 @@ let turnoAtual=""
 data.forEach(r=>{
 if(r.turno!==turnoAtual){
 turnoAtual=r.turno
-html+=`<div style="width:100%;font-weight:bold;margin-top:10px">${turnoAtual.toUpperCase()}</div>`
+html+=`<div style="width:100%;font-weight:bold;margin-top:12px;border-bottom:1px solid #ddd;padding-bottom:3px">${turnoAtual.toUpperCase()}</div>`
 }
 html+=`<button onclick="executarTodos('${r.id}',this)" class="btn-rotina">${r.titulo}</button>`
 })
@@ -621,6 +622,7 @@ carregarRotinas()
 </script>
 </body>
 </html>
+
 
 
 
