@@ -783,20 +783,51 @@ carregarRotinas();
 029 EXECUTAR ROTINA PARA TODOS
 ====================================================*/
 async function executarTodos(rotinaNome){
+
 const dataInicio=document.getElementById("dataInicio").value
 const usuario=localStorage.getItem("usuario_id")
+
 if(!confirm("Executar '"+rotinaNome+"' para TODOS os pacientes?"))return
+
 try{
-const{data,error}=await db.from("vw_rotinas_painel").select("id,paciente").eq("rotina",rotinaNome).eq("data",dataInicio)
-if(error){console.error(error);alert("Erro ao localizar rotinas");return}
-for(const r of data){
-await db.from("rotinas_execucao").update({status:"executado",executado_por:usuario,horario_execucao:new Date().toISOString()}).eq("id",r.id)
+
+const {data,error}=await db
+.from("vw_rotinas_painel")
+.select("id")
+.eq("rotina",rotinaNome)
+.eq("data",dataInicio)
+
+if(error){
+console.error(error)
+alert("Erro ao localizar rotinas")
+return
 }
+
+if(!data || data.length===0){
+alert("Nenhuma rotina encontrada para executar")
+return
+}
+
+for(const r of data){
+
+await db
+.from("rotinas_execucao")   // ✔ tabela correta
+.update({
+status:"executado",
+executado_por:usuario,
+horario_execucao:new Date().toISOString()
+})
+.eq("id",r.id)
+
+}
+
 carregarRotinas()
+
 }catch(e){
 console.error(e)
 alert("Erro ao executar rotina")
 }
+
 }
 /* ====================================================
 030 CARREGAR ROTINAS PARA LINHA TODOS
@@ -907,6 +938,7 @@ carregarRotinas()
 </script>
 </body>
 </html>
+
 
 
 
