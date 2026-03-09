@@ -630,11 +630,43 @@ document.getElementById("painelEnfermagem").style.display="block"
 document.getElementById("painelClinico").style.display="none"
 document.getElementById("painelAdmin").style.display="none"
 }
+/* ====================================================
+PAINEL CLÍNICO
+==================================================== */
 function abrirClinico(){
-document.getElementById("painelEnfermagem").style.display="none"
-document.getElementById("painelClinico").style.display="block"
-document.getElementById("painelAdmin").style.display="none"
+document.getElementById("tituloTurno").innerText="Painel Clínico"
+document.getElementById("rotinas").innerHTML=`
+<div style="padding:20px">
+<h3>Painel Clínico</h3>
+<p>Carregando dados clínicos...</p>
+</div>
+`
+carregarPainelClinico()
 }
+
+async function carregarPainelClinico(){
+const {data,error}=await db
+.from("pacientes")
+.select("nome,idade,diagnostico,comorbidades")
+.order("nome")
+if(error){
+alert("Erro ao carregar painel clínico")
+return
+}
+let html=""
+data.forEach(p=>{
+html+=`
+<div style="background:#fff;padding:15px;border-radius:10px;margin-bottom:10px;border-left:6px solid #3498db">
+<b>${p.nome}</b><br>
+Idade: ${p.idade || "-"}<br>
+Diagnóstico: ${p.diagnostico || "-"}<br>
+Comorbidades: ${p.comorbidades || "-"}
+</div>
+`
+})
+document.getElementById("rotinas").innerHTML=html
+}
+
 async function abrirAdmin(){
 document.getElementById("painelEnfermagem").style.display="none"
 document.getElementById("painelClinico").style.display="none"
@@ -653,6 +685,7 @@ carregarRotinas();
 </script>
 </body>
 </html>
+
 
 
 
