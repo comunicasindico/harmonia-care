@@ -825,7 +825,7 @@ carregarRotinas()
 
 }catch(e){
 console.error(e)
-alert("Erro ao executar rotina")
+alert("Erro ao executar rotina: " + e.message)
 }
 
 }
@@ -901,7 +901,7 @@ const {data,error}=await db
 
 if(error){
 console.error(error)
-alert("Erro ao executar rotina")
+alert("Erro ao executar rotina: " + e.message)
 return
 }
 
@@ -938,6 +938,7 @@ carregarRotinas()
 </script>
 </body>
 </html>
+
 
 
 
