@@ -687,10 +687,15 @@ risco[p.grau_risco]++
 })
 
 /* ============================
-ATUALIZA CARDS SUPERIORES
+REMOVE CARDS ANTIGOS
 ============================ */
 
-const painel=document.getElementById("painelClinico")
+const dashboard=document.querySelector("#painelClinico .dashboard")
+if(dashboard) dashboard.remove()
+
+/* ============================
+CRIA BOTÕES TOTALIZADORES
+============================ */
 
 let extras=document.getElementById("totaisClinicosExtras")
 
@@ -698,7 +703,7 @@ if(!extras){
 extras=document.createElement("div")
 extras.id="totaisClinicosExtras"
 extras.className="totais-clinicos"
-painel.insertBefore(extras,painel.firstChild)
+document.getElementById("painelClinico").prepend(extras)
 }
 
 let htmlExtras=`
@@ -706,7 +711,6 @@ let htmlExtras=`
 <div class="btn-clinico">HAS <span>${totalHas}</span></div>
 <div class="btn-clinico">DM <span>${totalDm}</span></div>
 <div class="btn-clinico">Demência <span>${totalDa}</span></div>
-
 <div class="btn-clinico">Cardio <span>${totalCardio}</span></div>
 <div class="btn-clinico">Acamado <span>${totalAcamado}</span></div>
 <div class="btn-clinico">Dieta <span>${totalDieta}</span></div>
@@ -714,36 +718,6 @@ let htmlExtras=`
 
 Object.keys(risco).sort().forEach(g=>{
 htmlExtras+=`<div class="btn-clinico">Risco ${g} <span>${risco[g]}</span></div>`
-})
-
-extras.innerHTML=htmlExtras
-/* ============================
-TOTAIS ADICIONAIS EM BOTÕES
-============================ */
-
-let painel=document.getElementById("painelClinico")
-
-let extras=document.getElementById("totaisClinicosExtras")
-
-if(!extras){
-extras=document.createElement("div")
-extras.id="totaisClinicosExtras"
-extras.style.marginBottom="15px"
-extras.style.display="flex"
-extras.style.flexWrap="wrap"
-extras.style.gap="8px"
-painel.insertBefore(extras,painel.children[1])
-}
-
-let htmlExtras=`
-
-<button class="btn-secondary">Cardio ${totalCardio}</button>
-<button class="btn-secondary">Acamado ${totalAcamado}</button>
-<button class="btn-secondary">Dieta ${totalDieta}</button>
-`
-
-Object.keys(risco).sort().forEach(g=>{
-htmlExtras+=`<button class="btn-secondary">Risco ${g} ${risco[g]}</button>`
 })
 
 extras.innerHTML=htmlExtras
@@ -1100,6 +1074,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
