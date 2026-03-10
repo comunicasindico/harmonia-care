@@ -173,7 +173,32 @@ font-weight:bold;
 color:#e74c3c;
 font-weight:bold;
 }
+/* ====================================================
+ALINHAMENTO DAS ROTINAS
+==================================================== */
 
+.rotinas-linha{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+gap:6px;
+}
+
+.rotinas-totais{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+gap:6px;
+margin-bottom:10px;
+text-align:center;
+font-size:12px;
+}
+
+.rotina-total-item{
+background:#fafafa;
+border:1px solid #ddd;
+border-radius:8px;
+padding:6px;
+}
+  
 </style>
 </head>
 <!-- ====================================================
@@ -542,7 +567,7 @@ let barra=`
 </div>
 </div>`
 
-let rotinas=pacientes[p].rotinas.join("")
+let rotinas=`<div class="rotinas-linha">${pacientes[p].rotinas.join("")}</div>`
 
 html+=`
 <tr>
@@ -975,6 +1000,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
