@@ -16,6 +16,7 @@
 002 STYLE
 ==================================================== -->
 <style>
+
 body{margin:0;font-family:Arial;background:#f4f6f9;}
 
 #login{display:flex;justify-content:center;align-items:center;height:100vh;}
@@ -81,19 +82,25 @@ box-shadow:0 2px 8px rgba(0,0,0,0.08);
 margin-top:20px;
 }
 
-table{width:100%;border-collapse:collapse;}
+table{
+width:100%;
+border-collapse:collapse;
+}
 
 th,td{
-padding:6px;
+padding:8px;
 border-bottom:1px solid #ddd;
 font-size:13px;
 text-align:left;
 }
 
+/* TURNOS */
+
 .turnos{
 display:flex;
 gap:10px;
 margin-bottom:15px;
+align-items:center;
 }
 
 .turno-manha{background:#3498db;color:#fff;}
@@ -114,54 +121,34 @@ opacity:1;
 box-shadow:0 0 0 3px rgba(0,0,0,0.15) inset;
 }
 
-.drag-container{
-min-height:120px;
-border:2px dashed #ccc;
-border-radius:10px;
-padding:10px;
-background:#fafafa;
-}
+/* ROTINAS */
 
-.drag-item{
-background:#3498db;
-color:#fff;
-padding:6px;
-border-radius:6px;
-margin-bottom:6px;
-cursor:grab;
-font-size:13px;
-}
-
-.grid-rotinas{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:6px 20px;
-}
-
-.item-rotina{
+.rotinas-linha{
 display:flex;
-align-items:center;
-justify-content:space-between;
-border-bottom:1px solid #eee;
-padding:4px 0;
+flex-wrap:wrap;
+gap:6px;
 }
-
-/* BOTÕES DE ROTINA */
 
 .btn-rotina{
-background:#f1f1f1;
-border:1px solid #ccc;
 border-radius:8px;
 padding:6px 10px;
-margin:3px;
 font-size:12px;
 cursor:pointer;
+border:1px solid #ccc;
 transition:0.2s;
 }
 
-.btn-rotina:hover{
-background:#d8ecff;
-border-color:#3498db;
+/* STATUS */
+
+.rotina-pendente{
+background:#f2f2f2;
+color:#444;
+}
+
+.rotina-executada{
+background:#e6f6ec;
+border-color:#b9e4c8;
+color:#1e7e46;
 }
 
 .icone-status{
@@ -169,24 +156,23 @@ margin-left:6px;
 font-weight:bold;
 }
 
-/* LINHA TODOS */
+/* TOTAIS ROTINAS */
 
-.layout-todos{
-display:grid;
-grid-template-columns:200px 1fr;
-gap:10px;
-align-items:start;
-}
-
-#rotinasTodos{
+.rotinas-totais{
 display:flex;
-flex-direction:column;
-gap:6px;
+flex-wrap:wrap;
+gap:12px;
+margin-bottom:10px;
+font-size:12px;
+justify-content:center;
+color:#555;
 }
 
-#rotinasTodos .btn-rotina{
-width:100%;
-text-align:left;
+.rotina-total-item{
+background:#fafafa;
+padding:4px 8px;
+border-radius:6px;
+border:1px solid #ddd;
 }
 
 </style>
@@ -475,41 +461,104 @@ renderizarRotinas(data)
 016 RENDERIZAR ROTINAS
 ==================================================== */
 function renderizarRotinas(data){
+
 let pacientes={}
+let totaisRotinas={}
+
 data.forEach(r=>{
+
 if(!pacientes[r.paciente]){
 pacientes[r.paciente]={rotinas:[],ok:0,total:0,controle:{}}
 }
+
 const chave=r.rotina+"_"+r.turno+"_"+r.data
 if(pacientes[r.paciente].controle[chave]){return}
+
 pacientes[r.paciente].controle[chave]=true
+
 pacientes[r.paciente].total++
+
 if(r.status==="executado") pacientes[r.paciente].ok++
-let statusIcon="🔴"
-if(r.status==="executado") statusIcon="✔"
-pacientes[r.paciente].rotinas.push(`<div class="linha-rotina"><button class="btn-rotina" onclick="executarRotina('${r.id}',this)">${r.rotina} <span class="icone-status">${statusIcon}</span></button></div>`)
+
+/* CONTAR ROTINAS */
+if(!totaisRotinas[r.rotina]){
+totaisRotinas[r.rotina]={executado:0,total:0}
+}
+
+totaisRotinas[r.rotina].total++
+
+if(r.status==="executado"){
+totaisRotinas[r.rotina].executado++
+}
+
+let classe="rotina-pendente"
+let statusIcon=""
+
+if(r.status==="executado"){
+classe="rotina-executada"
+statusIcon="✔"
+}
+
+pacientes[r.paciente].rotinas.push(
+`<button class="btn-rotina ${classe}" onclick="executarRotina('${r.id}',this)">
+${r.rotina}
+<span class="icone-status">${statusIcon}</span>
+</button>`
+)
+
 })
+
+/* TOTAIS DAS ROTINAS */
+
+let htmlTotais=`<div class="rotinas-totais">`
+
+Object.keys(totaisRotinas).forEach(r=>{
+const t=totaisRotinas[r]
+htmlTotais+=`
+<div class="rotina-total-item">
+${r} (${t.executado}/${t.total})
+</div>`
+})
+
+htmlTotais+=`</div>`
+
 let html=""
+
 Object.keys(pacientes).forEach(p=>{
+
 let total=pacientes[p].total
 let ok=pacientes[p].ok
+
 let progresso=Math.round((ok/total)*100)||0
-let barra=`<div style="width:120px"><div style="font-size:11px">${progresso}%</div><div style="background:#eee;height:6px;border-radius:4px"><div style="width:${progresso}%;background:#2ecc71;height:6px;border-radius:4px"></div></div></div>`
-let rotinas=pacientes[p].rotinas.join("")
-html+=`<tr><td style="font-weight:bold">${p}</td><td>${barra}</td><td>${rotinas}</td></tr>`
-})
-html+=`
-<tr style="background:#f5f5f5;border-top:2px solid #ccc">
-<td style="font-weight:bold">Todos</td>
-<td></td>
-<td>
-<div class="layout-todos">
-<div id="rotinasTodos"></div>
+
+let barra=`
+<div style="width:120px">
+<div style="font-size:11px">${progresso}%</div>
+<div style="background:#eee;height:6px;border-radius:4px">
+<div style="width:${progresso}%;background:#2ecc71;height:6px;border-radius:4px"></div>
 </div>
+</div>`
+
+let rotinas=pacientes[p].rotinas.join("")
+
+html+=`
+<tr>
+<td style="font-weight:bold">${p}</td>
+<td>${barra}</td>
+<td><div class="rotinas-linha">${rotinas}</div></td>
+</tr>
+`
+
+})
+
+document.getElementById("rotinas").innerHTML=`
+<tr>
+<td colspan="3">
+${htmlTotais}
 </td>
-</tr>`
-document.getElementById("rotinas").innerHTML=html
-carregarRotinasTodos()
+</tr>
+`+html
+
 }
 /* ====================================================
 017 EXECUTAR ROTINA
@@ -923,6 +972,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
