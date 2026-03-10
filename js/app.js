@@ -1,4 +1,3 @@
-
 /* ====================================================
 LOGIN
 ==================================================== */
@@ -54,8 +53,10 @@ LOGOUT
 ==================================================== */
 
 function logout(){
+
 localStorage.clear()
 location.reload()
+
 }
 
 /* ====================================================
@@ -89,15 +90,13 @@ await carregarPacientesBusca()
 
 await carregarRotinas()
 
-if(typeof carregarClinico==="function"){
 await carregarClinico()
-}
 
-setInterval(()=>{
-carregarRotinas()
-},30000)
+setInterval(()=>{carregarRotinas()},30000)
 
 abrirEnfermagem()
+
+mudarTurno("manha")
 
 }
 
@@ -107,13 +106,16 @@ DATA HOJE
 
 function definirDataHoje(){
 
-const hoje = new Date().toISOString().split("T")[0]
+const hoje = new Date()
 
-const inicio = document.getElementById("dataInicio")
-const fim = document.getElementById("dataFim")
+const ano = hoje.getFullYear()
+const mes = String(hoje.getMonth()+1).padStart(2,'0')
+const dia = String(hoje.getDate()).padStart(2,'0')
 
-if(inicio) inicio.value = hoje
-if(fim) fim.value = hoje
+const dataLocal = `${ano}-${mes}-${dia}`
+
+document.getElementById("dataInicio").value = dataLocal
+document.getElementById("dataFim").value = dataLocal
 
 }
 
@@ -121,33 +123,31 @@ if(fim) fim.value = hoje
 PAINÉIS
 ==================================================== */
 
-function abrirPainel(id){
+function abrirEnfermagem(){
 
-document.getElementById("painelEnfermagem").style.display="none"
+document.getElementById("painelEnfermagem").style.display="block"
 document.getElementById("painelClinico").style.display="none"
 document.getElementById("painelAdmin").style.display="none"
 
-document.getElementById(id).style.display="block"
-
-}
-
-function abrirEnfermagem(){
-abrirPainel("painelEnfermagem")
 }
 
 function abrirClinico(){
-abrirPainel("painelClinico")
+
+document.getElementById("painelEnfermagem").style.display="none"
+document.getElementById("painelAdmin").style.display="none"
+document.getElementById("painelClinico").style.display="block"
+
 carregarClinico()
+
 }
 
 async function abrirAdmin(){
 
-abrirPainel("painelAdmin")
-
-await carregarProfissionais()
+document.getElementById("painelEnfermagem").style.display="none"
+document.getElementById("painelClinico").style.display="none"
+document.getElementById("painelAdmin").style.display="block"
 
 await carregarPacientesDrag()
-
-await carregarRotinasAdmin()
+await carregarProfissionaisDrag()
 
 }
