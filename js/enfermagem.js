@@ -1,4 +1,3 @@
-
 /* ====================================================
 MUDAR TURNO
 ==================================================== */
@@ -6,6 +5,14 @@ MUDAR TURNO
 function mudarTurno(turno){
 
 TURNO_ATUAL=turno
+
+document.getElementById("btnManha").classList.remove("turno-ativo")
+document.getElementById("btnTarde").classList.remove("turno-ativo")
+document.getElementById("btnNoite").classList.remove("turno-ativo")
+
+if(turno==="manha")document.getElementById("btnManha").classList.add("turno-ativo")
+if(turno==="tarde")document.getElementById("btnTarde").classList.add("turno-ativo")
+if(turno==="noite")document.getElementById("btnNoite").classList.add("turno-ativo")
 
 carregarRotinas()
 
@@ -18,92 +25,43 @@ CARREGAR ROTINAS
 
 async function carregarRotinas(){
 
-const {data,error}=await db
+const paciente=document.getElementById("buscaPaciente")?.value
+
+if(paciente && paciente !== "todos"){
+carregarDadosClinicosPaciente(paciente)
+}
+
+const dataInicio=document.getElementById("dataInicio")?.value
+const dataFim=document.getElementById("dataFim")?.value
+
+let query=db
 .from("vw_rotinas_painel")
 .select("*")
 .eq("turno",TURNO_ATUAL)
-.order("paciente",{ascending:true})
-.order("rotina",{ascending:true})
+
+if(paciente) query=query.eq("paciente_id",paciente)
+if(dataInicio) query=query.gte("data",dataInicio)
+if(dataFim) query=query.lte("data",dataFim)
+
+query=query.order("paciente").order("rotina")
+
+const {data,error}=await query
 
 if(error){
+
 console.error(error)
 alert("Erro ao carregar rotinas")
-return
-}
 
-renderizarRotinas(data)
+return
+
+}
 
 calcularIndicadores(data)
 
-}
-
-/* ====================================================
-RENDERIZAR ROTINAS
-==================================================== */
-
-function renderizarRotinas(data){
-
-let html=""
-
-data.forEach(r=>{
-
-let classe="rotina-pendente"
-let icon=""
-
-if(r.status==="executado"){
-classe="rotina-executada"
-icon="✔"
-}
-
-html+=`
-
-<tr>
-
-<td>${r.paciente}</td>
-
-<td>${r.turno}</td>
-
-<td>
-
-<button
-class="btn-rotina ${classe}"
-onclick="executarRotina('${r.id}',this)">
-
-${r.rotina} ${icon}
-
-</button>
-
-</td>
-
-</tr>
-
-`
-
-})
-
-document.getElementById("rotinas").innerHTML=html
+renderizarRotinas(data)
 
 }
 
-/* ====================================================
-EXECUTAR ROTINA
-==================================================== */
-
-async function executarRotina(id,btn){
-
-btn.disabled=true
-
-await db
-.from("rotinas_execucao")
-.update({
-status:"executado",
-horario_execucao:new Date().toISOString()
-})
-.eq("id",id)
-
-carregarRotinas()
-
-}
 
 /* ====================================================
 INDICADORES
@@ -118,9 +76,7 @@ let atrasado=0
 data.forEach(r=>{
 
 if(r.status==="executado")executado++
-
 if(r.status==="pendente")pendente++
-
 if(r.status==="atrasado")atrasado++
 
 })
