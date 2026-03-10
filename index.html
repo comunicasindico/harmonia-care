@@ -287,9 +287,9 @@ Fone:(81)3461-3109
 </div>
 <div style="display:flex;align-items:end">
 <button onclick="carregarRotinas()" class="btn-primary">Pesquisar</button>
+</div>
+</div>
 <div id="dadosClinicosPaciente"></div>
-</div>
-</div>
 <div class="turnos">
 <button id="btnManha" class="turno-btn turno-manha" onclick="mudarTurno('manha')">Manhã</button>
 <button id="btnTarde" class="turno-btn turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
@@ -479,8 +479,11 @@ carregarRotinas()
 ==================================================== */
 async function carregarRotinas(){
 const paciente=document.getElementById("buscaPaciente")?.value
-if(pacienteId && pacienteId !== "todos"){
-carregarDadosClinicosPaciente(pacienteId)
+if(paciente && paciente !== "todos"){
+  carregarDadosClinicosPaciente(paciente);
+}else{
+  const box = document.getElementById("dadosClinicosPaciente");
+  if(box) box.innerHTML = "";
 }
 const dataInicio=document.getElementById("dataInicio")?.value
 const dataFim=document.getElementById("dataFim")?.value
@@ -1226,6 +1229,7 @@ document.getElementById("dadosClinicosPaciente").innerHTML=html
 </script>
 </body>
 </html>
+
 
 
 
