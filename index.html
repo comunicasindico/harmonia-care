@@ -7,6 +7,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Harmonia Care</title>
+<link rel="icon" href="logo-harmonia.png">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -342,7 +343,6 @@ PDF do Paciente
 <!-- ====================================================
 PAINEL ADMIN
 ==================================================== -->
-
 <div id="painelAdmin" style="display:none">
 
 <div class="box">
@@ -406,9 +406,7 @@ Adicionar
 <!-- ====================================================
 007 SCRIPT
 ==================================================== -->
-
 <script>
-
 /* ====================================================
 008 CONFIG
 ==================================================== */
@@ -857,36 +855,65 @@ document.getElementById("indicadorAtrasado").innerHTML="⚠ "+atrasado
 021 DATA HOJE
 ==================================================== */
 function definirDataHoje(){
-const hoje = new Date()
-const ano = hoje.getFullYear()
-const mes = String(hoje.getMonth()+1).padStart(2,'0')
-const dia = String(hoje.getDate()).padStart(2,'0')
-const dataLocal = `${ano}-${mes}-${dia}`
-document.getElementById("dataInicio").value = dataLocal
-document.getElementById("dataFim").value = dataLocal
+
+const hoje = new Date().toISOString().split("T")[0]
+
+const inicio = document.getElementById("dataInicio")
+const fim = document.getElementById("dataFim")
+
+if(inicio) inicio.value = hoje
+if(fim) fim.value = hoje
+
 }
 /* ====================================================
 022 PAINÉIS
 ==================================================== */
+/* ====================================================
+001 FUNÇÃO UNIVERSAL DE NAVEGAÇÃO ENTRE PAINÉIS
+==================================================== */
+function abrirPainel(id){
+document.getElementById("painelEnfermagem").style.display="none"
+document.getElementById("painelClinico").style.display="none"
+document.getElementById("painelAdmin").style.display="none"
+document.getElementById(id).style.display="block"
+}
+/* ====================================================
+002 PAINEL ENFERMAGEM
+==================================================== */
 function abrirEnfermagem(){
+abrirPainel("painelEnfermagem")
 document.getElementById("painelEnfermagem").style.display="block"
 document.getElementById("painelClinico").style.display="none"
 document.getElementById("painelAdmin").style.display="none"
 }
+/* ====================================================
+003 PAINEL CLÍNICO
+==================================================== */
 function abrirClinico(){
+abrirPainel("painelClinico")
 document.getElementById("painelEnfermagem").style.display="none"
 document.getElementById("painelAdmin").style.display="none"
 document.getElementById("painelClinico").style.display="block"
 carregarClinico()
 }
+/* ====================================================
+004 PAINEL ADMIN
+==================================================== */
 async function abrirAdmin(){
-document.getElementById("painelEnfermagem").style.display="none"
-document.getElementById("painelClinico").style.display="none"
-document.getElementById("painelAdmin").style.display="block"
+abrirPainel("painelAdmin")
+
+const enf = document.getElementById("painelEnfermagem")
+const cli = document.getElementById("painelClinico")
+const adm = document.getElementById("painelAdmin")
+
+if(enf) enf.style.display="none"
+if(cli) cli.style.display="none"
+if(adm) adm.style.display="block"
+
 await carregarProfissionais()
 await carregarPacientesDrag()
 await carregarRotinasAdmin()
-await carregarEscala()
+
 }
 setInterval(()=>{
 if(document.getElementById("painelEnfermagem").style.display==="block"){
@@ -1592,10 +1619,15 @@ carregarRotinasAdmin()
 
 }
 
-  
+window.onload = function(){
+definirDataHoje()
+}
+
+
 </script>
 </body>
 </html>
+
 
 
 
