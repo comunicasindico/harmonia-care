@@ -7,6 +7,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Harmonia Care</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -17,9 +18,18 @@
 ==================================================== -->
 <style>
 
-body{margin:0;font-family:Arial;background:#f4f6f9;}
+body{
+margin:0;
+font-family:Arial;
+background:#f4f6f9;
+}
 
-#login{display:flex;justify-content:center;align-items:center;height:100vh;}
+#login{
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
 
 .login-box{
 background:#fff;
@@ -57,7 +67,9 @@ max-width:1200px;
 margin:auto;
 }
 
-.menu{margin-bottom:20px;}
+.menu{
+margin-bottom:20px;
+}
 
 .dashboard{
 display:grid;
@@ -82,7 +94,10 @@ box-shadow:0 2px 8px rgba(0,0,0,0.08);
 margin-top:20px;
 }
 
-table{width:100%;border-collapse:collapse;}
+table{
+width:100%;
+border-collapse:collapse;
+}
 
 th,td{
 padding:6px;
@@ -90,6 +105,8 @@ border-bottom:1px solid #ddd;
 font-size:13px;
 text-align:left;
 }
+
+/* TURNOS */
 
 .turnos{
 display:flex;
@@ -115,9 +132,7 @@ opacity:1;
 box-shadow:0 0 0 3px rgba(0,0,0,0.15) inset;
 }
 
-/* =========================
-ROTINAS
-========================= */
+/* ROTINAS */
 
 .rotinas-linha{
 display:flex;
@@ -144,9 +159,7 @@ border-color:#b9e4c8;
 color:#1e7e46;
 }
 
-/* =========================
-TOTAIS
-========================= */
+/* TOTAIS */
 
 .rotinas-totais{
 display:flex;
@@ -173,29 +186,9 @@ font-weight:bold;
 color:#e74c3c;
 font-weight:bold;
 }
-/* ===== TOTAIS CLÍNICOS ===== */
-.totais-clinicos{
-display:flex;
-flex-wrap:wrap;
-justify-content:center;
-gap:10px;
-margin:20px 0;
-}
 
-.btn-clinico{
-background:#555;
-color:#fff;
-padding:10px 16px;
-border-radius:10px;
-font-weight:bold;
-font-size:14px;
-}
+/* CLÍNICO */
 
-.btn-clinico span{
-color:#ff4d4d;
-font-weight:900;
-margin-left:6px;
-}
 .box-clinico-paciente{
 margin-top:20px;
 padding:15px;
@@ -214,165 +207,206 @@ font-size:14px;
 border:1px solid #ddd;
 }
 
-  
+/* DRAG ADMIN */
+
+.drag-container{
+display:flex;
+gap:30px;
+flex-wrap:wrap;
+}
+
+.drag-box{
+flex:1;
+min-height:150px;
+background:#fafafa;
+border:2px dashed #ddd;
+padding:10px;
+border-radius:10px;
+}
+
+.drag-item{
+background:#fff;
+padding:8px;
+margin-bottom:6px;
+border-radius:6px;
+cursor:grab;
+border:1px solid #ddd;
+}
+
 </style>
 </head>
+
 <!-- ====================================================
 003 BODY
 ==================================================== -->
 <body>
+
 <!-- ====================================================
 004 LOGIN
 ==================================================== -->
+
 <div id="login">
+
 <div class="login-box">
+
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
 <img src="logo-harmonia.png" style="height:38px">
 <h2 style="margin:0">Harmonia Care</h2>
 </div>
+
 <input id="usuario" placeholder="Usuário">
 <input id="senha" type="password" placeholder="Senha">
-<button onclick="login()" class="btn-primary" style="width:100%">Entrar</button>
+
+<button onclick="login()" class="btn-primary" style="width:100%">
+Entrar
+</button>
+
 <div style="margin-top:15px;font-size:12px;text-align:center;color:#666">
+
 <b>Lar Geriátrico HARMONIA</b><br>
 CNPJ:11.197.111/0001-56<br>
 Rua Doutor Manoel Benício Fontinele,38 – Piedade<br>
 Jaboatão dos Guararapes – PE<br>
 Fone:(81)3461-3109
+
+</div>
+
 </div>
 </div>
-</div>
+
 <!-- ====================================================
 005 APP
 ==================================================== -->
+
 <div id="app">
+
 <h1 style="display:flex;justify-content:space-between;align-items:center">
+
 <div style="display:flex;gap:10px;align-items:center">
 <img src="logo-harmonia.png" style="height:32px">
 <span>Harmonia Care</span>
 </div>
-<button onclick="logout()" class="btn-danger">Sair</button>
+
+<button onclick="logout()" class="btn-danger">
+Sair
+</button>
+
 </h1>
+
 <div class="menu">
+
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+
 <div style="display:flex;gap:10px">
-<button onclick="abrirEnfermagem()" class="btn-primary">Painel Enfermagem</button>
-<button onclick="abrirClinico()" class="btn-secondary">Painel Clínico</button>
-<button onclick="abrirAdmin()" class="btn-success">Admin</button>
-<button onclick="gerarPDFGeral()" class="btn-primary">Gerar PDF</button>
-<button onclick="gerarPDFPaciente()" class="btn-primary">PDF do Paciente</button>
+
+<button onclick="abrirEnfermagem()" class="btn-primary">
+Painel Enfermagem
+</button>
+
+<button onclick="abrirClinico()" class="btn-secondary">
+Painel Clínico
+</button>
+
+<button onclick="abrirAdmin()" class="btn-success">
+Admin
+</button>
+
+<button onclick="gerarPDFGeral()" class="btn-primary">
+Gerar PDF
+</button>
+
+<button onclick="gerarPDFPaciente()" class="btn-primary">
+PDF do Paciente
+</button>
+
 </div>
+
 <div style="display:flex;gap:10px;font-weight:bold">
-<div id="indicadorExecutado" style="background:#2ecc71;color:#fff;padding:6px 10px;border-radius:8px">✔ 0</div>
-<div id="indicadorPendente" style="background:#f39c12;color:#fff;padding:6px 10px;border-radius:8px">🔴 0</div>
-<div id="indicadorAtrasado" style="background:#e74c3c;color:#fff;padding:6px 10px;border-radius:8px">⚠ 0</div>
-</div>
-</div>
-</div>
-<div id="painelEnfermagem">
-<div class="box">
-<h3>Rotinas do Turno</h3>
-<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px">
-<div>
-<label>Paciente</label><br>
-<select id="buscaPaciente" style="padding:6px;border-radius:6px"></select>
-</div>
-<div>
-<label>Data início</label><br>
-<input type="date" id="dataInicio">
-</div>
-<div>
-<label>Data fim</label><br>
-<input type="date" id="dataFim">
-</div>
-<div style="display:flex;align-items:end">
-<button onclick="carregarRotinas()" class="btn-primary">Pesquisar</button>
-</div>
+
+<div id="indicadorExecutado" style="background:#2ecc71;color:#fff;padding:6px 10px;border-radius:8px">
+✔ 0
 </div>
 
-<div id="dadosClinicosPaciente" class="dados-clinicos"></div>
-
-<div class="turnos">
-<button id="btnManha" class="turno-btn turno-manha" onclick="mudarTurno('manha')">Manhã</button>
-<button id="btnTarde" class="turno-btn turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
-<button id="btnNoite" class="turno-btn turno-noite" onclick="mudarTurno('noite')">Noite</button>
+<div id="indicadorPendente" style="background:#f39c12;color:#fff;padding:6px 10px;border-radius:8px">
+🔴 0
 </div>
 
-<table>
-<thead>
-<tr>
-<th>Paciente</th>
-<th>Progresso</th>
-<th>Rotinas</th>
-
-</tr>
-</thead>
-<tbody id="rotinas"></tbody>
-</table>
+<div id="indicadorAtrasado" style="background:#e74c3c;color:#fff;padding:6px 10px;border-radius:8px">
+⚠ 0
+</div>
 
 </div>
 </div>
-
-<div id="painelClinico" style="display:none">
-<div class="dashboard">
-<div class="card"><h3 id="totalPacientes">0</h3>Pacientes</div>
-<div class="card"><h3 id="totalHas">0</h3>HAS</div>
-<div class="card"><h3 id="totalDm">0</h3>DM</div>
-<div class="card"><h3 id="totalDemencia">0</h3>Demência</div>
 </div>
 
-<div class="box">
-<table>
-<thead>
-<tr>
-<th>Paciente</th>
-<th>Idade</th>
-<th>HAS</th>
-<th>DM</th>
-<th>Demência</th>
-<th>Cardio</th>
-<th>Acamado</th>
-<th>Pressão PA</th>
-<th>Dieta</th>
-<th>Risco</th>
-<th>Outras</th>
-</tr>
-</thead>
-<tbody id="quadroClinico"></tbody>
-</table>
-</div>
-</div>
+<!-- ====================================================
+PAINEL ADMIN
+==================================================== -->
+
 <div id="painelAdmin" style="display:none">
+
 <div class="box">
-<h3>Escala Profissionais</h3>
+
+<h3>Escala Profissionais x Pacientes</h3>
+
+<div class="drag-container">
+
+<div class="drag-box">
+<h4>Profissionais</h4>
 <div id="listaProfissionaisDrag"></div>
 </div>
-<div class="box">
-<h3>Pacientes</h3>
+
+<div class="drag-box">
+<h4>Pacientes</h4>
 <div id="listaPacientesDrag"></div>
 </div>
-<!-- ====================================================
-006 ADMIN ROTINAS
-==================================================== -->
+
+</div>
+
+</div>
+
 <div class="box">
+
 <h3>Rotinas do Sistema</h3>
-<div id="listaRotinasAdmin"></div>
-<div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
-<input id="novaRotinaNome" placeholder="Nova rotina" style="padding:6px;border-radius:6px">
-<select id="novoTurno" style="padding:6px;border-radius:6px">
+
+<table>
+
+<thead>
+<tr>
+<th>Rotina</th>
+<th>Turno</th>
+<th>Ações</th>
+</tr>
+</thead>
+
+<tbody id="listaRotinasAdmin"></tbody>
+
+</table>
+
+<div style="margin-top:10px;display:flex;gap:10px">
+
+<input id="novaRotinaNome" placeholder="Nova rotina">
+
+<select id="novoTurno">
 <option value="Manhã">Manhã</option>
 <option value="Tarde">Tarde</option>
 <option value="Noite">Noite</option>
 </select>
+
 <button onclick="adicionarRotina()" class="btn-primary">
 Adicionar
 </button>
+
 </div>
+
 </div>
+
 </div>
+
 <!-- ====================================================
 007 SCRIPT
 ==================================================== -->
+
 <script>
 
 /* ====================================================
@@ -849,9 +883,10 @@ async function abrirAdmin(){
 document.getElementById("painelEnfermagem").style.display="none"
 document.getElementById("painelClinico").style.display="none"
 document.getElementById("painelAdmin").style.display="block"
+await carregarProfissionais()
 await carregarPacientesDrag()
-await carregarProfissionaisDrag()
-await carregarEscalaDrag()
+await carregarRotinasAdmin()
+await carregarEscala()
 }
 setInterval(()=>{
 if(document.getElementById("painelEnfermagem").style.display==="block"){
@@ -1341,9 +1376,226 @@ document.getElementById("dadosClinicosPaciente").innerHTML=html
 
 }
 
+/* ====================================================
+050 DRAG AND DROP
+==================================================== */
 
+function allowDrop(ev){
+ev.preventDefault()
+}
+
+function drag(ev){
+ev.dataTransfer.setData("text", ev.target.id)
+}
+
+function drop(ev){
+ev.preventDefault()
+
+const data = ev.dataTransfer.getData("text")
+
+const profissionalId = data.replace("prof_","")
+const pacienteId = ev.target.id.replace("pac_","")
+
+salvarEscala(profissionalId,pacienteId)
+
+}
+
+/* ====================================================
+051 CARREGAR PROFISSIONAIS
+==================================================== */
+
+async function carregarProfissionais(){
+
+const {data,error} = await db
+.from("profissionais")
+.select("id,nome")
+.order("nome")
+
+if(error) return
+
+let html=""
+
+data.forEach(p=>{
+
+html+=`
+<div class="drag-item"
+draggable="true"
+ondragstart="drag(event)"
+id="prof_${p.id}">
+${p.nome}
+</div>
+`
+
+})
+
+document.getElementById("listaProfissionaisDrag").innerHTML = html
+
+}
+
+/* ====================================================
+052 CARREGAR PACIENTES DRAG
+==================================================== */
+
+async function carregarPacientesDrag(){
+
+const {data,error} = await db
+.from("pacientes")
+.select("id,nome_completo")
+.order("nome_completo")
+
+if(error) return
+
+let html=""
+
+data.forEach(p=>{
+
+html+=`
+<div class="drag-item"
+ondrop="drop(event)"
+ondragover="allowDrop(event)"
+id="pac_${p.id}">
+${p.nome_completo}
+</div>
+`
+
+})
+
+document.getElementById("listaPacientesDrag").innerHTML = html
+
+}
+
+  /* ====================================================
+053 SALVAR ESCALA
+==================================================== */
+
+async function salvarEscala(profissionalId,pacienteId){
+
+await db
+.from("escala_profissionais")
+.insert({
+profissional_id:profissionalId,
+paciente_id:pacienteId
+})
+
+alert("Escala salva!")
+
+}
+
+ /* ====================================================
+054 CARREGAR ROTINAS ADMIN
+==================================================== */
+
+async function carregarRotinasAdmin(){
+
+const {data,error} = await db
+.from("rotina_modelos")
+.select("*")
+.order("nome")
+
+if(error) return
+
+let html=""
+
+data.forEach(r=>{
+
+html+=`
+
+<tr>
+
+<td>
+<input id="rot_${r.id}" value="${r.nome}">
+</td>
+
+<td>${r.turno}</td>
+
+<td>
+
+<button onclick="salvarRotina('${r.id}')" class="btn-success">
+Salvar
+</button>
+
+<button onclick="excluirRotina('${r.id}')" class="btn-danger">
+Excluir
+</button>
+
+</td>
+
+</tr>
+
+`
+
+})
+
+document.getElementById("listaRotinasAdmin").innerHTML = html
+
+}
+
+  /* ====================================================
+055 INSERIR ROTINA
+==================================================== */
+
+async function adicionarRotina(){
+
+const nome = document.getElementById("novaRotinaNome").value
+const turno = document.getElementById("novoTurno").value
+
+if(!nome){
+alert("Digite a rotina")
+return
+}
+
+await db
+.from("rotina_modelos")
+.insert({
+nome:nome,
+turno:turno
+})
+
+document.getElementById("novaRotinaNome").value=""
+
+carregarRotinasAdmin()
+
+}
+
+  /* ====================================================
+056 SALVAR ROTINA
+==================================================== */
+
+async function salvarRotina(id){
+
+const nome = document.getElementById("rot_"+id).value
+
+await db
+.from("rotina_modelos")
+.update({nome:nome})
+.eq("id",id)
+
+alert("Rotina atualizada")
+
+}
+
+
+/* ====================================================
+057 EXCLUIR ROTINA
+==================================================== */
+
+async function excluirRotina(id){
+
+if(!confirm("Excluir rotina?")) return
+
+await db
+.from("rotina_modelos")
+.delete()
+.eq("id",id)
+
+carregarRotinasAdmin()
+
+}
+
+  
 </script>
 </body>
 </html>
+
 
 
