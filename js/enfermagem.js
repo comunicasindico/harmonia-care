@@ -52,19 +52,20 @@ select.innerHTML = html
 ==================================================== */
 async function carregarRotinas(){
 const paciente=document.getElementById("buscaPaciente")?.value
-const dataInicio=document.getElementById("dataInicio")?.value
+const dataHoje=document.getElementById("dataInicio")?.value
 const turno=TURNO_ATUAL
-const {data:idosos}=await db.from("idosos").select("id,nome")
-const {data:rotinas}=await db.from("rotinas").select("id,nome,turno").eq("turno",turno)
-const {data:execucoes}=await db.from("rotinas_execucao").select("*").eq("data",dataInicio)
+const {data:idosos}=await db.from("idosos").select("id,nome_completo")
+const {data:rotinas}=await db.from("rotinas").select("id,nome").eq("turno",turno)
+const {data:execucoes}=await db.from("rotinas_execucao").select("*").eq("data",dataHoje)
 let lista=[]
 idosos.forEach(i=>{
+if(paciente!=="todos"&&paciente!==i.id)return
 rotinas.forEach(r=>{
 const exec=execucoes.find(e=>e.idoso_id===i.id&&e.rotina_id===r.id)
 lista.push({
 id:exec?.id||`${i.id}_${r.id}`,
 idoso_id:i.id,
-paciente:i.nome,
+paciente:i.nome_completo,
 rotina:r.nome,
 status:exec?.status||"pendente"
 })
