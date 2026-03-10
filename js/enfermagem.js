@@ -1,60 +1,84 @@
 /* ====================================================
-MUDAR TURNO
+020 – MUDAR TURNO
 ==================================================== */
 
 function mudarTurno(turno){
 
-TURNO_ATUAL=turno
+TURNO_ATUAL = turno
 
-document.getElementById("btnManha").classList.remove("turno-ativo")
-document.getElementById("btnTarde").classList.remove("turno-ativo")
-document.getElementById("btnNoite").classList.remove("turno-ativo")
+const btnManha = document.getElementById("btnManha")
+const btnTarde = document.getElementById("btnTarde")
+const btnNoite = document.getElementById("btnNoite")
 
-if(turno==="manha")document.getElementById("btnManha").classList.add("turno-ativo")
-if(turno==="tarde")document.getElementById("btnTarde").classList.add("turno-ativo")
-if(turno==="noite")document.getElementById("btnNoite").classList.add("turno-ativo")
+if(btnManha) btnManha.classList.remove("turno-ativo")
+if(btnTarde) btnTarde.classList.remove("turno-ativo")
+if(btnNoite) btnNoite.classList.remove("turno-ativo")
+
+if(turno==="manha" && btnManha) btnManha.classList.add("turno-ativo")
+if(turno==="tarde" && btnTarde) btnTarde.classList.add("turno-ativo")
+if(turno==="noite" && btnNoite) btnNoite.classList.add("turno-ativo")
 
 carregarRotinas()
 
 }
 
+/* ====================================================
+021 – CARREGAR PACIENTES BUSCA
+==================================================== */
+
+async function carregarPacientesBusca(){
+
+const select = document.getElementById("buscaPaciente")
+
+if(!select) return
+
+const {data} = await db
+.from("pacientes")
+.select("id,nome_completo")
+.order("nome_completo")
+
+let html = `<option value="todos">Todos</option>`
+
+data.forEach(p=>{
+
+html += `<option value="${p.id}">${p.nome_completo}</option>`
+
+})
+
+select.innerHTML = html
+
+}
 
 /* ====================================================
-CARREGAR ROTINAS
+022 – CARREGAR ROTINAS
 ==================================================== */
 
 async function carregarRotinas(){
 
-const paciente=document.getElementById("buscaPaciente")?.value
+const paciente = document.getElementById("buscaPaciente")?.value
+const dataInicio = document.getElementById("dataInicio")?.value
+const dataFim = document.getElementById("dataFim")?.value
 
-if(paciente && paciente !== "todos"){
-carregarDadosClinicosPaciente(paciente)
-}
-
-const dataInicio=document.getElementById("dataInicio")?.value
-const dataFim=document.getElementById("dataFim")?.value
-
-let query=db
+let query = db
 .from("vw_rotinas_painel")
 .select("*")
 .eq("turno",TURNO_ATUAL)
 
-if(paciente) query=query.eq("paciente_id",paciente)
-if(dataInicio) query=query.gte("data",dataInicio)
-if(dataFim) query=query.lte("data",dataFim)
+if(paciente && paciente !== "todos") query = query.eq("paciente_id",paciente)
+if(dataInicio) query = query.gte("data",dataInicio)
+if(dataFim) query = query.lte("data",dataFim)
 
-query=query.order("paciente").order("rotina")
-
-const {data,error}=await query
+const {data,error} = await query
 
 if(error){
 
 console.error(error)
 alert("Erro ao carregar rotinas")
-
 return
 
 }
+
+ROTINAS_CACHE = data
 
 calcularIndicadores(data)
 
@@ -62,27 +86,90 @@ renderizarRotinas(data)
 
 }
 
-
 /* ====================================================
-INDICADORES
+023 – RENDERIZAR ROTINAS
 ==================================================== */
 
-function calcularIndicadores(data){
+function renderizarRotinas(lista){
+
+const tbody = document.getElementById("rotinas")
+
+if(!tbody) return
+
+let html = ""
+
+lista.forEach(r=>{
+
+const classe = r.status==="executado" ? "rotina-executada" : "rotina-pendente"
+
+html += `
+<tr>
+
+<td>${r.paciente}</td>
+
+<td>${r.status}</td>
+
+<td>
+<button class="btn-rotina ${classe}"
+onclick="executarRotina('${r.id}')">
+${r.rotina}
+</button>
+</td>
+
+</tr>
+`
+
+})
+
+tbody.innerHTML = html
+
+}
+
+/* ====================================================
+024 – EXECUTAR ROTINA
+==================================================== */
+
+async function executarRotina(id){
+
+const usuario = localStorage.getItem("usuario_nome")
+
+await db
+.from("rotina_execucao")
+.update({
+status:"executado",
+executado_por:usuario,
+horario_execucao:new Date()
+})
+.eq("id",id)
+
+carregarRotinas()
+
+}
+
+/* ====================================================
+025 – INDICADORES
+==================================================== */
+
+function calcularIndicadores(lista){
 
 let executado=0
 let pendente=0
 let atrasado=0
 
-data.forEach(r=>{
+lista.forEach(r=>{
 
-if(r.status==="executado")executado++
-if(r.status==="pendente")pendente++
-if(r.status==="atrasado")atrasado++
+if(r.status==="executado") executado++
+if(r.status==="pendente") pendente++
+if(r.status==="atrasado") atrasado++
 
 })
 
-document.getElementById("indicadorExecutado").innerHTML="✔ "+executado
-document.getElementById("indicadorPendente").innerHTML="🔴 "+pendente
-document.getElementById("indicadorAtrasado").innerHTML="⚠ "+atrasado
+const e = document.getElementById("indicadorExecutado")
+const p = document.getElementById("indicadorPendente")
+const a = document.getElementById("indicadorAtrasado")
+
+if(e) e.innerHTML = "✔ "+executado
+if(p) p.innerHTML = "🔴 "+pendente
+if(a) a.innerHTML = "⚠ "+atrasado
 
 }
