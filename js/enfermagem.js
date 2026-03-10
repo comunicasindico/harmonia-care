@@ -1,9 +1,10 @@
 /* ====================================================
 020 – MUDAR TURNO
 ==================================================== */
+
 function mudarTurno(turno){
 
-TURNO_ATUAL = turno
+TURNO_ATUAL=turno
 
 const btnManha=document.getElementById("btnManha")
 const btnTarde=document.getElementById("btnTarde")
@@ -24,6 +25,7 @@ if(typeof carregarRotinas==="function")carregarRotinas()
 /* ====================================================
 021 – CARREGAR PACIENTES BUSCA
 ==================================================== */
+
 async function carregarPacientesBusca(){
 
 if(!db)return
@@ -35,6 +37,7 @@ const {data,error}=await db
 .from("pacientes")
 .select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
 .order("nome_completo")
 
 if(error){
@@ -55,6 +58,7 @@ select.innerHTML=html
 /* ====================================================
 022 – CARREGAR ROTINAS
 ==================================================== */
+
 async function carregarRotinas(){
 
 if(!db)return
@@ -63,7 +67,7 @@ const paciente=document.getElementById("buscaPaciente")?.value||"todos"
 const dataHoje=document.getElementById("dataInicio")?.value
 const turno=TURNO_ATUAL
 
-const {data:idosos}=await db
+const {data:pacientes}=await db
 .from("pacientes")
 .select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
@@ -81,19 +85,19 @@ const {data:execucoes}=await db
 
 let lista=[]
 
-idosos?.forEach(i=>{
+pacientes?.forEach(p=>{
 
-if(paciente!=="todos"&&paciente!==i.id)return
+if(paciente!=="todos"&&paciente!==p.id)return
 
 rotinas?.forEach(r=>{
 
-const exec=execucoes?.find(e=>e.paciente_id===i.id&&e.rotina_id===r.id)
+const exec=execucoes?.find(e=>e.idoso_id===p.id&&e.rotina_id===r.id)
 
 lista.push({
-id:exec?.id||`${i.id}_${r.id}`,
-paciente_id:i.id,
+id:exec?.id||`${p.id}_${r.id}`,
+idoso_id:p.id,
 rotina_id:r.id,
-paciente:i.nome_completo,
+paciente:p.nome_completo,
 rotina:r.nome,
 status:exec?.status||"pendente"
 })
@@ -112,6 +116,7 @@ renderizarRotinas(lista)
 /* ====================================================
 023 – RENDERIZAR ROTINAS
 ==================================================== */
+
 function renderizarRotinas(lista){
 
 const tbody=document.getElementById("rotinas")
@@ -123,16 +128,16 @@ const pacientes={}
 
 lista.forEach(r=>{
 
-if(!pacientes[r.paciente_id]){
+if(!pacientes[r.idoso_id]){
 
-pacientes[r.paciente_id]={
+pacientes[r.idoso_id]={
 nome:r.paciente,
 rotinas:[]
 }
 
 }
 
-pacientes[r.paciente_id].rotinas.push(r)
+pacientes[r.idoso_id].rotinas.push(r)
 
 })
 
@@ -151,7 +156,7 @@ const classe=r.status==="executado"
 rotinasHTML+=`
 <button
 class="btn-rotina ${classe}"
-onclick="executarRotina('${r.paciente_id}','${r.rotina_id}')">
+onclick="executarRotina('${r.idoso_id}','${r.rotina_id}')">
 ${r.rotina}
 </button>
 `
@@ -178,7 +183,8 @@ tbody.innerHTML=html
 /* ====================================================
 024 – EXECUTAR ROTINA
 ==================================================== */
-async function executarRotina(idosoId,rotinaId){
+
+async function executarRotina(pacienteId,rotinaId){
 
 if(!db)return
 
@@ -190,7 +196,7 @@ await db
 status:"executado",
 horario_executado:new Date()
 })
-.eq("paciente_id",idosoId)
+.eq("idoso_id",pacienteId)
 .eq("rotina_id",rotinaId)
 .eq("data",dataHoje)
 
@@ -201,9 +207,8 @@ carregarRotinas()
 /* ====================================================
 025 – INDICADORES
 ==================================================== */
-function calcularIndicadores(lista){
 
-if(!lista)return
+function calcularIndicadores(lista){
 
 let executado=0
 let pendente=0
@@ -230,12 +235,12 @@ if(a)a.innerHTML="⚠ "+atrasado
 /* ====================================================
 026 – EXECUTAR TODAS ROTINAS
 ==================================================== */
-async function executarTodos(idosoId){
+
+async function executarTodos(pacienteId){
 
 if(!db)return
-if(!ROTINAS_CACHE)return
 
-const rotinas=ROTINAS_CACHE.filter(r=>r.paciente_id===idosoId)
+const rotinas=ROTINAS_CACHE.filter(r=>r.idoso_id===pacienteId)
 
 for(const r of rotinas){
 
@@ -247,14 +252,14 @@ await db
 status:"executado",
 horario_executado:new Date()
 })
-.eq("paciente_id",r.paciente_id)
+.eq("idoso_id",r.idoso_id)
 .eq("rotina_id",r.rotina_id)
 
 }
 
 }
 
-if(typeof carregarRotinas==="function")carregarRotinas()
+carregarRotinas()
 
 }
 
@@ -268,8 +273,6 @@ if(!db)return
 
 const hoje=new Date().toISOString().slice(0,10)
 
-/* PACIENTES */
-
 const {data:pacientes,error:e1}=await db
 .from("pacientes")
 .select("id")
@@ -281,8 +284,6 @@ console.error("Erro pacientes",e1)
 return
 }
 
-/* ROTINAS */
-
 const {data:rotinas,error:e2}=await db
 .from("rotinas")
 .select("id")
@@ -292,8 +293,6 @@ console.error("Erro rotinas",e2)
 return
 }
 
-/* GERAR EXECUÇÕES */
-
 for(const p of pacientes||[]){
 
 for(const r of rotinas||[]){
@@ -301,7 +300,7 @@ for(const r of rotinas||[]){
 const {data:existe}=await db
 .from("rotinas_execucao")
 .select("id")
-.eq("paciente_id",p.id)
+.eq("idoso_id",p.id)
 .eq("rotina_id",r.id)
 .eq("data",hoje)
 .maybeSingle()
@@ -311,7 +310,7 @@ if(!existe){
 await db
 .from("rotinas_execucao")
 .insert({
-paciente_id:p.id,
+idoso_id:p.id,
 rotina_id:r.id,
 data:hoje,
 status:"pendente"
