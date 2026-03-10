@@ -567,8 +567,7 @@ let barra=`
 </div>
 </div>`
 
-let rotinas=`<div class="rotinas-linha">${pacientes[p].rotinas.join("")}</div>`
-
+let rotinas=pacientes[p].rotinas.join("")
 html+=`
 <tr>
 <td style="font-weight:bold">${p}</td>
@@ -1000,6 +999,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
