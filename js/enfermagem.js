@@ -54,9 +54,6 @@ select.innerHTML=html
 /* ====================================================
 022 – CARREGAR ROTINAS
 ==================================================== */
-
-let ROTINAS_CACHE=[]
-
 async function carregarRotinas(){
 
 if(!db)return
@@ -203,6 +200,8 @@ carregarRotinas()
 ==================================================== */
 function calcularIndicadores(lista){
 
+if(!lista)return
+
 let executado=0
 let pendente=0
 let atrasado=0
@@ -231,6 +230,7 @@ if(a)a.innerHTML="⚠ "+atrasado
 async function executarTodos(idosoId){
 
 if(!db)return
+if(!ROTINAS_CACHE)return
 
 const rotinas=ROTINAS_CACHE.filter(r=>r.idoso_id===idosoId)
 
@@ -251,7 +251,7 @@ horario_executado:new Date()
 
 }
 
-carregarRotinas()
+if(typeof carregarRotinas==="function")carregarRotinas()
 
 }
 
@@ -282,9 +282,9 @@ console.error("Erro rotinas",e2)
 return
 }
 
-for(const i of idosos){
+for(const i of idosos||[]){
 
-for(const r of rotinas){
+for(const r of rotinas||[]){
 
 const {data:existe}=await db
 .from("rotinas_execucao")
