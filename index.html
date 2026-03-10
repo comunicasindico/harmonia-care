@@ -196,6 +196,24 @@ color:#ff4d4d;
 font-weight:900;
 margin-left:6px;
 }
+.box-clinico-paciente{
+margin-top:20px;
+padding:15px;
+background:#f4f6f9;
+border-radius:10px;
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+}
+
+.box-clinico-paciente span{
+background:#ffffff;
+padding:6px 10px;
+border-radius:6px;
+font-size:14px;
+border:1px solid #ddd;
+}
+
   
 </style>
 </head>
@@ -269,6 +287,7 @@ Fone:(81)3461-3109
 </div>
 <div style="display:flex;align-items:end">
 <button onclick="carregarRotinas()" class="btn-primary">Pesquisar</button>
+<div id="dadosClinicosPaciente"></div>
 </div>
 </div>
 <div class="turnos">
@@ -460,6 +479,7 @@ carregarRotinas()
 ==================================================== */
 async function carregarRotinas(){
 const paciente=document.getElementById("buscaPaciente")?.value
+carregarDadosClinicosPaciente(pacienteId)
 const dataInicio=document.getElementById("dataInicio")?.value
 const dataFim=document.getElementById("dataFim")?.value
 let query=db
@@ -1105,14 +1125,16 @@ let linhas=[]
 rotinas.forEach(r=>{
 let statusTexto="Pendente"
 
-if(r.status==="executado") statusTexto="✔ Executado"
-if(r.status==="atrasado") statusTexto="⚠ Atrasado"
+let status="Pendente"
+
+if(r.status==="executado") status="✔ Executado"
+if(r.status==="atrasado") status="⚠ Atrasado"
 
 linhas.push([
 dataBR(r.data),
 r.turno.charAt(0).toUpperCase()+r.turno.slice(1),
 r.rotina,
-statusTexto
+status
 ])
 })
 
@@ -1149,10 +1171,60 @@ doc.save("relatorio_"+paciente.nome_completo+".pdf")
 
 }
 
+/* ================================
+028 - DADOS CLINICOS PACIENTE
+================================ */
+async function carregarDadosClinicosPaciente(pacienteId){
+
+const {data,error}=await db
+.from("pacientes")
+.select(`
+data_nascimento,
+has,
+dm,
+da,
+cardiopatia,
+acamado,
+pressao_arterial,
+dieta_especial,
+grau_risco,
+outras_comorbidades
+`)
+.eq("id",pacienteId)
+.single()
+
+if(error) return
+
+function idade(data){
+if(!data) return ""
+const n=new Date(data)
+const h=new Date()
+let i=h.getFullYear()-n.getFullYear()
+const m=h.getMonth()-n.getMonth()
+if(m<0||(m===0&&h.getDate()<n.getDate())) i--
+return i
+}
+
+let html=""
+
+html+=`<span><b>Idade:</b> ${idade(data.data_nascimento)}</span>`
+html+=`<span><b>HAS:</b> ${data.has?"Sim":"Não"}</span>`
+html+=`<span><b>DM:</b> ${data.dm?"Sim":"Não"}</span>`
+html+=`<span><b>Demência:</b> ${data.da?"Sim":"Não"}</span>`
+html+=`<span><b>Cardio:</b> ${data.cardiopatia?"Sim":"Não"}</span>`
+html+=`<span><b>Acamado:</b> ${data.acamado?"Sim":"Não"}</span>`
+html+=`<span><b>PA:</b> ${data.pressao_arterial||""}</span>`
+html+=`<span><b>Dieta:</b> ${data.dieta_especial?"Sim":"Não"}</span>`
+html+=`<span><b>Risco:</b> ${data.grau_risco||""}</span>`
+
+document.getElementById("dadosClinicosPaciente").innerHTML=html
+
+}
 
 </script>
 </body>
 </html>
+
 
 
 
