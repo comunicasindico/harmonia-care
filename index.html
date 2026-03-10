@@ -479,7 +479,7 @@ carregarRotinas()
 ==================================================== */
 async function carregarRotinas(){
 const paciente=document.getElementById("buscaPaciente")?.value
-if(pacienteId){
+if(pacienteId && pacienteId !== "todos"){
 carregarDadosClinicosPaciente(pacienteId)
 }
 const dataInicio=document.getElementById("dataInicio")?.value
@@ -1226,6 +1226,7 @@ document.getElementById("dadosClinicosPaciente").innerHTML=html
 </script>
 </body>
 </html>
+
 
 
 
