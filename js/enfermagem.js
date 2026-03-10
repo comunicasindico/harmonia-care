@@ -262,14 +262,17 @@ horario_executado:new Date()
 carregarRotinas()
 
 }
-
+/* ====================================================
+027 – GERAR ROTINAS
+==================================================== */
 async function gerarRotinasDoDia(){
 
 if(!db)return
 
-const hoje=new Date().toISOString().slice(0,10)
+if(ROTINAS_GERADAS)return
+ROTINAS_GERADAS=true
 
-/* PACIENTES */
+const hoje=new Date().toISOString().slice(0,10)
 
 const {data:pacientes,error:e1}=await db
 .from("pacientes")
@@ -278,34 +281,21 @@ const {data:pacientes,error:e1}=await db
 .eq("ativo",true)
 
 if(e1){
-console.error("Erro pacientes",e1)
+console.error(e1)
 return
 }
-
-/* ROTINAS */
 
 const {data:rotinas,error:e2}=await db
 .from("rotinas")
 .select("id")
 
 if(e2){
-console.error("Erro rotinas",e2)
+console.error(e2)
 return
 }
 
-/* 🔴 EVITAR LOOP INFINITO */
-
-if(!pacientes?.length){
-console.log("Sem pacientes")
-return
-}
-
-if(!rotinas?.length){
-console.log("Sem rotinas")
-return
-}
-
-/* GERAR ROTINAS */
+if(!pacientes?.length)return
+if(!rotinas?.length)return
 
 for(const p of pacientes){
 
