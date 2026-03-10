@@ -68,7 +68,7 @@ let query = db
 .select("*")
 .eq("turno",TURNO_ATUAL)
 
-if(paciente && paciente !== "todos") query = query.eq("paciente_id",paciente)
+if(paciente && paciente !== "todos") query = query.eq("idoso_id",paciente)
 if(dataInicio) query = query.gte("data",dataInicio)
 if(dataFim) query = query.lte("data",dataFim)
 
@@ -102,21 +102,64 @@ if(!tbody) return
 
 let html = ""
 
+const pacientes = {}
+
+/* agrupar rotinas por idoso */
+
 lista.forEach(r=>{
 
-const classe = r.status==="executado" ? "rotina-executada" : "rotina-pendente"
+if(!pacientes[r.idoso_id]){
 
-html+=`
+pacientes[r.idoso_id] = {
+nome: r.paciente,
+rotinas: []
+}
+
+}
+
+pacientes[r.idoso_id].rotinas.push(r)
+
+})
+
+/* renderizar */
+
+Object.keys(pacientes).forEach(pid=>{
+
+const p = pacientes[pid]
+
+let rotinasHTML = ""
+
+p.rotinas.forEach(r=>{
+
+const classe = r.status==="executado"
+? "rotina-executada"
+: "rotina-pendente"
+
+rotinasHTML += `
+
+<button
+class="btn-rotina ${classe}"
+onclick="executarRotina('${r.id}')">
+
+${r.rotina}
+
+</button>
+
+`
+
+})
+
+html += `
 
 <tr>
 
 <td>
 
-${r.paciente}
+${p.nome}
 
 <button
 style="margin-left:10px"
-onclick="executarTodos('${r.paciente_id}')">
+onclick="executarTodos('${pid}')">
 
 TODOS
 
@@ -124,17 +167,16 @@ TODOS
 
 </td>
 
-<td>${r.status}</td>
+<td>${p.rotinas.length}</td>
 
-<td>
-<button
-class="btn-rotina ${classe}"
-onclick="executarRotina('${r.id}')">
-${r.rotina}
-</button>
+<td class="rotinas-linha">
+
+${rotinasHTML}
+
 </td>
 
 </tr>
+
 `
 
 })
@@ -142,7 +184,6 @@ ${r.rotina}
 tbody.innerHTML = html
 
 }
-
 /* ====================================================
 024 – EXECUTAR ROTINA
 ==================================================== */
@@ -192,24 +233,24 @@ if(a) a.innerHTML = "⚠ "+atrasado
 
 }
 /* ====================================================
-EXECUTAR TODOS
+024 – EXECUTAR TODAS ROTINAS DO IDOSO
 ==================================================== */
 
-async function executarTodos(pacienteId){
+async function executarTodos(idosoId){
 
-const rotinas=ROTINAS_CACHE.filter(r=>r.paciente_id===pacienteId)
+const rotinas = ROTINAS_CACHE.filter(r => r.idoso_id === idosoId)
 
 for(const r of rotinas){
 
-if(r.status!=="executado"){
+if(r.status !== "executado"){
 
 await db
-.from("rotina_execucao")
+.from("rotinas_execucao")
 .update({
 status:"executado",
-horario_execucao:new Date()
+horario_executado:new Date()
 })
-.eq("id",r.id)
+.eq("id", r.id)
 
 }
 
