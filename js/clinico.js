@@ -96,7 +96,7 @@ return idade
 }
 
 /* ====================================================
-032 – DADOS CLINICOS PACIENTE
+DADOS CLINICOS PACIENTE
 ==================================================== */
 
 async function carregarDadosClinicosPaciente(pacienteId){
@@ -108,13 +108,18 @@ return
 
 }
 
-const {data}=await db
+const {data,error}=await db
 .from("pacientes")
 .select("*")
 .eq("id",pacienteId)
 .single()
 
-if(!data) return
+if(error){
+
+console.log(error)
+return
+
+}
 
 let html=`
 
@@ -124,7 +129,7 @@ let html=`
 
 <b>Paciente:</b> ${data.nome_completo}<br>
 
-<b>Idade:</b> ${calcularIdade(data.data_nascimento)}<br>
+<b>Idade:</b> ${calcularIdade(data.data_nascimento)} anos<br>
 
 <b>HAS:</b> ${data.has?"Sim":"Não"}<br>
 
@@ -136,11 +141,11 @@ let html=`
 
 <b>Acamado:</b> ${data.acamado?"Sim":"Não"}<br>
 
-<b>Pressão:</b> ${data.pressao_arterial ?? ""}<br>
+<b>Pressão arterial:</b> ${data.pressao_arterial ?? ""}<br>
 
-<b>Dieta:</b> ${data.dieta_especial?"Sim":"Não"}<br>
+<b>Dieta especial:</b> ${data.dieta_especial?"Sim":"Não"}<br>
 
-<b>Grau de risco:</b> ${data.grau_risco ?? ""}<br>
+<b>Grau de risco:</b> ${data.grau_risco ?? ""}
 
 </div>
 
