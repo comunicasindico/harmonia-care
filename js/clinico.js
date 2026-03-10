@@ -3,17 +3,22 @@
 ==================================================== */
 async function carregarClinico(){
 
+if(!db){
+console.error("Supabase ainda não carregou")
+return
+}
+
 const {data,error}=await db
 .from("pacientes")
 .select("*")
 .order("nome_completo")
 
 if(error){
-
 console.error(error)
 return
-
 }
+
+if(!data) return
 
 let html=""
 
@@ -32,43 +37,35 @@ if(p.demencia) totalDemencia++
 
 html+=`
 <tr>
-
-<td>${p.nome_completo}</td>
-
+<td>${p.nome_completo??""}</td>
 <td>${calcularIdade(p.data_nascimento)}</td>
-
 <td>${p.has?"✔":""}</td>
-
 <td>${p.dm?"✔":""}</td>
-
 <td>${p.demencia?"✔":""}</td>
-
 <td>${p.cardiopatia?"✔":""}</td>
-
 <td>${p.acamado?"✔":""}</td>
-
 <td>${p.pressao_arterial??""}</td>
-
 <td>${p.dieta_especial?"✔":""}</td>
-
 <td>${p.grau_risco??""}</td>
-
 <td>${p.outras_comorbidades??""}</td>
-
 </tr>
 `
-
 })
 
-document.getElementById("quadroClinico").innerHTML=html
+const tabela=document.getElementById("quadroClinico")
+if(tabela) tabela.innerHTML=html
 
-document.getElementById("totalPacientes").innerHTML=totalPacientes
-document.getElementById("totalHas").innerHTML=totalHas
-document.getElementById("totalDm").innerHTML=totalDm
-document.getElementById("totalDemencia").innerHTML=totalDemencia
+const tPac=document.getElementById("totalPacientes")
+const tHas=document.getElementById("totalHas")
+const tDm=document.getElementById("totalDm")
+const tDem=document.getElementById("totalDemencia")
+
+if(tPac) tPac.innerHTML=totalPacientes
+if(tHas) tHas.innerHTML=totalHas
+if(tDm) tDm.innerHTML=totalDm
+if(tDem) tDem.innerHTML=totalDemencia
 
 }
-
 /* ====================================================
 031 – CALCULAR IDADE
 ==================================================== */
