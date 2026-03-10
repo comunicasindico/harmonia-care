@@ -1214,7 +1214,10 @@ pressao_arterial
 .eq("id",pacienteId)
 .single()
 
-if(error){console.error(error);return}
+if(error){
+console.error(error)
+return
+}
 
 const html=`
 <div style="
@@ -1238,7 +1241,6 @@ font-size:14px
 <br><br>
 
 <b>Outras Comorbidades:</b> ${data.outras_comorbidades || "-"}
-`
 
 </div>
 `
@@ -1251,6 +1253,7 @@ document.getElementById("dadosClinicosPaciente").innerHTML=html
 </script>
 </body>
 </html>
+
 
 
 
