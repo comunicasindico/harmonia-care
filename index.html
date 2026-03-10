@@ -976,6 +976,23 @@ async function gerarPDFGeral(){
 const { jsPDF } = window.jspdf
 const doc = new jsPDF()
 
+/* ================================
+FORMATA DATA
+================================ */
+
+function dataBR(data){
+if(!data) return ""
+const d=new Date(data)
+const dia=String(d.getDate()).padStart(2,'0')
+const mes=String(d.getMonth()+1).padStart(2,'0')
+const ano=d.getFullYear()
+return `${dia}-${mes}-${ano}`
+}
+
+/* ================================
+BUSCAR DADOS
+================================ */
+
 const {data,error}=await db
 .from("vw_rotinas_painel")
 .select("*")
@@ -983,14 +1000,27 @@ const {data,error}=await db
 .order("data",{ascending:true})
 
 if(error){
+console.error(error)
 alert("Erro ao gerar PDF")
 return
 }
 
-/* LOGO */
+/* ================================
+LOGO
+================================ */
+
 const logo=new Image()
 logo.src="logo-harmonia.png"
+
+await new Promise(resolve=>{
+logo.onload=resolve
+})
+
 doc.addImage(logo,"PNG",14,8,25,25)
+
+/* ================================
+CABEÇALHO
+================================ */
 
 doc.setFontSize(16)
 doc.text("HARMONIA CARE",45,15)
@@ -1001,19 +1031,39 @@ doc.text("Relatório Geral de Rotinas",45,22)
 doc.setFontSize(10)
 doc.text("Emitido em: "+new Date().toLocaleDateString("pt-BR"),14,40)
 
-/* TABELA */
+/* ================================
+LINHAS
+================================ */
 
 let linhas=[]
 
+if(data && data.length>0){
+
 data.forEach(r=>{
+
+let status="Pendente"
+if(r.status==="executado") status="✔ Executado"
+if(r.status==="atrasado") status="⚠ Atrasado"
+
 linhas.push([
-r.paciente,
-r.data,
-r.turno,
-r.rotina,
-r.status==="executado"?"✔":"Pendente"
+r.paciente || "",
+dataBR(r.data),
+r.turno || "",
+r.rotina || "",
+status
 ])
+
 })
+
+}else{
+
+linhas.push(["Sem registros","-","-","-","-"])
+
+}
+
+/* ================================
+TABELA
+================================ */
 
 doc.autoTable({
 startY:45,
@@ -1023,32 +1073,34 @@ styles:{fontSize:9},
 headStyles:{fillColor:[52,152,219]}
 })
 
+/* ================================
+SALVAR
+================================ */
+
 doc.save("relatorio_geral_rotinas.pdf")
 
 }
+
 /* ====================================================
 027 GERAR PDF PACIENTE 
 ==================================================== */
 async function gerarPDFPaciente(){
 
 const pacienteId=document.getElementById("buscaPaciente").value
+
 if(!pacienteId || pacienteId==="todos"){
 alert("Selecione um paciente específico para gerar o PDF.")
 return
 }
+
 const dataInicio=document.getElementById("dataInicio").value
 const dataFim=document.getElementById("dataFim").value
-
-if(!pacienteId){
-alert("Selecione um paciente")
-return
-}
 
 const { jsPDF } = window.jspdf
 const doc = new jsPDF()
 
 /* ================================
-FORMATA DATA BR
+FORMATA DATA
 ================================ */
 
 function dataBR(data){
@@ -1069,8 +1121,8 @@ let query=db
 .select("*")
 .eq("paciente_id",pacienteId)
 
-if(dataInicio){query=query.gte("data",dataInicio)}
-if(dataFim){query=query.lte("data",dataFim)}
+if(dataInicio) query=query.gte("data",dataInicio)
+if(dataFim) query=query.lte("data",dataFim)
 
 const {data:rotinas,error}=await query.order("data",{ascending:true})
 
@@ -1080,28 +1132,25 @@ alert("Erro ao buscar rotinas")
 return
 }
 
-if(error){
-alert("Erro ao gerar PDF")
-return
-}
-
-if(!rotinas){
-rotinas=[]
-}
-
 /* ================================
-BUSCAR DADOS CLÍNICOS
+BUSCAR PACIENTE
 ================================ */
 
-const {data:paciente}=await db
+const {data:paciente,error:erroPaciente}=await db
 .from("pacientes")
 .select("*")
 .eq("id",pacienteId)
 .single()
 
+if(erroPaciente || !paciente){
+alert("Erro ao buscar dados do paciente")
+return
+}
+
 /* ================================
 LOGO
 ================================ */
+
 const logo=new Image()
 logo.src="logo-harmonia.png"
 
@@ -1110,8 +1159,9 @@ logo.onload=resolve
 })
 
 doc.addImage(logo,"PNG",14,8,25,25)
+
 /* ================================
-CABECALHO
+CABEÇALHO
 ================================ */
 
 doc.setFontSize(16)
@@ -1122,7 +1172,13 @@ doc.text("Relatório de Rotinas e Dados Clínicos",45,22)
 
 doc.setFontSize(10)
 doc.text("Paciente: "+paciente.nome_completo,14,40)
-doc.text("Período: "+dataBR(dataInicio)+" até "+dataBR(dataFim),14,46)
+
+let periodo="Todos registros"
+if(dataInicio || dataFim){
+periodo=dataBR(dataInicio)+" até "+dataBR(dataFim)
+}
+
+doc.text("Período: "+periodo,14,46)
 doc.text("Emitido em: "+dataBR(new Date()),14,52)
 
 /* ================================
@@ -1137,6 +1193,7 @@ doc.text("Informações Clínicas",14,clinicoY)
 clinicoY+=8
 
 let dadosClinicos=[
+
 ["Idade",calcularIdade(paciente.data_nascimento)],
 ["HAS",paciente.has?"Sim":"Não"],
 ["DM",paciente.dm?"Sim":"Não"],
@@ -1147,10 +1204,9 @@ let dadosClinicos=[
 ["Dieta Especial",paciente.dieta_especial?"Sim":"Não"],
 ["Grau de Risco",paciente.grau_risco || ""],
 ["Outras Comorbidades",paciente.outras_comorbidades || ""]
+
 ]
-if(linhas.length===0){
-linhas.push(["Sem registros","-","-","-"])
-}
+
 doc.autoTable({
 startY:clinicoY,
 head:[["Item","Informação"]],
@@ -1162,23 +1218,40 @@ headStyles:{fillColor:[120,120,120]}
 /* ================================
 ROTINAS
 ================================ */
+
 let linhas=[]
 
+if(rotinas && rotinas.length>0){
+
 rotinas.forEach(r=>{
+
 let status="Pendente"
 
 if(r.status==="executado") status="✔ Executado"
 if(r.status==="atrasado") status="⚠ Atrasado"
 
+let turno=r.turno ? r.turno.charAt(0).toUpperCase()+r.turno.slice(1) : ""
+
 linhas.push([
 dataBR(r.data),
-r.turno.charAt(0).toUpperCase()+r.turno.slice(1),
-r.rotina,
+turno,
+r.rotina || "",
 status
 ])
+
 })
 
-let inicioTabela=doc.lastAutoTable.finalY+15
+}else{
+
+linhas.push(["Sem registros","-","-","-"])
+
+}
+
+/* ================================
+TABELA ROTINAS
+================================ */
+
+let inicioTabela=(doc.lastAutoTable?.finalY || 90)+15
 
 doc.setFontSize(11)
 doc.text("Registros de Enfermagem",14,inicioTabela)
@@ -1195,7 +1268,7 @@ headStyles:{fillColor:[52,152,219]}
 ASSINATURAS
 ================================ */
 
-let finalY=doc.lastAutoTable.finalY+20
+let finalY=(doc.lastAutoTable?.finalY || inicioTabela)+20
 
 doc.text("_______________________________",14,finalY)
 doc.text("Profissional Responsável",14,finalY+6)
@@ -1272,3 +1345,4 @@ document.getElementById("dadosClinicosPaciente").innerHTML=html
 </script>
 </body>
 </html>
+
