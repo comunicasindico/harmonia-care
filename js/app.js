@@ -105,7 +105,7 @@ await carregarProfissionaisDrag()
 016 – EMPRESA – CARREGAR DADOS
 ==================================================== */
 async function carregarEmpresa(){
-const {data,error}=await db.from("empresas").select("*").eq("id",EMPRESA_ID).single()
+const {data,error}=await db.from("empresas").select("nome_fantasia,cnpj,endereco,cidade,estado,telefone").eq("id",EMPRESA_ID).single()
 if(error){
 console.log("Erro empresa",error)
 return
