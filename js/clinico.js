@@ -1,8 +1,3 @@
-
-/* ====================================================
-CARREGAR CLINICO
-==================================================== */
-
 async function carregarClinico(){
 
 const {data,error}=await db
@@ -10,19 +5,12 @@ const {data,error}=await db
 .select("*")
 .order("nome_completo")
 
-if(error){
-console.error(error)
-return
-}
-
 let html=""
 
 data.forEach(p=>{
 
 html+=`
-
 <tr>
-
 <td>${p.nome_completo}</td>
 <td>${calcularIdade(p.data_nascimento)}</td>
 <td>${p.has?"✔":""}</td>
@@ -34,9 +22,7 @@ html+=`
 <td>${p.dieta_especial?"✔":""}</td>
 <td>${p.grau_risco??""}</td>
 <td>${p.outras_comorbidades??""}</td>
-
 </tr>
-
 `
 
 })
@@ -44,10 +30,6 @@ html+=`
 document.getElementById("quadroClinico").innerHTML=html
 
 }
-
-/* ====================================================
-CALCULAR IDADE
-==================================================== */
 
 function calcularIdade(data){
 
@@ -60,9 +42,7 @@ let idade=hoje.getFullYear()-nascimento.getFullYear()
 
 const m=hoje.getMonth()-nascimento.getMonth()
 
-if(m<0 || (m===0 && hoje.getDate()<nascimento.getDate())){
-idade--
-}
+if(m<0 || (m===0 && hoje.getDate()<nascimento.getDate())) idade--
 
 return idade
 
