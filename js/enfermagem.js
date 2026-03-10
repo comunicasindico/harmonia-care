@@ -1,4 +1,3 @@
-/* ====================================================
 020 – MUDAR TURNO
 ==================================================== */
 function mudarTurno(turno){
@@ -17,7 +16,7 @@ if(turno==="manha" && btnManha) btnManha.classList.add("turno-ativo")
 if(turno==="tarde" && btnTarde) btnTarde.classList.add("turno-ativo")
 if(turno==="noite" && btnNoite) btnNoite.classList.add("turno-ativo")
 
-carregarRotinas()
+if(typeof carregarRotinas==="function")carregarRotinas()
 
 }
 
