@@ -72,18 +72,22 @@ function abrirPainel(id){
 const paineis=["painelEnfermagem","painelClinico","painelAdmin"]
 paineis.forEach(p=>{
 const el=document.getElementById(p)
-if(el)el.style.display="none"
+if(el){el.style.display="none"}
 })
 const alvo=document.getElementById(id)
-if(alvo)alvo.style.display="block"
+if(alvo){alvo.style.display="block"}
 }
+
 function abrirEnfermagem(){
 abrirPainel("painelEnfermagem")
+if(typeof carregarRotinas==="function"){carregarRotinas()}
 }
+
 function abrirClinico(){
 abrirPainel("painelClinico")
 if(typeof carregarClinico==="function"){carregarClinico()}
 }
+
 async function abrirAdmin(){
 abrirPainel("painelAdmin")
 if(typeof carregarPacientesDrag==="function"){await carregarPacientesDrag()}
