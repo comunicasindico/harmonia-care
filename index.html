@@ -173,7 +173,32 @@ font-weight:bold;
 color:#e74c3c;
 font-weight:bold;
 }
+/* ====================================================
+TOTAIS CLÍNICOS CENTRALIZADOS
+==================================================== */
 
+.totais-clinicos{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:10px;
+margin-bottom:20px;
+}
+
+.btn-clinico{
+background:#555;
+color:#fff;
+padding:10px 14px;
+border-radius:10px;
+font-weight:bold;
+font-size:14px;
+}
+
+.btn-clinico span{
+color:#ff4d4d;
+font-weight:900;
+margin-left:4px;
+}
   
 </style>
 </head>
@@ -668,10 +693,33 @@ risco[p.grau_risco]++
 ATUALIZA CARDS SUPERIORES
 ============================ */
 
-document.getElementById("totalPacientes").innerText=totalPacientes
-document.getElementById("totalHas").innerText=totalHas
-document.getElementById("totalDm").innerText=totalDm
-document.getElementById("totalDemencia").innerText=totalDa
+let painel=document.getElementById("painelClinico")
+
+let extras=document.getElementById("totaisClinicosExtras")
+
+if(!extras){
+extras=document.createElement("div")
+extras.id="totaisClinicosExtras"
+extras.className="totais-clinicos"
+painel.insertBefore(extras,painel.children[0])
+}
+
+let htmlExtras=`
+<div class="btn-clinico">Pacientes <span>${totalPacientes}</span></div>
+<div class="btn-clinico">HAS <span>${totalHas}</span></div>
+<div class="btn-clinico">DM <span>${totalDm}</span></div>
+<div class="btn-clinico">Demência <span>${totalDa}</span></div>
+
+<div class="btn-clinico">Cardio <span>${totalCardio}</span></div>
+<div class="btn-clinico">Acamado <span>${totalAcamado}</span></div>
+<div class="btn-clinico">Dieta <span>${totalDieta}</span></div>
+`
+
+Object.keys(risco).sort().forEach(g=>{
+htmlExtras+=`<div class="btn-clinico">Risco ${g} <span>${risco[g]}</span></div>`
+})
+
+extras.innerHTML=htmlExtras
 
 /* ============================
 TOTAIS ADICIONAIS EM BOTÕES
@@ -1056,6 +1104,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
