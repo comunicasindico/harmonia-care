@@ -682,25 +682,6 @@ return
 }
 
 /* ============================
-FUNÇÃO IDADE
-============================ */
-function calcularIdade(data){
-if(!data) return ""
-const nascimento=new Date(data)
-const hoje=new Date()
-
-let idade=hoje.getFullYear()-nascimento.getFullYear()
-
-const m=hoje.getMonth()-nascimento.getMonth()
-
-if(m<0 || (m===0 && hoje.getDate()<nascimento.getDate())){
-idade--
-}
-
-return idade
-}
-
-/* ============================
 TOTALIZADORES
 ============================ */
 
@@ -958,6 +939,34 @@ btn.style.background="#2ecc71"
 btn.style.color="#fff"
 }
 carregarRotinas()
+}
+
+/* ================================
+025A CALCULAR IDADE
+================================ */
+function calcularIdade(data){
+if(!data) return ""
+
+const nascimento=new Date(data)
+const hoje=new Date()
+
+let idade=hoje.getFullYear()-nascimento.getFullYear()
+
+const m=hoje.getMonth()-nascimento.getMonth()
+
+if(m<0 || (m===0 && hoje.getDate()<nascimento.getDate())){
+idade--
+}
+
+return idade
+}
+
+/* ================================
+ATALHO IDADE
+================================ */
+
+function idade(data){
+return calcularIdade(data)
 }
 /* ====================================================
 026 GERAR PDF GERAL PROFISSIONAL
@@ -1266,6 +1275,7 @@ document.getElementById("dadosClinicosPaciente").innerHTML=html
 </script>
 </body>
 </html>
+
 
 
 
