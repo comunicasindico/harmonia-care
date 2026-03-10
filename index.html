@@ -289,7 +289,7 @@ Fone:(81)3461-3109
 <button onclick="carregarRotinas()" class="btn-primary">Pesquisar</button>
 </div>
 </div>
-<div id="dadosClinicosPaciente"></div>
+
 <div class="turnos">
 <button id="btnManha" class="turno-btn turno-manha" onclick="mudarTurno('manha')">Manhã</button>
 <button id="btnTarde" class="turno-btn turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
@@ -302,6 +302,7 @@ Fone:(81)3461-3109
 <th>Paciente</th>
 <th>Progresso</th>
 <th>Rotinas</th>
+<th>Clínico</th>
 </tr>
 </thead>
 <tbody id="rotinas"></tbody>
@@ -596,6 +597,7 @@ html+=`
 <td style="font-weight:bold">${p}</td>
 <td>${barra}</td>
 <td><div class="rotinas-linha">${rotinas}</div></td>
+<td id="clinico-${p}"></td>
 </tr>
 `
 
@@ -603,7 +605,7 @@ html+=`
 
 document.getElementById("rotinas").innerHTML=`
 <tr>
-<td colspan="3">
+<td colspan="4">
 ${htmlTotais}
 </td>
 </tr>
@@ -1222,13 +1224,14 @@ html+=`<span><b>PA:</b> ${data.pressao_arterial||""}</span>`
 html+=`<span><b>Dieta:</b> ${data.dieta_especial?"Sim":"Não"}</span>`
 html+=`<span><b>Risco:</b> ${data.grau_risco||""}</span>`
 
-document.getElementById("dadosClinicosPaciente").innerHTML=html
-
+const box=document.getElementById("clinico-"+pacienteId)
+if(box) box.innerHTML=html
 }
 
 </script>
 </body>
 </html>
+
 
 
 
