@@ -1,5 +1,5 @@
 /* ====================================================
-SUPABASE CONFIG
+CONFIG
 ==================================================== */
 
 let TURNO_ATUAL="manha"
@@ -10,29 +10,22 @@ const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 
 const EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e"
 
-const db = supabase.createClient(
-SUPABASE_URL,
-SUPABASE_KEY
-)
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
 
 /* ====================================================
-SUPABASE KEEP ALIVE
-evita pausa do projeto free
+KEEP ALIVE
 ==================================================== */
 
 setInterval(async () => {
 
-try{
+try {
 
-await db
-.from("pacientes")
-.select("id")
-.limit(1)
+await db.from("pacientes").select("id").limit(1)
 
 console.log("Supabase ativo")
 
-}catch(e){
+} catch(e){
 
 console.log("keep alive erro")
 
