@@ -4,28 +4,18 @@
 async function login(){
 const usuario=document.getElementById("usuario").value.trim()
 const senha=document.getElementById("senha").value.trim()
+if(!usuario||!senha){alert("Informe usuário e senha");return}
 if(usuario==="admin"&&senha==="123456"){
 localStorage.setItem("usuario_nome","Administrador")
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 await iniciarSistema()
-return
-}
+return}
 const {data,error}=await db.from("usuarios").select("*").eq("usuario",usuario).limit(1)
-if(error){
-console.error(error)
-alert("Erro ao acessar usuários")
-return
-}
-if(!data?.length){
-alert("Usuário não encontrado")
-return
-}
+if(error){console.error(error);alert("Erro ao acessar usuários");return}
+if(!data||data.length===0){alert("Usuário não encontrado");return}
 const user=data[0]
-if(user.senha_hash!==senha){
-alert("Senha incorreta")
-return
-}
+if(user.senha_hash!==senha){alert("Senha incorreta");return}
 localStorage.setItem("usuario_nome",user.nome)
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
@@ -36,12 +26,10 @@ await iniciarSistema()
 ==================================================== */
 async function iniciarSistema(){
 definirDataHoje()
-await gerarRotinasDoDia()
-await carregarPacientesBusca()
-await carregarRotinas()
-if(typeof carregarClinico==="function"){
-await carregarClinico()
-}
+if(typeof gerarRotinasDoDia==="function"){await gerarRotinasDoDia()}
+if(typeof carregarPacientesBusca==="function"){await carregarPacientesBusca()}
+if(typeof carregarRotinas==="function"){await carregarRotinas()}
+if(typeof carregarClinico==="function"){await carregarClinico()}
 mudarTurno("manha")
 }
 /* ====================================================
@@ -54,15 +42,15 @@ location.reload()
 /* ====================================================
 013 – INIT
 ==================================================== */
-window.onload=async function(){
-carregarEmpresa()
+window.addEventListener("load",async()=>{
+if(typeof carregarEmpresa==="function"){carregarEmpresa()}
 const loginSalvo=localStorage.getItem("usuario_nome")
 if(loginSalvo){
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 await iniciarSistema()
 }
-}
+})
 /* ====================================================
 014 – DATA HOJE
 ==================================================== */
@@ -94,22 +82,22 @@ abrirPainel("painelEnfermagem")
 }
 function abrirClinico(){
 abrirPainel("painelClinico")
-carregarClinico()
+if(typeof carregarClinico==="function"){carregarClinico()}
 }
 async function abrirAdmin(){
 abrirPainel("painelAdmin")
-await carregarPacientesDrag()
-await carregarProfissionaisDrag()
+if(typeof carregarPacientesDrag==="function"){await carregarPacientesDrag()}
+if(typeof carregarProfissionaisDrag==="function"){await carregarProfissionaisDrag()}
 }
 /* ====================================================
 016 – EMPRESA – CARREGAR DADOS
 ==================================================== */
 async function carregarEmpresa(){
+if(typeof db==="undefined"){console.log("Supabase ainda não carregou");return}
 const {data,error}=await db.from("empresas").select("nome_fantasia,cnpj,endereco,cidade,estado,telefone").eq("id",EMPRESA_ID).single()
-if(error){
-console.log("Erro empresa",error)
-return
-}
+if(error){console.log("Erro empresa",error);return}
+if(!data)return
 let html=`<div style="font-size:13px;color:#666;margin-bottom:18px;line-height:1.5"><b>${data.nome_fantasia}</b><br>CNPJ ${data.cnpj}<br>${data.endereco}<br>${data.cidade} – ${data.estado}<br>Tel: ${data.telefone}</div>`
-document.getElementById("dadosEmpresa").innerHTML=html
+const el=document.getElementById("dadosEmpresa")
+if(el)el.innerHTML=html
 }
