@@ -1,16 +1,17 @@
 /* ====================================================
 001 – CONFIG SUPABASE
 ==================================================== */
-
 const SUPABASE_URL = "https://whvwqektkinnhdprehss.supabase.co"
-
 const SUPABASE_KEY =
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU"
-
 const EMPRESA_ID = "d9f678e5-6c7a-485e-895c-cb4791db840e"
 
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
-
+const options={
+global:{
+fetch:(url,opts)=>fetch(url,{...opts,cache:"no-store"})
+}
+}
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,options)
 /* ====================================================
 002 – VARIÁVEIS GLOBAIS
 ==================================================== */
