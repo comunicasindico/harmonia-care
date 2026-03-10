@@ -8,11 +8,6 @@ SUPABASE_URL,
 SUPABASE_ANON_KEY
 )
 db = supabaseClient
-/* ====================================================
-002 – VARIÁVEIS GLOBAIS
-==================================================== */
-let TURNO_ATUAL = "manha"
-let ROTINAS_CACHE = []
 
 /* ====================================================
 003 – KEEP ALIVE
