@@ -259,12 +259,12 @@ carregarRotinas()
 ==================================================== */
 async function gerarRotinasDoDia(){
 const hoje=new Date().toISOString().slice(0,10)
-const {data:idosos, error:e1}=await db.from("idosos").select("id")
+const {data:idosos,error:e1}=await db.from("idosos").select("id")
 if(e1){
 console.error("Erro idosos",e1)
 return
 }
-const {data:rotinas,error:e2}=await db.from("rotinas").select("id,turno")
+const {data:rotinas,error:e2}=await db.from("rotinas").select("id")
 if(e2){
 console.error("Erro rotinas",e2)
 return
@@ -277,7 +277,6 @@ await db.from("rotinas_execucao").insert({
 idoso_id:i.id,
 rotina_id:r.id,
 data:hoje,
-turno:r.turno,
 status:"pendente"
 })
 }
