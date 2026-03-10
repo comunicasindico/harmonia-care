@@ -990,7 +990,23 @@ return
 const { jsPDF } = window.jspdf
 const doc = new jsPDF()
 
-/* BUSCAR DADOS */
+/* ================================
+FORMATA DATA BR
+================================ */
+
+function dataBR(data){
+if(!data) return ""
+const d=new Date(data)
+const dia=String(d.getDate()).padStart(2,'0')
+const mes=String(d.getMonth()+1).padStart(2,'0')
+const ano=d.getFullYear()
+return `${dia}-${mes}-${ano}`
+}
+
+/* ================================
+BUSCAR ROTINAS
+================================ */
+
 let query=db
 .from("vw_rotinas_painel")
 .select("*")
@@ -999,62 +1015,113 @@ let query=db
 if(dataInicio){query=query.gte("data",dataInicio)}
 if(dataFim){query=query.lte("data",dataFim)}
 
-const {data,error}=await query
-.order("data",{ascending:true})
+const {data:rotinas,error}=await query.order("data",{ascending:true})
 
 if(error){
 alert("Erro ao gerar PDF")
 return
 }
 
-if(!data || data.length===0){
+if(!rotinas || rotinas.length===0){
 alert("Nenhum registro encontrado")
 return
 }
 
-/* NOME DO PACIENTE */
-const pacienteNome=data[0].paciente
+/* ================================
+BUSCAR DADOS CLÍNICOS
+================================ */
 
-/* LOGO */
+const {data:paciente}=await db
+.from("pacientes")
+.select("*")
+.eq("id",pacienteId)
+.single()
+
+/* ================================
+LOGO
+================================ */
+
 const logo=new Image()
 logo.src="logo-harmonia.png"
-
-/* CABEÇALHO */
 doc.addImage(logo,"PNG",14,8,25,25)
+
+/* ================================
+CABECALHO
+================================ */
 
 doc.setFontSize(16)
 doc.text("HARMONIA CARE",45,15)
 
 doc.setFontSize(11)
-doc.text("Relatório de Rotinas de Enfermagem",45,22)
+doc.text("Relatório de Rotinas e Dados Clínicos",45,22)
 
 doc.setFontSize(10)
-doc.text("Paciente: "+pacienteNome,14,40)
-doc.text("Período: "+dataInicio+" até "+dataFim,14,46)
-doc.text("Emitido em: "+new Date().toLocaleDateString("pt-BR"),14,52)
+doc.text("Paciente: "+paciente.nome_completo,14,40)
+doc.text("Período: "+dataBR(dataInicio)+" até "+dataBR(dataFim),14,46)
+doc.text("Emitido em: "+dataBR(new Date()),14,52)
 
-/* TABELA */
+/* ================================
+DADOS CLÍNICOS
+================================ */
+
+let clinicoY=65
+
+doc.setFontSize(11)
+doc.text("Informações Clínicas",14,clinicoY)
+
+clinicoY+=8
+
+let dadosClinicos=[
+["HAS",paciente.has?"Sim":"Não"],
+["DM",paciente.dm?"Sim":"Não"],
+["Demência",paciente.da?"Sim":"Não"],
+["Cardiopatia",paciente.cardiopatia?"Sim":"Não"],
+["Acamado",paciente.acamado?"Sim":"Não"],
+["Dieta Especial",paciente.dieta_especial?"Sim":"Não"],
+["Pressão Arterial",paciente.pressao_arterial || ""],
+["Grau de Risco",paciente.grau_risco || ""],
+["Outras Comorbidades",paciente.outras_comorbidades || ""]
+]
+
+doc.autoTable({
+startY:clinicoY,
+head:[["Item","Informação"]],
+body:dadosClinicos,
+styles:{fontSize:9},
+headStyles:{fillColor:[120,120,120]}
+})
+
+/* ================================
+ROTINAS
+================================ */
 
 let linhas=[]
 
-data.forEach(r=>{
+rotinas.forEach(r=>{
 linhas.push([
-r.data,
+dataBR(r.data),
 r.turno,
 r.rotina,
 r.status==="executado"?"✔ Executado":"Pendente"
 ])
 })
 
+let inicioTabela=doc.lastAutoTable.finalY+15
+
+doc.setFontSize(11)
+doc.text("Registros de Enfermagem",14,inicioTabela)
+
 doc.autoTable({
-startY:60,
+startY:inicioTabela+5,
 head:[["Data","Turno","Rotina","Status"]],
 body:linhas,
 styles:{fontSize:9},
 headStyles:{fillColor:[52,152,219]}
 })
 
-/* ASSINATURA */
+/* ================================
+ASSINATURAS
+================================ */
 
 let finalY=doc.lastAutoTable.finalY+20
 
@@ -1064,9 +1131,11 @@ doc.text("Profissional Responsável",14,finalY+6)
 doc.text("_______________________________",120,finalY)
 doc.text("Responsável Técnico",120,finalY+6)
 
-/* SALVAR */
+/* ================================
+SALVAR
+================================ */
 
-doc.save("relatorio_"+pacienteNome+".pdf")
+doc.save("relatorio_"+paciente.nome_completo+".pdf")
 
 }
 
@@ -1074,6 +1143,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
