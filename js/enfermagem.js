@@ -106,15 +106,29 @@ lista.forEach(r=>{
 
 const classe = r.status==="executado" ? "rotina-executada" : "rotina-pendente"
 
-html += `
+html+=`
+
 <tr>
 
-<td>${r.paciente}</td>
+<td>
+
+${r.paciente}
+
+<button
+style="margin-left:10px"
+onclick="executarTodos('${r.paciente_id}')">
+
+TODOS
+
+</button>
+
+</td>
 
 <td>${r.status}</td>
 
 <td>
-<button class="btn-rotina ${classe}"
+<button
+class="btn-rotina ${classe}"
 onclick="executarRotina('${r.id}')">
 ${r.rotina}
 </button>
