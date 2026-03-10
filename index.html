@@ -1042,8 +1042,8 @@ if(data && data.length>0){
 data.forEach(r=>{
 
 let status="Pendente"
-if(r.status==="executado") status="✔ Executado"
-if(r.status==="atrasado") status="⚠ Atrasado"
+if(r.status==="executado") status="Executado"
+if(r.status==="atrasado") status="Atrasado"
 
 linhas.push([
 r.paciente || "",
@@ -1227,8 +1227,8 @@ rotinas.forEach(r=>{
 
 let status="Pendente"
 
-if(r.status==="executado") status="✔ Executado"
-if(r.status==="atrasado") status="⚠ Atrasado"
+if(r.status==="executado") status="Executado"
+if(r.status==="atrasado") status="Atrasado"
 
 let turno=r.turno ? r.turno.charAt(0).toUpperCase()+r.turno.slice(1) : ""
 
@@ -1345,4 +1345,5 @@ document.getElementById("dadosClinicosPaciente").innerHTML=html
 </script>
 </body>
 </html>
+
 
