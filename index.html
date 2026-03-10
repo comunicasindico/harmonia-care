@@ -290,6 +290,8 @@ Fone:(81)3461-3109
 </div>
 </div>
 
+<div id="dadosClinicosPaciente" class="dados-clinicos"></div>
+
 <div class="turnos">
 <button id="btnManha" class="turno-btn turno-manha" onclick="mudarTurno('manha')">Manhã</button>
 <button id="btnTarde" class="turno-btn turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
@@ -1155,6 +1157,8 @@ status
 ])
 })
 
+await carregarDadosClinicosPaciente(paciente)
+
 let inicioTabela=doc.lastAutoTable.finalY+15
 
 doc.setFontSize(11)
@@ -1202,62 +1206,52 @@ dm,
 da,
 cardiopatia,
 acamado,
-pressao_arterial,
 dieta_especial,
+outras_comorbidades,
 grau_risco,
-outras_comorbidades
+pressao_arterial
 `)
 .eq("id",pacienteId)
 .single()
 
-if(error) return
+if(error){console.error(error);return}
 
-function idade(data){
-if(!data) return ""
-const n=new Date(data)
-const h=new Date()
-let i=h.getFullYear()-n.getFullYear()
-const m=h.getMonth()-n.getMonth()
-if(m<0||(m===0&&h.getDate()<n.getDate())) i--
-return i
-}
+const html=`
+<div style="
+margin-top:10px;
+padding:10px;
+background:#f4f6f9;
+border-radius:8px;
+font-size:14px
+">
 
-let html=""
-
-html+=`<span><b>Idade:</b> ${idade(data.data_nascimento)}</span>`
-html+=`<span><b>HAS:</b> ${data.has?"Sim":"Não"}</span>`
-html+=`<span><b>DM:</b> ${data.dm?"Sim":"Não"}</span>`
-html+=`<span><b>Demência:</b> ${data.da?"Sim":"Não"}</span>`
-html+=`<span><b>Cardio:</b> ${data.cardiopatia?"Sim":"Não"}</span>`
-html+=`<span><b>Acamado:</b> ${data.acamado?"Sim":"Não"}</span>`
-html+=`<span><b>PA:</b> ${data.pressao_arterial||""}</span>`
-html+=`<span><b>Dieta:</b> ${data.dieta_especial?"Sim":"Não"}</span>`
-html+=`<span><b>Risco:</b> ${data.grau_risco||""}</span>`
-
-const info=document.getElementById("clinico-info-"+pacienteNome)
-const comorb=document.getElementById("clinico-comorb-"+pacienteNome)
-
-if(info){
-info.innerHTML=`
 <b>Idade:</b> ${idade(data.data_nascimento)}
-&nbsp;&nbsp;<b>HAS: </b> ${data.has?"Sim":"Não"}
-&nbsp;&nbsp;<b>DM: </b> ${data.dm?"Sim":"Não"}
-&nbsp;&nbsp;<b>Demência: </b> ${data.da?"Sim":"Não"}
-&nbsp;&nbsp;<b>Cardio: </b> ${data.cardiopatia?"Sim":"Não"}
-&nbsp;&nbsp;<b>Acamado: </b> ${data.acamado?"Sim":"Não"}
-&nbsp;&nbsp;<b>PA: </b> ${data.pressao_arterial||""}
-&nbsp;&nbsp;<b>Dieta: </b> ${data.dieta_especial?"Sim":"Não"}
-&nbsp;&nbsp;<b>Risco: </b> ${data.grau_risco||""}
+&nbsp;&nbsp;<b>HAS:</b> ${data.has?"Sim":"Não"}
+&nbsp;&nbsp;<b>DM:</b> ${data.dm?"Sim":"Não"}
+&nbsp;&nbsp;<b>Demência:</b> ${data.da?"Sim":"Não"}
+&nbsp;&nbsp;<b>Cardio:</b> ${data.cardiopatia?"Sim":"Não"}
+&nbsp;&nbsp;<b>Acamado:</b> ${data.acamado?"Sim":"Não"}
+&nbsp;&nbsp;<b>PA:</b> ${data.pressao_arterial || ""}
+&nbsp;&nbsp;<b>Dieta:</b> ${data.dieta_especial?"Sim":"Não"}
+&nbsp;&nbsp;<b>Risco:</b> ${data.grau_risco || ""}
+
+<br><br>
+
+<b>Outras Comorbidades:</b> ${data.outras_comorbidades || "-"}
 `
+
+</div>
+`
+
+document.getElementById("dadosClinicosPaciente").innerHTML=html
+
 }
 
-if(comorb){
-comorb.innerHTML=`<b>Comorbidades: </b> ${data.outras_comorbidades||""}`
-}
-}
+
 </script>
 </body>
 </html>
+
 
 
 
