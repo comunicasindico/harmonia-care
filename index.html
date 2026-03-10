@@ -479,7 +479,9 @@ carregarRotinas()
 ==================================================== */
 async function carregarRotinas(){
 const paciente=document.getElementById("buscaPaciente")?.value
+if(pacienteId){
 carregarDadosClinicosPaciente(pacienteId)
+}
 const dataInicio=document.getElementById("dataInicio")?.value
 const dataFim=document.getElementById("dataFim")?.value
 let query=db
@@ -1224,6 +1226,7 @@ document.getElementById("dadosClinicosPaciente").innerHTML=html
 </script>
 </body>
 </html>
+
 
 
 
