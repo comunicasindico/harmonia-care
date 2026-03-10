@@ -11,6 +11,8 @@ return
 const {data,error}=await db
 .from("pacientes")
 .select("*")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
 .order("nome_completo")
 
 if(error){
@@ -33,7 +35,7 @@ totalPacientes++
 
 if(p.has) totalHas++
 if(p.dm) totalDm++
-if(p.demencia) totalDemencia++
+if(p.da) totalDemencia++
 
 html+=`
 <tr>
@@ -41,7 +43,7 @@ html+=`
 <td>${calcularIdade(p.data_nascimento)}</td>
 <td>${p.has?"✔":""}</td>
 <td>${p.dm?"✔":""}</td>
-<td>${p.demencia?"✔":""}</td>
+<td>${p.da?"✔":""}</td>
 <td>${p.cardiopatia?"✔":""}</td>
 <td>${p.acamado?"✔":""}</td>
 <td>${p.pressao_arterial??""}</td>
