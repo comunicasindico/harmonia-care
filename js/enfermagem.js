@@ -263,15 +263,13 @@ carregarRotinas()
 
 }
 
-/* ====================================================
-027 – GERAR ROTINAS DO DIA
-==================================================== */
-
 async function gerarRotinasDoDia(){
 
 if(!db)return
 
 const hoje=new Date().toISOString().slice(0,10)
+
+/* PACIENTES */
 
 const {data:pacientes,error:e1}=await db
 .from("pacientes")
@@ -284,6 +282,8 @@ console.error("Erro pacientes",e1)
 return
 }
 
+/* ROTINAS */
+
 const {data:rotinas,error:e2}=await db
 .from("rotinas")
 .select("id")
@@ -293,9 +293,23 @@ console.error("Erro rotinas",e2)
 return
 }
 
-for(const p of pacientes||[]){
+/* 🔴 EVITAR LOOP INFINITO */
 
-for(const r of rotinas||[]){
+if(!pacientes?.length){
+console.log("Sem pacientes")
+return
+}
+
+if(!rotinas?.length){
+console.log("Sem rotinas")
+return
+}
+
+/* GERAR ROTINAS */
+
+for(const p of pacientes){
+
+for(const r of rotinas){
 
 const {data:existe}=await db
 .from("rotinas_execucao")
@@ -309,12 +323,12 @@ if(!existe){
 
 await db
 .from("rotinas_execucao")
-.insert({
+.insert([{
 idoso_id:p.id,
 rotina_id:r.id,
 data:hoje,
 status:"pendente"
-})
+}])
 
 }
 
