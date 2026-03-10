@@ -34,6 +34,7 @@ if(!select)return
 const {data,error}=await db
 .from("pacientes")
 .select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
 .order("nome_completo")
 
 if(error){
@@ -65,6 +66,8 @@ const turno=TURNO_ATUAL
 const {data:idosos}=await db
 .from("pacientes")
 .select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
 
 const {data:rotinas}=await db
 .from("rotinas")
@@ -84,11 +87,11 @@ if(paciente!=="todos"&&paciente!==i.id)return
 
 rotinas?.forEach(r=>{
 
-const exec=execucoes?.find(e=>e.idoso_id===i.id&&e.rotina_id===r.id)
+const exec=execucoes?.find(e=>e.paciente_id===i.id&&e.rotina_id===r.id)
 
 lista.push({
 id:exec?.id||`${i.id}_${r.id}`,
-idoso_id:i.id,
+paciente_id:i.id,
 rotina_id:r.id,
 paciente:i.nome_completo,
 rotina:r.nome,
@@ -120,16 +123,16 @@ const pacientes={}
 
 lista.forEach(r=>{
 
-if(!pacientes[r.idoso_id]){
+if(!pacientes[r.paciente_id]){
 
-pacientes[r.idoso_id]={
+pacientes[r.paciente_id]={
 nome:r.paciente,
 rotinas:[]
 }
 
 }
 
-pacientes[r.idoso_id].rotinas.push(r)
+pacientes[r.paciente_id].rotinas.push(r)
 
 })
 
@@ -148,7 +151,7 @@ const classe=r.status==="executado"
 rotinasHTML+=`
 <button
 class="btn-rotina ${classe}"
-onclick="executarRotina('${r.idoso_id}','${r.rotina_id}')">
+onclick="executarRotina('${r.paciente_id}','${r.rotina_id}')">
 ${r.rotina}
 </button>
 `
@@ -187,7 +190,7 @@ await db
 status:"executado",
 horario_executado:new Date()
 })
-.eq("idoso_id",idosoId)
+.eq("paciente_id",idosoId)
 .eq("rotina_id",rotinaId)
 .eq("data",dataHoje)
 
@@ -232,7 +235,7 @@ async function executarTodos(idosoId){
 if(!db)return
 if(!ROTINAS_CACHE)return
 
-const rotinas=ROTINAS_CACHE.filter(r=>r.idoso_id===idosoId)
+const rotinas=ROTINAS_CACHE.filter(r=>r.paciente_id===idosoId)
 
 for(const r of rotinas){
 
@@ -244,7 +247,7 @@ await db
 status:"executado",
 horario_executado:new Date()
 })
-.eq("idoso_id",r.idoso_id)
+.eq("paciente_id",r.paciente_id)
 .eq("rotina_id",r.rotina_id)
 
 }
@@ -258,20 +261,27 @@ if(typeof carregarRotinas==="function")carregarRotinas()
 /* ====================================================
 027 – GERAR ROTINAS DO DIA
 ==================================================== */
+
 async function gerarRotinasDoDia(){
 
 if(!db)return
 
 const hoje=new Date().toISOString().slice(0,10)
 
-const {data:idosos,error:e1}=await db
+/* PACIENTES */
+
+const {data:pacientes,error:e1}=await db
 .from("pacientes")
 .select("id")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
 
 if(e1){
-console.error("Erro idosos",e1)
+console.error("Erro pacientes",e1)
 return
 }
+
+/* ROTINAS */
 
 const {data:rotinas,error:e2}=await db
 .from("rotinas")
@@ -282,14 +292,16 @@ console.error("Erro rotinas",e2)
 return
 }
 
-for(const i of idosos||[]){
+/* GERAR EXECUÇÕES */
+
+for(const p of pacientes||[]){
 
 for(const r of rotinas||[]){
 
 const {data:existe}=await db
 .from("rotinas_execucao")
 .select("id")
-.eq("idoso_id",i.id)
+.eq("paciente_id",p.id)
 .eq("rotina_id",r.id)
 .eq("data",hoje)
 .maybeSingle()
@@ -299,7 +311,7 @@ if(!existe){
 await db
 .from("rotinas_execucao")
 .insert({
-idoso_id:i.id,
+paciente_id:p.id,
 rotina_id:r.id,
 data:hoje,
 status:"pendente"
