@@ -594,7 +594,9 @@ setTimeout(()=>{carregarRotinas()},200)}
 018 CLÍNICO
 ==================================================== */
 async function carregarClinico(){
+
 try{
+
 const {data,error}=await db
 .from("pacientes")
 .select(`
@@ -605,17 +607,23 @@ dm,
 da,
 cardiopatia,
 acamado,
+pressao_arterial,
 dieta_especial,
 grau_risco,
-pressao_arterial,
 outras_comorbidades
 `)
 .order("nome_completo",{ascending:true})
+
 if(error){
 console.error(error)
 alert("Erro ao carregar painel clínico")
 return
 }
+
+/* ============================
+FUNÇÃO IDADE
+============================ */
+
 function calcularIdade(data){
 if(!data) return ""
 const nasc=new Date(data)
@@ -625,14 +633,64 @@ const m=hoje.getMonth()-nasc.getMonth()
 if(m<0||(m===0&&hoje.getDate()<nasc.getDate()))idade--
 return idade
 }
-let html=""
+
+/* ============================
+TOTALIZADORES
+============================ */
+
 let totalHas=0
 let totalDm=0
 let totalDa=0
+let totalCardio=0
+let totalAcamado=0
+let totalDieta=0
+
+let risco={}
+
 data.forEach(p=>{
+
 if(p.has) totalHas++
 if(p.dm) totalDm++
 if(p.da) totalDa++
+if(p.cardiopatia) totalCardio++
+if(p.acamado) totalAcamado++
+if(p.dieta_especial) totalDieta++
+
+if(p.grau_risco){
+if(!risco[p.grau_risco]) risco[p.grau_risco]=0
+risco[p.grau_risco]++
+}
+
+})
+
+/* ============================
+TOTAIS NO TOPO
+============================ */
+
+let htmlTotais=`<div class="clinico-totais">
+
+<div class="clinico-card">HAS <span class="clinico-num">${totalHas}</span></div>
+<div class="clinico-card">DM <span class="clinico-num">${totalDm}</span></div>
+<div class="clinico-card">Demência <span class="clinico-num">${totalDa}</span></div>
+<div class="clinico-card">Cardio <span class="clinico-num">${totalCardio}</span></div>
+<div class="clinico-card">Acamado <span class="clinico-num">${totalAcamado}</span></div>
+<div class="clinico-card">Dieta <span class="clinico-num">${totalDieta}</span></div>
+`
+
+Object.keys(risco).sort().forEach(g=>{
+htmlTotais+=`<div class="clinico-card">Risco ${g} <span class="clinico-num">${risco[g]}</span></div>`
+})
+
+htmlTotais+=`</div>`
+
+/* ============================
+TABELA COMPLETA
+============================ */
+
+let html=""
+
+data.forEach(p=>{
+
 html+=`
 <tr>
 <td>${p.nome_completo}</td>
@@ -648,16 +706,25 @@ html+=`
 <td>${p.outras_comorbidades ?? ""}</td>
 </tr>
 `
+
 })
-document.getElementById("quadroClinico").innerHTML=html
-document.getElementById("totalPacientes").innerText=data.length
-document.getElementById("totalHas").innerText=totalHas
-document.getElementById("totalDm").innerText=totalDm
-document.getElementById("totalDemencia").innerText=totalDa
+
+document.getElementById("quadroClinico").innerHTML=
+`
+<tr>
+<td colspan="11">
+${htmlTotais}
+</td>
+</tr>
+`+html
+
 }catch(err){
+
 console.error("Erro clínico:",err)
 alert("Erro ao carregar painel clínico")
+
 }
+
 }
 /* ====================================================
 019 CARREGAR PACIENTES NO SELECT
@@ -975,6 +1042,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
