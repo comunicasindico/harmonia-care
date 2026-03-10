@@ -66,6 +66,7 @@ location.reload()
 ==================================================== */
 
 window.onload = function(){
+carregarEmpresa()
 
 const loginSalvo = localStorage.getItem("usuario_nome")
 
