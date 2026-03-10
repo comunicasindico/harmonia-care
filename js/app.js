@@ -37,7 +37,7 @@ await iniciarSistema()
 async function iniciarSistema(){
 definirDataHoje()
 await gerarRotinasDoDia()
-await carregarPacientesSelect()
+await carregarPacientesBusca()
 await carregarRotinas()
 if(typeof carregarClinico==="function"){
 await carregarClinico()
