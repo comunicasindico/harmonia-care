@@ -1,7 +1,6 @@
 /* ====================================================
 020 – MUDAR TURNO
 ==================================================== */
-
 function mudarTurno(turno){
 
 TURNO_ATUAL = turno
@@ -25,7 +24,6 @@ carregarRotinas()
 /* ====================================================
 021 – CARREGAR PACIENTES BUSCA
 ==================================================== */
-
 async function carregarPacientesBusca(){
 
 const select = document.getElementById("buscaPaciente")
@@ -93,7 +91,6 @@ renderizarRotinas(data)
 /* ====================================================
 023 – RENDERIZAR ROTINAS
 ==================================================== */
-
 function renderizarRotinas(lista){
 
 const tbody = document.getElementById("rotinas")
@@ -187,7 +184,6 @@ tbody.innerHTML = html
 /* ====================================================
 024 – EXECUTAR ROTINA
 ==================================================== */
-
 async function executarRotina(id){
 
 const usuario = localStorage.getItem("usuario_nome")
@@ -208,7 +204,6 @@ carregarRotinas()
 /* ====================================================
 025 – INDICADORES
 ==================================================== */
-
 function calcularIndicadores(lista){
 
 let executado=0
@@ -233,9 +228,8 @@ if(a) a.innerHTML = "⚠ "+atrasado
 
 }
 /* ====================================================
-024 – EXECUTAR TODAS ROTINAS DO IDOSO
+026 – EXECUTAR TODAS ROTINAS DO IDOSO
 ==================================================== */
-
 async function executarTodos(idosoId){
 
 const rotinas = ROTINAS_CACHE.filter(r => r.idoso_id === idosoId)
@@ -260,3 +254,33 @@ carregarRotinas()
 
 }
 
+/* ====================================================
+027 – GERAR ROTINAS DO DIA
+==================================================== */
+async function gerarRotinasDoDia(){
+const hoje=new Date().toISOString().slice(0,10)
+const {data:idosos, error:e1}=await db.from("idosos").select("id")
+if(e1){
+console.error("Erro idosos",e1)
+return
+}
+const {data:rotinas,error:e2}=await db.from("rotinas").select("id,turno")
+if(e2){
+console.error("Erro rotinas",e2)
+return
+}
+for(const i of idosos){
+for(const r of rotinas){
+const {data:existe}=await db.from("rotinas_execucao").select("id").eq("idoso_id",i.id).eq("rotina_id",r.id).eq("data",hoje).maybeSingle()
+if(!existe){
+await db.from("rotinas_execucao").insert({
+idoso_id:i.id,
+rotina_id:r.id,
+data:hoje,
+turno:r.turno,
+status:"pendente"
+})
+}
+}
+}
+}
