@@ -32,7 +32,7 @@ const select=document.getElementById("buscaPaciente")
 if(!select)return
 
 const {data,error}=await db
-.from("idosos")
+.from("pacientes")
 .select("id,nome_completo")
 .order("nome_completo")
 
@@ -63,7 +63,7 @@ const dataHoje=document.getElementById("dataInicio")?.value
 const turno=TURNO_ATUAL
 
 const {data:idosos}=await db
-.from("idosos")
+.from("pacientes")
 .select("id,nome_completo")
 
 const {data:rotinas}=await db
@@ -265,7 +265,7 @@ if(!db)return
 const hoje=new Date().toISOString().slice(0,10)
 
 const {data:idosos,error:e1}=await db
-.from("idosos")
+.from("pacientes")
 .select("id")
 
 if(e1){
