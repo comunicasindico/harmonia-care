@@ -302,7 +302,7 @@ Fone:(81)3461-3109
 <th>Paciente</th>
 <th>Progresso</th>
 <th>Rotinas</th>
-<th>Clínico</th>
+
 </tr>
 </thead>
 <tbody id="rotinas"></tbody>
@@ -597,7 +597,17 @@ html+=`
 <td style="font-weight:bold">${p}</td>
 <td>${barra}</td>
 <td><div class="rotinas-linha">${rotinas}</div></td>
-<td id="clinico-${p}"></td>
+</tr>
+
+<tr class="linha-clinica">
+<td></td>
+<td id="clinico-info-${p}" colspan="2"></td>
+</tr>
+
+<tr class="linha-comorbidades">
+<td></td>
+<td></td>
+<td id="clinico-comorb-${p}"></td>
 </tr>
 `
 
@@ -605,7 +615,7 @@ html+=`
 
 document.getElementById("rotinas").innerHTML=`
 <tr>
-<td colspan="4">
+<td colspan="3">
 ${htmlTotais}
 </td>
 </tr>
@@ -1224,13 +1234,31 @@ html+=`<span><b>PA:</b> ${data.pressao_arterial||""}</span>`
 html+=`<span><b>Dieta:</b> ${data.dieta_especial?"Sim":"Não"}</span>`
 html+=`<span><b>Risco:</b> ${data.grau_risco||""}</span>`
 
-const box=document.getElementById("clinico-"+pacienteId)
-if(box) box.innerHTML=html
+const info=document.getElementById("clinico-info-"+pacienteNome)
+const comorb=document.getElementById("clinico-comorb-"+pacienteNome)
+
+if(info){
+info.innerHTML=`
+<b>Idade:</b> ${idade(data.data_nascimento)}
+&nbsp;&nbsp;<b>HAS: </b> ${data.has?"Sim":"Não"}
+&nbsp;&nbsp;<b>DM: </b> ${data.dm?"Sim":"Não"}
+&nbsp;&nbsp;<b>Demência: </b> ${data.da?"Sim":"Não"}
+&nbsp;&nbsp;<b>Cardio: </b> ${data.cardiopatia?"Sim":"Não"}
+&nbsp;&nbsp;<b>Acamado: </b> ${data.acamado?"Sim":"Não"}
+&nbsp;&nbsp;<b>PA: </b> ${data.pressao_arterial||""}
+&nbsp;&nbsp;<b>Dieta: </b> ${data.dieta_especial?"Sim":"Não"}
+&nbsp;&nbsp;<b>Risco: </b> ${data.grau_risco||""}
+`
+}
+
+if(comorb){
+comorb.innerHTML=`<b>Comorbidades: </b> ${data.outras_comorbidades||""}`
 }
 
 </script>
 </body>
 </html>
+
 
 
 
