@@ -173,22 +173,19 @@ font-weight:bold;
 color:#e74c3c;
 font-weight:bold;
 }
-/* ====================================================
-TOTAIS CLÍNICOS CENTRALIZADOS
-==================================================== */
-
+/* ===== TOTAIS CLÍNICOS ===== */
 .totais-clinicos{
 display:flex;
 flex-wrap:wrap;
 justify-content:center;
 gap:10px;
-margin-bottom:20px;
+margin:20px 0;
 }
 
 .btn-clinico{
 background:#555;
 color:#fff;
-padding:10px 14px;
+padding:10px 16px;
 border-radius:10px;
 font-weight:bold;
 font-size:14px;
@@ -197,7 +194,7 @@ font-size:14px;
 .btn-clinico span{
 color:#ff4d4d;
 font-weight:900;
-margin-left:4px;
+margin-left:6px;
 }
   
 </style>
@@ -693,7 +690,7 @@ risco[p.grau_risco]++
 ATUALIZA CARDS SUPERIORES
 ============================ */
 
-let painel=document.getElementById("painelClinico")
+const painel=document.getElementById("painelClinico")
 
 let extras=document.getElementById("totaisClinicosExtras")
 
@@ -701,7 +698,7 @@ if(!extras){
 extras=document.createElement("div")
 extras.id="totaisClinicosExtras"
 extras.className="totais-clinicos"
-painel.insertBefore(extras,painel.children[0])
+painel.insertBefore(extras,painel.firstChild)
 }
 
 let htmlExtras=`
@@ -720,7 +717,6 @@ htmlExtras+=`<div class="btn-clinico">Risco ${g} <span>${risco[g]}</span></div>`
 })
 
 extras.innerHTML=htmlExtras
-
 /* ============================
 TOTAIS ADICIONAIS EM BOTÕES
 ============================ */
@@ -1104,6 +1100,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
