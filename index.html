@@ -82,25 +82,19 @@ box-shadow:0 2px 8px rgba(0,0,0,0.08);
 margin-top:20px;
 }
 
-table{
-width:100%;
-border-collapse:collapse;
-}
+table{width:100%;border-collapse:collapse;}
 
 th,td{
-padding:8px;
+padding:6px;
 border-bottom:1px solid #ddd;
 font-size:13px;
 text-align:left;
 }
 
-/* TURNOS */
-
 .turnos{
 display:flex;
 gap:10px;
 margin-bottom:15px;
-align-items:center;
 }
 
 .turno-manha{background:#3498db;color:#fff;}
@@ -121,7 +115,9 @@ opacity:1;
 box-shadow:0 0 0 3px rgba(0,0,0,0.15) inset;
 }
 
-/* ROTINAS */
+/* =========================
+ROTINAS
+========================= */
 
 .rotinas-linha{
 display:flex;
@@ -135,14 +131,11 @@ padding:6px 10px;
 font-size:12px;
 cursor:pointer;
 border:1px solid #ccc;
-transition:0.2s;
 }
-
-/* STATUS */
 
 .rotina-pendente{
 background:#f2f2f2;
-color:#444;
+color:#555;
 }
 
 .rotina-executada{
@@ -151,28 +144,34 @@ border-color:#b9e4c8;
 color:#1e7e46;
 }
 
-.icone-status{
-margin-left:6px;
-font-weight:bold;
-}
-
-/* TOTAIS ROTINAS */
+/* =========================
+TOTAIS
+========================= */
 
 .rotinas-totais{
 display:flex;
 flex-wrap:wrap;
 gap:12px;
-margin-bottom:10px;
-font-size:12px;
+margin-bottom:12px;
 justify-content:center;
-color:#555;
+font-size:13px;
 }
 
 .rotina-total-item{
 background:#fafafa;
-padding:4px 8px;
-border-radius:6px;
+padding:5px 10px;
+border-radius:8px;
 border:1px solid #ddd;
+}
+
+.total-ok{
+color:#1e7e46;
+font-weight:bold;
+}
+
+.total-pendente{
+color:#e74c3c;
+font-weight:bold;
 }
 
 </style>
@@ -514,9 +513,13 @@ let htmlTotais=`<div class="rotinas-totais">`
 
 Object.keys(totaisRotinas).forEach(r=>{
 const t=totaisRotinas[r]
+let pendente=t.total - t.executado
+
 htmlTotais+=`
 <div class="rotina-total-item">
-${r} (${t.executado}/${t.total})
+${r}
+(<span class="total-ok">${t.executado}</span>/
+<span class="total-pendente">${pendente}</span>)
 </div>`
 })
 
@@ -972,6 +975,7 @@ doc.save("relatorio_"+pacienteNome+".pdf")
 </script>
 </body>
 </html>
+
 
 
 
