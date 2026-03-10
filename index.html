@@ -4,17 +4,20 @@
 <head>
 
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>Harmonia Care</title>
 
 <link rel="icon" href="logo-harmonia.png">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <style>
 
@@ -378,17 +381,12 @@ Demência
 </thead>
 
 <tbody id="quadroClinico"></tbody>
-
 </table>
-
 </div>
-
 </div>
 
 <!-- ADMIN -->
-
 <div id="painelAdmin" style="display:none">
-
 <div class="box">
 <h3>Profissionais</h3>
 <div id="listaProfissionaisDrag"></div>
@@ -398,20 +396,21 @@ Demência
 <h3>Pacientes</h3>
 <div id="listaPacientesDrag"></div>
 </div>
-
 </div>
-
 </div>
-
 <!-- JS DO SISTEMA -->
 
-<script src="js/supabase.js"></script>
-<script src="js/enfermagem.js"></script>
-<script src="js/clinico.js"></script>
-<script src="js/admin.js"></script>
-<script src="js/pdf.js"></script>
-<script src="js/app.js"></script>
+<script>
+const v=Date.now()
+document.write('<script src="js/supabase.js?v='+v+'"><\/script>')
+document.write('<script src="js/enfermagem.js?v='+v+'"><\/script>')
+document.write('<script src="js/clinico.js?v='+v+'"><\/script>')
+document.write('<script src="js/admin.js?v='+v+'"><\/script>')
+document.write('<script src="js/pdf.js?v='+v+'"><\/script>')
+document.write('<script src="js/app.js?v='+v+'"><\/script>')
+</script>
 
 </body>
 </html>
+
 
