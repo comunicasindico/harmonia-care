@@ -1,20 +1,21 @@
+/* ====================================================
 020 – MUDAR TURNO
 ==================================================== */
 function mudarTurno(turno){
 
 TURNO_ATUAL = turno
 
-const btnManha = document.getElementById("btnManha")
-const btnTarde = document.getElementById("btnTarde")
-const btnNoite = document.getElementById("btnNoite")
+const btnManha=document.getElementById("btnManha")
+const btnTarde=document.getElementById("btnTarde")
+const btnNoite=document.getElementById("btnNoite")
 
-if(btnManha) btnManha.classList.remove("turno-ativo")
-if(btnTarde) btnTarde.classList.remove("turno-ativo")
-if(btnNoite) btnNoite.classList.remove("turno-ativo")
+if(btnManha)btnManha.classList.remove("turno-ativo")
+if(btnTarde)btnTarde.classList.remove("turno-ativo")
+if(btnNoite)btnNoite.classList.remove("turno-ativo")
 
-if(turno==="manha" && btnManha) btnManha.classList.add("turno-ativo")
-if(turno==="tarde" && btnTarde) btnTarde.classList.add("turno-ativo")
-if(turno==="noite" && btnNoite) btnNoite.classList.add("turno-ativo")
+if(turno==="manha"&&btnManha)btnManha.classList.add("turno-ativo")
+if(turno==="tarde"&&btnTarde)btnTarde.classList.add("turno-ativo")
+if(turno==="noite"&&btnNoite)btnNoite.classList.add("turno-ativo")
 
 if(typeof carregarRotinas==="function")carregarRotinas()
 
@@ -25,54 +26,87 @@ if(typeof carregarRotinas==="function")carregarRotinas()
 ==================================================== */
 async function carregarPacientesBusca(){
 
-const select = document.getElementById("buscaPaciente")
+if(!db)return
 
-if(!select) return
+const select=document.getElementById("buscaPaciente")
+if(!select)return
 
-const {data} = await db
-.from("pacientes")
+const {data,error}=await db
+.from("idosos")
 .select("id,nome_completo")
 .order("nome_completo")
 
-let html = `<option value="todos">Todos</option>`
+if(error){
+console.error(error)
+return
+}
 
-data.forEach(p=>{
+let html=`<option value="todos">Todos</option>`
 
-html += `<option value="${p.id}">${p.nome_completo}</option>`
-
+data?.forEach(p=>{
+html+=`<option value="${p.id}">${p.nome_completo}</option>`
 })
 
-select.innerHTML = html
+select.innerHTML=html
 
 }
 
 /* ====================================================
 022 – CARREGAR ROTINAS
 ==================================================== */
+
+let ROTINAS_CACHE=[]
+
 async function carregarRotinas(){
-const paciente=document.getElementById("buscaPaciente")?.value
+
+if(!db)return
+
+const paciente=document.getElementById("buscaPaciente")?.value||"todos"
 const dataHoje=document.getElementById("dataInicio")?.value
 const turno=TURNO_ATUAL
-const {data:idosos}=await db.from("idosos").select("id,nome_completo")
-const {data:rotinas}=await db.from("rotinas").select("id,nome").eq("turno",turno)
-const {data:execucoes}=await db.from("rotinas_execucao").select("*").eq("data",dataHoje)
+
+const {data:idosos}=await db
+.from("idosos")
+.select("id,nome_completo")
+
+const {data:rotinas}=await db
+.from("rotinas")
+.select("id,nome")
+.eq("turno",turno)
+
+const {data:execucoes}=await db
+.from("rotinas_execucao")
+.select("*")
+.eq("data",dataHoje)
+
 let lista=[]
-idosos.forEach(i=>{
+
+idosos?.forEach(i=>{
+
 if(paciente!=="todos"&&paciente!==i.id)return
-rotinas.forEach(r=>{
-const exec=execucoes.find(e=>e.idoso_id===i.id&&e.rotina_id===r.id)
+
+rotinas?.forEach(r=>{
+
+const exec=execucoes?.find(e=>e.idoso_id===i.id&&e.rotina_id===r.id)
+
 lista.push({
 id:exec?.id||`${i.id}_${r.id}`,
 idoso_id:i.id,
+rotina_id:r.id,
 paciente:i.nome_completo,
 rotina:r.nome,
 status:exec?.status||"pendente"
 })
+
 })
+
 })
+
 ROTINAS_CACHE=lista
+
 calcularIndicadores(lista)
 renderizarRotinas(lista)
+
 }
 
 /* ====================================================
@@ -80,23 +114,20 @@ renderizarRotinas(lista)
 ==================================================== */
 function renderizarRotinas(lista){
 
-const tbody = document.getElementById("rotinas")
+const tbody=document.getElementById("rotinas")
+if(!tbody)return
 
-if(!tbody) return
+let html=""
 
-let html = ""
-
-const pacientes = {}
-
-/* agrupar rotinas por idoso */
+const pacientes={}
 
 lista.forEach(r=>{
 
 if(!pacientes[r.idoso_id]){
 
-pacientes[r.idoso_id] = {
-nome: r.paciente,
-rotinas: []
+pacientes[r.idoso_id]={
+nome:r.paciente,
+rotinas:[]
 }
 
 }
@@ -105,82 +136,63 @@ pacientes[r.idoso_id].rotinas.push(r)
 
 })
 
-/* renderizar */
-
 Object.keys(pacientes).forEach(pid=>{
 
-const p = pacientes[pid]
+const p=pacientes[pid]
 
-let rotinasHTML = ""
+let rotinasHTML=""
 
 p.rotinas.forEach(r=>{
 
-const classe = r.status==="executado"
-? "rotina-executada"
-: "rotina-pendente"
+const classe=r.status==="executado"
+?"rotina-executada"
+:"rotina-pendente"
 
-rotinasHTML += `
-
+rotinasHTML+=`
 <button
 class="btn-rotina ${classe}"
-onclick="executarRotina('${r.id}')">
-
+onclick="executarRotina('${r.idoso_id}','${r.rotina_id}')">
 ${r.rotina}
-
 </button>
-
 `
 
 })
 
-html += `
-
+html+=`
 <tr>
-
 <td>
-
 ${p.nome}
-
-<button
-style="margin-left:10px"
-onclick="executarTodos('${pid}')">
-
-TODOS
-
-</button>
-
+<button style="margin-left:10px" onclick="executarTodos('${pid}')">TODOS</button>
 </td>
-
 <td>${p.rotinas.length}</td>
-
-<td class="rotinas-linha">
-
-${rotinasHTML}
-
-</td>
-
+<td class="rotinas-linha">${rotinasHTML}</td>
 </tr>
-
 `
 
 })
 
-tbody.innerHTML = html
+tbody.innerHTML=html
 
 }
+
 /* ====================================================
 024 – EXECUTAR ROTINA
 ==================================================== */
-async function executarRotina(id){
-const usuario = localStorage.getItem("usuario_nome")
+async function executarRotina(idosoId,rotinaId){
 
-await db.from("rotinas_execucao").insert({
-idoso_id:idosoId,
-rotina_id:rotinaId,
-data:dataHoje,
-status:"executado"
+if(!db)return
+
+const dataHoje=document.getElementById("dataInicio")?.value
+
+await db
+.from("rotinas_execucao")
+.update({
+status:"executado",
+horario_executado:new Date()
 })
-.eq("id",id)
+.eq("idoso_id",idosoId)
+.eq("rotina_id",rotinaId)
+.eq("data",dataHoje)
 
 carregarRotinas()
 
@@ -197,31 +209,34 @@ let atrasado=0
 
 lista.forEach(r=>{
 
-if(r.status==="executado") executado++
-if(r.status==="pendente") pendente++
-if(r.status==="atrasado") atrasado++
+if(r.status==="executado")executado++
+if(r.status==="pendente")pendente++
+if(r.status==="atrasado")atrasado++
 
 })
 
-const e = document.getElementById("indicadorExecutado")
-const p = document.getElementById("indicadorPendente")
-const a = document.getElementById("indicadorAtrasado")
+const e=document.getElementById("indicadorExecutado")
+const p=document.getElementById("indicadorPendente")
+const a=document.getElementById("indicadorAtrasado")
 
-if(e) e.innerHTML = "✔ "+executado
-if(p) p.innerHTML = "🔴 "+pendente
-if(a) a.innerHTML = "⚠ "+atrasado
+if(e)e.innerHTML="✔ "+executado
+if(p)p.innerHTML="🔴 "+pendente
+if(a)a.innerHTML="⚠ "+atrasado
 
 }
+
 /* ====================================================
-026 – EXECUTAR TODAS ROTINAS DO IDOSO
+026 – EXECUTAR TODAS ROTINAS
 ==================================================== */
 async function executarTodos(idosoId){
 
-const rotinas = ROTINAS_CACHE.filter(r => r.idoso_id === idosoId)
+if(!db)return
+
+const rotinas=ROTINAS_CACHE.filter(r=>r.idoso_id===idosoId)
 
 for(const r of rotinas){
 
-if(r.status !== "executado"){
+if(r.status!=="executado"){
 
 await db
 .from("rotinas_execucao")
@@ -229,39 +244,71 @@ await db
 status:"executado",
 horario_executado:new Date()
 })
-.eq("id", r.id)
+.eq("idoso_id",r.idoso_id)
+.eq("rotina_id",r.rotina_id)
+
 }
+
 }
 
 carregarRotinas()
+
 }
 
 /* ====================================================
 027 – GERAR ROTINAS DO DIA
 ==================================================== */
 async function gerarRotinasDoDia(){
+
+if(!db)return
+
 const hoje=new Date().toISOString().slice(0,10)
-const {data:idosos,error:e1}=await db.from("idosos").select("id")
+
+const {data:idosos,error:e1}=await db
+.from("idosos")
+.select("id")
+
 if(e1){
 console.error("Erro idosos",e1)
 return
 }
-const {data:rotinas,error:e2}=await db.from("rotinas").select("id")
+
+const {data:rotinas,error:e2}=await db
+.from("rotinas")
+.select("id")
+
 if(e2){
 console.error("Erro rotinas",e2)
 return
 }
+
 for(const i of idosos){
+
 for(const r of rotinas){
-const {data:existe}=await db.from("rotinas_execucao").select("id").eq("idoso_id",i.id).eq("rotina_id",r.id).eq("data",hoje).maybeSingle()
+
+const {data:existe}=await db
+.from("rotinas_execucao")
+.select("id")
+.eq("idoso_id",i.id)
+.eq("rotina_id",r.id)
+.eq("data",hoje)
+.maybeSingle()
+
 if(!existe){
-await db.from("rotinas_execucao").insert({
+
+await db
+.from("rotinas_execucao")
+.insert({
 idoso_id:i.id,
 rotina_id:r.id,
 data:hoje,
 status:"pendente"
 })
+
 }
+
 }
+
 }
+
 }
