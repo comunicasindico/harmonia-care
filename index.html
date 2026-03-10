@@ -684,14 +684,19 @@ return
 /* ============================
 FUNÇÃO IDADE
 ============================ */
-
 function calcularIdade(data){
 if(!data) return ""
-const nasc=new Date(data)
+const nascimento=new Date(data)
 const hoje=new Date()
-let idade=hoje.getFullYear()-nasc.getFullYear()
-const m=hoje.getMonth()-nasc.getMonth()
-if(m<0||(m===0&&hoje.getDate()<nasc.getDate()))idade--
+
+let idade=hoje.getFullYear()-nascimento.getFullYear()
+
+const m=hoje.getMonth()-nascimento.getMonth()
+
+if(m<0 || (m===0 && hoje.getDate()<nascimento.getDate())){
+idade--
+}
+
 return idade
 }
 
@@ -1013,7 +1018,7 @@ doc.save("relatorio_geral_rotinas.pdf")
 
 }
 /* ====================================================
-027 GERAR PDF PACIENTE PROFISSIONAL
+027 GERAR PDF PACIENTE 
 ==================================================== */
 async function gerarPDFPaciente(){
 
@@ -1083,11 +1088,14 @@ const {data:paciente}=await db
 /* ================================
 LOGO
 ================================ */
-
 const logo=new Image()
 logo.src="logo-harmonia.png"
-doc.addImage(logo,"PNG",14,8,25,25)
 
+await new Promise(resolve=>{
+logo.onload=resolve
+})
+
+doc.addImage(logo,"PNG",14,8,25,25)
 /* ================================
 CABECALHO
 ================================ */
@@ -1142,8 +1150,6 @@ ROTINAS
 let linhas=[]
 
 rotinas.forEach(r=>{
-let statusTexto="Pendente"
-
 let status="Pendente"
 
 if(r.status==="executado") status="✔ Executado"
@@ -1157,7 +1163,7 @@ status
 ])
 })
 
-await carregarDadosClinicosPaciente(paciente)
+await carregarDadosClinicosPaciente(pacienteId)
 
 let inicioTabela=doc.lastAutoTable.finalY+15
 
@@ -1253,6 +1259,7 @@ document.getElementById("dadosClinicosPaciente").innerHTML=html
 </script>
 </body>
 </html>
+
 
 
 
