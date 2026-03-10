@@ -52,10 +52,14 @@ select.innerHTML = html
 /* ====================================================
 022 – CARREGAR ROTINAS
 ==================================================== */
-
 async function carregarRotinas(){
 
-const paciente = document.getElementById("buscaPaciente")?.value
+const paciente=document.getElementById("buscaPaciente")?.value
+if(paciente && paciente!=="todos"){
+carregarDadosClinicosPaciente(paciente)
+}else{
+document.getElementById("dadosClinicosPaciente").innerHTML=""
+}
 const dataInicio = document.getElementById("dataInicio")?.value
 const dataFim = document.getElementById("dataFim")?.value
 
@@ -173,3 +177,31 @@ if(p) p.innerHTML = "🔴 "+pendente
 if(a) a.innerHTML = "⚠ "+atrasado
 
 }
+/* ====================================================
+EXECUTAR TODOS
+==================================================== */
+
+async function executarTodos(pacienteId){
+
+const rotinas=ROTINAS_CACHE.filter(r=>r.paciente_id===pacienteId)
+
+for(const r of rotinas){
+
+if(r.status!=="executado"){
+
+await db
+.from("rotina_execucao")
+.update({
+status:"executado",
+horario_execucao:new Date()
+})
+.eq("id",r.id)
+
+}
+
+}
+
+carregarRotinas()
+
+}
+
