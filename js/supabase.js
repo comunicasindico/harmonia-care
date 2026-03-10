@@ -7,7 +7,7 @@ const supabaseClient=window.supabase.createClient(
 SUPABASE_URL,
 SUPABASE_ANON_KEY
 )
-const db=supabaseClient
+db = supabaseClient
 const EMPRESA_ID = "d9f678e5-6c7a-485e-895c-cb4791db840e"
 /* ====================================================
 002 – VARIÁVEIS GLOBAIS
