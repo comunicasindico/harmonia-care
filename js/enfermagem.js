@@ -51,41 +51,28 @@ select.innerHTML = html
 022 – CARREGAR ROTINAS
 ==================================================== */
 async function carregarRotinas(){
-
 const paciente=document.getElementById("buscaPaciente")?.value
-if(paciente && paciente!=="todos"){
-carregarDadosClinicosPaciente(paciente)
-}else{
-document.getElementById("dadosClinicosPaciente").innerHTML=""
-}
-const dataInicio = document.getElementById("dataInicio")?.value
-const dataFim = document.getElementById("dataFim")?.value
-
-let query = db
-.from("vw_rotinas_painel")
-.select("*")
-.eq("turno",TURNO_ATUAL)
-
-if(paciente && paciente !== "todos") query = query.eq("idoso_id",paciente)
-if(dataInicio) query = query.gte("data",dataInicio)
-if(dataFim) query = query.lte("data",dataFim)
-
-const {data,error} = await query
-
-if(error){
-
-console.error(error)
-alert("Erro ao carregar rotinas")
-return
-
-}
-
-ROTINAS_CACHE = data
-
-calcularIndicadores(data)
-
-renderizarRotinas(data)
-
+const dataInicio=document.getElementById("dataInicio")?.value
+const turno=TURNO_ATUAL
+const {data:idosos}=await db.from("idosos").select("id,nome")
+const {data:rotinas}=await db.from("rotinas").select("id,nome,turno").eq("turno",turno)
+const {data:execucoes}=await db.from("rotinas_execucao").select("*").eq("data",dataInicio)
+let lista=[]
+idosos.forEach(i=>{
+rotinas.forEach(r=>{
+const exec=execucoes.find(e=>e.idoso_id===i.id&&e.rotina_id===r.id)
+lista.push({
+id:exec?.id||`${i.id}_${r.id}`,
+idoso_id:i.id,
+paciente:i.nome,
+rotina:r.nome,
+status:exec?.status||"pendente"
+})
+})
+})
+ROTINAS_CACHE=lista
+calcularIndicadores(lista)
+renderizarRotinas(lista)
 }
 
 /* ====================================================
@@ -185,15 +172,13 @@ tbody.innerHTML = html
 024 – EXECUTAR ROTINA
 ==================================================== */
 async function executarRotina(id){
-
 const usuario = localStorage.getItem("usuario_nome")
 
-await db
-.from("rotina_execucao")
-.update({
-status:"executado",
-executado_por:usuario,
-horario_execucao:new Date()
+await db.from("rotinas_execucao").insert({
+idoso_id:idosoId,
+rotina_id:rotinaId,
+data:dataHoje,
+status:"executado"
 })
 .eq("id",id)
 
@@ -245,13 +230,10 @@ status:"executado",
 horario_executado:new Date()
 })
 .eq("id", r.id)
-
 }
-
 }
 
 carregarRotinas()
-
 }
 
 /* ====================================================
