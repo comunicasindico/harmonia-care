@@ -23,6 +23,14 @@ let totalPacientes=0
 let totalHas=0
 let totalDm=0
 let totalDemencia=0
+let totalCardio=0
+let totalAcamado=0
+let totalPAAlterada=0
+let risco1=0
+let risco2=0
+let risco3=0
+let risco4=0
+let risco5=0
 let pacienteAtual=null
 data.forEach(p=>{
 if(pacienteSelecionado!=="todos" && pacienteSelecionado!==p.id)return
@@ -31,6 +39,21 @@ totalPacientes++
 if(p.has)totalHas++
 if(p.dm)totalDm++
 if(p.da)totalDemencia++
+if(p.cardiopatia)totalCardio++
+if(p.acamado)totalAcamado++
+if(p.pressao_arterial){
+let pa=p.pressao_arterial.split("/")
+if(pa.length==2){
+let s=parseInt(pa[0])
+let d=parseInt(pa[1])
+if(s>=140||d>=90)totalPAAlterada++
+}
+}
+if(p.grau_risco==1)risco1++
+if(p.grau_risco==2)risco2++
+if(p.grau_risco==3)risco3++
+if(p.grau_risco==4)risco4++
+if(p.grau_risco==5)risco5++
 html+=`<tr>
 <td>${p.nome_completo??""}</td>
 <td>${calcularIdade(p.data_nascimento)}</td>
@@ -47,6 +70,20 @@ html+=`<tr>
 })
 const tabela=document.getElementById("quadroClinico")
 if(tabela)tabela.innerHTML=html
+const resumo=document.getElementById("resumoClinico")
+if(resumo)resumo.innerHTML=
+"HAS "+totalHas+
+" | DM "+totalDm+
+" | DEMÊNCIA "+totalDemencia+
+" | CARDIO "+totalCardio+
+" | ACAMADO "+totalAcamado+
+" | PA ALTERADA "+totalPAAlterada+
+" | RISCO 1:"+risco1+
+" 2:"+risco2+
+" 3:"+risco3+
+" 4:"+risco4+
+" 5:"+risco5
+
 document.getElementById("totalPacientes").innerHTML=totalPacientes
 document.getElementById("totalHas").innerHTML=totalHas
 document.getElementById("totalDm").innerHTML=totalDm
