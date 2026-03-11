@@ -121,19 +121,27 @@ renderizarRotinas(lista)
 023 – RENDERIZAR ROTINAS
 ==================================================== */
 function renderizarRotinas(lista){
+
 const tbody=document.getElementById("rotinas")
 if(!tbody)return
+
 let html=""
+
 const pacientes={}
+
 lista.forEach(r=>{
+
 if(!pacientes[r.idoso_id]){
 pacientes[r.idoso_id]={
 nome:r.paciente,
 rotinas:[]
 }
 }
+
 pacientes[r.idoso_id].rotinas.push(r)
+
 })
+
 Object.keys(pacientes).forEach(pid=>{
 
 const p=pacientes[pid]
