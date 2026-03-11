@@ -143,7 +143,7 @@ ${r.rotina}
 html+=`
 <tr>
 <td>
-${p.nome}
+${p.nome_completo}
 <button style="margin-left:10px" onclick="executarTodos('${pid}')">TODOS</button>
 </td>
 <td>${p.rotinas.length}</td>
