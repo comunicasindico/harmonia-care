@@ -25,6 +25,7 @@ await iniciarSistema()
 011 – INICIAR SISTEMA
 ==================================================== */
 async function iniciarSistema(){
+while(!db){await new Promise(r=>setTimeout(r,50))}
 definirDataHoje()
 if(typeof carregarPacientesBusca==="function"){await carregarPacientesBusca()}
 if(typeof gerarRotinasDoDia==="function"){await gerarRotinasDoDia()}
@@ -55,6 +56,9 @@ document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 await iniciarSistema()
 }
+})
+window.addEventListener("pageshow",function(e){
+if(e.persisted){location.reload()}
 })
 /* ====================================================
 014 – DATA HOJE
