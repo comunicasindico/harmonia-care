@@ -88,17 +88,16 @@ if(alvo){alvo.style.display="block"}
 }
 
 function abrirEnfermagem(){
-document.getElementById("painelEnfermagem").style.display="block"
-document.getElementById("painelClinico").style.display="none"
-document.getElementById("painelAdmin").style.display="none"
+abrirPainel("painelEnfermagem")
 localStorage.setItem("painelAtual","enfermagem")
+if(typeof carregarRotinas==="function"){carregarRotinas()}
+if(typeof carregarClinico==="function"){carregarClinico()}
 }
 
 function abrirClinico(){
-document.getElementById("painelEnfermagem").style.display="none"
-document.getElementById("painelClinico").style.display="block"
-document.getElementById("painelAdmin").style.display="none"
+abrirPainel("painelClinico")
 localStorage.setItem("painelAtual","clinico")
+if(typeof carregarClinico==="function"){carregarClinico()}
 }
 
 async function abrirAdmin(){
