@@ -26,6 +26,8 @@ await iniciarSistema()
 ==================================================== */
 async function iniciarSistema(){
 definirDataHoje()
+const busca=document.getElementById("buscaPaciente")
+if(busca)busca.value="todos"
 if(typeof carregarPacientesBusca==="function"){
 await carregarPacientesBusca()
 }
