@@ -74,7 +74,17 @@ divClinico.innerHTML=`
 <tr><td><b>Demência</b></td><td>${pacienteAtual.da?"✔ Sim":"-"}</td></tr>
 <tr><td><b>Cardiopatia</b></td><td>${pacienteAtual.cardiopatia?"✔ Sim":"-"}</td></tr>
 <tr><td><b>Acamado</b></td><td>${pacienteAtual.acamado?"✔ Sim":"-"}</td></tr>
-<tr><td><b>Pressão Arterial</b></td><td>${pacienteAtual.pressao_arterial??"-"}</td></tr>
+<tr>
+<td><b>Pressão Arterial</b></td>
+<td>
+<input id="clin_pa"
+value="${pacienteAtual.pressao_arterial??""}"
+placeholder="120/80"
+style="padding:6px;border-radius:6px;border:1px solid #ccc;width:100px"
+onblur="formatarPA(this);avaliarPA()">
+<span id="pa_status" style="margin-left:10px;font-weight:bold"></span>
+</td>
+</tr>
 <tr><td><b>Dieta Especial</b></td><td>${pacienteAtual.dieta_especial?"✔ Sim":"-"}</td></tr>
 <tr><td><b>Grau de Risco</b></td><td>${pacienteAtual.grau_risco??"-"}</td></tr>
 <tr><td><b>Outras Comorbidades</b></td><td>${pacienteAtual.outras_comorbidades??"-"}</td></tr>
@@ -206,4 +216,83 @@ outras_comorbidades:null
 
 carregarClinico()
 
+}
+/* ====================================================
+SALVAR DADOS CLINICOS
+==================================================== */
+async function salvarClinico(id){
+
+const has=document.getElementById("clin_has").checked
+const dm=document.getElementById("clin_dm").checked
+const da=document.getElementById("clin_da").checked
+const cardio=document.getElementById("clin_cardio").checked
+const acamado=document.getElementById("clin_acamado").checked
+const dieta=document.getElementById("clin_dieta").checked
+const pa=document.getElementById("clin_pa").value
+const risco=document.getElementById("clin_risco").value
+const outros=document.getElementById("clin_outros").value
+
+await db
+.from("pacientes")
+.update({
+has:has,
+dm:dm,
+da:da,
+cardiopatia:cardio,
+acamado:acamado,
+dieta_especial:dieta,
+pressao_arterial:pa,
+grau_risco:risco,
+outras_comorbidades:outros
+})
+.eq("id",id)
+
+alert("Dados clínicos atualizados")
+
+carregarClinico()
+
+}
+/* ====================================================
+FORMATAR PRESSÃO ARTERIAL
+==================================================== */
+function formatarPA(input){
+let v=input.value.replace(/[^\d]/g,"")
+if(v.length>=3){
+let sist=v.slice(0,3)
+let diast=v.slice(3,5)
+if(diast)input.value=sist+"/"+diast
+else input.value=sist
+}
+}
+/* ====================================================
+AVALIAR PRESSÃO ARTERIAL
+==================================================== */
+function avaliarPA(){
+const campo=document.getElementById("clin_pa")
+const status=document.getElementById("pa_status")
+if(!campo||!status)return
+let v=campo.value
+if(!v.includes("/")){
+status.innerHTML=""
+return
+}
+let partes=v.split("/")
+let sist=parseInt(partes[0])
+let diast=parseInt(partes[1])
+if(isNaN(sist)||isNaN(diast)){
+status.innerHTML=""
+return
+}
+if(sist<=129 && diast<=85){
+status.innerHTML="🟢 Normal"
+status.style.color="#16a34a"
+}
+else if((sist>=130 && sist<=139)||(diast>=86 && diast<=89)){
+status.innerHTML="🟡 Atenção"
+status.style.color="#ca8a04"
+}
+else if(sist>=140 || diast>=90){
+status.innerHTML="🔴 Hipertensão"
+status.style.color="#dc2626"
+}
 }
