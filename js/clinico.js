@@ -106,12 +106,16 @@ return idade
 function editarClinico(id){
 const campo=document.getElementById("clin_pa")
 if(campo)campo.removeAttribute("disabled")
-const btnSalvar=document.createElement("button")
+let btnSalvar=document.getElementById("btnSalvarClinico")
+if(!btnSalvar){
+btnSalvar=document.createElement("button")
+btnSalvar.id="btnSalvarClinico"
 btnSalvar.className="btn-primary"
 btnSalvar.innerText="Salvar"
 btnSalvar.onclick=function(){salvarClinico(id)}
 const box=document.querySelector("#dadosClinicosPaciente .box div")
 if(box)box.appendChild(btnSalvar)
+}
 }
 /* ====================================================
 033 – EXCLUIR DADOS CLINICOS
