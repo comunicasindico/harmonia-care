@@ -2,48 +2,35 @@
 030 – CARREGAR CLINICO
 ==================================================== */
 async function carregarClinico(){
-
 const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todos"
-
 if(!db){
 console.error("Supabase ainda não carregou")
 return
 }
-
 const {data,error}=await db
 .from("pacientes")
 .select("*")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
 .order("nome_completo")
-
 if(error){
 console.error(error)
 return
 }
-
 if(!data)return
-
 let html=""
 let totalPacientes=0
 let totalHas=0
 let totalDm=0
 let totalDemencia=0
-
 let pacienteAtual=null
-
 data.forEach(p=>{
-
 if(pacienteSelecionado!=="todos" && pacienteSelecionado!==p.id)return
-
 if(pacienteSelecionado!=="todos")pacienteAtual=p
-
 totalPacientes++
-
 if(p.has)totalHas++
 if(p.dm)totalDm++
 if(p.da)totalDemencia++
-
 html+=`
 <tr>
 <td>${p.nome_completo??""}</td>
@@ -59,192 +46,39 @@ html+=`
 <td>${p.outras_comorbidades??""}</td>
 </tr>
 `
-
 })
-
-/* ATUALIZA TABELA CLINICA */
-
 const tabela=document.getElementById("quadroClinico")
 if(tabela)tabela.innerHTML=html
-
-/* ATUALIZA INDICADORES */
-
 document.getElementById("totalPacientes").innerHTML=totalPacientes
 document.getElementById("totalHas").innerHTML=totalHas
 document.getElementById("totalDm").innerHTML=totalDm
 document.getElementById("totalDemencia").innerHTML=totalDemencia
-
-
-/* ====================================================
-MOSTRAR DADOS CLINICOS NO PAINEL ENFERMAGEM
-==================================================== */
-
 const divClinico=document.getElementById("dadosClinicosPaciente")
-
 if(!divClinico)return
-
 if(pacienteSelecionado==="todos" || !pacienteAtual){
 divClinico.innerHTML=""
 return
 }
-
 divClinico.innerHTML=`
 <div class="box">
-
 <h3>Dados Clínicos do Paciente</h3>
-
 <div style="margin-bottom:10px;display:flex;gap:10px">
-
-<button class="btn-primary"
-onclick="editarClinico('${pacienteAtual.id}')">
-Editar
-</button>
-
-<button class="btn-danger"
-onclick="excluirClinico('${pacienteAtual.id}')">
-Excluir
-</button>
-
+<button class="btn-primary" onclick="editarClinico('${pacienteAtual.id}')">Editar</button>
+<button class="btn-danger" onclick="excluirClinico('${pacienteAtual.id}')">Excluir</button>
 </div>
-
 <table>
-
-<tr>
-<td><b>Paciente</b></td>
-<td>${pacienteAtual.nome_completo}</td>
-</tr>
-
-<tr>
-<td><b>Idade</b></td>
-<td>${calcularIdade(pacienteAtual.data_nascimento)}</td>
-</tr>
-
-<tr>
-<td><b>HAS</b></td>
-<td>${pacienteAtual.has?"✔ Sim":"-"}</td>
-</tr>
-
-<tr>
-<td><b>Diabetes</b></td>
-<td>${pacienteAtual.dm?"✔ Sim":"-"}</td>
-</tr>
-
-<tr>
-<td><b>Demência</b></td>
-<td>${pacienteAtual.da?"✔ Sim":"-"}</td>
-</tr>
-
-<tr>
-<td><b>Cardiopatia</b></td>
-<td>${pacienteAtual.cardiopatia?"✔ Sim":"-"}</td>
-</tr>
-
-<tr>
-<td><b>Acamado</b></td>
-<td>${pacienteAtual.acamado?"✔ Sim":"-"}</td>
-</tr>
-
-<tr>
-<td><b>Pressão Arterial</b></td>
-<td>${pacienteAtual.pressao_arterial??"-"}</td>
-</tr>
-
-<tr>
-<td><b>Dieta Especial</b></td>
-<td>${pacienteAtual.dieta_especial?"✔ Sim":"-"}</td>
-</tr>
-
-<tr>
-<td><b>Grau de Risco</b></td>
-<td>${pacienteAtual.grau_risco??"-"}</td>
-</tr>
-
-<tr>
-<td><b>Outras Comorbidades</b></td>
-<td>${pacienteAtual.outras_comorbidades??"-"}</td>
-</tr>
-
+<tr><td><b>Paciente</b></td><td>${pacienteAtual.nome_completo}</td></tr>
+<tr><td><b>Idade</b></td><td>${calcularIdade(pacienteAtual.data_nascimento)}</td></tr>
+<tr><td><b>HAS</b></td><td>${pacienteAtual.has?"✔ Sim":"-"}</td></tr>
+<tr><td><b>Diabetes</b></td><td>${pacienteAtual.dm?"✔ Sim":"-"}</td></tr>
+<tr><td><b>Demência</b></td><td>${pacienteAtual.da?"✔ Sim":"-"}</td></tr>
+<tr><td><b>Cardiopatia</b></td><td>${pacienteAtual.cardiopatia?"✔ Sim":"-"}</td></tr>
+<tr><td><b>Acamado</b></td><td>${pacienteAtual.acamado?"✔ Sim":"-"}</td></tr>
+<tr><td><b>Pressão Arterial</b></td><td>${pacienteAtual.pressao_arterial??"-"}</td></tr>
+<tr><td><b>Dieta Especial</b></td><td>${pacienteAtual.dieta_especial?"✔ Sim":"-"}</td></tr>
+<tr><td><b>Grau de Risco</b></td><td>${pacienteAtual.grau_risco??"-"}</td></tr>
+<tr><td><b>Outras Comorbidades</b></td><td>${pacienteAtual.outras_comorbidades??"-"}</td></tr>
 </table>
-
-</div>
-`
-/* ====================================================
-MOSTRAR DADOS CLINICOS NO PAINEL ENFERMAGEM
-==================================================== */
-
-const divPaciente=document.getElementById("dadosClinicosPaciente")
-
-if(!divPaciente) return
-
-if(!pacienteAtual){
-divPaciente.innerHTML=""
-return
-}
-
-divPaciente.innerHTML=`
-<div class="box">
-
-<h3>Dados Clínicos do Paciente</h3>
-
-<table>
-
-<tr>
-<td><b>Paciente</b></td>
-<td>${pacienteAtual.nome_completo??""}</td>
-</tr>
-
-<tr>
-<td><b>Idade</b></td>
-<td>${calcularIdade(pacienteAtual.data_nascimento)}</td>
-</tr>
-
-<tr>
-<td><b>HAS</b></td>
-<td>${pacienteAtual.has?"✔ Sim":"-"}</td>
-</tr>
-
-<tr>
-<td><b>Diabetes</b></td>
-<td>${pacienteAtual.dm?"✔ Sim":"-"}</td>
-</tr>
-
-<tr>
-<td><b>Demência</b></td>
-<td>${pacienteAtual.da?"✔ Sim":"-"}</td>
-</tr>
-
-<tr>
-<td><b>Cardiopatia</b></td>
-<td>${pacienteAtual.cardiopatia?"✔ Sim":"-"}</td>
-</tr>
-
-<tr>
-<td><b>Acamado</b></td>
-<td>${pacienteAtual.acamado?"✔ Sim":"-"}</td>
-</tr>
-
-<tr>
-<td><b>Pressão Arterial</b></td>
-<td>${pacienteAtual.pressao_arterial??"-"}</td>
-</tr>
-
-<tr>
-<td><b>Dieta Especial</b></td>
-<td>${pacienteAtual.dieta_especial?"✔ Sim":"-"}</td>
-</tr>
-
-<tr>
-<td><b>Grau de Risco</b></td>
-<td>${pacienteAtual.grau_risco??"-"}</td>
-</tr>
-
-<tr>
-<td><b>Outras Comorbidades</b></td>
-<td>${pacienteAtual.outras_comorbidades??"-"}</td>
-</tr>
-
-</table>
-
 </div>
 `
 }
