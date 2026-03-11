@@ -85,6 +85,8 @@ const {data:pacientes,error:e1}=await db
 .from("pacientes")
 .select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+.order("nome_completo")
 if(e1){console.error("Erro pacientes",e1);return}
 const {data:rotinas,error:e2}=await db
 .from("rotina_modelos")
@@ -119,29 +121,19 @@ renderizarRotinas(lista)
 023 – RENDERIZAR ROTINAS
 ==================================================== */
 function renderizarRotinas(lista){
-
 const tbody=document.getElementById("rotinas")
 if(!tbody)return
-
 let html=""
-
 const pacientes={}
-
 lista.forEach(r=>{
-
 if(!pacientes[r.idoso_id]){
-
 pacientes[r.idoso_id]={
 nome:r.paciente,
 rotinas:[]
 }
-
 }
-
 pacientes[r.idoso_id].rotinas.push(r)
-
 })
-
 Object.keys(pacientes).forEach(pid=>{
 
 const p=pacientes[pid]
@@ -167,7 +159,7 @@ ${r.rotina}
 html+=`
 <tr>
 <td>
-${p.nome_completo}
+${p.nome}
 <button style="margin-left:10px" onclick="executarTodos('${pid}')">TODOS</button>
 </td>
 <td>${p.rotinas.length}</td>
