@@ -22,10 +22,9 @@ console.error(error)
 return
 }
 
-if(!data) return
+if(!data)return
 
 let html=""
-
 let totalPacientes=0
 let totalHas=0
 let totalDm=0
@@ -35,16 +34,15 @@ let pacienteAtual=null
 
 data.forEach(p=>{
 
-/* FILTRO POR PACIENTE */
-if(pacienteSelecionado!=="todos" && pacienteSelecionado!==p.id) return
+if(pacienteSelecionado!=="todos" && pacienteSelecionado!==p.id)return
 
-if(pacienteSelecionado!=="todos") pacienteAtual=p
+if(pacienteSelecionado!=="todos")pacienteAtual=p
 
 totalPacientes++
 
-if(p.has) totalHas++
-if(p.dm) totalDm++
-if(p.da) totalDemencia++
+if(p.has)totalHas++
+if(p.dm)totalDm++
+if(p.da)totalDemencia++
 
 html+=`
 <tr>
@@ -64,22 +62,17 @@ html+=`
 
 })
 
-/* ATUALIZA TABELA DO PAINEL CLINICO */
+/* ATUALIZA TABELA CLINICA */
 
 const tabela=document.getElementById("quadroClinico")
-if(tabela) tabela.innerHTML=html
+if(tabela)tabela.innerHTML=html
 
 /* ATUALIZA INDICADORES */
 
-const tPac=document.getElementById("totalPacientes")
-const tHas=document.getElementById("totalHas")
-const tDm=document.getElementById("totalDm")
-const tDem=document.getElementById("totalDemencia")
-
-if(tPac) tPac.innerHTML=totalPacientes
-if(tHas) tHas.innerHTML=totalHas
-if(tDm) tDm.innerHTML=totalDm
-if(tDem) tDem.innerHTML=totalDemencia
+document.getElementById("totalPacientes").innerHTML=totalPacientes
+document.getElementById("totalHas").innerHTML=totalHas
+document.getElementById("totalDm").innerHTML=totalDm
+document.getElementById("totalDemencia").innerHTML=totalDemencia
 
 
 /* ====================================================
@@ -88,15 +81,14 @@ MOSTRAR DADOS CLINICOS NO PAINEL ENFERMAGEM
 
 const divClinico=document.getElementById("dadosClinicosPaciente")
 
-if(!divClinico) return
+if(!divClinico)return
 
-if(!pacienteAtual){
+if(pacienteSelecionado==="todos" || !pacienteAtual){
 divClinico.innerHTML=""
 return
 }
 
 divClinico.innerHTML=`
-
 <div class="box">
 
 <h3>Dados Clínicos do Paciente</h3>
@@ -119,7 +111,7 @@ Excluir
 
 <tr>
 <td><b>Paciente</b></td>
-<td>${pacienteAtual.nome_completo??""}</td>
+<td>${pacienteAtual.nome_completo}</td>
 </tr>
 
 <tr>
@@ -175,7 +167,6 @@ Excluir
 </table>
 
 </div>
-
 `
 
 }
@@ -372,8 +363,7 @@ EXCLUIR DADOS CLINICOS
 ==================================================== */
 async function excluirClinico(pacienteId){
 
-if(!confirm("Deseja apagar os dados clínicos deste paciente?"))
-return
+if(!confirm("Deseja apagar os dados clínicos deste paciente?"))return
 
 await db
 .from("pacientes")
