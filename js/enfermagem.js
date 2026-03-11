@@ -118,6 +118,7 @@ ROTINAS_CACHE=lista
 calcularIndicadores(lista)
 renderizarRotinas(lista)
 }
+
 /* ====================================================
 023 – RENDERIZAR ROTINAS
 ==================================================== */
@@ -149,7 +150,12 @@ const p=pacientes[pid]
 
 let rotinasHTML=""
 
+let total=p.rotinas.length
+let executadas=0
+
 p.rotinas.forEach(r=>{
+
+if(r.status==="executado") executadas++
 
 const classe=r.status==="executado"
 ?"rotina-executada"
@@ -165,14 +171,46 @@ ${r.rotina}
 
 })
 
+/* CALCULO PROGRESSO */
+
+let percentual=total>0?Math.round((executadas/total)*100):0
+
+let cor="#ef4444"   // vermelho
+
+if(percentual===100) cor="#22c55e" // verde
+else if(percentual>0) cor="#f59e0b" // laranja
+
 html+=`
 <tr>
+
+<td class="nome-paciente">${p.nome||""}</td>
+
 <td>
-<span class="nome-paciente">${p.nome || ""}</span>
-<button class="btn-todos" onclick="executarTodos('${pid}')">Rotinas OK</button>
+
+<div class="progresso-container">
+
+<div class="progresso-bar">
+<div class="progresso-fill"
+style="width:${percentual}%;background:${cor}">
+</div>
+</div>
+
+<span class="progresso-label">
+${percentual}% (${executadas}/${total})
+</span>
+
+<button class="btn-todos" onclick="executarTodos('${pid}')">
+Rotinas OK
+</button>
+
+</div>
+
 </td>
-<td>${p.rotinas.length}</td>
-<td class="rotinas-linha">${rotinasHTML}</td>
+
+<td class="rotinas-linha">
+${rotinasHTML}
+</td>
+
 </tr>
 `
 
