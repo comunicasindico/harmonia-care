@@ -237,7 +237,7 @@ Pesquisar
 <div id="painelClinico" style="display:none">
 
 <div class="box">
-<div id="resumoClinico" style="font-size:12px;font-weight:bold;margin-bottom:6px"></div>
+
 <table id="tabelaClinica">
 
 <thead>
@@ -246,14 +246,14 @@ Pesquisar
 
 <th>Paciente</th>
 <th>Idade</th>
-<th>HAS</th>
-<th>DM</th>
-<th>Demência</th>
-<th>Cardio</th>
-<th>Acamado</th>
-<th>Pressão PA</th>
+<th id="cabHas">HAS</th>
+<th id="cabDm">DM</th>
+<th id="cabDemencia">Demência</th>
+<th id="cabCardio">Cardio</th>
+<th id="cabAcamado">Acamado</th>
+<th id="cabPa">Pressão PA</th>
 <th>Dieta</th>
-<th>Risco</th>
+<th id="cabRisco">Risco</th>
 <th>Outras</th>
 
 </tr>
@@ -261,8 +261,11 @@ Pesquisar
 </thead>
 
 <tbody id="quadroClinico"></tbody>
+
 <tfoot>
+
 <tr id="rodapeClinico">
+
 <td></td>
 <td></td>
 <td id="rodapeHas"></td>
@@ -274,10 +277,15 @@ Pesquisar
 <td></td>
 <td id="rodapeRisco"></td>
 <td></td>
+
 </tr>
+
 </tfoot>
+
 </table>
+
 </div>
+
 </div>
 
 <!-- ADMIN -->
@@ -307,6 +315,7 @@ Pesquisar
 
 </body>
 </html>
+
 
 
 
