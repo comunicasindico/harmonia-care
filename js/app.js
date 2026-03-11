@@ -26,21 +26,15 @@ await iniciarSistema()
 ==================================================== */
 async function iniciarSistema(){
 definirDataHoje()
-const busca=document.getElementById("buscaPaciente")
-if(busca)busca.value="todos"
-if(typeof carregarPacientesBusca==="function"){
-await carregarPacientesBusca()
-}
-if(typeof gerarRotinasDoDia==="function"){
-await gerarRotinasDoDia()
-}
-if(typeof carregarRotinas==="function"){
-await carregarRotinas()
-}
-if(typeof carregarClinico==="function"){
-await carregarClinico()
-}
+if(typeof carregarPacientesBusca==="function"){await carregarPacientesBusca()}
+if(typeof gerarRotinasDoDia==="function"){await gerarRotinasDoDia()}
+if(typeof carregarRotinas==="function"){await carregarRotinas()}
+if(typeof carregarClinico==="function"){await carregarClinico()}
 mudarTurno("manha")
+const painelSalvo=localStorage.getItem("painelAtual")
+if(painelSalvo==="clinico"){abrirClinico()}
+else if(painelSalvo==="admin"){abrirAdmin()}
+else{abrirEnfermagem()}
 }
 /* ====================================================
 012 – LOGOUT
@@ -89,16 +83,21 @@ if(alvo){alvo.style.display="block"}
 }
 
 function abrirEnfermagem(){
-abrirPainel("painelEnfermagem")
-if(typeof carregarRotinas==="function"){carregarRotinas()}
+document.getElementById("painelEnfermagem").style.display="block"
+document.getElementById("painelClinico").style.display="none"
+document.getElementById("painelAdmin").style.display="none"
+localStorage.setItem("painelAtual","enfermagem")
 }
 
 function abrirClinico(){
-abrirPainel("painelClinico")
-if(typeof carregarClinico==="function"){carregarClinico()}
+document.getElementById("painelEnfermagem").style.display="none"
+document.getElementById("painelClinico").style.display="block"
+document.getElementById("painelAdmin").style.display="none"
+localStorage.setItem("painelAtual","clinico")
 }
 
 async function abrirAdmin(){
+localStorage.setItem("painelAtual","admin")
 abrirPainel("painelAdmin")
 if(typeof carregarPacientesDrag==="function"){await carregarPacientesDrag()}
 if(typeof carregarProfissionaisDrag==="function"){await carregarProfissionaisDrag()}
