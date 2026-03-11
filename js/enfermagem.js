@@ -62,8 +62,8 @@ const {data:pacientes,error:e1}=await db
 .eq("empresa_id",EMPRESA_ID)
 if(e1){console.error("Erro pacientes",e1);return}
 const {data:rotinas,error:e2}=await db
-.from("rotinas")
-.select("id,nome_completo")
+.from("rotina_modelos")
+.select("id,nome")
 .eq("turno",turno)
 if(e2){console.error("Erro rotinas",e2);return}
 const {data:execucoes,error:e3}=await db
