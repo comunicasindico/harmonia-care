@@ -86,6 +86,104 @@ if(tDem) tDem.innerHTML=totalDemencia
 MOSTRAR DADOS CLINICOS NO PAINEL ENFERMAGEM
 ==================================================== */
 
+const divClinico=document.getElementById("dadosClinicosPaciente")
+
+if(!divClinico) return
+
+if(!pacienteAtual){
+divClinico.innerHTML=""
+return
+}
+
+divClinico.innerHTML=`
+
+<div class="box">
+
+<h3>Dados Clínicos do Paciente</h3>
+
+<div style="margin-bottom:10px;display:flex;gap:10px">
+
+<button class="btn-primary"
+onclick="editarClinico('${pacienteAtual.id}')">
+Editar
+</button>
+
+<button class="btn-danger"
+onclick="excluirClinico('${pacienteAtual.id}')">
+Excluir
+</button>
+
+</div>
+
+<table>
+
+<tr>
+<td><b>Paciente</b></td>
+<td>${pacienteAtual.nome_completo??""}</td>
+</tr>
+
+<tr>
+<td><b>Idade</b></td>
+<td>${calcularIdade(pacienteAtual.data_nascimento)}</td>
+</tr>
+
+<tr>
+<td><b>HAS</b></td>
+<td>${pacienteAtual.has?"✔ Sim":"-"}</td>
+</tr>
+
+<tr>
+<td><b>Diabetes</b></td>
+<td>${pacienteAtual.dm?"✔ Sim":"-"}</td>
+</tr>
+
+<tr>
+<td><b>Demência</b></td>
+<td>${pacienteAtual.da?"✔ Sim":"-"}</td>
+</tr>
+
+<tr>
+<td><b>Cardiopatia</b></td>
+<td>${pacienteAtual.cardiopatia?"✔ Sim":"-"}</td>
+</tr>
+
+<tr>
+<td><b>Acamado</b></td>
+<td>${pacienteAtual.acamado?"✔ Sim":"-"}</td>
+</tr>
+
+<tr>
+<td><b>Pressão Arterial</b></td>
+<td>${pacienteAtual.pressao_arterial??"-"}</td>
+</tr>
+
+<tr>
+<td><b>Dieta Especial</b></td>
+<td>${pacienteAtual.dieta_especial?"✔ Sim":"-"}</td>
+</tr>
+
+<tr>
+<td><b>Grau de Risco</b></td>
+<td>${pacienteAtual.grau_risco??"-"}</td>
+</tr>
+
+<tr>
+<td><b>Outras Comorbidades</b></td>
+<td>${pacienteAtual.outras_comorbidades??"-"}</td>
+</tr>
+
+</table>
+
+</div>
+
+`
+
+}
+
+/* ====================================================
+MOSTRAR DADOS CLINICOS NO PAINEL ENFERMAGEM
+==================================================== */
+
 const divPaciente=document.getElementById("dadosClinicosPaciente")
 
 if(!divPaciente) return
@@ -245,5 +343,47 @@ let html=`
 `
 
 document.getElementById("dadosClinicosPaciente").innerHTML=html
+
+}
+/* ====================================================
+EDITAR DADOS CLINICOS
+==================================================== */
+async function editarClinico(pacienteId){
+
+const pressao=prompt("Pressão arterial:")
+const risco=prompt("Grau de risco:")
+const outras=prompt("Outras comorbidades:")
+
+await db
+.from("pacientes")
+.update({
+pressao_arterial:pressao,
+grau_risco:risco,
+outras_comorbidades:outras
+})
+.eq("id",pacienteId)
+
+carregarClinico()
+
+}
+
+/* ====================================================
+EXCLUIR DADOS CLINICOS
+==================================================== */
+async function excluirClinico(pacienteId){
+
+if(!confirm("Deseja apagar os dados clínicos deste paciente?"))
+return
+
+await db
+.from("pacientes")
+.update({
+pressao_arterial:null,
+grau_risco:null,
+outras_comorbidades:null
+})
+.eq("id",pacienteId)
+
+carregarClinico()
 
 }
