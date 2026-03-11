@@ -180,7 +180,7 @@ grau_risco:risco,
 outras_comorbidades:outros
 }).eq("id",id)
 alert("Dados atualizados")
-carregarClinico()
+await carregarClinico()
 }
 /* ====================================================
 035 – FORMATAR PRESSÃO ARTERIAL
