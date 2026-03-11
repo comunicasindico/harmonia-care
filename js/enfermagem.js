@@ -212,17 +212,11 @@ if(a)a.innerHTML="⚠ "+atrasado
 /* ====================================================
 026 – EXECUTAR TODAS ROTINAS
 ==================================================== */
-
 async function executarTodos(pacienteId){
-
 if(!db)return
-
 const rotinas=ROTINAS_CACHE.filter(r=>r.idoso_id===pacienteId)
-
 for(const r of rotinas){
-
 if(r.status!=="executado"){
-
 await db
 .from("rotinas_execucao")
 .update({
@@ -231,21 +225,15 @@ horario_executado:new Date()
 })
 .eq("idoso_id",r.idoso_id)
 .eq("rotina_id",r.rotina_id)
-
 }
-
 }
-
 carregarRotinas()
-
 }
 /* ====================================================
 027 – GERAR ROTINAS
 ==================================================== */
 async function gerarRotinasDoDia(){
-
 if(!db)return
-
 if(ROTINAS_GERADAS)return
 ROTINAS_GERADAS=true
 
@@ -256,12 +244,10 @@ const {data:pacientes,error:e1}=await db
 .select("id")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
-
 if(e1){
 console.error(e1)
 return
 }
-
 const {data:rotinas,error:e2}=await db
 .from("rotina_modelos")
 .select("id")
@@ -270,28 +256,18 @@ if(e2){
 console.error(e2)
 return
 }
-
 if(!pacientes?.length)return
 if(!rotinas?.length)return
 
 for(const p of pacientes){
-
 for(const r of rotinas){
-
-const {data:existe}=await db
-.from("rotinas_execucao")
-.select("id")
-.eq("idoso_id",p.id)
-.eq("rotina_id",r.id)
-.eq("data",hoje)
-.maybeSingle()const {data:existe,error:e3}=await db
+const {data:existe,error:e3}=await db
 .from("rotinas_execucao")
 .select("id")
 .eq("idoso_id",p.id)
 .eq("rotina_id",r.id)
 .eq("data",hoje)
 .limit(1)
-
 if(!existe || existe.length===0){
 const {error:e4}=await db
 .from("rotinas_execucao")
@@ -301,15 +277,6 @@ rotina_id:r.id,
 data:hoje,
 status:"pendente"
 })
-
 if(e4){
-console.error("Erro insert rotina",e4)
-}
-
-}
-
-}
-
-}
-
+console.error("Erro insert rotina",e4)}}}}
 }
