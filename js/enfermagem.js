@@ -1,31 +1,24 @@
 /* ====================================================
 020 – MUDAR TURNO
 ==================================================== */
-
 function mudarTurno(turno){
+console.log("Turno selecionado:",turno)
 
 TURNO_ATUAL=turno
-
 const btnManha=document.getElementById("btnManha")
 const btnTarde=document.getElementById("btnTarde")
 const btnNoite=document.getElementById("btnNoite")
-
 if(btnManha)btnManha.classList.remove("turno-ativo")
 if(btnTarde)btnTarde.classList.remove("turno-ativo")
 if(btnNoite)btnNoite.classList.remove("turno-ativo")
-
 if(turno==="manha"&&btnManha)btnManha.classList.add("turno-ativo")
 if(turno==="tarde"&&btnTarde)btnTarde.classList.add("turno-ativo")
 if(turno==="noite"&&btnNoite)btnNoite.classList.add("turno-ativo")
-
 if(typeof carregarRotinas==="function")carregarRotinas()
-
 }
-
 /* ====================================================
 021 – CARREGAR PACIENTES BUSCA
 ==================================================== */
-
 async function carregarPacientesBusca(){
 
 if(!db)return
@@ -58,61 +51,45 @@ select.innerHTML=html
 /* ====================================================
 022 – CARREGAR ROTINAS
 ==================================================== */
-
 async function carregarRotinas(){
-
 if(!db)return
-
 const paciente=document.getElementById("buscaPaciente")?.value||"todos"
 const dataHoje=document.getElementById("dataInicio")?.value
 const turno=TURNO_ATUAL
-
-const {data:pacientes}=await db
+const {data:pacientes,error:e1}=await db
 .from("pacientes")
-.select("id,nome_completo")
+.select("id,nome")
 .eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true)
-
-const {data:rotinas}=await db
+if(e1){console.error("Erro pacientes",e1);return}
+const {data:rotinas,error:e2}=await db
 .from("rotinas")
 .select("id,nome")
 .eq("turno",turno)
-
-const {data:execucoes}=await db
+if(e2){console.error("Erro rotinas",e2);return}
+const {data:execucoes,error:e3}=await db
 .from("rotinas_execucao")
 .select("*")
 .eq("data",dataHoje)
-
+if(e3){console.error("Erro execucoes",e3);return}
 let lista=[]
-
 pacientes?.forEach(p=>{
-
 if(paciente!=="todos"&&paciente!==p.id)return
-
 rotinas?.forEach(r=>{
-
 const exec=execucoes?.find(e=>e.idoso_id===p.id&&e.rotina_id===r.id)
-
 lista.push({
 id:exec?.id||`${p.id}_${r.id}`,
 idoso_id:p.id,
 rotina_id:r.id,
-paciente:p.nome_completo,
+paciente:p.nome,
 rotina:r.nome,
 status:exec?.status||"pendente"
 })
-
 })
-
 })
-
 ROTINAS_CACHE=lista
-
 calcularIndicadores(lista)
 renderizarRotinas(lista)
-
 }
-
 /* ====================================================
 023 – RENDERIZAR ROTINAS
 ==================================================== */
