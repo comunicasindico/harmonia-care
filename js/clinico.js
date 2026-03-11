@@ -31,10 +31,14 @@ let totalHas=0
 let totalDm=0
 let totalDemencia=0
 
+let pacienteAtual=null
+
 data.forEach(p=>{
 
 /* FILTRO POR PACIENTE */
 if(pacienteSelecionado!=="todos" && pacienteSelecionado!==p.id) return
+
+if(pacienteSelecionado!=="todos") pacienteAtual=p
 
 totalPacientes++
 
@@ -60,8 +64,12 @@ html+=`
 
 })
 
+/* ATUALIZA TABELA DO PAINEL CLINICO */
+
 const tabela=document.getElementById("quadroClinico")
 if(tabela) tabela.innerHTML=html
+
+/* ATUALIZA INDICADORES */
 
 const tPac=document.getElementById("totalPacientes")
 const tHas=document.getElementById("totalHas")
@@ -72,6 +80,87 @@ if(tPac) tPac.innerHTML=totalPacientes
 if(tHas) tHas.innerHTML=totalHas
 if(tDm) tDm.innerHTML=totalDm
 if(tDem) tDem.innerHTML=totalDemencia
+
+
+/* ====================================================
+MOSTRAR DADOS CLINICOS NO PAINEL ENFERMAGEM
+==================================================== */
+
+const divPaciente=document.getElementById("dadosClinicosPaciente")
+
+if(!divPaciente) return
+
+if(!pacienteAtual){
+divPaciente.innerHTML=""
+return
+}
+
+divPaciente.innerHTML=`
+<div class="box">
+
+<h3>Dados Clínicos do Paciente</h3>
+
+<table>
+
+<tr>
+<td><b>Paciente</b></td>
+<td>${pacienteAtual.nome_completo??""}</td>
+</tr>
+
+<tr>
+<td><b>Idade</b></td>
+<td>${calcularIdade(pacienteAtual.data_nascimento)}</td>
+</tr>
+
+<tr>
+<td><b>HAS</b></td>
+<td>${pacienteAtual.has?"✔ Sim":"-"}</td>
+</tr>
+
+<tr>
+<td><b>Diabetes</b></td>
+<td>${pacienteAtual.dm?"✔ Sim":"-"}</td>
+</tr>
+
+<tr>
+<td><b>Demência</b></td>
+<td>${pacienteAtual.da?"✔ Sim":"-"}</td>
+</tr>
+
+<tr>
+<td><b>Cardiopatia</b></td>
+<td>${pacienteAtual.cardiopatia?"✔ Sim":"-"}</td>
+</tr>
+
+<tr>
+<td><b>Acamado</b></td>
+<td>${pacienteAtual.acamado?"✔ Sim":"-"}</td>
+</tr>
+
+<tr>
+<td><b>Pressão Arterial</b></td>
+<td>${pacienteAtual.pressao_arterial??"-"}</td>
+</tr>
+
+<tr>
+<td><b>Dieta Especial</b></td>
+<td>${pacienteAtual.dieta_especial?"✔ Sim":"-"}</td>
+</tr>
+
+<tr>
+<td><b>Grau de Risco</b></td>
+<td>${pacienteAtual.grau_risco??"-"}</td>
+</tr>
+
+<tr>
+<td><b>Outras Comorbidades</b></td>
+<td>${pacienteAtual.outras_comorbidades??"-"}</td>
+</tr>
+
+</table>
+
+</div>
+`
 
 }
 /* ====================================================
