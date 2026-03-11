@@ -286,7 +286,7 @@ return
 }
 
 const {data:rotinas,error:e2}=await db
-.from("rotinas")
+.from("rotina_modelos")
 .select("id")
 
 if(e2){
@@ -307,18 +307,27 @@ const {data:existe}=await db
 .eq("idoso_id",p.id)
 .eq("rotina_id",r.id)
 .eq("data",hoje)
-.maybeSingle()
-
-if(!existe){
-
-await db
+.maybeSingle()const {data:existe,error:e3}=await db
 .from("rotinas_execucao")
-.insert([{
+.select("id")
+.eq("idoso_id",p.id)
+.eq("rotina_id",r.id)
+.eq("data",hoje)
+.limit(1)
+
+if(!existe || existe.length===0){
+const {error:e4}=await db
+.from("rotinas_execucao")
+.insert({
 idoso_id:p.id,
 rotina_id:r.id,
 data:hoje,
 status:"pendente"
-}])
+})
+
+if(e4){
+console.error("Erro insert rotina",e4)
+}
 
 }
 
