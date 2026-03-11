@@ -56,14 +56,14 @@ const {data,error}=await db
 .select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
-.order("nome_completo")
+.order("nome_completo",{ascending:true})
 
 if(error){
-console.error(error)
+console.error("Erro pacientes",error)
 return
 }
 
-let html=`<option value="todos">Todos</option>`
+let html=`<option value="todos">TODOS</option>`
 
 data?.forEach(p=>{
 html+=`<option value="${p.id}">${p.nome_completo}</option>`
