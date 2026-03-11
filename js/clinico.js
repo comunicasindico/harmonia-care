@@ -128,14 +128,9 @@ return idade
 /* ====================================================
 032 – EDITAR DADOS CLINICOS
 ==================================================== */
-/* ====================================================
-032 – EDITAR DADOS CLINICOS
-==================================================== */
-function editarClinico(id){
-["clin_has","clin_dm","clin_da","clin_cardio","clin_acamado","clin_pa","clin_dieta","clin_dieta_texto","clin_risco","clin_outros"].forEach(c=>{
-const el=document.getElementById(c)
-if(el)el.removeAttribute("disabled")
-})
+function editarClinico(){
+MODO_EDICAO_CLINICO=true
+carregarClinico()
 }
 /* ====================================================
 033 – EXCLUIR DADOS CLINICOS
@@ -180,6 +175,7 @@ grau_risco:risco,
 outras_comorbidades:outros
 }).eq("id",id)
 alert("Dados atualizados")
+MODO_EDICAO_CLINICO=false
 await carregarClinico()
 }
 /* ====================================================
