@@ -25,27 +25,20 @@ await iniciarSistema()
 011 – INICIAR SISTEMA
 ==================================================== */
 async function iniciarSistema(){
-
 definirDataHoje()
-
 if(typeof carregarPacientesBusca==="function"){
 await carregarPacientesBusca()
 }
-
 if(typeof gerarRotinasDoDia==="function"){
 await gerarRotinasDoDia()
 }
-
-mudarTurno("manha")
-
 if(typeof carregarRotinas==="function"){
 await carregarRotinas()
 }
-
 if(typeof carregarClinico==="function"){
 await carregarClinico()
 }
-
+mudarTurno("manha")
 }
 /* ====================================================
 012 – LOGOUT
