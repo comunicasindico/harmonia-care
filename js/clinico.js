@@ -3,6 +3,8 @@
 ==================================================== */
 async function carregarClinico(){
 
+const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todos"
+
 if(!db){
 console.error("Supabase ainda não carregou")
 return
@@ -31,6 +33,9 @@ let totalDemencia=0
 
 data.forEach(p=>{
 
+/* FILTRO POR PACIENTE */
+if(pacienteSelecionado!=="todos" && pacienteSelecionado!==p.id) return
+
 totalPacientes++
 
 if(p.has) totalHas++
@@ -52,6 +57,7 @@ html+=`
 <td>${p.outras_comorbidades??""}</td>
 </tr>
 `
+
 })
 
 const tabela=document.getElementById("quadroClinico")
