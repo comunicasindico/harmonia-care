@@ -4,25 +4,10 @@
 async function carregarClinico(){
 const selectPaciente=document.getElementById("buscaPaciente")
 const pacienteSelecionado=selectPaciente?selectPaciente.value:"todos"
-if(!db){
-console.error("Supabase ainda não carregou")
-return
-}
-const {data,error}=await db
-.from("pacientes")
-.select("*")
-.eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true)
-.order("nome_completo")
-if(error){
-console.error(error)
-return
-}
-if(!data||data.length===0){
-const tabela=document.getElementById("quadroClinico")
-if(tabela)tabela.innerHTML=""
-return
-}
+if(!db){console.error("Supabase ainda não carregou");return}
+const {data,error}=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo")
+if(error){console.error(error);return}
+if(!data||data.length===0){const tabela=document.getElementById("quadroClinico");if(tabela)tabela.innerHTML="";return}
 let html=""
 let totalPacientes=0
 let totalHas=0
@@ -36,7 +21,9 @@ let risco2=0
 let risco3=0
 let risco4=0
 let risco5=0
+let pacienteAtual=null
 data.forEach(p=>{
+if(pacienteSelecionado!=="todos"&&pacienteSelecionado===p.id){pacienteAtual=p}
 totalPacientes++
 if(p.has)totalHas++
 if(p.dm)totalDm++
@@ -49,8 +36,7 @@ if(pa.length===2){
 let s=parseInt(pa[0])
 let d=parseInt(pa[1])
 if(s>=140||d>=90)totalPAAlterada++
-}
-}
+}}
 if(p.grau_risco==1)risco1++
 if(p.grau_risco==2)risco2++
 if(p.grau_risco==3)risco3++
@@ -110,6 +96,25 @@ const rodapeRisco=document.getElementById("rodapeRisco")
 if(rodapeRisco)rodapeRisco.innerHTML=`<b style="color:${corRisco}">${riscoTotal}</b>`
 const totalPacientesCard=document.getElementById("totalPacientes")
 if(totalPacientesCard)totalPacientesCard.innerHTML=totalPacientes
+const divClinico=document.getElementById("dadosClinicosPaciente")
+if(!divClinico)return
+if(pacienteSelecionado==="todos"||!pacienteAtual){divClinico.innerHTML="";return}
+divClinico.innerHTML=`<div class="box">
+<h3>Dados Clínicos do Paciente</h3>
+<table class="tabela-clinica-edicao">
+<tr><td><b>Paciente</b></td><td><b>${pacienteAtual.nome_completo}</b></td></tr>
+<tr><td><b>Idade</b></td><td><b>${calcularIdade(pacienteAtual.data_nascimento)}</b></td></tr>
+<tr><td><b>HAS</b></td><td><b>${pacienteAtual.has?"SIM":"NÃO"}</b></td></tr>
+<tr><td><b>Diabetes</b></td><td><b>${pacienteAtual.dm?"SIM":"NÃO"}</b></td></tr>
+<tr><td><b>Demência</b></td><td><b>${pacienteAtual.da?"SIM":"NÃO"}</b></td></tr>
+<tr><td><b>Cardiopatia</b></td><td><b>${pacienteAtual.cardiopatia?"SIM":"NÃO"}</b></td></tr>
+<tr><td><b>Acamado</b></td><td><b>${pacienteAtual.acamado?"SIM":"NÃO"}</b></td></tr>
+<tr><td><b>Pressão Arterial</b></td><td><b>${pacienteAtual.pressao_arterial??"-"}</b></td></tr>
+<tr><td><b>Dieta Especial</b></td><td><b>${pacienteAtual.dieta_especial?"SIM":"NÃO"} ${pacienteAtual.dieta_texto??""}</b></td></tr>
+<tr><td><b>Grau de Risco</b></td><td><b>${pacienteAtual.grau_risco??"-"}</b></td></tr>
+<tr><td><b>Outras Comorbidades</b></td><td><b>${pacienteAtual.outras_comorbidades??"-"}</b></td></tr>
+</table>
+</div>`
 }
 
 /* ====================================================
