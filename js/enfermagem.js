@@ -167,8 +167,8 @@ ${r.rotina}
 html+=`
 <tr>
 <td>
-${p.nome}
-<button style="margin-left:10px" onclick="executarTodos('${pid}')">TODOS</button>
+<span class="nome-paciente">${p.nome || ""}</span>
+<button class="btn-todos" onclick="executarTodos('${pid}')">TODOS</button>
 </td>
 <td>${p.rotinas.length}</td>
 <td class="rotinas-linha">${rotinasHTML}</td>
