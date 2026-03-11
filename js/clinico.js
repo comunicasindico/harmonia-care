@@ -69,43 +69,17 @@ divClinico.innerHTML=`<div class="box">
 </div>
 </div>
 <table class="tabela-clinica-edicao">
-<tr><td><b>Paciente</b></td><td>${pacienteAtual.nome_completo}</td></tr>
-<tr><td><b>Idade</b></td><td>${calcularIdade(pacienteAtual.data_nascimento)}</td></tr>
-<tr><td><b>HAS</b></td><td><select id="clin_has" disabled><option value="true"${pacienteAtual.has?" selected":""}>Sim</option><option value="false"${!pacienteAtual.has?" selected":""}>Não</option></select></td></tr>
-<tr><td><b>Diabetes</b></td><td><select id="clin_dm" disabled><option value="true"${pacienteAtual.dm?" selected":""}>Sim</option><option value="false"${!pacienteAtual.dm?" selected":""}>Não</option></select></td></tr>
-<tr><td><b>Demência</b></td><td><select id="clin_da" disabled><option value="true"${pacienteAtual.da?" selected":""}>Sim</option><option value="false"${!pacienteAtual.da?" selected":""}>Não</option></select></td></tr>
-<tr><td><b>Cardiopatia</b></td><td><select id="clin_cardio" disabled><option value="true"${pacienteAtual.cardiopatia?" selected":""}>Sim</option><option value="false"${!pacienteAtual.cardiopatia?" selected":""}>Não</option></select></td></tr>
-<tr><td><b>Acamado</b></td><td><select id="clin_acamado" disabled><option value="true"${pacienteAtual.acamado?" selected":""}>Sim</option><option value="false"${!pacienteAtual.acamado?" selected":""}>Não</option></select></td></tr>
-<tr>
-<td><b>Pressão Arterial</b></td>
-<td><input id="clin_pa" disabled value="${pacienteAtual.pressao_arterial??""}" placeholder="120/80" onblur="formatarPA(this);avaliarPA()"><span id="pa_status" style="margin-left:10px;font-weight:bold"></span></td>
-</tr>
-<tr>
-<td><b>Dieta Especial</b></td>
-<td>
-<select id="clin_dieta" disabled>
-<option value="true"${pacienteAtual.dieta_especial?" selected":""}>Sim</option>
-<option value="false"${!pacienteAtual.dieta_especial?" selected":""}>Não</option>
-</select>
-<input id="clin_dieta_texto" disabled value="${pacienteAtual.dieta_texto??""}" placeholder="Ex: Hipossódica">
-</td>
-</tr>
-<tr>
-<td><b>Grau de Risco</b></td>
-<td>
-<select id="clin_risco" disabled>
-<option value="1"${pacienteAtual.grau_risco==1?" selected":""}>1</option>
-<option value="2"${pacienteAtual.grau_risco==2?" selected":""}>2</option>
-<option value="3"${pacienteAtual.grau_risco==3?" selected":""}>3</option>
-<option value="4"${pacienteAtual.grau_risco==4?" selected":""}>4</option>
-<option value="5"${pacienteAtual.grau_risco==5?" selected":""}>5</option>
-</select>
-</td>
-</tr>
-<tr>
-<td><b>Outras Comorbidades</b></td>
-<td><input id="clin_outros" disabled value="${pacienteAtual.outras_comorbidades??""}" placeholder="Ex: Osteoporose"></td>
-</tr>
+<tr><td><b>Paciente</b></td><td><b>${pacienteAtual.nome_completo}</b></td></tr>
+<tr><td><b>Idade</b></td><td><b>${calcularIdade(pacienteAtual.data_nascimento)}</b></td></tr>
+<tr><td><b>HAS</b></td><td>${MODO_EDICAO_CLINICO?`<select id="clin_has"><option value="true"${pacienteAtual.has?" selected":""}>Sim</option><option value="false"${!pacienteAtual.has?" selected":""}>Não</option></select>`:`<b>${pacienteAtual.has?"SIM":"NÃO"}</b>`}</td></tr>
+<tr><td><b>Diabetes</b></td><td>${MODO_EDICAO_CLINICO?`<select id="clin_dm"><option value="true"${pacienteAtual.dm?" selected":""}>Sim</option><option value="false"${!pacienteAtual.dm?" selected":""}>Não</option></select>`:`<b>${pacienteAtual.dm?"SIM":"NÃO"}</b>`}</td></tr>
+<tr><td><b>Demência</b></td><td>${MODO_EDICAO_CLINICO?`<select id="clin_da"><option value="true"${pacienteAtual.da?" selected":""}>Sim</option><option value="false"${!pacienteAtual.da?" selected":""}>Não</option></select>`:`<b>${pacienteAtual.da?"SIM":"NÃO"}</b>`}</td></tr>
+<tr><td><b>Cardiopatia</b></td><td>${MODO_EDICAO_CLINICO?`<select id="clin_cardio"><option value="true"${pacienteAtual.cardiopatia?" selected":""}>Sim</option><option value="false"${!pacienteAtual.cardiopatia?" selected":""}>Não</option></select>`:`<b>${pacienteAtual.cardiopatia?"SIM":"NÃO"}</b>`}</td></tr>
+<tr><td><b>Acamado</b></td><td>${MODO_EDICAO_CLINICO?`<select id="clin_acamado"><option value="true"${pacienteAtual.acamado?" selected":""}>Sim</option><option value="false"${!pacienteAtual.acamado?" selected":""}>Não</option></select>`:`<b>${pacienteAtual.acamado?"SIM":"NÃO"}</b>`}</td></tr>
+<tr><td><b>Pressão Arterial</b></td><td>${MODO_EDICAO_CLINICO?`<input id="clin_pa" value="${pacienteAtual.pressao_arterial??""}" placeholder="120/80" onblur="formatarPA(this);avaliarPA()">`:`<b>${pacienteAtual.pressao_arterial??"-"}</b>`}<span id="pa_status" style="margin-left:10px;font-weight:bold"></span></td></tr>
+<tr><td><b>Dieta Especial</b></td><td>${MODO_EDICAO_CLINICO?`<select id="clin_dieta"><option value="true"${pacienteAtual.dieta_especial?" selected":""}>Sim</option><option value="false"${!pacienteAtual.dieta_especial?" selected":""}>Não</option></select><input id="clin_dieta_texto" value="${pacienteAtual.dieta_texto??""}" placeholder="Ex: Hipossódica">`:`<b>${pacienteAtual.dieta_especial?"SIM":"NÃO"} ${pacienteAtual.dieta_texto??""}</b>`}</td></tr>
+<tr><td><b>Grau de Risco</b></td><td>${MODO_EDICAO_CLINICO?`<select id="clin_risco"><option value="1"${pacienteAtual.grau_risco==1?" selected":""}>1</option><option value="2"${pacienteAtual.grau_risco==2?" selected":""}>2</option><option value="3"${pacienteAtual.grau_risco==3?" selected":""}>3</option><option value="4"${pacienteAtual.grau_risco==4?" selected":""}>4</option><option value="5"${pacienteAtual.grau_risco==5?" selected":""}>5</option></select>`:`<b>${pacienteAtual.grau_risco??"-"}</b>`}</td></tr>
+<tr><td><b>Outras Comorbidades</b></td><td>${MODO_EDICAO_CLINICO?`<input id="clin_outros" value="${pacienteAtual.outras_comorbidades??""}" placeholder="Ex: Osteoporose">`:`<b>${pacienteAtual.outras_comorbidades??"-"}</b>`}</td></tr>
 </table>
 </div>`
 }
