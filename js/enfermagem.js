@@ -81,6 +81,7 @@ if(!db)return
 const paciente=document.getElementById("buscaPaciente")?.value||"todos"
 const dataHoje=document.getElementById("dataInicio")?.value
 const turno=TURNO_ATUAL
+
 const {data:pacientes,error:e1}=await db
 .from("pacientes")
 .select("id,nome_completo")
