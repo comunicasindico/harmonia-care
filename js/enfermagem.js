@@ -32,7 +32,7 @@ const select=document.getElementById("buscaPaciente")
 select.innerHTML=""
 const optTodos=document.createElement("option")
 optTodos.value="todos"
-optTodos.textContent="TODOS"
+optTodos.textContent="Rotinas OK"
 select.appendChild(optTodos)
 pacientes.forEach(p=>{
 const opt=document.createElement("option")
