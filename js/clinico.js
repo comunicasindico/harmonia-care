@@ -2,7 +2,8 @@
 030 – CARREGAR CLINICO
 ==================================================== */
 async function carregarClinico(){
-const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todos"
+const selectPaciente=document.getElementById("buscaPaciente")
+const pacienteSelecionado=selectPaciente?selectPaciente.value:"todos"
 if(!db){
 console.error("Supabase ainda não carregou")
 return
@@ -17,7 +18,11 @@ if(error){
 console.error(error)
 return
 }
-if(!data)return
+if(!data||data.length===0){
+const tabela=document.getElementById("quadroClinico")
+if(tabela)tabela.innerHTML=""
+return
+}
 let html=""
 let totalPacientes=0
 let totalHas=0
@@ -31,10 +36,7 @@ let risco2=0
 let risco3=0
 let risco4=0
 let risco5=0
-let pacienteAtual=null
 data.forEach(p=>{
-if(pacienteSelecionado!=="todos" && pacienteSelecionado!==p.id)return
-if(pacienteSelecionado!=="todos")pacienteAtual=p
 totalPacientes++
 if(p.has)totalHas++
 if(p.dm)totalDm++
@@ -43,7 +45,7 @@ if(p.cardiopatia)totalCardio++
 if(p.acamado)totalAcamado++
 if(p.pressao_arterial){
 let pa=p.pressao_arterial.split("/")
-if(pa.length==2){
+if(pa.length===2){
 let s=parseInt(pa[0])
 let d=parseInt(pa[1])
 if(s>=140||d>=90)totalPAAlterada++
@@ -70,9 +72,7 @@ html+=`<tr>
 })
 const tabela=document.getElementById("quadroClinico")
 if(tabela)tabela.innerHTML=html
-
 const riscoTotal=risco1+risco2+risco3+risco4+risco5
-
 const corHas="#e74c3c"
 const corDm="#f39c12"
 const corDemencia="#8e44ad"
@@ -80,7 +80,6 @@ const corCardio="#c0392b"
 const corAcamado="#34495e"
 const corPa="#e67e22"
 const corRisco="#2c3e50"
-
 const cabHas=document.getElementById("cabHas")
 if(cabHas)cabHas.innerHTML=`HAS<br><b style="color:${corHas}">${totalHas}</b>`
 const cabDm=document.getElementById("cabDm")
@@ -95,7 +94,6 @@ const cabPa=document.getElementById("cabPa")
 if(cabPa)cabPa.innerHTML=`PA<br><b style="color:${corPa}">${totalPAAlterada}</b>`
 const cabRisco=document.getElementById("cabRisco")
 if(cabRisco)cabRisco.innerHTML=`Risco<br><b style="color:${corRisco}">${riscoTotal}</b>`
-
 const rodapeHas=document.getElementById("rodapeHas")
 if(rodapeHas)rodapeHas.innerHTML=`<b style="color:${corHas}">${totalHas}</b>`
 const rodapeDm=document.getElementById("rodapeDm")
@@ -110,8 +108,8 @@ const rodapePa=document.getElementById("rodapePa")
 if(rodapePa)rodapePa.innerHTML=`<b style="color:${corPa}">${totalPAAlterada}</b>`
 const rodapeRisco=document.getElementById("rodapeRisco")
 if(rodapeRisco)rodapeRisco.innerHTML=`<b style="color:${corRisco}">${riscoTotal}</b>`
-
-document.getElementById("totalPacientes").innerHTML=totalPacientes
+const totalPacientesCard=document.getElementById("totalPacientes")
+if(totalPacientesCard)totalPacientesCard.innerHTML=totalPacientes
 }
 
 /* ====================================================
