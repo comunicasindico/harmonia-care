@@ -58,12 +58,12 @@ const dataHoje=document.getElementById("dataInicio")?.value
 const turno=TURNO_ATUAL
 const {data:pacientes,error:e1}=await db
 .from("pacientes")
-.select("id,nome")
+.select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
 if(e1){console.error("Erro pacientes",e1);return}
 const {data:rotinas,error:e2}=await db
 .from("rotinas")
-.select("id,nome")
+.select("id,nome_completo")
 .eq("turno",turno)
 if(e2){console.error("Erro rotinas",e2);return}
 const {data:execucoes,error:e3}=await db
@@ -80,7 +80,7 @@ lista.push({
 id:exec?.id||`${p.id}_${r.id}`,
 idoso_id:p.id,
 rotina_id:r.id,
-paciente:p.nome,
+paciente:p.nome_completo,
 rotina:r.nome,
 status:exec?.status||"pendente"
 })
@@ -236,9 +236,7 @@ async function gerarRotinasDoDia(){
 if(!db)return
 if(ROTINAS_GERADAS)return
 ROTINAS_GERADAS=true
-
 const hoje=new Date().toISOString().slice(0,10)
-
 const {data:pacientes,error:e1}=await db
 .from("pacientes")
 .select("id")
@@ -251,14 +249,12 @@ return
 const {data:rotinas,error:e2}=await db
 .from("rotina_modelos")
 .select("id")
-
 if(e2){
 console.error(e2)
 return
 }
 if(!pacientes?.length)return
 if(!rotinas?.length)return
-
 for(const p of pacientes){
 for(const r of rotinas){
 const {data:existe,error:e3}=await db
@@ -268,7 +264,7 @@ const {data:existe,error:e3}=await db
 .eq("rotina_id",r.id)
 .eq("data",hoje)
 .limit(1)
-if(!existe || existe.length===0){
+if(!existe||existe.length===0){
 const {error:e4}=await db
 .from("rotinas_execucao")
 .insert({
@@ -278,5 +274,9 @@ data:hoje,
 status:"pendente"
 })
 if(e4){
-console.error("Erro insert rotina",e4)}}}}
+console.error("Erro insert rotina",e4)
+}
+}
+}
+}
 }
