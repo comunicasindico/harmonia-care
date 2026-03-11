@@ -70,62 +70,48 @@ html+=`<tr>
 })
 const tabela=document.getElementById("quadroClinico")
 if(tabela)tabela.innerHTML=html
-document.getElementById("rodapeHas").innerHTML="<b style='color:#e74c3c'>"+totalHas+"</b>"
-document.getElementById("rodapeDm").innerHTML="<b style='color:#f39c12'>"+totalDm+"</b>"
-document.getElementById("rodapeDemencia").innerHTML="<b style='color:#8e44ad'>"+totalDemencia+"</b>"
-document.getElementById("rodapeCardio").innerHTML="<b style='color:#c0392b'>"+totalCardio+"</b>"
-document.getElementById("rodapeAcamado").innerHTML="<b style='color:#34495e'>"+totalAcamado+"</b>"
-document.getElementById("rodapePa").innerHTML="<b style='color:#e67e22'>"+totalPAAlterada+"</b>"
-document.getElementById("rodapeRisco").innerHTML="<b style='color:#2c3e50'>"+(risco3+risco4+risco5)+"</b>"
-const resumo=document.getElementById("resumoClinico")
-if(resumo)resumo.innerHTML=
-"HAS "+totalHas+
-" | DM "+totalDm+
-" | DEMÊNCIA "+totalDemencia+
-" | CARDIO "+totalCardio+
-" | ACAMADO "+totalAcamado+
-" | PA ALTERADA "+totalPAAlterada+
-" | RISCO 1:"+risco1+
-" 2:"+risco2+
-" 3:"+risco3+
-" 4:"+risco4+
-" 5:"+risco5
+
+const riscoTotal=risco1+risco2+risco3+risco4+risco5
+
+const corHas="#e74c3c"
+const corDm="#f39c12"
+const corDemencia="#8e44ad"
+const corCardio="#c0392b"
+const corAcamado="#34495e"
+const corPa="#e67e22"
+const corRisco="#2c3e50"
+
+const cabHas=document.getElementById("cabHas")
+if(cabHas)cabHas.innerHTML=`HAS<br><b style="color:${corHas}">${totalHas}</b>`
+const cabDm=document.getElementById("cabDm")
+if(cabDm)cabDm.innerHTML=`DM<br><b style="color:${corDm}">${totalDm}</b>`
+const cabDemencia=document.getElementById("cabDemencia")
+if(cabDemencia)cabDemencia.innerHTML=`Demência<br><b style="color:${corDemencia}">${totalDemencia}</b>`
+const cabCardio=document.getElementById("cabCardio")
+if(cabCardio)cabCardio.innerHTML=`Cardio<br><b style="color:${corCardio}">${totalCardio}</b>`
+const cabAcamado=document.getElementById("cabAcamado")
+if(cabAcamado)cabAcamado.innerHTML=`Acamado<br><b style="color:${corAcamado}">${totalAcamado}</b>`
+const cabPa=document.getElementById("cabPa")
+if(cabPa)cabPa.innerHTML=`PA<br><b style="color:${corPa}">${totalPAAlterada}</b>`
+const cabRisco=document.getElementById("cabRisco")
+if(cabRisco)cabRisco.innerHTML=`Risco<br><b style="color:${corRisco}">${riscoTotal}</b>`
+
+const rodapeHas=document.getElementById("rodapeHas")
+if(rodapeHas)rodapeHas.innerHTML=`<b style="color:${corHas}">${totalHas}</b>`
+const rodapeDm=document.getElementById("rodapeDm")
+if(rodapeDm)rodapeDm.innerHTML=`<b style="color:${corDm}">${totalDm}</b>`
+const rodapeDemencia=document.getElementById("rodapeDemencia")
+if(rodapeDemencia)rodapeDemencia.innerHTML=`<b style="color:${corDemencia}">${totalDemencia}</b>`
+const rodapeCardio=document.getElementById("rodapeCardio")
+if(rodapeCardio)rodapeCardio.innerHTML=`<b style="color:${corCardio}">${totalCardio}</b>`
+const rodapeAcamado=document.getElementById("rodapeAcamado")
+if(rodapeAcamado)rodapeAcamado.innerHTML=`<b style="color:${corAcamado}">${totalAcamado}</b>`
+const rodapePa=document.getElementById("rodapePa")
+if(rodapePa)rodapePa.innerHTML=`<b style="color:${corPa}">${totalPAAlterada}</b>`
+const rodapeRisco=document.getElementById("rodapeRisco")
+if(rodapeRisco)rodapeRisco.innerHTML=`<b style="color:${corRisco}">${riscoTotal}</b>`
 
 document.getElementById("totalPacientes").innerHTML=totalPacientes
-document.getElementById("totalHas").innerHTML=totalHas
-document.getElementById("totalDm").innerHTML=totalDm
-document.getElementById("totalDemencia").innerHTML=totalDemencia
-const divClinico=document.getElementById("dadosClinicosPaciente")
-if(!divClinico)return
-if(pacienteSelecionado==="todos" || !pacienteAtual){
-divClinico.innerHTML=""
-return
-}
-divClinico.innerHTML=`<div class="box">
-<h3>Dados Clínicos do Paciente</h3>
-<div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
-<div style="display:flex;gap:10px">
-<button class="btn-primary" onclick="editarClinico('${pacienteAtual.id}')">Editar</button>
-<button class="btn-success" onclick="salvarClinico('${pacienteAtual.id}')">Salvar</button>
-</div>
-<div>
-<button class="btn-danger" onclick="excluirClinico('${pacienteAtual.id}')">Excluir</button>
-</div>
-</div>
-<table class="tabela-clinica-edicao">
-<tr><td><b>Paciente</b></td><td><b>${pacienteAtual.nome_completo}</b></td></tr>
-<tr><td><b>Idade</b></td><td><b>${calcularIdade(pacienteAtual.data_nascimento)}</b></td></tr>
-<tr><td><b>HAS</b></td><td>${MODO_EDICAO_CLINICO?`<select id="clin_has"><option value="true"${pacienteAtual.has?" selected":""}>Sim</option><option value="false"${!pacienteAtual.has?" selected":""}>Não</option></select>`:`<b>${pacienteAtual.has?"SIM":"NÃO"}</b>`}</td></tr>
-<tr><td><b>Diabetes</b></td><td>${MODO_EDICAO_CLINICO?`<select id="clin_dm"><option value="true"${pacienteAtual.dm?" selected":""}>Sim</option><option value="false"${!pacienteAtual.dm?" selected":""}>Não</option></select>`:`<b>${pacienteAtual.dm?"SIM":"NÃO"}</b>`}</td></tr>
-<tr><td><b>Demência</b></td><td>${MODO_EDICAO_CLINICO?`<select id="clin_da"><option value="true"${pacienteAtual.da?" selected":""}>Sim</option><option value="false"${!pacienteAtual.da?" selected":""}>Não</option></select>`:`<b>${pacienteAtual.da?"SIM":"NÃO"}</b>`}</td></tr>
-<tr><td><b>Cardiopatia</b></td><td>${MODO_EDICAO_CLINICO?`<select id="clin_cardio"><option value="true"${pacienteAtual.cardiopatia?" selected":""}>Sim</option><option value="false"${!pacienteAtual.cardiopatia?" selected":""}>Não</option></select>`:`<b>${pacienteAtual.cardiopatia?"SIM":"NÃO"}</b>`}</td></tr>
-<tr><td><b>Acamado</b></td><td>${MODO_EDICAO_CLINICO?`<select id="clin_acamado"><option value="true"${pacienteAtual.acamado?" selected":""}>Sim</option><option value="false"${!pacienteAtual.acamado?" selected":""}>Não</option></select>`:`<b>${pacienteAtual.acamado?"SIM":"NÃO"}</b>`}</td></tr>
-<tr><td><b>Pressão Arterial</b></td><td>${MODO_EDICAO_CLINICO?`<input id="clin_pa" value="${pacienteAtual.pressao_arterial??""}" placeholder="120/80" onblur="formatarPA(this);avaliarPA()">`:`<b>${pacienteAtual.pressao_arterial??"-"}</b>`}<span id="pa_status" style="margin-left:10px;font-weight:bold"></span></td></tr>
-<tr><td><b>Dieta Especial</b></td><td>${MODO_EDICAO_CLINICO?`<select id="clin_dieta"><option value="true"${pacienteAtual.dieta_especial?" selected":""}>Sim</option><option value="false"${!pacienteAtual.dieta_especial?" selected":""}>Não</option></select><input id="clin_dieta_texto" value="${pacienteAtual.dieta_texto??""}" placeholder="Ex: Hipossódica">`:`<b>${pacienteAtual.dieta_especial?"SIM":"NÃO"} ${pacienteAtual.dieta_texto??""}</b>`}</td></tr>
-<tr><td><b>Grau de Risco</b></td><td>${MODO_EDICAO_CLINICO?`<select id="clin_risco"><option value="1"${pacienteAtual.grau_risco==1?" selected":""}>1</option><option value="2"${pacienteAtual.grau_risco==2?" selected":""}>2</option><option value="3"${pacienteAtual.grau_risco==3?" selected":""}>3</option><option value="4"${pacienteAtual.grau_risco==4?" selected":""}>4</option><option value="5"${pacienteAtual.grau_risco==5?" selected":""}>5</option></select>`:`<b>${pacienteAtual.grau_risco??"-"}</b>`}</td></tr>
-<tr><td><b>Outras Comorbidades</b></td><td>${MODO_EDICAO_CLINICO?`<input id="clin_outros" value="${pacienteAtual.outras_comorbidades??""}" placeholder="Ex: Osteoporose">`:`<b>${pacienteAtual.outras_comorbidades??"-"}</b>`}</td></tr>
-</table>
-</div>`
 }
 
 /* ====================================================
