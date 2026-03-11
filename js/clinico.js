@@ -179,25 +179,17 @@ document.getElementById("dadosClinicosPaciente").innerHTML=html
 /* ====================================================
 EDITAR DADOS CLINICOS
 ==================================================== */
-async function editarClinico(pacienteId){
-
-const pressao=prompt("Pressão arterial:")
-const risco=prompt("Grau de risco:")
-const outras=prompt("Outras comorbidades:")
-
+async function editarClinico(id){
+const pa=document.getElementById("clin_pa")?.value
 await db
 .from("pacientes")
 .update({
-pressao_arterial:pressao,
-grau_risco:risco,
-outras_comorbidades:outras
+pressao_arterial:pa
 })
-.eq("id",pacienteId)
-
+.eq("id",id)
+alert("Dados atualizados")
 carregarClinico()
-
 }
-
 /* ====================================================
 EXCLUIR DADOS CLINICOS
 ==================================================== */
