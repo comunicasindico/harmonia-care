@@ -17,6 +17,31 @@ if(turno==="noite"&&btnNoite)btnNoite.classList.add("turno-ativo")
 if(typeof carregarRotinas==="function")carregarRotinas()
 }
 /* ====================================================
+020A – CARREGAR PACIENTES
+==================================================== */
+async function carregarPacientes(){
+const {data:pacientes,error}=await db
+.from("pacientes")
+.select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
+if(error){
+console.error("Erro pacientes",error)
+return
+}
+const select=document.getElementById("buscaPaciente")
+select.innerHTML=""
+const optTodos=document.createElement("option")
+optTodos.value="todos"
+optTodos.textContent="TODOS"
+select.appendChild(optTodos)
+pacientes.forEach(p=>{
+const opt=document.createElement("option")
+opt.value=p.id
+opt.textContent=p.nome_completo
+select.appendChild(opt)
+})
+}
+/* ====================================================
 021 – CARREGAR PACIENTES BUSCA
 ==================================================== */
 async function carregarPacientesBusca(){
@@ -93,7 +118,6 @@ renderizarRotinas(lista)
 /* ====================================================
 023 – RENDERIZAR ROTINAS
 ==================================================== */
-
 function renderizarRotinas(lista){
 
 const tbody=document.getElementById("rotinas")
@@ -160,7 +184,6 @@ tbody.innerHTML=html
 /* ====================================================
 024 – EXECUTAR ROTINA
 ==================================================== */
-
 async function executarRotina(pacienteId,rotinaId){
 
 if(!db)return
@@ -184,7 +207,6 @@ carregarRotinas()
 /* ====================================================
 025 – INDICADORES
 ==================================================== */
-
 function calcularIndicadores(lista){
 
 let executado=0
