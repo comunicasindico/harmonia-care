@@ -302,19 +302,23 @@ Pesquisar
 </div>
 </div>
 <!-- JS DO SISTEMA -->
+<script src="./js/globals.js?v=2"></script>
+<script src="./js/supabase.js?v=2"></script>
+<script src="./js/enfermagem.js?v=2"></script>
+<script src="./js/clinico.js?v=2"></script>
+<script src="./js/admin.js?v=2"></script>
+<script src="./js/pdf.js?v=2"></script>
+<script src="./js/app.js?v=2"></script>
 
-<!-- JS DO SISTEMA -->
-
-<script src="./js/globals.js"></script>
-<script src="./js/supabase.js"></script>
-<script src="./js/enfermagem.js"></script>
-<script src="./js/clinico.js"></script>
-<script src="./js/admin.js"></script>
-<script src="./js/pdf.js"></script>
-<script src="./js/app.js"></script>
+<script>
+window.addEventListener("pageshow",function(e){
+if(e.persisted){window.location.reload()}
+})
+</script>
 
 </body>
 </html>
+
 
 
 
