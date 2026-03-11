@@ -59,11 +59,16 @@ return
 }
 divClinico.innerHTML=`<div class="box">
 <h3>Dados Clínicos do Paciente</h3>
-<div style="margin-bottom:10px;display:flex;gap:10px">
+<div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+<div style="display:flex;gap:10px">
 <button class="btn-primary" onclick="editarClinico('${pacienteAtual.id}')">Editar</button>
+<button class="btn-success" onclick="salvarClinico('${pacienteAtual.id}')">Salvar</button>
+</div>
+<div>
 <button class="btn-danger" onclick="excluirClinico('${pacienteAtual.id}')">Excluir</button>
 </div>
-<table>
+</div>
+<table class="tabela-clinica-edicao">
 <tr><td><b>Paciente</b></td><td>${pacienteAtual.nome_completo}</td></tr>
 <tr><td><b>Idade</b></td><td>${calcularIdade(pacienteAtual.data_nascimento)}</td></tr>
 <tr><td><b>HAS</b></td><td><select id="clin_has" disabled><option value="true"${pacienteAtual.has?" selected":""}>Sim</option><option value="false"${!pacienteAtual.has?" selected":""}>Não</option></select></td></tr>
