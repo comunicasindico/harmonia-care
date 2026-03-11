@@ -169,7 +169,7 @@ html+=`
 <tr>
 <td>
 <span class="nome-paciente">${p.nome || ""}</span>
-<button class="btn-todos" onclick="executarTodos('${pid}')">TODOS</button>
+<button class="btn-todos" onclick="executarTodos('${pid}')">Rotinas OK</button>
 </td>
 <td>${p.rotinas.length}</td>
 <td class="rotinas-linha">${rotinasHTML}</td>
