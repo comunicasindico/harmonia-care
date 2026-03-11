@@ -36,6 +36,7 @@ if(painelSalvo==="clinico"){abrirClinico()}
 else if(painelSalvo==="admin"){abrirAdmin()}
 else{abrirEnfermagem()}
 }
+
 /* ====================================================
 012 – LOGOUT
 ==================================================== */
