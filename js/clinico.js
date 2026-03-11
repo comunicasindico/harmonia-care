@@ -70,6 +70,13 @@ html+=`<tr>
 })
 const tabela=document.getElementById("quadroClinico")
 if(tabela)tabela.innerHTML=html
+document.getElementById("rodapeHas").innerHTML="<b style='color:#e74c3c'>"+totalHas+"</b>"
+document.getElementById("rodapeDm").innerHTML="<b style='color:#f39c12'>"+totalDm+"</b>"
+document.getElementById("rodapeDemencia").innerHTML="<b style='color:#8e44ad'>"+totalDemencia+"</b>"
+document.getElementById("rodapeCardio").innerHTML="<b style='color:#c0392b'>"+totalCardio+"</b>"
+document.getElementById("rodapeAcamado").innerHTML="<b style='color:#34495e'>"+totalAcamado+"</b>"
+document.getElementById("rodapePa").innerHTML="<b style='color:#e67e22'>"+totalPAAlterada+"</b>"
+document.getElementById("rodapeRisco").innerHTML="<b style='color:#2c3e50'>"+(risco3+risco4+risco5)+"</b>"
 const resumo=document.getElementById("resumoClinico")
 if(resumo)resumo.innerHTML=
 "HAS "+totalHas+
