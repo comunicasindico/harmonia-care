@@ -74,7 +74,7 @@ divClinico.innerHTML=`<div class="box">
 <tr>
 <td><b>Pressão Arterial</b></td>
 <td>
-<input id="clin_pa" value="${pacienteAtual.pressao_arterial??""}" placeholder="120/80" style="padding:6px;border-radius:6px;border:1px solid #ccc;width:100px" onblur="formatarPA(this);avaliarPA()">
+<input id="clin_pa" disabled value="${pacienteAtual.pressao_arterial??""}" placeholder="120/80" style="padding:6px;border-radius:6px;border:1px solid #ccc;width:100px" onblur="formatarPA(this);avaliarPA()">
 <span id="pa_status" style="margin-left:10px;font-weight:bold"></span>
 </td>
 </tr>
@@ -103,16 +103,16 @@ return idade
 /* ====================================================
 032 – EDITAR DADOS CLINICOS
 ==================================================== */
-async function editarClinico(id){
-const pa=document.getElementById("clin_pa")?.value
-await db
-.from("pacientes")
-.update({pressao_arterial:pa})
-.eq("id",id)
-alert("Dados atualizados")
-carregarClinico()
+function editarClinico(id){
+const campo=document.getElementById("clin_pa")
+if(campo)campo.removeAttribute("disabled")
+const btnSalvar=document.createElement("button")
+btnSalvar.className="btn-primary"
+btnSalvar.innerText="Salvar"
+btnSalvar.onclick=function(){salvarClinico(id)}
+const box=document.querySelector("#dadosClinicosPaciente .box div")
+if(box)box.appendChild(btnSalvar)
 }
-
 /* ====================================================
 033 – EXCLUIR DADOS CLINICOS
 ==================================================== */
