@@ -215,6 +215,48 @@ ${rotinasHTML}
 `
 
 })
+/* ============================================
+LINHA FINAL – TODOS OS PACIENTES
+============================================ */
+if(lista.length>0){
+
+const rotinasUnicas={}
+lista.forEach(r=>{
+rotinasUnicas[r.rotina_id]=r.rotina
+})
+
+let rotinasHTML=""
+
+Object.keys(rotinasUnicas).forEach(rotinaId=>{
+
+rotinasHTML+=`
+<button
+class="btn-rotina"
+onclick="executarRotinaTodos('${rotinaId}')">
+${rotinasUnicas[rotinaId]}
+</button>
+`
+
+})
+
+html+=`
+<tr style="background:#f0fdf4;font-weight:bold">
+
+<td>
+Todos os Pacientes
+</td>
+
+<td>
+—
+</td>
+
+<td class="rotinas-linha">
+${rotinasHTML}
+</td>
+
+</tr>
+`
+}
 
 tbody.innerHTML=html
 
@@ -289,6 +331,34 @@ horario_executado:new Date()
 }
 }
 carregarRotinas()
+}
+/* ====================================================
+EXECUTAR ROTINA PARA TODOS OS PACIENTES
+==================================================== */
+async function executarRotinaTodos(rotinaId){
+
+if(!db)return
+
+const dataHoje=document.getElementById("dataInicio")?.value
+
+const rotinas=ROTINAS_CACHE.filter(r=>r.rotina_id===rotinaId)
+
+for(const r of rotinas){
+
+await db
+.from("rotinas_execucao")
+.update({
+status:"executado",
+horario_executado:new Date()
+})
+.eq("idoso_id",r.idoso_id)
+.eq("rotina_id",r.rotina_id)
+.eq("data",dataHoje)
+
+}
+
+carregarRotinas()
+
 }
 /* ====================================================
 027 – GERAR ROTINAS
