@@ -240,6 +240,7 @@ ${MODO_EDICAO_CLINICO ?
 :`<span style="font-size:11px;max-width:160px;display:inline-block;white-space:normal;line-height:1.2">
 ${p.outras_comorbidades??"Não tem"}
 </span>`
+}
 </td>
 
 <td class="acoesClinico" style="${MODO_EDICAO_CLINICO ? '' : 'display:none'}">
