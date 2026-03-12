@@ -237,7 +237,9 @@ return `<span style="color:#16a34a;font-weight:bold">🟢 ${p.grau_risco}</span>
 <td>
 ${MODO_EDICAO_CLINICO ?
 `<input class="campo-clinico clin_outros" value="${p.outras_comorbidades??""}">`
-:(p.outras_comorbidades??"Não tem")}
+:`<span style="font-size:11px;max-width:160px;display:inline-block;white-space:normal;line-height:1.2">
+${p.outras_comorbidades??"Não tem"}
+</span>`
 </td>
 
 </tr>
