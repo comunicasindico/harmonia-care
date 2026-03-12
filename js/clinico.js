@@ -42,19 +42,81 @@ if(p.grau_risco==2)risco2++
 if(p.grau_risco==3)risco3++
 if(p.grau_risco==4)risco4++
 if(p.grau_risco==5)risco5++
-html+=`<tr>
+
+html+=`<tr data-id="${p.id}">
+
 <td>${p.nome_completo??""}</td>
+
 <td>${calcularIdade(p.data_nascimento)}</td>
-<td>${p.has?"&#10004;":""}</td>
-<td>${p.dm?"✔":""}</td>
-<td>${p.da?"✔":""}</td>
-<td>${p.cardiopatia?"✔":""}</td>
-<td>${p.acamado?"✔":""}</td>
-<td>${p.pressao_arterial??""}</td>
-<td>${p.dieta_especial?"✔":""}</td>
-<td>${p.grau_risco??""}</td>
-<td>${p.outras_comorbidades??""}</td>
+
+<td>
+<select class="campo-clinico clin_has" disabled>
+<option value="true"${p.has?" selected":""}>✔</option>
+<option value="false"${!p.has?" selected":""}></option>
+</select>
+</td>
+
+<td>
+<select class="campo-clinico clin_dm" disabled>
+<option value="true"${p.dm?" selected":""}>✔</option>
+<option value="false"${!p.dm?" selected":""}></option>
+</select>
+</td>
+
+<td>
+<select class="campo-clinico clin_da" disabled>
+<option value="true"${p.da?" selected":""}>✔</option>
+<option value="false"${!p.da?" selected":""}></option>
+</select>
+</td>
+
+<td>
+<select class="campo-clinico clin_cardio" disabled>
+<option value="true"${p.cardiopatia?" selected":""}>✔</option>
+<option value="false"${!p.cardiopatia?" selected":""}></option>
+</select>
+</td>
+
+<td>
+<select class="campo-clinico clin_acamado" disabled>
+<option value="true"${p.acamado?" selected":""}>✔</option>
+<option value="false"${!p.acamado?" selected":""}></option>
+</select>
+</td>
+
+<td>
+<input class="campo-clinico clin_pa"
+value="${p.pressao_arterial??""}"
+placeholder="120/80"
+disabled>
+</td>
+
+<td>
+<input class="campo-clinico clin_dieta"
+value="${p.dieta_texto??""}"
+placeholder="Dieta especial"
+disabled>
+</td>
+
+<td>
+<select class="campo-clinico clin_risco" disabled>
+<option value="1"${p.grau_risco==1?" selected":""}>1</option>
+<option value="2"${p.grau_risco==2?" selected":""}>2</option>
+<option value="3"${p.grau_risco==3?" selected":""}>3</option>
+<option value="4"${p.grau_risco==4?" selected":""}>4</option>
+<option value="5"${p.grau_risco==5?" selected":""}>5</option>
+</select>
+</td>
+
+<td>
+<input class="campo-clinico clin_outros"
+value="${p.outras_comorbidades??""}"
+placeholder="Outras"
+disabled>
+</td>
+
 </tr>`
+
 })
 const tabela=document.getElementById("quadroClinico")
 if(tabela)tabela.innerHTML=html
@@ -269,4 +331,54 @@ let html=`<div class="box">
 <b>Grau de risco:</b> ${data.grau_risco ?? ""}
 </div>`
 document.getElementById("dadosClinicosPaciente").innerHTML=html
+}
+/* ====================================================
+038 – EDITAR DADOS CLINICOS GLOBAL
+==================================================== */
+function editarClinicoGlobal(){
+document.querySelectorAll("#quadroClinico select").forEach(el=>{
+el.removeAttribute("disabled")
+})
+document.querySelectorAll("#quadroClinico input").forEach(el=>{
+el.removeAttribute("disabled")
+})
+
+}
+/* ====================================================
+039 – SALVAR CLINICOS GLOBAL
+==================================================== */
+async function salvarClinicoGlobal(){
+
+const linhas=document.querySelectorAll("#quadroClinico tr")
+
+for(const linha of linhas){
+
+const id=linha.dataset.id
+if(!id)continue
+
+const dados={
+
+has:linha.querySelector(".clin_has").value==="true",
+dm:linha.querySelector(".clin_dm").value==="true",
+da:linha.querySelector(".clin_da").value==="true",
+cardiopatia:linha.querySelector(".clin_cardio").value==="true",
+acamado:linha.querySelector(".clin_acamado").value==="true",
+pressao_arterial:linha.querySelector(".clin_pa").value,
+dieta_texto:linha.querySelector(".clin_dieta").value,
+grau_risco:parseInt(linha.querySelector(".clin_risco").value),
+outras_comorbidades:linha.querySelector(".clin_outros").value
+
+}
+
+await db
+.from("pacientes")
+.update(dados)
+.eq("id",id)
+
+}
+
+alert("Dados clínicos atualizados")
+
+carregarClinico()
+
 }
