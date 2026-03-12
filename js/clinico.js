@@ -165,7 +165,35 @@ return p.pressao_arterial
 <td>
 ${MODO_EDICAO_CLINICO ?
 `<input class="campo-clinico clin_dieta" value="${p.dieta_texto??""}" placeholder="Dieta especial">`
-:(p.dieta_texto??"- Sem dieta especial")}
+:
+(()=>{
+if(!p.dieta_especial) return "<span style='color:#6b7280'>- Sem dieta especial</span>"
+
+let d=(p.dieta_texto??"").toLowerCase()
+
+/* CORES AUTOMÁTICAS */
+
+if(d.includes("hipossod"))
+return "<span style='color:#2563eb;font-weight:bold'>🧂 Hipossódica</span>"
+
+if(d.includes("diab"))
+return "<span style='color:#9333ea;font-weight:bold'>🍬 Diabética</span>"
+
+if(d.includes("past"))
+return "<span style='color:#ea580c;font-weight:bold'>🥣 Pastosa</span>"
+
+if(d.includes("veget"))
+return "<span style='color:#16a34a;font-weight:bold'>🥗 Vegetariana</span>"
+
+if(d.includes("liquid"))
+return "<span style='color:#0ea5e9;font-weight:bold'>🥤 Líquida</span>"
+
+/* padrão */
+
+return `<span style="color:#f59e0b;font-weight:bold">🍽️ ${p.dieta_texto}</span>`
+
+})()
+}
 </td>
 
 <td>
@@ -198,14 +226,51 @@ ${MODO_EDICAO_CLINICO ?
 </tr>
 `
 })
-
 tabela.innerHTML=html
 
+/* ===============================
+031 PAINEL NUTRICIONAL
+=============================== */
+let totalDietas=0
+let hipossodica=0
+let diabetica=0
+let pastosa=0
+let vegetariana=0
+let liquida=0
+
+data.forEach(p=>{
+
+if(!p.dieta_especial) return
+
+totalDietas++
+
+let d=(p.dieta_texto??"").toLowerCase()
+
+if(d.includes("hipossod")) hipossodica++
+else if(d.includes("diab")) diabetica++
+else if(d.includes("past")) pastosa++
+else if(d.includes("veget")) vegetariana++
+else if(d.includes("liquid")) liquida++
+
+})
+
+const elTotal=document.getElementById("dietaTotal")
+const elHip=document.getElementById("dietaHipossodica")
+const elDia=document.getElementById("dietaDiabetica")
+const elPas=document.getElementById("dietaPastosa")
+const elVeg=document.getElementById("dietaVegetariana")
+const elLiq=document.getElementById("dietaLiquida")
+
+if(elTotal) elTotal.innerText=`🍽️ ${totalDietas}`
+if(elHip) elHip.innerText=`🧂 ${hipossodica}`
+if(elDia) elDia.innerText=`🍬 ${diabetica}`
+if(elPas) elPas.innerText=`🥣 ${pastosa}`
+if(elVeg) elVeg.innerText=`🥗 ${vegetariana}`
+if(elLiq) elLiq.innerText=`🥤 ${liquida}`
 
 /* ====================================================
-031 PAINEL DE RISCO INSTITUCIONAL
+032 PAINEL DE RISCO INSTITUCIONAL
 ==================================================== */
-
 let alto=0
 let medio=0
 let moderado=0
@@ -231,7 +296,7 @@ if(r4) r4.innerText=baixo
 }
 
 /* ===============================
-032 INDICADORES
+033 INDICADORES
 =============================== */
 const riscoTotal=risco1+risco2+risco3+risco4+risco5
 
@@ -266,7 +331,7 @@ if(totalPacientesCard) totalPacientesCard.innerHTML=totalPacientes
 
 
 /* ====================================================
-033 – CALCULAR IDADE
+034 – CALCULAR IDADE
 ==================================================== */
 function calcularIdade(data){
 
@@ -287,22 +352,20 @@ return idade
 }
 
 /* ====================================================
-034 – EDITAR CLINICO GLOBAL
+035 – EDITAR CLINICO GLOBAL
 ==================================================== */
 function editarClinicoGlobal(){
 
-document.querySelectorAll("#quadroClinico select").forEach(el=>{
-el.removeAttribute("disabled")
-})
+/* ativa modo edição */
+MODO_EDICAO_CLINICO = true
 
-document.querySelectorAll("#quadroClinico input").forEach(el=>{
-el.removeAttribute("disabled")
-})
+/* recarrega tabela clínica */
+carregarClinico()
 
 }
 
 /* ====================================================
-035 – SALVAR CLINICO GLOBAL
+036 – SALVAR CLINICO GLOBAL
 ==================================================== */
 async function salvarClinicoGlobal(){
 
@@ -321,6 +384,7 @@ da:linha.querySelector(".clin_da").value==="true",
 cardiopatia:linha.querySelector(".clin_cardio").value==="true",
 acamado:linha.querySelector(".clin_acamado").value==="true",
 pressao_arterial:linha.querySelector(".clin_pa").value,
+dieta_especial:linha.querySelector(".clin_dieta").value.trim()!=="" ,
 dieta_texto:linha.querySelector(".clin_dieta").value,
 grau_risco:parseInt(linha.querySelector(".clin_risco").value),
 outras_comorbidades:linha.querySelector(".clin_outros").value
@@ -333,14 +397,17 @@ await db
 .eq("id",id)
 
 }
-
 alert("Dados clínicos atualizados")
 
-carregarClinico()
+/* sai do modo edição */
+MODO_EDICAO_CLINICO=false
+
+/* recarrega tabela */
+await carregarClinico()
 
 }
 /* ====================================================
-036 – CARREGAR DADOS CLÍNICOS DO PACIENTE (ENFERMAGEM)
+037 – CARREGAR DADOS CLÍNICOS DO PACIENTE (ENFERMAGEM)
 ==================================================== */
 async function carregarDadosClinicosPaciente(pacienteId){
 
