@@ -45,7 +45,7 @@ if(p.grau_risco==5)risco5++
 html+=`<tr>
 <td>${p.nome_completo??""}</td>
 <td>${calcularIdade(p.data_nascimento)}</td>
-<td>${p.has?"✔":""}</td>
+<td>${p.has?"&#10004;":""}</td>
 <td>${p.dm?"✔":""}</td>
 <td>${p.da?"✔":""}</td>
 <td>${p.cardiopatia?"✔":""}</td>
