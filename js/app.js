@@ -27,6 +27,7 @@ await iniciarSistema()
 async function iniciarSistema(){
 while(!db){await new Promise(r=>setTimeout(r,50))}
 definirDataHoje()
+if(typeof carregarEmpresa==="function"){carregarEmpresa()}
 if(typeof carregarPacientesBusca==="function"){await carregarPacientesBusca()}
 if(typeof gerarRotinasDoDia==="function"){await gerarRotinasDoDia()}
 if(typeof carregarRotinas==="function"){await carregarRotinas()}
