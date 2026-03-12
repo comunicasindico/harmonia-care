@@ -449,3 +449,20 @@ await carregarClinico()
 }
 
 }
+/* ====================================================
+029 – AO SELECIONAR PACIENTE
+==================================================== */
+async function aoSelecionarPaciente(){
+
+const paciente=document.getElementById("buscaPaciente")?.value
+
+if(typeof carregarRotinas==="function"){
+await carregarRotinas()
+}
+
+/* mostrar clínico individual */
+if(typeof carregarDadosClinicosPaciente==="function"){
+await carregarDadosClinicosPaciente(paciente)
+}
+
+}
