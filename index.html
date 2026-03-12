@@ -303,11 +303,14 @@ Pesquisar
 <script src="./js/app.js?v=3"></script>
 
 <script>
-window.addEventListener("pageshow",function(e){
-if(e.persisted){window.location.reload()}
+window.addEventListener("load",()=>{
+if(!window.db){
+setTimeout(()=>location.reload(),300)
+}
 })
 </script>
 
 </body>
 </html>
+
 
