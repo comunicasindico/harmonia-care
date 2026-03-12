@@ -382,16 +382,11 @@ carregarClinico()
 033 – SALVAR CLINICO GLOBAL
 ==================================================== */
 async function salvarClinicoGlobal(){
-
 const linhas=document.querySelectorAll("#quadroClinico tr")
-
 for(const linha of linhas){
-
 const id=linha.dataset.id
 if(!id)continue
-
 const dados={
-
 has:linha.querySelector(".clin_has").value==="true",
 dm:linha.querySelector(".clin_dm").value==="true",
 da:linha.querySelector(".clin_da").value==="true",
@@ -399,26 +394,20 @@ cardiopatia:linha.querySelector(".clin_cardio").value==="true",
 acamado:linha.querySelector(".clin_acamado").value==="true",
 pressao_arterial:linha.querySelector(".clin_pa").value,
 dieta_texto:linha.querySelector(".clin_dieta").value,
-dieta_especial:linha.querySelector(".clin_dieta").value!=""
+dieta_especial:linha.querySelector(".clin_dieta").value!="",
 grau_risco:parseInt(linha.querySelector(".clin_risco").value),
 outras_comorbidades:linha.querySelector(".clin_outros").value
-
 }
-
 await db
 .from("pacientes")
 .update(dados)
 .eq("id",id)
-
 }
 alert("Dados clínicos atualizados")
-
 /* sai do modo edição */
 MODO_EDICAO_CLINICO=false
-
 /* recarrega tabela */
 await carregarClinico()
-
 }
 /* ====================================================
 034 – CARREGAR DADOS CLÍNICOS DO PACIENTE (ENFERMAGEM)
