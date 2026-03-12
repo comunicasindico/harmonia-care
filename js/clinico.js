@@ -164,7 +164,14 @@ return p.pressao_arterial
 
 <td>
 ${MODO_EDICAO_CLINICO ?
-`<input class="campo-clinico clin_dieta" value="${p.dieta_texto??""}" placeholder="Dieta especial">`
+`<select class="campo-clinico clin_dieta">
+<option value="">Não</option>
+<option value="Hipossódica"${p.dieta_texto=="🧂Hipossódica"?" selected":""}>Hipossódica</option>
+<option value="Diabética"${p.dieta_texto=="🍬Diabética"?" selected":""}>Diabética</option>
+<option value="Pastosa"${p.dieta_texto=="🥣Pastosa"?" selected":""}>Pastosa</option>
+<option value="Vegetariana"${p.dieta_texto=="🥗Vegetariana"?" selected":""}>Vegetariana</option>
+<option value="Líquida"${p.dieta_texto=="🥤Líquida"?" selected":""}>Líquida</option>
+</select>`
 :
 (()=>{
 if(!p.dieta_especial) return "<span style='color:#6b7280'>- Sem dieta especial</span>"
@@ -381,8 +388,8 @@ da:linha.querySelector(".clin_da").value==="true",
 cardiopatia:linha.querySelector(".clin_cardio").value==="true",
 acamado:linha.querySelector(".clin_acamado").value==="true",
 pressao_arterial:linha.querySelector(".clin_pa").value,
-dieta_especial:linha.querySelector(".clin_dieta").value.trim()!=="" ,
 dieta_texto:linha.querySelector(".clin_dieta").value,
+dieta_especial:linha.querySelector(".clin_dieta").value!=""
 grau_risco:parseInt(linha.querySelector(".clin_risco").value),
 outras_comorbidades:linha.querySelector(".clin_outros").value
 
