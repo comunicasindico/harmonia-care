@@ -45,29 +45,47 @@ select.appendChild(opt)
 021 – CARREGAR PACIENTES BUSCA
 ==================================================== */
 async function carregarPacientesBusca(){
-if(!db)return
+
+if(!db){
+console.warn("Supabase ainda não carregado")
+return
+}
+
 const select=document.getElementById("buscaPaciente")
 if(!select)return
+
 const {data,error}=await db
 .from("pacientes")
 .select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
 .order("nome_completo",{ascending:true})
+
 if(error){
 console.error("Erro pacientes",error)
 return
 }
+
 let html=`<option value="todos">TODOS</option>`
+
 data?.forEach(p=>{
 html+=`<option value="${p.id}">${p.nome_completo}</option>`
 })
+
 select.innerHTML=html
 select.value="todos"
+
+/* carregar dados depois do select pronto */
+
+if(typeof carregarRotinas==="function"){
 await carregarRotinas()
+}
+
+if(typeof carregarClinico==="function"){
 await carregarClinico()
 }
 
+}
 /* ====================================================
 022 – CARREGAR ROTINAS
 ==================================================== */
