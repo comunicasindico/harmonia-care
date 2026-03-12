@@ -142,7 +142,21 @@ Gerar PDF
 <button onclick="gerarPDFPaciente()" class="btn-primary">
 PDF do Paciente
 </button>
+<div style="display:flex;gap:8px;margin-left:10px">
 
+<button onclick="editarClinicoGlobal()" class="btn-secondary">
+Editar Clínico
+</button>
+
+<button onclick="salvarClinicoGlobal()" class="btn-success">
+Salvar
+</button>
+
+<button onclick="excluirClinicoSelecionado()" class="btn-danger">
+Excluir
+</button>
+
+</div>
 </div>
 
 <div style="display:flex;gap:10px;font-weight:bold">
@@ -318,6 +332,7 @@ if(e.persisted){window.location.reload()}
 
 </body>
 </html>
+
 
 
 
