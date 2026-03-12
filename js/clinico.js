@@ -242,11 +242,9 @@ ${p.outras_comorbidades??"Não tem"}
 </span>`
 </td>
 
-<td class="acoesClinico" style="${MODO_EDICAO_CLINICO?'':'display:none'}">
+<td class="acoesClinico" style="${MODO_EDICAO_CLINICO ? '' : 'display:none'}">
 <button class="btn-danger" style="font-size:10px;padding:3px 6px"
-onclick="excluirPaciente('${p.id}','${p.nome_completo}')">
-Excluir
-</button>
+onclick="excluirPaciente('${p.id}', \`${p.nome_completo}\`)">Excluir</button>
 </td>
 
 </tr>
