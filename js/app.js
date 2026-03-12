@@ -91,11 +91,16 @@ if(alvo){alvo.style.display="block"}
 function abrirEnfermagem(){
 abrirPainel("painelEnfermagem")
 localStorage.setItem("painelAtual","enfermagem")
-const acoes=document.getElementById("acoesClinico")
-if(acoes)acoes.style.display="none"
-if(typeof carregarRotinas==="function"){carregarRotinas()}
-if(typeof carregarClinico==="function"){carregarClinico()}
+if(typeof carregarRotinas==="function"){
+carregarRotinas()
 }
+/* carregar clínico do paciente selecionado */
+const paciente=document.getElementById("buscaPaciente")?.value
+if(typeof carregarDadosClinicosPaciente==="function"){
+carregarDadosClinicosPaciente(paciente)
+}
+}
+
 function abrirClinico(){
 abrirPainel("painelClinico")
 localStorage.setItem("painelAtual","clinico")
