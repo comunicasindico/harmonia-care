@@ -47,13 +47,7 @@ let risco3=0
 let risco4=0
 let risco5=0
 
-let pacienteAtual=null
-
 data.forEach(p=>{
-
-if(pacienteSelecionado!=="todos" && pacienteSelecionado===p.id){
-pacienteAtual=p
-}
 
 totalPacientes++
 
@@ -82,74 +76,123 @@ html+=`
 
 <tr data-id="${p.id}">
 
-<td>${p.nome_completo ?? ""}</td>
+<td>
+${(()=>{
+let alerta=""
+
+if(p.grau_risco>=4) alerta+="🔴 "
+if(p.acamado) alerta+="⚫ "
+if(p.da) alerta+="🧠 "
+
+return alerta+(p.nome_completo??"")
+})()}
+</td>
 
 <td>${calcularIdade(p.data_nascimento)}</td>
 
 <td>
-<select class="campo-clinico clin_has" disabled>
-<option value="true" ${p.has?"selected":""}>✔</option>
-<option value="false" ${!p.has?"selected":""}></option>
-</select>
+${MODO_EDICAO_CLINICO ?
+`<select class="campo-clinico clin_has">
+<option value="true"${p.has?" selected":""}>✔</option>
+<option value="false"${!p.has?" selected":""}></option>
+</select>`
+:(p.has?"✔":"")}
 </td>
 
 <td>
-<select class="campo-clinico clin_dm" disabled>
-<option value="true" ${p.dm?"selected":""}>✔</option>
-<option value="false" ${!p.dm?"selected":""}></option>
-</select>
+${MODO_EDICAO_CLINICO ?
+`<select class="campo-clinico clin_dm">
+<option value="true"${p.dm?" selected":""}>✔</option>
+<option value="false"${!p.dm?" selected":""}></option>
+</select>`
+:(p.dm?"✔":"")}
 </td>
 
 <td>
-<select class="campo-clinico clin_da" disabled>
-<option value="true" ${p.da?"selected":""}>✔</option>
-<option value="false" ${!p.da?"selected":""}></option>
-</select>
+${MODO_EDICAO_CLINICO ?
+`<select class="campo-clinico clin_da">
+<option value="true"${p.da?" selected":""}>✔</option>
+<option value="false"${!p.da?" selected":""}></option>
+</select>`
+:(p.da?"✔":"")}
 </td>
 
 <td>
-<select class="campo-clinico clin_cardio" disabled>
-<option value="true" ${p.cardiopatia?"selected":""}>✔</option>
-<option value="false" ${!p.cardiopatia?"selected":""}></option>
-</select>
+${MODO_EDICAO_CLINICO ?
+`<select class="campo-clinico clin_cardio">
+<option value="true"${p.cardiopatia?" selected":""}>✔</option>
+<option value="false"${!p.cardiopatia?" selected":""}></option>
+</select>`
+:(p.cardiopatia?"✔":"")}
 </td>
 
 <td>
-<select class="campo-clinico clin_acamado" disabled>
-<option value="true" ${p.acamado?"selected":""}>✔</option>
-<option value="false" ${!p.acamado?"selected":""}></option>
-</select>
+${MODO_EDICAO_CLINICO ?
+`<select class="campo-clinico clin_acamado">
+<option value="true"${p.acamado?" selected":""}>✔</option>
+<option value="false"${!p.acamado?" selected":""}></option>
+</select>`
+:(p.acamado?"✔":"")}
 </td>
 
 <td>
-<input class="campo-clinico clin_pa"
-value="${p.pressao_arterial ?? ""}"
-placeholder="120/80"
-disabled>
+${MODO_EDICAO_CLINICO ?
+`<input class="campo-clinico clin_pa" value="${p.pressao_arterial??""}" placeholder="120/80">`
+:
+(()=>{
+if(!p.pressao_arterial) return ""
+
+let pa=p.pressao_arterial.split("/")
+if(pa.length!==2) return p.pressao_arterial
+
+let sist=parseInt(pa[0])
+let diast=parseInt(pa[1])
+
+if(sist<=129 && diast<=85)
+return `<span style="color:#16a34a;font-weight:bold">🟢 ${p.pressao_arterial}</span>`
+
+if((sist>=130 && sist<=139)||(diast>=86 && diast<=89))
+return `<span style="color:#ca8a04;font-weight:bold">🟡 ${p.pressao_arterial}</span>`
+
+if(sist>=140 || diast>=90)
+return `<span style="color:#dc2626;font-weight:bold">🔴 ${p.pressao_arterial}</span>`
+
+return p.pressao_arterial
+})()
+}
 </td>
 
 <td>
-<input class="campo-clinico clin_dieta"
-value="${p.dieta_texto ?? ""}"
-placeholder="Dieta especial"
-disabled>
+${MODO_EDICAO_CLINICO ?
+`<input class="campo-clinico clin_dieta" value="${p.dieta_texto??""}" placeholder="Dieta especial">`
+:(p.dieta_texto??"- Sem dieta especial")}
 </td>
 
 <td>
-<select class="campo-clinico clin_risco" disabled>
-<option value="1" ${p.grau_risco==1?"selected":""}>1</option>
-<option value="2" ${p.grau_risco==2?"selected":""}>2</option>
-<option value="3" ${p.grau_risco==3?"selected":""}>3</option>
-<option value="4" ${p.grau_risco==4?"selected":""}>4</option>
-<option value="5" ${p.grau_risco==5?"selected":""}>5</option>
-</select>
+${MODO_EDICAO_CLINICO ?
+`<select class="campo-clinico clin_risco">
+<option value="1"${p.grau_risco==1?" selected":""}>1</option>
+<option value="2"${p.grau_risco==2?" selected":""}>2</option>
+<option value="3"${p.grau_risco==3?" selected":""}>3</option>
+<option value="4"${p.grau_risco==4?" selected":""}>4</option>
+<option value="5"${p.grau_risco==5?" selected":""}>5</option>
+</select>`
+:
+(()=>{
+if(!p.grau_risco) return ""
+
+if(p.grau_risco==5) return `<span style="color:#dc2626;font-weight:bold">🔴 ${p.grau_risco}</span>`
+if(p.grau_risco==4) return `<span style="color:#ea580c;font-weight:bold">🟠 ${p.grau_risco}</span>`
+if(p.grau_risco==3) return `<span style="color:#ca8a04;font-weight:bold">🟡 ${p.grau_risco}</span>`
+return `<span style="color:#16a34a;font-weight:bold">🟢 ${p.grau_risco}</span>`
+})()
+}
 </td>
 
 <td>
-<input class="campo-clinico clin_outros"
-value="${p.outras_comorbidades ?? ""}"
-placeholder="Outras"
-disabled>
+${MODO_EDICAO_CLINICO ?
+`<input class="campo-clinico clin_outros" value="${p.outras_comorbidades??""}">`
+:(p.outras_comorbidades??"Não tem")}
 </td>
 
 </tr>
@@ -158,8 +201,37 @@ disabled>
 
 tabela.innerHTML=html
 
+
+/* ====================================================
+031 PAINEL DE RISCO INSTITUCIONAL
+==================================================== */
+
+let alto=0
+let medio=0
+let moderado=0
+let baixo=0
+
+data.forEach(p=>{
+if(p.grau_risco==5) alto++
+else if(p.grau_risco==4) medio++
+else if(p.grau_risco==3) moderado++
+else if(p.grau_risco<=2) baixo++
+})
+
+const r1=document.getElementById("riscoAlto")
+const r2=document.getElementById("riscoMedio")
+const r3=document.getElementById("riscoModerado")
+const r4=document.getElementById("riscoBaixo")
+
+if(r1) r1.innerText=alto
+if(r2) r2.innerText=medio
+if(r3) r3.innerText=moderado
+if(r4) r4.innerText=baixo
+
+}
+
 /* ===============================
-INDICADORES
+032 INDICADORES
 =============================== */
 const riscoTotal=risco1+risco2+risco3+risco4+risco5
 
@@ -192,8 +264,9 @@ if(totalPacientesCard) totalPacientesCard.innerHTML=totalPacientes
 
 }
 
+
 /* ====================================================
-031 – CALCULAR IDADE
+033 – CALCULAR IDADE
 ==================================================== */
 function calcularIdade(data){
 
@@ -214,7 +287,7 @@ return idade
 }
 
 /* ====================================================
-038 – EDITAR CLINICO GLOBAL
+034 – EDITAR CLINICO GLOBAL
 ==================================================== */
 function editarClinicoGlobal(){
 
@@ -229,7 +302,7 @@ el.removeAttribute("disabled")
 }
 
 /* ====================================================
-039 – SALVAR CLINICO GLOBAL
+035 – SALVAR CLINICO GLOBAL
 ==================================================== */
 async function salvarClinicoGlobal(){
 
@@ -267,7 +340,7 @@ carregarClinico()
 
 }
 /* ====================================================
-040 – CARREGAR DADOS CLÍNICOS DO PACIENTE (ENFERMAGEM)
+036 – CARREGAR DADOS CLÍNICOS DO PACIENTE (ENFERMAGEM)
 ==================================================== */
 async function carregarDadosClinicosPaciente(pacienteId){
 
