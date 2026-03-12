@@ -1,7 +1,6 @@
 /* ====================================================
 030 – CARREGAR CLINICO
 ==================================================== */
-
 async function carregarClinico(){
 
 const selectPaciente=document.getElementById("buscaPaciente")
