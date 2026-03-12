@@ -90,13 +90,16 @@ if(alvo){alvo.style.display="block"}
 function abrirEnfermagem(){
 abrirPainel("painelEnfermagem")
 localStorage.setItem("painelAtual","enfermagem")
+const acoes=document.getElementById("acoesClinico")
+if(acoes)acoes.style.display="none"
 if(typeof carregarRotinas==="function"){carregarRotinas()}
 if(typeof carregarClinico==="function"){carregarClinico()}
 }
-
 function abrirClinico(){
 abrirPainel("painelClinico")
 localStorage.setItem("painelAtual","clinico")
+const acoes=document.getElementById("acoesClinico")
+if(acoes)acoes.style.display="flex"
 if(typeof carregarClinico==="function"){carregarClinico()}
 }
 
