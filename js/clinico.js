@@ -366,19 +366,4 @@ let html=`
 box.innerHTML=html
 
 }
-/* ====================================================
-041 – SELECIONAR PACIENTE
-==================================================== */
-async function selecionarPaciente(){
 
-const paciente=document.getElementById("buscaPaciente")?.value
-
-if(typeof carregarRotinas==="function"){
-await carregarRotinas()
-}
-
-if(typeof carregarDadosClinicosPaciente==="function"){
-await carregarDadosClinicosPaciente(paciente)
-}
-
-}
