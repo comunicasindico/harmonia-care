@@ -229,7 +229,7 @@ ${MODO_EDICAO_CLINICO ?
 tabela.innerHTML=html
 
 /* ===============================
-031 PAINEL NUTRICIONAL
+030A PAINEL NUTRICIONAL
 =============================== */
 let totalDietas=0
 let hipossodica=0
@@ -269,7 +269,7 @@ if(elVeg) elVeg.innerText=`🥗 ${vegetariana}`
 if(elLiq) elLiq.innerText=`🥤 ${liquida}`
 
 /* ====================================================
-032 PAINEL DE RISCO INSTITUCIONAL
+030B PAINEL DE RISCO INSTITUCIONAL
 ==================================================== */
 let alto=0
 let medio=0
@@ -293,10 +293,8 @@ if(r2) r2.innerText=medio
 if(r3) r3.innerText=moderado
 if(r4) r4.innerText=baixo
 
-}
-
 /* ===============================
-033 INDICADORES
+030C INDICADORES
 =============================== */
 const riscoTotal=risco1+risco2+risco3+risco4+risco5
 
@@ -329,9 +327,8 @@ if(totalPacientesCard) totalPacientesCard.innerHTML=totalPacientes
 
 }
 
-
 /* ====================================================
-034 – CALCULAR IDADE
+031 – CALCULAR IDADE
 ==================================================== */
 function calcularIdade(data){
 
@@ -352,7 +349,7 @@ return idade
 }
 
 /* ====================================================
-035 – EDITAR CLINICO GLOBAL
+032 – EDITAR CLINICO GLOBAL
 ==================================================== */
 function editarClinicoGlobal(){
 
@@ -365,7 +362,7 @@ carregarClinico()
 }
 
 /* ====================================================
-036 – SALVAR CLINICO GLOBAL
+033 – SALVAR CLINICO GLOBAL
 ==================================================== */
 async function salvarClinicoGlobal(){
 
@@ -407,7 +404,7 @@ await carregarClinico()
 
 }
 /* ====================================================
-037 – CARREGAR DADOS CLÍNICOS DO PACIENTE (ENFERMAGEM)
+034 – CARREGAR DADOS CLÍNICOS DO PACIENTE (ENFERMAGEM)
 ==================================================== */
 async function carregarDadosClinicosPaciente(pacienteId){
 
