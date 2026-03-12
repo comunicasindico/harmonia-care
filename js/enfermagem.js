@@ -423,3 +423,29 @@ console.error("Erro insert rotina",e4)
 }
 }
 }
+/* ====================================================
+028 – SELECIONAR PACIENTE
+==================================================== */
+async function selecionarPaciente(){
+
+const select=document.getElementById("buscaPaciente")
+if(!select)return
+
+const pacienteId=select.value
+
+/* atualizar rotinas */
+if(typeof carregarRotinas==="function"){
+await carregarRotinas()
+}
+
+/* atualizar clínico individual */
+if(typeof carregarDadosClinicosPaciente==="function"){
+await carregarDadosClinicosPaciente(pacienteId)
+}
+
+/* atualizar tabela clínica geral */
+if(typeof carregarClinico==="function"){
+await carregarClinico()
+}
+
+}
