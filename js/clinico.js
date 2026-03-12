@@ -162,7 +162,6 @@ tabela.innerHTML=html
 /* ===============================
 INDICADORES
 =============================== */
-
 const riscoTotal=risco1+risco2+risco3+risco4+risco5
 
 const corHas="#e74c3c"
@@ -197,7 +196,6 @@ if(totalPacientesCard) totalPacientesCard.innerHTML=totalPacientes
 /* ====================================================
 031 – CALCULAR IDADE
 ==================================================== */
-
 function calcularIdade(data){
 
 if(!data) return ""
@@ -219,7 +217,6 @@ return idade
 /* ====================================================
 038 – EDITAR CLINICO GLOBAL
 ==================================================== */
-
 function editarClinicoGlobal(){
 
 document.querySelectorAll("#quadroClinico select").forEach(el=>{
@@ -235,7 +232,6 @@ el.removeAttribute("disabled")
 /* ====================================================
 039 – SALVAR CLINICO GLOBAL
 ==================================================== */
-
 async function salvarClinicoGlobal(){
 
 const linhas=document.querySelectorAll("#quadroClinico tr")
