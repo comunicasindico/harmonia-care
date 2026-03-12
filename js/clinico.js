@@ -162,45 +162,55 @@ return p.pressao_arterial
 }
 </td>
 
-<td>
+<td style="font-size:11px;white-space:nowrap">
+
 ${MODO_EDICAO_CLINICO ?
-`<select class="campo-clinico clin_dieta">
+
+`<select class="campo-clinico clin_dieta" style="font-size:11px;padding:2px 4px">
+
 <option value="">Não</option>
-<option value="Hipossódica"${p.dieta_texto=="🧂Hipossódica"?" selected":""}>Hipossódica</option>
-<option value="Diabética"${p.dieta_texto=="🍬Diabética"?" selected":""}>Diabética</option>
-<option value="Pastosa"${p.dieta_texto=="🥣Pastosa"?" selected":""}>Pastosa</option>
-<option value="Vegetariana"${p.dieta_texto=="🥗Vegetariana"?" selected":""}>Vegetariana</option>
-<option value="Líquida"${p.dieta_texto=="🥤Líquida"?" selected":""}>Líquida</option>
+
+<option value="🧂Hipossódica"${p.dieta_texto=="🧂Hipossódica"?" selected":""}>🧂Hipossódica</option>
+
+<option value="🍬Diabética"${p.dieta_texto=="🍬Diabética"?" selected":""}>🍬Diabética</option>
+
+<option value="🥣Pastosa"${p.dieta_texto=="🥣Pastosa"?" selected":""}>🥣Pastosa</option>
+
+<option value="🥗Vegetariana"${p.dieta_texto=="🥗Vegetariana"?" selected":""}>🥗Vegetariana</option>
+
+<option value="🥤Líquida"${p.dieta_texto=="🥤Líquida"?" selected":""}>🥤Líquida</option>
+
 </select>`
+
 :
+
 (()=>{
-if(!p.dieta_especial) return "<span style='color:#6b7280'>- Sem dieta especial</span>"
+if(!p.dieta_especial)
+return "<span style='color:#6b7280;font-size:11px'>- Sem dieta</span>"
 
 let d=(p.dieta_texto??"").toLowerCase()
 
-/* CORES AUTOMÁTICAS */
-
 if(d.includes("hipossod"))
-return "<span style='color:#2563eb;font-weight:bold'>🧂 Hipossódica</span>"
+return "<span style='color:#2563eb;font-weight:bold;font-size:11px'>🧂Hipossódica</span>"
 
 if(d.includes("diab"))
-return "<span style='color:#9333ea;font-weight:bold'>🍬 Diabética</span>"
+return "<span style='color:#9333ea;font-weight:bold;font-size:11px'>🍬Diabética</span>"
 
 if(d.includes("past"))
-return "<span style='color:#ea580c;font-weight:bold'>🥣 Pastosa</span>"
+return "<span style='color:#ea580c;font-weight:bold;font-size:11px'>🥣Pastosa</span>"
 
 if(d.includes("veget"))
-return "<span style='color:#16a34a;font-weight:bold'>🥗 Vegetariana</span>"
+return "<span style='color:#16a34a;font-weight:bold;font-size:11px'>🥗Vegetariana</span>"
 
 if(d.includes("liquid"))
-return "<span style='color:#0ea5e9;font-weight:bold'>🥤 Líquida</span>"
+return "<span style='color:#0ea5e9;font-weight:bold;font-size:11px'>🥤Líquida</span>"
 
-/* padrão */
-
-return `<span style="color:#f59e0b;font-weight:bold">🍽️ ${p.dieta_texto}</span>`
+return `<span style="color:#f59e0b;font-weight:bold;font-size:11px">🍽️ ${p.dieta_texto}</span>`
 
 })()
+
 }
+
 </td>
 
 <td>
