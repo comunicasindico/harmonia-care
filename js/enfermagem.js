@@ -123,7 +123,7 @@ const tbody=document.getElementById("rotinas")
 if(!tbody)return
 
 let html=""
-
+const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todos"
 const pacientes={}
 
 lista.forEach(r=>{
@@ -213,8 +213,7 @@ ${rotinasHTML}
 /* ============================================
 LINHA FINAL – TODOS OS PACIENTES
 ============================================ */
-if(lista.length>0){
-
+if(lista.length>0 && pacienteSelecionado==="todos"){
 const rotinasUnicas={}
 lista.forEach(r=>{
 rotinasUnicas[r.rotina_id]=r.rotina
