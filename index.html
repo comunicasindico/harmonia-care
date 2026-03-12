@@ -15,7 +15,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
@@ -31,7 +30,6 @@ button{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:poin
 .btn-success{background:#2ecc71;color:#fff;}
 #app{display:none;padding:30px;max-width:1200px;margin:auto;}
 .menu{margin-bottom:20px;}
-.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;}
 .card{background:#fff;padding:20px;border-radius:12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
 .box{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-top:20px;}
 table{width:100%;border-collapse:collapse;}
@@ -46,32 +44,12 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 .btn-rotina{border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;border:1px solid #ccc;}
 .rotina-pendente{background:#f2f2f2;color:#555;}
 .rotina-executada{background:#e6f6ec;border-color:#b9e4c8;color:#1e7e46;}
-.rotinas-totais{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;justify-content:center;font-size:13px;}
-.rotina-total-item{background:#fafafa;padding:5px 10px;border-radius:8px;border:1px solid #ddd;}
-.total-ok{color:#1e7e46;font-weight:bold;}
-.total-pendente{color:#e74c3c;font-weight:bold;}
 .nome-paciente{font-weight:600;margin-right:10px;}
-.btn-todos{background:#22c55e;color:white;border:none;padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;white-space:nowrap;}
+.btn-todos{background:#22c55e;color:white;border:none;padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;}
 .progresso-container{display:flex;align-items:center;gap:12px;}
 .progresso-bar{width:140px;height:10px;background:#e5e7eb;border-radius:6px;overflow:hidden;}
 .progresso-fill{height:100%;transition:width .3s ease;}
 .progresso-label{font-size:12px;font-weight:bold;min-width:70px;}
-tr.todos-pacientes{background:#ecfdf5;font-weight:bold;border-top:2px solid #22c55e;}
-.tabela-clinica-edicao td{
-padding:8px;
-border-bottom:1px solid #ddd;
-}
-.tabela-clinica-edicao input{
-padding:6px;
-border-radius:6px;
-border:1px solid #ccc;
-}
-.tabela-clinica-edicao select{
-padding:6px;
-border-radius:6px;
-}
-.btn-success{background:#16a34a;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer}
-
 </style>
 
 </head>
@@ -88,7 +66,9 @@ border-radius:6px;
 <img src="logo-harmonia.png" style="height:38px">
 <h2 style="margin:0">Harmonia Care</h2>
 </div>
+
 <div id="dadosEmpresa"></div>
+
 <input id="usuario" placeholder="Usuário">
 <input id="senha" type="password" placeholder="Senha">
 
@@ -142,7 +122,6 @@ Gerar PDF
 <button onclick="gerarPDFPaciente()" class="btn-primary">
 PDF do Paciente
 </button>
-<div style="display:flex;gap:8px;margin-left:10px">
 
 <div id="acoesClinico" style="display:none;gap:8px;margin-left:10px">
 
@@ -154,13 +133,8 @@ Editar Clínico
 Salvar
 </button>
 
-<button onclick="excluirClinicoSelecionado()" class="btn-danger">
-Excluir
-</button>
-
 </div>
 
-</div>
 </div>
 
 <div style="display:flex;gap:10px;font-weight:bold">
@@ -223,9 +197,7 @@ Pesquisar
 <div class="turnos">
 
 <button id="btnManha" class="turno-btn turno-manha" onclick="mudarTurno('manha')">Manhã</button>
-
 <button id="btnTarde" class="turno-btn turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
-
 <button id="btnNoite" class="turno-btn turno-noite" onclick="mudarTurno('noite')">Noite</button>
 
 </div>
@@ -233,13 +205,11 @@ Pesquisar
 <table>
 
 <thead>
-
 <tr>
 <th>Paciente</th>
 <th>Progresso</th>
 <th>Rotinas</th>
 </tr>
-
 </thead>
 
 <tbody id="rotinas"></tbody>
@@ -282,7 +252,7 @@ Pesquisar
 
 <tfoot>
 
-<tr id="rodapeClinico">
+<tr>
 
 <td></td>
 <td></td>
@@ -307,7 +277,9 @@ Pesquisar
 </div>
 
 <!-- ADMIN -->
+
 <div id="painelAdmin" style="display:none">
+
 <div class="box">
 <h3>Profissionais</h3>
 <div id="listaProfissionaisDrag"></div>
@@ -317,9 +289,11 @@ Pesquisar
 <h3>Pacientes</h3>
 <div id="listaPacientesDrag"></div>
 </div>
+
 </div>
+
 </div>
-<!-- JS DO SISTEMA -->
+
 <script src="./js/globals.js?v=2"></script>
 <script src="./js/supabase.js?v=2"></script>
 <script src="./js/enfermagem.js?v=2"></script>
@@ -336,24 +310,3 @@ if(e.persisted){window.location.reload()}
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
