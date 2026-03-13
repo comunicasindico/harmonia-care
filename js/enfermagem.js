@@ -333,12 +333,24 @@ if(!db)return
 
 const dataHoje=document.getElementById("dataInicio")?.value
 
+/* identificar profissional */
+
+let profissionalId = localStorage.getItem("profissional_id")
+
+/* admin não pode ser enviado para UUID */
+
+if(profissionalId==="admin"){
+profissionalId=null
+}
+
+/* feedback visual imediato */
+
 if(botao){
 botao.classList.remove("rotina-pendente")
 botao.classList.add("rotina-executada")
 }
 
-const profissionalId=localStorage.getItem("profissional_id") || null
+/* atualizar banco */
 
 const {error}=await db
 .from("rotinas_execucao")
@@ -355,9 +367,11 @@ if(error){
 console.error("Erro executar rotina",error)
 }
 
+/* recarregar lista */
+
 setTimeout(()=>{
 carregarRotinas()
-},150)
+},120)
 
 }
 
