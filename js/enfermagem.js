@@ -96,7 +96,10 @@ const dataHoje=document.getElementById("dataInicio")?.value
 const turno=TURNO_ATUAL
 
 let pacientes=[]
-if(PROFISSIONAL_ID && PROFISSIONAL_ID !== "null"){
+
+/* se for profissional logado */
+
+if(PROFISSIONAL_ID && PROFISSIONAL_ID !== "null" && PROFISSIONAL_ID !== "admin"){
 
 const {data,error}=await db
 .from("pacientes_profissionais")
@@ -112,22 +115,32 @@ if(error){
 console.error("Erro pacientes profissional",error)
 return
 }
+
 pacientes=data?.map(p=>({
 id:p.pacientes.id,
 nome_completo:p.pacientes.nome_completo
 }))||[]
-}else{
+
+}
+
+/* se for ADMIN */
+
+else{
+
 const {data,error}=await db
 .from("pacientes")
 .select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
 .order("nome_completo")
+
 if(error){
 console.error("Erro pacientes",error)
 return
 }
+
 pacientes=data||[]
+
 }
 
 const {data:rotinas,error:e2}=await db
