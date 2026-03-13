@@ -25,34 +25,17 @@ await iniciarSistema()
 011 – INICIAR SISTEMA
 ==================================================== */
 async function iniciarSistema(){
-
 while(!db){await new Promise(r=>setTimeout(r,50))}
-
 definirDataHoje()
-
 if(typeof carregarEmpresa==="function"){carregarEmpresa()}
-
-if(typeof carregarPacientesBusca==="function"){
-await carregarPacientesBusca()
-}
-
-if(typeof gerarRotinasDoDia==="function"){
-await gerarRotinasDoDia()
-}
-
-if(typeof carregarRotinas==="function"){
-await carregarRotinas()
-}
-
-if(typeof carregarClinico==="function"){
-await carregarClinico()
-}
-
-mudarTurno("manha")
-
+if(typeof carregarPacientesBusca==="function"){await carregarPacientesBusca()}
+if(typeof gerarRotinasDoDia==="function"){await gerarRotinasDoDia()}
 /* RESTAURAR PAINEL */
-const painelSalvo = localStorage.getItem("painelAtual") || "painelEnfermagem"
+const painelSalvo=localStorage.getItem("painelAtual")||"painelEnfermagem"
 abrirPainel(painelSalvo)
+if(typeof carregarRotinas==="function"){await carregarRotinas()}
+if(typeof carregarClinico==="function"){await carregarClinico()}
+mudarTurno("manha")
 }
 /* ====================================================
 012 – LOGOUT
