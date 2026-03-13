@@ -53,15 +53,12 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 .dieta-chip{padding:3px 6px;border-radius:6px;background:#f3f4f6;font-weight:600;border:1px solid #ddd;font-size:11px;line-height:1;}
 .clin_pa{width:70px;text-align:center;}
 #tabelaClinica td{font-size:11px;padding:4px 6px;}
-.clin_outros{font-size:11px;max-width:160px;white-space:normal;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
-overflow:hidden;}
+.clin_outros{font-size:11px;max-width:160px;white-space:normal;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 #painelRisco{margin-left:auto;display:flex;gap:10px;align-items:center;}
 .rotinas-linha{display:flex;flex-wrap:wrap;gap:6px}
 .btn-rotina{padding:4px 8px;font-size:12px;border-radius:6px}
 .nome-paciente{font-size:14px;font-weight:600}
 .progresso-label{font-size:12px;font-weight:600;color:#333}
-  
-
 </style>
 
 </head>
@@ -71,7 +68,6 @@ overflow:hidden;}
 <!-- LOGIN -->
 
 <div id="login">
-
 <div class="login-box">
 
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
@@ -89,7 +85,6 @@ Entrar
 </button>
 
 </div>
-
 </div>
 
 <!-- APP -->
@@ -115,53 +110,24 @@ Sair
 
 <div style="display:flex;gap:10px">
 
-<button onclick="abrirEnfermagem()" class="btn-primary">
-Painel Enfermagem
-</button>
-
-<button onclick="abrirClinico()" class="btn-secondary">
-Painel Clínico
-</button>
-
-<button onclick="abrirAdmin()" class="btn-success">
-Admin
-</button>
-
-<button onclick="gerarPDFGeral()" class="btn-primary">
-Gerar PDF
-</button>
-
-<button onclick="gerarPDFPaciente()" class="btn-primary">
-PDF do Paciente
-</button>
+<button onclick="abrirEnfermagem()" class="btn-primary">Painel Enfermagem</button>
+<button onclick="abrirClinico()" class="btn-secondary">Painel Clínico</button>
+<button onclick="abrirAdmin()" class="btn-success">Admin</button>
+<button onclick="gerarPDFGeral()" class="btn-primary">Gerar PDF</button>
+<button onclick="gerarPDFPaciente()" class="btn-primary">PDF do Paciente</button>
 
 <div id="acoesClinico" style="display:none;gap:8px;margin-left:10px">
-
-<button onclick="editarClinicoGlobal()" class="btn-secondary">
-Editar Clínico
-</button>
-
-<button onclick="salvarClinicoGlobal()" class="btn-success">
-Salvar
-</button>
-
+<button onclick="editarClinicoGlobal()" class="btn-secondary">Editar Clínico</button>
+<button onclick="salvarClinicoGlobal()" class="btn-success">Salvar</button>
 </div>
 
 </div>
 
 <div style="display:flex;gap:10px;font-weight:bold">
 
-<div id="indicadorExecutado" style="background:#2ecc71;color:#fff;padding:6px 10px;border-radius:8px">
-✔ 0
-</div>
-
-<div id="indicadorPendente" style="background:#f39c12;color:#fff;padding:6px 10px;border-radius:8px">
-🔴 0
-</div>
-
-<div id="indicadorAtrasado" style="background:#e74c3c;color:#fff;padding:6px 10px;border-radius:8px">
-⚠ 0
-</div>
+<div id="indicadorExecutado" style="background:#2ecc71;color:#fff;padding:6px 10px;border-radius:8px">✔ 0</div>
+<div id="indicadorPendente" style="background:#f39c12;color:#fff;padding:6px 10px;border-radius:8px">🔴 0</div>
+<div id="indicadorAtrasado" style="background:#e74c3c;color:#fff;padding:6px 10px;border-radius:8px">⚠ 0</div>
 
 </div>
 
@@ -172,9 +138,7 @@ Salvar
 <!-- ENFERMAGEM -->
 
 <div id="painelEnfermagem">
-
 <div class="box">
-
 <h3>Rotinas do Turno</h3>
 
 <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px">
@@ -197,9 +161,7 @@ Salvar
 </div>
 
 <div style="display:flex;align-items:end">
-<button onclick="carregarRotinas()" class="btn-primary">
-Pesquisar
-</button>
+<button onclick="carregarRotinas()" class="btn-primary">Pesquisar</button>
 </div>
 
 </div>
@@ -207,15 +169,12 @@ Pesquisar
 <div id="dadosClinicosPaciente"></div>
 
 <div class="turnos">
-
 <button id="btnManha" class="turno-btn turno-manha" onclick="mudarTurno('manha')">Manhã</button>
 <button id="btnTarde" class="turno-btn turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
 <button id="btnNoite" class="turno-btn turno-noite" onclick="mudarTurno('noite')">Noite</button>
-
 </div>
 
 <table>
-
 <thead>
 <tr>
 <th>Paciente</th>
@@ -223,30 +182,18 @@ Pesquisar
 <th>Rotinas</th>
 </tr>
 </thead>
-
 <tbody id="rotinas"></tbody>
-
 </table>
 
 </div>
-
 </div>
 
 <!-- CLINICO -->
 
 <div id="painelClinico" style="display:none">
-
 <div class="box">
 
-<!-- PAINEL DE DIETAS -->
-<div id="painelDietas" style="
-display:flex;
-gap:8px;
-margin-bottom:10px;
-font-size:12px;
-justify-content:flex-end;
-flex-wrap:wrap;
-">
+<div id="painelDietas" style="display:flex;gap:8px;margin-bottom:10px;font-size:12px;justify-content:flex-end;flex-wrap:wrap;">
 <div class="dieta-chip" id="dietaTotal">🍽️ 0</div>
 <div class="dieta-chip" id="dietaHipossodica">🧂 0</div>
 <div class="dieta-chip" id="dietaDiabetica">🍬 0</div>
@@ -255,15 +202,7 @@ flex-wrap:wrap;
 <div class="dieta-chip" id="dietaLiquida">🥤 0</div>
 </div>
 
-<!-- PAINEL INDICADORES CLINICOS -->
-<div id="painelIndicadoresClinicos" style="
-display:flex;
-gap:6px;
-flex-wrap:wrap;
-margin-bottom:6px;
-font-size:11px;
-justify-content:flex-end;
-">
+<div id="painelIndicadoresClinicos" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;font-size:11px;justify-content:flex-end;">
 <div class="dieta-chip" id="indicadorRISCO5" style="background:#fee2e2">🔴 Alto 0</div>
 <div class="dieta-chip" id="indicadorRISCO4" style="background:#fed7aa">🟠 Médio 0</div>
 <div class="dieta-chip" id="indicadorRISCO3" style="background:#fef3c7">🟡 Moderado 0</div>
@@ -273,7 +212,6 @@ justify-content:flex-end;
 <table id="tabelaClinica">
 <thead>
 <tr>
-
 <th>Paciente</th>
 <th>Idade</th>
 <th id="cabHas">HAS</th>
@@ -287,36 +225,13 @@ justify-content:flex-end;
 <th>Outras</th>
 <th id="colAcoes" style="display:none">Ações</th>
 </tr>
-
 </thead>
 
 <tbody id="quadroClinico"></tbody>
 
-<tfoot>
-
-<tr>
-
-<td></td>
-<td></td>
-<td id="rodapeHas"></td>
-<td id="rodapeDm"></td>
-<td id="rodapeDemencia"></td>
-<td id="rodapeCardio"></td>
-<td id="rodapeAcamado"></td>
-<td id="rodapePa"></td>
-<td></td>
-<td id="rodapeRisco"></td>
-
-<td id="rodapeAcoes" style="display:none"></td>
-<td></td>
-</tr>
-
-</tfoot>
-
 </table>
 
 </div>
-
 </div>
 
 <!-- ADMIN -->
@@ -337,43 +252,15 @@ justify-content:flex-end;
 
 </div>
 
-<script>
-function carregarJS(arquivo){
-const s=document.createElement("script")
-s.src=arquivo+"?v="+Date.now()
-document.body.appendChild(s)
-}
+<!-- ORDEM CORRETA DOS SCRIPTS -->
 
-carregarJS("./js/globals.js")
-carregarJS("./js/supabase.js")
-setTimeout(()=>carregarJS("./js/enfermagem.js"),100)
-setTimeout(()=>carregarJS("./js/clinico.js"),150)
-setTimeout(()=>carregarJS("./js/admin.js"),200)
-setTimeout(()=>carregarJS("./js/pdf.js"),250)
-setTimeout(()=>carregarJS("./js/app.js"),300)
-</script>
-
-
+<script src="./js/globals.js"></script>
+<script src="./js/supabase.js"></script>
+<script src="./js/enfermagem.js"></script>
+<script src="./js/clinico.js"></script>
+<script src="./js/admin.js"></script>
+<script src="./js/pdf.js"></script>
+<script src="./js/app.js"></script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
