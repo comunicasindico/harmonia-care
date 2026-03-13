@@ -94,90 +94,79 @@ if(!db)return
 const paciente=document.getElementById("buscaPaciente")?.value||"todos"
 const dataHoje=document.getElementById("dataInicio")?.value
 const turno=TURNO_ATUAL
-
+let profissionalId=PROFISSIONAL_ID||localStorage.getItem("profissional_id")
 let pacientes=[]
-
 /* se for profissional logado */
-
-if(PROFISSIONAL_ID && PROFISSIONAL_ID !== "null" && PROFISSIONAL_ID !== "admin"){
-
+if(profissionalId&&profissionalId!=="null"){
 const {data,error}=await db
 .from("pacientes_profissionais")
 .select(`
 paciente_id,
 pacientes(id,nome_completo)
 `)
-.eq("profissional_id",PROFISSIONAL_ID)
+.eq("profissional_id",profissionalId)
 .eq("turno",turno)
 .eq("ativo",true)
-
 if(error){
 console.error("Erro pacientes profissional",error)
 return
 }
-
 pacientes=data?.map(p=>({
 id:p.pacientes.id,
 nome_completo:p.pacientes.nome_completo
 }))||[]
-
 }
-
-/* se for ADMIN */
-
+/* se for ADMIN (sem filtro por profissional) */
 else{
-
 const {data,error}=await db
 .from("pacientes")
 .select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
 .order("nome_completo")
-
 if(error){
 console.error("Erro pacientes",error)
 return
 }
-
 pacientes=data||[]
-
 }
-
 const {data:rotinas,error:e2}=await db
 .from("rotina_modelos")
 .select("id,nome")
 .eq("turno",turno)
 if(e2){console.error("Erro rotinas",e2);return}
-
 const {data:execucoes,error:e3}=await db
 .from("rotinas_execucao")
 .select("*")
 .eq("data",dataHoje)
-
+if(e3){console.error("Erro execucoes",e3);return}
 const {data:profissionais}=await db
 .from("profissionais")
 .select("id,nome_apelido")
-
-if(e3){console.error("Erro execucoes",e3);return}
 const mapaProfissionais={}
 profissionais?.forEach(p=>{
 mapaProfissionais[p.id]=p.nome_apelido
 })
-
+/* criar mapa de execuções para evitar .find() lento */
+const mapaExecucoes={}
+execucoes?.forEach(e=>{
+mapaExecucoes[`${e.idoso_id}_${e.rotina_id}`]=e
+})
 let lista=[]
 pacientes?.forEach(p=>{
 if(paciente!=="todos"&&paciente!==p.id)return
 rotinas?.forEach(r=>{
-const exec=execucoes?.find(e=>e.idoso_id===p.id&&e.rotina_id===r.id)
-
+const chave=`${p.id}_${r.id}`
+const exec=mapaExecucoes[chave]
 lista.push({
-id:exec?.id||`${p.id}_${r.id}`,
+id:exec?.id||chave,
 idoso_id:p.id,
 rotina_id:r.id,
 paciente:p.nome_completo,
 rotina:r.nome,
 status:exec?.status||"pendente",
-profissional:exec?.profissional_id?mapaProfissionais[exec.profissional_id]:""})
+profissional:exec?.profissional_id?mapaProfissionais[exec.profissional_id]:""
+})
 })
 })
 ROTINAS_CACHE=lista
