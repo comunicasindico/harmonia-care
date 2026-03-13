@@ -36,6 +36,11 @@ PROFISSIONAL_ID=admin.id
 EMPRESA_ID=admin.empresa_id
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
+
+if(typeof carregarEmpresa==="function"){
+await carregarEmpresa()
+}
+
 await iniciarSistema()
 if(btn)btn.disabled=false
 return
@@ -80,6 +85,11 @@ EMPRESA_ID=user.empresa_id
 PROFISSIONAL_ID=user.id
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
+
+if(typeof carregarEmpresa==="function"){
+await carregarEmpresa()
+}
+
 await iniciarSistema()
 if(btn)btn.disabled=false
 }
@@ -89,7 +99,6 @@ if(btn)btn.disabled=false
 async function iniciarSistema(){
 while(!db){await new Promise(r=>setTimeout(r,50))}
 definirDataHoje()
-if(typeof carregarEmpresa==="function"){carregarEmpresa()}
 if(typeof carregarPacientesBusca==="function"){await carregarPacientesBusca()}
 if(typeof gerarRotinasDoDia==="function"){await gerarRotinasDoDia()}
 /* RESTAURAR PAINEL */
