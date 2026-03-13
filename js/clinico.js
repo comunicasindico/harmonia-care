@@ -120,13 +120,6 @@ document.getElementById("cabRisco").innerHTML="Risco"
 /* ===============================
 030D INDICADORES VISUAIS
 =============================== */
-const iHAS=document.getElementById("indicadorHAS"),iDM=document.getElementById("indicadorDM"),iDEM=document.getElementById("indicadorDEM"),iCARD=document.getElementById("indicadorCARDIO"),iACAM=document.getElementById("indicadorACAMADO"),iPA=document.getElementById("indicadorPA")
-if(iHAS)iHAS.innerHTML=`HAS <b>${totalHas}</b>`
-if(iDM)iDM.innerHTML=`DM <b>${totalDm}</b>`
-if(iDEM)iDEM.innerHTML=`DEM <b>${totalDemencia}</b>`
-if(iCARD)iCARD.innerHTML=`CARD <b>${totalCardio}</b>`
-if(iACAM)iACAM.innerHTML=`ACAM <b>${totalAcamado}</b>`
-if(iPA)iPA.innerHTML=`PA <b>${totalPAAlterada}</b>`
 const elR5=document.getElementById("indicadorRISCO5"),elRisco4=document.getElementById("indicadorRISCO4"),elR3=document.getElementById("indicadorRISCO3"),elR12=document.getElementById("indicadorRISCO12")
 if(elR5)elR5.innerHTML=`🔴 ${risco5}`
 if(elRisco4)elRisco4.innerHTML=`🟠 ${risco4}`
