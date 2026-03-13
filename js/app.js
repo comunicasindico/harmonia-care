@@ -51,14 +51,8 @@ await carregarClinico()
 mudarTurno("manha")
 
 /* RESTAURAR PAINEL */
-const painelSalvo = localStorage.getItem("painelAtual")
-
-if(painelSalvo && document.getElementById(painelSalvo)){
+const painelSalvo = localStorage.getItem("painelAtual") || "painelEnfermagem"
 abrirPainel(painelSalvo)
-}else{
-abrirPainel("painelEnfermagem")
-}
-
 }
 /* ====================================================
 012 – LOGOUT
