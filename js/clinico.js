@@ -106,16 +106,10 @@ if(r3)r3.innerText=moderado
 if(r4)r4.innerText=baixo
 
 /* ===============================
-030C INDICADORES
+030C INDICADORES (DESATIVADO)
+REMOVIDOS DO CABEÇALHO
 =============================== */
-const corHas="#e74c3c",corDm="#f39c12",corDemencia="#8e44ad",corCardio="#c0392b",corAcamado="#34495e",corPa="#e67e22",corRisco="#2c3e50"
-document.getElementById("cabHas").innerHTML="HAS"
-document.getElementById("cabDm").innerHTML="DM"
-document.getElementById("cabDemencia").innerHTML="Demência"
-document.getElementById("cabCardio").innerHTML="Cardio"
-document.getElementById("cabAcamado").innerHTML="Acamado"
-document.getElementById("cabPa").innerHTML="PA"
-document.getElementById("cabRisco").innerHTML="Risco"
+/* indicadores clínicos permanecem apenas na tabela */
 
 /* ===============================
 030D INDICADORES VISUAIS
