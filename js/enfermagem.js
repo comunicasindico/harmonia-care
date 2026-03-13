@@ -137,12 +137,19 @@ if(e2){console.error("Erro rotinas",e2);return}
 
 const {data:execucoes,error:e3}=await db
 .from("rotinas_execucao")
-.select(`
-*,
-profissionais:profissional_id(nome_apelido)
-`)
+.select("*")
 .eq("data",dataHoje)
+
+const {data:profissionais}=await db
+.from("profissionais")
+.select("id,nome_apelido")
+
 if(e3){console.error("Erro execucoes",e3);return}
+const mapaProfissionais={}
+profissionais?.forEach(p=>{
+mapaProfissionais[p.id]=p.nome_apelido
+})
+
 let lista=[]
 pacientes?.forEach(p=>{
 if(paciente!=="todos"&&paciente!==p.id)return
@@ -156,8 +163,7 @@ rotina_id:r.id,
 paciente:p.nome_completo,
 rotina:r.nome,
 status:exec?.status||"pendente",
-profissional:exec?.profissionais?.nome_apelido||""
-})
+profissional:exec?.profissional_id?mapaProfissionais[exec.profissional_id]:""})
 })
 })
 ROTINAS_CACHE=lista
