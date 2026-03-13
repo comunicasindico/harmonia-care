@@ -361,7 +361,32 @@ document.getElementById("rodapeRisco").innerHTML=`<b style="color:${corRisco}">$
 
 const totalPacientesCard=document.getElementById("totalPacientes")
 if(totalPacientesCard) totalPacientesCard.innerHTML=totalPacientes
+/* ===============================
+030D INDICADORES VISUAIS
+=============================== */
+const iHAS=document.getElementById("indicadorHAS")
+const iDM=document.getElementById("indicadorDM")
+const iDEM=document.getElementById("indicadorDEM")
+const iCARD=document.getElementById("indicadorCARDIO")
+const iACAM=document.getElementById("indicadorACAMADO")
+const iPA=document.getElementById("indicadorPA")
 
+if(iHAS) iHAS.innerHTML=`HAS <b>${totalHas}</b>`
+if(iDM) iDM.innerHTML=`DM <b>${totalDm}</b>`
+if(iDEM) iDEM.innerHTML=`DEM <b>${totalDemencia}</b>`
+if(iCARD) iCARD.innerHTML=`CARD <b>${totalCardio}</b>`
+if(iACAM) iACAM.innerHTML=`ACAM <b>${totalAcamado}</b>`
+if(iPA) iPA.innerHTML=`PA <b>${totalPAAlterada}</b>`
+
+const r5=document.getElementById("indicadorRISCO5")
+const r4=document.getElementById("indicadorRISCO4")
+const r3=document.getElementById("indicadorRISCO3")
+const r12=document.getElementById("indicadorRISCO12")
+
+if(r5) r5.innerHTML=`🔴 ${risco5}`
+if(r4) r4.innerHTML=`🟠 ${risco4}`
+if(r3) r3.innerHTML=`🟡 ${risco3}`
+if(r12) r12.innerHTML=`🟢 ${risco1+risco2}`
 }
 
 /* ====================================================
