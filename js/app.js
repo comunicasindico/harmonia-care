@@ -23,6 +23,11 @@ const user=data[0]
 if(user.senha_hash!==senha){alert("Senha incorreta");return}
 localStorage.setItem("usuario_nome",user.nome)
 localStorage.setItem("profissional_id",user.id)
+
+/* SALVAR EMPRESA */
+if(user.empresa_id){
+localStorage.setItem("empresa_id",user.empresa_id)
+}
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 await iniciarSistema()
