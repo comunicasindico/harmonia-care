@@ -96,8 +96,8 @@ const dataHoje=document.getElementById("dataInicio")?.value
 const turno=TURNO_ATUAL
 let profissionalId=PROFISSIONAL_ID||localStorage.getItem("profissional_id")
 let pacientes=[]
-/* se for profissional logado */
-if(profissionalId&&profissionalId!=="null"){
+/* PROFISSIONAL */
+if(profissionalId && profissionalId!=="null" && profissionalId!=="admin"){
 const {data,error}=await db
 .from("pacientes_profissionais")
 .select(`
@@ -132,7 +132,7 @@ pacientes=data||[]
 }
 const {data:rotinas,error:e2}=await db
 .from("rotina_modelos")
-.select("id,nome")
+.select("id,nome,turno")
 .eq("turno",turno)
 if(e2){console.error("Erro rotinas",e2);return}
 const {data:execucoes,error:e3}=await db
