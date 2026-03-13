@@ -7,6 +7,7 @@ const senha=document.getElementById("senha").value.trim()
 if(!usuario||!senha){alert("Informe usuário e senha");return}
 if(usuario==="admin"&&senha==="123456"){
 localStorage.setItem("usuario_nome","Administrador")
+localStorage.setItem("profissional_id",null)
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 await iniciarSistema()
@@ -17,6 +18,7 @@ if(!data||data.length===0){alert("Usuário não encontrado");return}
 const user=data[0]
 if(user.senha_hash!==senha){alert("Senha incorreta");return}
 localStorage.setItem("usuario_nome",user.nome)
+localStorage.setItem("profissional_id",user.id)
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 await iniciarSistema()
