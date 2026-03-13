@@ -2,347 +2,113 @@
 030 – CARREGAR CLINICO
 ==================================================== */
 async function carregarClinico(){
-
 const selectPaciente=document.getElementById("buscaPaciente")
 const pacienteSelecionado=selectPaciente?selectPaciente.value:"todos"
-
-if(!db){
-console.error("Supabase ainda não carregou")
-return
-}
-
-const {data,error}=await db
-.from("pacientes")
-.select("*")
-.eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true)
-.order("nome_completo")
-
-if(error){
-console.error(error)
-return
-}
-
+if(!db){console.error("Supabase ainda não carregou");return}
+const {data,error}=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo")
+if(error){console.error(error);return}
 const tabela=document.getElementById("quadroClinico")
 if(!tabela)return
-
-if(!data || data.length===0){
-tabela.innerHTML=""
-return
-}
-
+if(!data||data.length===0){tabela.innerHTML="";return}
 let html=""
+let totalPacientes=0,totalHas=0,totalDm=0,totalDemencia=0,totalCardio=0,totalAcamado=0,totalPAAlterada=0
+let risco1=0,risco2=0,risco3=0,risco4=0,risco5=0
 
-let totalPacientes=0
-let totalHas=0
-let totalDm=0
-let totalDemencia=0
-let totalCardio=0
-let totalAcamado=0
-let totalPAAlterada=0
-
-let risco1=0
-let risco2=0
-let risco3=0
-let risco4=0
-let risco5=0
-
+/* ===============================
+CALCULAR TOTAIS
+=============================== */
 data.forEach(p=>{
-
 totalPacientes++
-
 if(p.has)totalHas++
 if(p.dm)totalDm++
 if(p.da)totalDemencia++
 if(p.cardiopatia)totalCardio++
 if(p.acamado)totalAcamado++
-
 if(p.pressao_arterial){
 let pa=p.pressao_arterial.split("/")
 if(pa.length===2){
-let s=parseInt(pa[0])
-let d=parseInt(pa[1])
-if(s>=140 || d>=90) totalPAAlterada++
-}
-}
-
+let s=parseInt(pa[0]),d=parseInt(pa[1])
+if(s>=140||d>=90)totalPAAlterada++
+}}
 if(p.grau_risco==1)risco1++
 if(p.grau_risco==2)risco2++
 if(p.grau_risco==3)risco3++
 if(p.grau_risco==4)risco4++
 if(p.grau_risco==5)risco5++
+})
 
+const riscoTotal=risco1+risco2+risco3+risco4+risco5
+
+/* ===============================
+LINHA AMARELA TOTAL (MODELO EXCEL)
+=============================== */
 html+=`
-
-<tr data-id="${p.id}">
-
-<td>
-${(()=>{
-let alerta=""
-
-if(p.grau_risco>=4) alerta+="🔴 "
-if(p.acamado) alerta+="⚫ "
-if(p.da) alerta+="🧠 "
-
-return alerta+(p.nome_completo??"")
-})()}
-</td>
-
-<td>${calcularIdade(p.data_nascimento)}</td>
-
-<td>
-${MODO_EDICAO_CLINICO ?
-`<select class="campo-clinico clin_has">
-<option value="true"${p.has?" selected":""}>✔</option>
-<option value="false"${!p.has?" selected":""}></option>
-</select>`
-:(p.has?"✔":"")}
-</td>
-
-<td>
-${MODO_EDICAO_CLINICO ?
-`<select class="campo-clinico clin_dm">
-<option value="true"${p.dm?" selected":""}>✔</option>
-<option value="false"${!p.dm?" selected":""}></option>
-</select>`
-:(p.dm?"✔":"")}
-</td>
-
-<td>
-${MODO_EDICAO_CLINICO ?
-`<select class="campo-clinico clin_da">
-<option value="true"${p.da?" selected":""}>✔</option>
-<option value="false"${!p.da?" selected":""}></option>
-</select>`
-:(p.da?"✔":"")}
-</td>
-
-<td>
-${MODO_EDICAO_CLINICO ?
-`<select class="campo-clinico clin_cardio">
-<option value="true"${p.cardiopatia?" selected":""}>✔</option>
-<option value="false"${!p.cardiopatia?" selected":""}></option>
-</select>`
-:(p.cardiopatia?"✔":"")}
-</td>
-
-<td>
-${MODO_EDICAO_CLINICO ?
-`<select class="campo-clinico clin_acamado">
-<option value="true"${p.acamado?" selected":""}>✔</option>
-<option value="false"${!p.acamado?" selected":""}></option>
-</select>`
-:(p.acamado?"✔":"")}
-</td>
-
-<td>
-${MODO_EDICAO_CLINICO ?
-`<input class="campo-clinico clin_pa" value="${p.pressao_arterial??""}" placeholder="120/80">`
-:
-(()=>{
-if(!p.pressao_arterial) return ""
-
-let pa=p.pressao_arterial.split("/")
-if(pa.length!==2) return p.pressao_arterial
-
-let sist=parseInt(pa[0])
-let diast=parseInt(pa[1])
-
-if(sist<=129 && diast<=85)
-return `<span style="color:#16a34a;font-weight:bold">🟢 ${p.pressao_arterial}</span>`
-
-if((sist>=130 && sist<=139)||(diast>=86 && diast<=89))
-return `<span style="color:#ca8a04;font-weight:bold">🟡 ${p.pressao_arterial}</span>`
-
-if(sist>=140 || diast>=90)
-return `<span style="color:#dc2626;font-weight:bold">🔴 ${p.pressao_arterial}</span>`
-
-return p.pressao_arterial
-})()
-}
-</td>
-
-<td style="font-size:11px;white-space:nowrap">
-
-${MODO_EDICAO_CLINICO ?
-
-`<select class="campo-clinico clin_dieta" style="font-size:11px;padding:2px 4px">
-
-<option value="">Não</option>
-
-<option value="🧂Hipossódica"${p.dieta_texto=="🧂Hipossódica"?" selected":""}>🧂Hipossódica</option>
-
-<option value="🍬Diabética"${p.dieta_texto=="🍬Diabética"?" selected":""}>🍬Diabética</option>
-
-<option value="🥣Pastosa"${p.dieta_texto=="🥣Pastosa"?" selected":""}>🥣Pastosa</option>
-
-<option value="🥗Vegetariana"${p.dieta_texto=="🥗Vegetariana"?" selected":""}>🥗Vegetariana</option>
-
-<option value="🥤Líquida"${p.dieta_texto=="🥤Líquida"?" selected":""}>🥤Líquida</option>
-
-</select>`
-
-:
-
-(()=>{
-if(!p.dieta_especial)
-return "<span style='color:#6b7280;font-size:11px'>- Sem dieta</span>"
-
-let d=(p.dieta_texto??"").toLowerCase()
-
-if(d.includes("hipossod"))
-return "<span style='color:#2563eb;font-weight:bold;font-size:11px'>🧂Hipossódica</span>"
-
-if(d.includes("diab"))
-return "<span style='color:#9333ea;font-weight:bold;font-size:11px'>🍬Diabética</span>"
-
-if(d.includes("past"))
-return "<span style='color:#ea580c;font-weight:bold;font-size:11px'>🥣Pastosa</span>"
-
-if(d.includes("veget"))
-return "<span style='color:#16a34a;font-weight:bold;font-size:11px'>🥗Vegetariana</span>"
-
-if(d.includes("liquid"))
-return "<span style='color:#0ea5e9;font-weight:bold;font-size:11px'>🥤Líquida</span>"
-
-return `<span style="color:#f59e0b;font-weight:bold;font-size:11px">🍽️ ${p.dieta_texto}</span>`
-
-})()
-
-}
-
-</td>
-
-<td>
-${MODO_EDICAO_CLINICO ?
-`<select class="campo-clinico clin_risco">
-<option value="1"${p.grau_risco==1?" selected":""}>1</option>
-<option value="2"${p.grau_risco==2?" selected":""}>2</option>
-<option value="3"${p.grau_risco==3?" selected":""}>3</option>
-<option value="4"${p.grau_risco==4?" selected":""}>4</option>
-<option value="5"${p.grau_risco==5?" selected":""}>5</option>
-</select>`
-:
-(()=>{
-if(!p.grau_risco) return ""
-
-if(p.grau_risco==5) return `<span style="color:#dc2626;font-weight:bold">🔴 ${p.grau_risco}</span>`
-if(p.grau_risco==4) return `<span style="color:#ea580c;font-weight:bold">🟠 ${p.grau_risco}</span>`
-if(p.grau_risco==3) return `<span style="color:#ca8a04;font-weight:bold">🟡 ${p.grau_risco}</span>`
-return `<span style="color:#16a34a;font-weight:bold">🟢 ${p.grau_risco}</span>`
-})()
-}
-</td>
-
-<td>
-${MODO_EDICAO_CLINICO ?
-`<input class="campo-clinico clin_outros" value="${p.outras_comorbidades??""}">`
-:`<span style="font-size:11px;max-width:160px;display:inline-block;white-space:normal;line-height:1.2">
-${p.outras_comorbidades??"Não tem"}
-</span>`
-}
-</td>
-
-<td class="acoesClinico" style="${MODO_EDICAO_CLINICO ? '' : 'display:none'}">
-<button class="btn-danger" style="font-size:10px;padding:3px 6px"
-onclick="excluirPaciente('${p.id}', \`${p.nome_completo}\`)">Excluir</button>
-</td>
-
+<tr style="background:#fff200;font-weight:bold;text-align:center">
+<td>Todos</td>
+<td></td>
+<td style="color:#e74c3c">${totalHas}</td>
+<td style="color:#f39c12">${totalDm}</td>
+<td style="color:#8e44ad">${totalDemencia}</td>
+<td style="color:#c0392b">${totalCardio}</td>
+<td style="color:#34495e">${totalAcamado}</td>
+<td style="color:#e67e22">${totalPAAlterada}</td>
+<td></td>
+<td style="color:#2c3e50">${riscoTotal}</td>
+<td></td>
 </tr>
 `
+
+/* ===============================
+LINHAS DOS PACIENTES
+=============================== */
+data.forEach(p=>{
+html+=`
+<tr data-id="${p.id}">
+<td>${(()=>{let alerta="";if(p.grau_risco>=4)alerta+="🔴 ";if(p.acamado)alerta+="⚫ ";if(p.da)alerta+="🧠 ";return alerta+(p.nome_completo??"")})()}</td>
+<td>${calcularIdade(p.data_nascimento)}</td>
+<td>${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_has"><option value="true"${p.has?" selected":""}>✔</option><option value="false"${!p.has?" selected":""}></option></select>`:(p.has?"✔":"")}</td>
+<td>${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_dm"><option value="true"${p.dm?" selected":""}>✔</option><option value="false"${!p.dm?" selected":""}></option></select>`:(p.dm?"✔":"")}</td>
+<td>${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_da"><option value="true"${p.da?" selected":""}>✔</option><option value="false"${!p.da?" selected":""}></option></select>`:(p.da?"✔":"")}</td>
+<td>${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_cardio"><option value="true"${p.cardiopatia?" selected":""}>✔</option><option value="false"${!p.cardiopatia?" selected":""}></option></select>`:(p.cardiopatia?"✔":"")}</td>
+<td>${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_acamado"><option value="true"${p.acamado?" selected":""}>✔</option><option value="false"${!p.acamado?" selected":""}></option></select>`:(p.acamado?"✔":"")}</td>
+<td>${MODO_EDICAO_CLINICO?`<input class="campo-clinico clin_pa" value="${p.pressao_arterial??""}" placeholder="120/80">`:(()=>{if(!p.pressao_arterial)return"";let pa=p.pressao_arterial.split("/");if(pa.length!==2)return p.pressao_arterial;let sist=parseInt(pa[0]),diast=parseInt(pa[1]);if(sist<=129&&diast<=85)return`<span style="color:#16a34a;font-weight:bold">🟢 ${p.pressao_arterial}</span>`;if((sist>=130&&sist<=139)||(diast>=86&&diast<=89))return`<span style="color:#ca8a04;font-weight:bold">🟡 ${p.pressao_arterial}</span>`;if(sist>=140||diast>=90)return`<span style="color:#dc2626;font-weight:bold">🔴 ${p.pressao_arterial}</span>`;return p.pressao_arterial})()}</td>
+<td style="font-size:11px;white-space:nowrap">${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_dieta" style="font-size:11px;padding:2px 4px"><option value="">Não</option><option value="🧂Hipossódica"${p.dieta_texto=="🧂Hipossódica"?" selected":""}>🧂Hipossódica</option><option value="🍬Diabética"${p.dieta_texto=="🍬Diabética"?" selected":""}>🍬Diabética</option><option value="🥣Pastosa"${p.dieta_texto=="🥣Pastosa"?" selected":""}>🥣Pastosa</option><option value="🥗Vegetariana"${p.dieta_texto=="🥗Vegetariana"?" selected":""}>🥗Vegetariana</option><option value="🥤Líquida"${p.dieta_texto=="🥤Líquida"?" selected":""}>🥤Líquida</option></select>`:(()=>{if(!p.dieta_especial)return"<span style='color:#6b7280;font-size:11px'>- Sem dieta</span>";let d=(p.dieta_texto??"").toLowerCase();if(d.includes("hipossod"))return"<span style='color:#2563eb;font-weight:bold;font-size:11px'>🧂Hipossódica</span>";if(d.includes("diab"))return"<span style='color:#9333ea;font-weight:bold;font-size:11px'>🍬Diabética</span>";if(d.includes("past"))return"<span style='color:#ea580c;font-weight:bold;font-size:11px'>🥣Pastosa</span>";if(d.includes("veget"))return"<span style='color:#16a34a;font-weight:bold;font-size:11px'>🥗Vegetariana</span>";if(d.includes("liquid"))return"<span style='color:#0ea5e9;font-weight:bold;font-size:11px'>🥤Líquida</span>";return`<span style="color:#f59e0b;font-weight:bold;font-size:11px">🍽️ ${p.dieta_texto}</span>`})()}</td>
+<td>${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_risco"><option value="1"${p.grau_risco==1?" selected":""}>1</option><option value="2"${p.grau_risco==2?" selected":""}>2</option><option value="3"${p.grau_risco==3?" selected":""}>3</option><option value="4"${p.grau_risco==4?" selected":""}>4</option><option value="5"${p.grau_risco==5?" selected":""}>5</option></select>`:(()=>{if(!p.grau_risco)return"";if(p.grau_risco==5)return`<span style="color:#dc2626;font-weight:bold">🔴 ${p.grau_risco}</span>`;if(p.grau_risco==4)return`<span style="color:#ea580c;font-weight:bold">🟠 ${p.grau_risco}</span>`;if(p.grau_risco==3)return`<span style="color:#ca8a04;font-weight:bold">🟡 ${p.grau_risco}</span>`;return`<span style="color:#16a34a;font-weight:bold">🟢 ${p.grau_risco}</span>`})()}</td>
+<td>${MODO_EDICAO_CLINICO?`<input class="campo-clinico clin_outros" value="${p.outras_comorbidades??""}">`:`<span style="font-size:11px;max-width:160px;display:inline-block;white-space:normal;line-height:1.2">${p.outras_comorbidades??"Não tem"}</span>`}</td>
+<td class="acoesClinico" style="${MODO_EDICAO_CLINICO?'':'display:none'}"><button class="btn-danger" style="font-size:10px;padding:3px 6px" onclick="excluirPaciente('${p.id}',\`${p.nome_completo}\`)">Excluir</button></td>
+</tr>`
 })
+
 tabela.innerHTML=html
 
-/* controlar coluna ações */
-const colAcoes = document.getElementById("colAcoes")
-
-if(colAcoes){
-
-if(MODO_EDICAO_CLINICO){
-colAcoes.style.display=""
-}else{
-colAcoes.style.display="none"
-}
-
-}
 /* ===============================
 030A PAINEL NUTRICIONAL
 =============================== */
-let totalDietas=0
-let hipossodica=0
-let diabetica=0
-let pastosa=0
-let vegetariana=0
-let liquida=0
+let totalDietas=0,hipossodica=0,diabetica=0,pastosa=0,vegetariana=0,liquida=0
+data.forEach(p=>{if(!p.dieta_especial)return;totalDietas++;let d=(p.dieta_texto??"").toLowerCase();if(d.includes("hipossod"))hipossodica++;else if(d.includes("diab"))diabetica++;else if(d.includes("past"))pastosa++;else if(d.includes("veget"))vegetariana++;else if(d.includes("liquid"))liquida++})
+const elTotal=document.getElementById("dietaTotal"),elHip=document.getElementById("dietaHipossodica"),elDia=document.getElementById("dietaDiabetica"),elPas=document.getElementById("dietaPastosa"),elVeg=document.getElementById("dietaVegetariana"),elLiq=document.getElementById("dietaLiquida")
+if(elTotal)elTotal.innerText=`🍽️ ${totalDietas}`
+if(elHip)elHip.innerText=`🧂 ${hipossodica}`
+if(elDia)elDia.innerText=`🍬 ${diabetica}`
+if(elPas)elPas.innerText=`🥣 ${pastosa}`
+if(elVeg)elVeg.innerText=`🥗 ${vegetariana}`
+if(elLiq)elLiq.innerText=`🥤 ${liquida}`
 
-data.forEach(p=>{
-
-if(!p.dieta_especial) return
-
-totalDietas++
-
-let d=(p.dieta_texto??"").toLowerCase()
-
-if(d.includes("hipossod")) hipossodica++
-else if(d.includes("diab")) diabetica++
-else if(d.includes("past")) pastosa++
-else if(d.includes("veget")) vegetariana++
-else if(d.includes("liquid")) liquida++
-
-})
-
-const elTotal=document.getElementById("dietaTotal")
-const elHip=document.getElementById("dietaHipossodica")
-const elDia=document.getElementById("dietaDiabetica")
-const elPas=document.getElementById("dietaPastosa")
-const elVeg=document.getElementById("dietaVegetariana")
-const elLiq=document.getElementById("dietaLiquida")
-
-if(elTotal) elTotal.innerText=`🍽️ ${totalDietas}`
-if(elHip) elHip.innerText=`🧂 ${hipossodica}`
-if(elDia) elDia.innerText=`🍬 ${diabetica}`
-if(elPas) elPas.innerText=`🥣 ${pastosa}`
-if(elVeg) elVeg.innerText=`🥗 ${vegetariana}`
-if(elLiq) elLiq.innerText=`🥤 ${liquida}`
-
-/* ====================================================
-030B PAINEL DE RISCO INSTITUCIONAL
-==================================================== */
-let alto=0
-let medio=0
-let moderado=0
-let baixo=0
-
-data.forEach(p=>{
-if(p.grau_risco==5) alto++
-else if(p.grau_risco==4) medio++
-else if(p.grau_risco==3) moderado++
-else if(p.grau_risco<=2) baixo++
-})
-
-const r1=document.getElementById("riscoAlto")
-const r2=document.getElementById("riscoMedio")
-const r3=document.getElementById("riscoModerado")
-const r4=document.getElementById("riscoBaixo")
-
-if(r1) r1.innerText=alto
-if(r2) r2.innerText=medio
-if(r3) r3.innerText=moderado
-if(r4) r4.innerText=baixo
+/* ===============================
+030B PAINEL DE RISCO
+=============================== */
+let alto=0,medio=0,moderado=0,baixo=0
+data.forEach(p=>{if(p.grau_risco==5)alto++;else if(p.grau_risco==4)medio++;else if(p.grau_risco==3)moderado++;else if(p.grau_risco<=2)baixo++})
+const r1=document.getElementById("riscoAlto"),r2=document.getElementById("riscoMedio"),r3=document.getElementById("riscoModerado"),r4=document.getElementById("riscoBaixo")
+if(r1)r1.innerText=alto
+if(r2)r2.innerText=medio
+if(r3)r3.innerText=moderado
+if(r4)r4.innerText=baixo
 
 /* ===============================
 030C INDICADORES
 =============================== */
-const riscoTotal=risco1+risco2+risco3+risco4+risco5
-
-const corHas="#e74c3c"
-const corDm="#f39c12"
-const corDemencia="#8e44ad"
-const corCardio="#c0392b"
-const corAcamado="#34495e"
-const corPa="#e67e22"
-const corRisco="#2c3e50"
-
+const corHas="#e74c3c",corDm="#f39c12",corDemencia="#8e44ad",corCardio="#c0392b",corAcamado="#34495e",corPa="#e67e22",corRisco="#2c3e50"
 document.getElementById("cabHas").innerHTML=`HAS<br><b style="color:${corHas}">${totalHas}</b>`
 document.getElementById("cabDm").innerHTML=`DM<br><b style="color:${corDm}">${totalDm}</b>`
 document.getElementById("cabDemencia").innerHTML=`Demência<br><b style="color:${corDemencia}">${totalDemencia}</b>`
@@ -351,43 +117,24 @@ document.getElementById("cabAcamado").innerHTML=`Acamado<br><b style="color:${co
 document.getElementById("cabPa").innerHTML=`PA<br><b style="color:${corPa}">${totalPAAlterada}</b>`
 document.getElementById("cabRisco").innerHTML=`Risco<br><b style="color:${corRisco}">${riscoTotal}</b>`
 
-document.getElementById("rodapeHas").innerHTML=`<b style="color:${corHas}">${totalHas}</b>`
-document.getElementById("rodapeDm").innerHTML=`<b style="color:${corDm}">${totalDm}</b>`
-document.getElementById("rodapeDemencia").innerHTML=`<b style="color:${corDemencia}">${totalDemencia}</b>`
-document.getElementById("rodapeCardio").innerHTML=`<b style="color:${corCardio}">${totalCardio}</b>`
-document.getElementById("rodapeAcamado").innerHTML=`<b style="color:${corAcamado}">${totalAcamado}</b>`
-document.getElementById("rodapePa").innerHTML=`<b style="color:${corPa}">${totalPAAlterada}</b>`
-document.getElementById("rodapeRisco").innerHTML=`<b style="color:${corRisco}">${riscoTotal}</b>`
-
-const totalPacientesCard=document.getElementById("totalPacientes")
-if(totalPacientesCard) totalPacientesCard.innerHTML=totalPacientes
 /* ===============================
 030D INDICADORES VISUAIS
 =============================== */
-const iHAS=document.getElementById("indicadorHAS")
-const iDM=document.getElementById("indicadorDM")
-const iDEM=document.getElementById("indicadorDEM")
-const iCARD=document.getElementById("indicadorCARDIO")
-const iACAM=document.getElementById("indicadorACAMADO")
-const iPA=document.getElementById("indicadorPA")
+const iHAS=document.getElementById("indicadorHAS"),iDM=document.getElementById("indicadorDM"),iDEM=document.getElementById("indicadorDEM"),iCARD=document.getElementById("indicadorCARDIO"),iACAM=document.getElementById("indicadorACAMADO"),iPA=document.getElementById("indicadorPA")
+if(iHAS)iHAS.innerHTML=`HAS <b>${totalHas}</b>`
+if(iDM)iDM.innerHTML=`DM <b>${totalDm}</b>`
+if(iDEM)iDEM.innerHTML=`DEM <b>${totalDemencia}</b>`
+if(iCARD)iCARD.innerHTML=`CARD <b>${totalCardio}</b>`
+if(iACAM)iACAM.innerHTML=`ACAM <b>${totalAcamado}</b>`
+if(iPA)iPA.innerHTML=`PA <b>${totalPAAlterada}</b>`
+const elR5=document.getElementById("indicadorRISCO5"),elRisco4=document.getElementById("indicadorRISCO4"),elR3=document.getElementById("indicadorRISCO3"),elR12=document.getElementById("indicadorRISCO12")
+if(elR5)elR5.innerHTML=`🔴 ${risco5}`
+if(elRisco4)elRisco4.innerHTML=`🟠 ${risco4}`
+if(elR3)elR3.innerHTML=`🟡 ${risco3}`
+if(elR12)elR12.innerHTML=`🟢 ${risco1+risco2}`
 
-if(iHAS) iHAS.innerHTML=`HAS <b>${totalHas}</b>`
-if(iDM) iDM.innerHTML=`DM <b>${totalDm}</b>`
-if(iDEM) iDEM.innerHTML=`DEM <b>${totalDemencia}</b>`
-if(iCARD) iCARD.innerHTML=`CARD <b>${totalCardio}</b>`
-if(iACAM) iACAM.innerHTML=`ACAM <b>${totalAcamado}</b>`
-if(iPA) iPA.innerHTML=`PA <b>${totalPAAlterada}</b>`
-
-const elR5=document.getElementById("indicadorRISCO5")
-const elRisco4=document.getElementById("indicadorRISCO4")
-const elR3=document.getElementById("indicadorRISCO3")
-const elR12=document.getElementById("indicadorRISCO12")
-
-if(elR5) elR5.innerHTML=`🔴 ${risco5}`
-if(elRisco4) elR4.innerHTML=`🟠 ${risco4}`
-if(elR3) elR3.innerHTML=`🟡 ${risco3}`
-if(elR12) elR12.innerHTML=`🟢 ${risco1+risco2}`
-
+const totalPacientesCard=document.getElementById("totalPacientes")
+if(totalPacientesCard)totalPacientesCard.innerHTML=totalPacientes
 }
 
 /* ====================================================
