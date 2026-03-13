@@ -325,12 +325,14 @@ botao.classList.remove("rotina-pendente")
 botao.classList.add("rotina-executada")
 }
 
+const profissionalId=localStorage.getItem("profissional_id") || null
+
 const {error}=await db
 .from("rotinas_execucao")
 .update({
 status:"executado",
 horario_executado:new Date(),
-profissional_id:localStorage.getItem("profissional_id")
+profissional_id:profissionalId
 })
 .eq("idoso_id",pacienteId)
 .eq("rotina_id",rotinaId)
