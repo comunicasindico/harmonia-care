@@ -2,22 +2,25 @@
 010 – LOGIN
 ==================================================== */
 async function login(){
+/* garantir que o Supabase carregou */
+while(!db){
+await new Promise(r=>setTimeout(r,50))
+}
 const usuario=document.getElementById("usuario").value.trim()
 const senha=document.getElementById("senha").value.trim()
 if(!usuario||!senha){alert("Informe usuário e senha");return}
 
 if(usuario==="admin"&&senha==="123456"){
 
-/* buscar admin real na tabela profissionais */
 const {data:admin,error:eAdmin}=await db
 .from("profissionais")
 .select("id,nome_apelido,empresa_id")
 .eq("nome_apelido","admin")
 .single()
 
-if(eAdmin || !admin){
-alert("Administrador não encontrado na tabela profissionais")
-console.error("Erro admin",eAdmin)
+if(eAdmin||!admin){
+console.error("Admin não encontrado",eAdmin)
+alert("Administrador não configurado no sistema")
 return
 }
 
@@ -29,6 +32,7 @@ document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 
 await iniciarSistema()
+
 return
 }
 
