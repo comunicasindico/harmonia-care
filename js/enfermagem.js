@@ -458,7 +458,7 @@ return
 }
 const {data:rotinas,error:e2}=await db
 .from("rotina_modelos")
-.select("id")
+.select("id,turno")
 if(e2){
 console.error(e2)
 return
@@ -481,6 +481,7 @@ const {error:e4}=await db
 idoso_id:p.id,
 rotina_id:r.id,
 data:hoje,
+turno:r.turno,
 status:"pendente"
 })
 if(e4){
