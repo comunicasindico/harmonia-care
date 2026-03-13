@@ -249,7 +249,7 @@ ${percentual}% (${executadas}/${total})
 Rotinas OK
 </button>
 
-</div>faça o 3 em linhas 
+</div> 
 
 </td>
 
