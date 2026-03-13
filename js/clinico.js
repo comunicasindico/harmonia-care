@@ -109,13 +109,13 @@ if(r4)r4.innerText=baixo
 030C INDICADORES
 =============================== */
 const corHas="#e74c3c",corDm="#f39c12",corDemencia="#8e44ad",corCardio="#c0392b",corAcamado="#34495e",corPa="#e67e22",corRisco="#2c3e50"
-document.getElementById("cabHas").innerHTML=`HAS<br><b style="color:${corHas}">${totalHas}</b>`
-document.getElementById("cabDm").innerHTML=`DM<br><b style="color:${corDm}">${totalDm}</b>`
-document.getElementById("cabDemencia").innerHTML=`Demência<br><b style="color:${corDemencia}">${totalDemencia}</b>`
-document.getElementById("cabCardio").innerHTML=`Cardio<br><b style="color:${corCardio}">${totalCardio}</b>`
-document.getElementById("cabAcamado").innerHTML=`Acamado<br><b style="color:${corAcamado}">${totalAcamado}</b>`
-document.getElementById("cabPa").innerHTML=`PA<br><b style="color:${corPa}">${totalPAAlterada}</b>`
-document.getElementById("cabRisco").innerHTML=`Risco<br><b style="color:${corRisco}">${riscoTotal}</b>`
+document.getElementById("cabHas").innerHTML="HAS"
+document.getElementById("cabDm").innerHTML="DM"
+document.getElementById("cabDemencia").innerHTML="Demência"
+document.getElementById("cabCardio").innerHTML="Cardio"
+document.getElementById("cabAcamado").innerHTML="Acamado"
+document.getElementById("cabPa").innerHTML="PA"
+document.getElementById("cabRisco").innerHTML="Risco"
 
 /* ===============================
 030D INDICADORES VISUAIS
