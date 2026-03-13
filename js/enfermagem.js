@@ -109,7 +109,10 @@ const {data:rotinas,error:e2}=await db
 if(e2){console.error("Erro rotinas",e2);return}
 const {data:execucoes,error:e3}=await db
 .from("rotinas_execucao")
-.select("*")
+.select(`
+*,
+profissionais(nome_apelido)
+`)
 .eq("data",dataHoje)
 if(e3){console.error("Erro execucoes",e3);return}
 let lista=[]
@@ -123,7 +126,8 @@ idoso_id:p.id,
 rotina_id:r.id,
 paciente:p.nome_completo,
 rotina:r.nome,
-status:exec?.status||"pendente"
+status:exec?.status||"pendente",
+profissional:exec?.profissionais?.nome_apelido||""
 })
 })
 })
@@ -178,7 +182,7 @@ rotinasHTML+=`
 <button
 class="btn-rotina ${classe}"
 onclick="executarRotina('${r.idoso_id}','${r.rotina_id}')">
-${r.rotina}
+${r.rotina}${r.profissional?`<br><small>✔ ${r.profissional}</small>`:""}
 </button>
 `
 
@@ -287,7 +291,8 @@ await db
 .from("rotinas_execucao")
 .update({
 status:"executado",
-horario_executado:new Date()
+horario_executado:new Date(),
+profissional_id:localStorage.getItem("profissional_id")
 })
 .eq("idoso_id",pacienteId)
 .eq("rotina_id",rotinaId)
@@ -466,3 +471,5 @@ await carregarDadosClinicosPaciente(paciente)
 }
 
 }
+
+
