@@ -276,9 +276,9 @@ Object.keys(rotinasUnicas).forEach(rotinaId=>{
 
 rotinasHTML+=`
 <button
-class="btn-rotina"
-onclick="executarRotinaTodos('${rotinaId}')">
-${rotinasUnicas[rotinaId]}
+class="btn-rotina ${classe}"
+onclick="executarRotina('${r.idoso_id}','${r.rotina_id}',this)">
+${r.rotina}${r.profissional?`<br><small>✔ ${r.profissional}</small>`:""}
 </button>
 `
 
@@ -316,7 +316,7 @@ if(!db)return
 
 const dataHoje=document.getElementById("dataInicio")?.value
 
-/* muda visual imediato */
+/* muda visual imediatamente */
 
 if(botao){
 botao.classList.remove("rotina-pendente")
@@ -332,21 +332,19 @@ status:"executado",
 horario_executado:new Date(),
 profissional_id:localStorage.getItem("profissional_id")
 })
-.match({
-idoso_id:pacienteId,
-rotina_id:rotinaId,
-data:dataHoje
-})
+.eq("idoso_id",pacienteId)
+.eq("rotina_id",rotinaId)
+.eq("data",dataHoje)
 
 if(error){
 console.error("Erro executar rotina",error)
 }
 
-/* atualização silenciosa */
+/* recarrega silenciosamente */
 
 setTimeout(()=>{
 carregarRotinas()
-},300)
+},200)
 
 }
 
