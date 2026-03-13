@@ -7,11 +7,27 @@ const senha=document.getElementById("senha").value.trim()
 if(!usuario||!senha){alert("Informe usuário e senha");return}
 
 if(usuario==="admin"&&senha==="123456"){
-localStorage.setItem("usuario_nome","Administrador")
-localStorage.setItem("profissional_id","admin")
-localStorage.setItem("empresa_id",EMPRESA_ID)
+
+/* buscar admin real na tabela profissionais */
+const {data:admin,error:eAdmin}=await db
+.from("profissionais")
+.select("id,nome_apelido,empresa_id")
+.eq("nome_apelido","admin")
+.single()
+
+if(eAdmin || !admin){
+alert("Administrador não encontrado na tabela profissionais")
+console.error("Erro admin",eAdmin)
+return
+}
+
+localStorage.setItem("usuario_nome",admin.nome_apelido)
+localStorage.setItem("profissional_id",admin.id)
+localStorage.setItem("empresa_id",admin.empresa_id)
+
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
+
 await iniciarSistema()
 return
 }
