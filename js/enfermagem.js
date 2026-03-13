@@ -337,9 +337,9 @@ const dataHoje=document.getElementById("dataInicio")?.value
 
 let profissionalId = localStorage.getItem("profissional_id")
 
-/* admin não pode ser enviado para UUID */
+/* garantir UUID válido */
 
-if(profissionalId==="admin"){
+if(!profissionalId || profissionalId==="null"){
 profissionalId=null
 }
 
