@@ -50,7 +50,7 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 .progresso-bar{width:140px;height:10px;background:#e5e7eb;border-radius:6px;overflow:hidden;}
 .progresso-fill{height:100%;transition:width .3s ease;}
 .progresso-label{font-size:12px;font-weight:bold;min-width:70px;}
-.dieta-chip{padding:4px 8px;border-radius:6px;background:#f3f4f6;font-weight:bold;border:1px solid #ddd;}
+.dieta-chip{padding:3px 6px;border-radius:6px;background:#f3f4f6;font-weight:600;border:1px solid #ddd;font-size:11px;line-height:1;}
 .clin_pa{width:70px;text-align:center;}
 #tabelaClinica td{font-size:11px;padding:4px 6px;}
 .clin_outros{font-size:11px;max-width:160px;white-space:normal;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
@@ -253,21 +253,22 @@ flex-wrap:wrap;
 <!-- PAINEL INDICADORES CLINICOS -->
 <div id="painelIndicadoresClinicos" style="
 display:flex;
-gap:8px;
+gap:6px;
 flex-wrap:wrap;
-margin-bottom:10px;
+margin-bottom:6px;
+font-size:11px;
 ">
 <div class="dieta-chip" id="indicadorHAS">HAS 0</div>
 <div class="dieta-chip" id="indicadorDM">DM 0</div>
 <div class="dieta-chip" id="indicadorDEM">DEM 0</div>
-<div class="dieta-chip" id="indicadorCARDIO">CARDIO 0</div>
+<div class="dieta-chip" id="indicadorCARDIO">CARD 0</div>
 <div class="dieta-chip" id="indicadorACAMADO">ACAM 0</div>
 <div class="dieta-chip" id="indicadorPA">PA 0</div>
 
-<div class="dieta-chip" id="indicadorRISCO5">🔴 0</div>
-<div class="dieta-chip" id="indicadorRISCO4">🟠 0</div>
-<div class="dieta-chip" id="indicadorRISCO3">🟡 0</div>
-<div class="dieta-chip" id="indicadorRISCO12">🟢 0</div>
+<div class="dieta-chip" id="indicadorRISCO5" style="background:#fee2e2">🔴 0</div>
+<div class="dieta-chip" id="indicadorRISCO4" style="background:#fed7aa">🟠 0</div>
+<div class="dieta-chip" id="indicadorRISCO3" style="background:#fef3c7">🟡 0</div>
+<div class="dieta-chip" id="indicadorRISCO12" style="background:#dcfce7">🟢 0</div>
 </div>
 
 <table id="tabelaClinica">
@@ -355,6 +356,7 @@ setTimeout(()=>location.reload(),300)
 
 </body>
 </html>
+
 
 
 
