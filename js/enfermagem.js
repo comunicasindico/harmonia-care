@@ -165,12 +165,13 @@ const {data:execucoes,error:e3}=await db
 .select("*")
 .eq("data",dataHoje)
 if(e3){console.error("Erro execucoes",e3);return}
-const {data:profissionais}=await db
-.from("profissionais")
-.select("id,nome_apelido")
+const {data:usuarios}=await db
+.from("usuarios")
+.select("id,nome")
+
 const mapaProfissionais={}
-profissionais?.forEach(p=>{
-mapaProfissionais[p.id]=p.nome_apelido
+usuarios?.forEach(u=>{
+mapaProfissionais[u.id]=u.nome
 })
 /* criar mapa de execuções para evitar .find() lento */
 const mapaExecucoes={}
@@ -190,7 +191,7 @@ rotina_id:r.id,
 paciente:p.nome_completo,
 rotina:r.nome,
 status:exec?.status||"pendente",
-profissional:exec?.profissional_id?mapaProfissionais[exec.profissional_id]:""
+profissional:exec?.usuario_id?mapaProfissionais[exec.usuario_id]:""
 })
 })
 })
@@ -345,16 +346,17 @@ async function executarRotina(pacienteId,rotinaId,botao){
 
 if(!db)return
 
-const dataHoje=document.getElementById("dataInicio")?.value
+/* usar data padrão ISO para evitar erro de formato */
+const dataHoje=new Date().toISOString().slice(0,10)
 
-/* identificar profissional */
+/* identificar usuário logado */
 
-let profissionalId = PROFISSIONAL_ID || localStorage.getItem("profissional_id") || null
+let usuarioId = localStorage.getItem("usuario_id")
 
 /* garantir UUID válido */
 
-if(!profissionalId || profissionalId==="null"){
-profissionalId=null
+if(!usuarioId || usuarioId==="null"){
+usuarioId=null
 }
 
 /* feedback visual imediato */
@@ -371,7 +373,7 @@ const {error}=await db
 .update({
 status:"executado",
 horario_executado:new Date(),
-profissional_id:profissionalId
+usuario_id:usuarioId
 })
 .eq("idoso_id",pacienteId)
 .eq("rotina_id",rotinaId)
@@ -382,6 +384,7 @@ console.error("Erro executar rotina",error)
 }
 
 /* recarregar lista imediatamente */
+
 await carregarRotinas()
 
 }
