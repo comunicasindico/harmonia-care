@@ -133,7 +133,7 @@ pacientes=data||[]
 const {data:rotinas,error:e2}=await db
 .from("rotina_modelos")
 .select("id,nome,turno")
-.eq("turno",turno)
+const rotinasTurno = rotinas?.filter(r=>r.turno===turno) || []
 if(e2){console.error("Erro rotinas",e2);return}
 const {data:execucoes,error:e3}=await db
 .from("rotinas_execucao")
@@ -155,7 +155,7 @@ mapaExecucoes[`${e.idoso_id}_${e.rotina_id}`]=e
 let lista=[]
 pacientes?.forEach(p=>{
 if(paciente!=="todos"&&paciente!==p.id)return
-rotinas?.forEach(r=>{
+rotinasTurno.forEach(r=>{
 const chave=`${p.id}_${r.id}`
 const exec=mapaExecucoes[chave]
 lista.push({
