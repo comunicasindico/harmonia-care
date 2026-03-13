@@ -114,11 +114,15 @@ REMOVIDOS DO CABEÇALHO
 /* ===============================
 030D INDICADORES VISUAIS
 =============================== */
-const elR5=document.getElementById("indicadorRISCO5"),elRisco4=document.getElementById("indicadorRISCO4"),elR3=document.getElementById("indicadorRISCO3"),elR12=document.getElementById("indicadorRISCO12")
-if(elR5)elR5.innerHTML=`🔴 ${risco5}`
-if(elRisco4)elRisco4.innerHTML=`🟠 ${risco4}`
-if(elR3)elR3.innerHTML=`🟡 ${risco3}`
-if(elR12)elR12.innerHTML=`🟢 ${risco1+risco2}`
+const elR5=document.getElementById("indicadorRISCO5")
+const elR4=document.getElementById("indicadorRISCO4")
+const elR3=document.getElementById("indicadorRISCO3")
+const elR12=document.getElementById("indicadorRISCO12")
+
+if(elR5)elR5.innerHTML=`🔴 Alto ${risco5}`
+if(elR4)elR4.innerHTML=`🟠 Médio ${risco4}`
+if(elR3)elR3.innerHTML=`🟡 Moderado ${risco3}`
+if(elR12)elR12.innerHTML=`🟢 Baixo ${risco1+risco2}`
 
 const totalPacientesCard=document.getElementById("totalPacientes")
 if(totalPacientesCard)totalPacientesCard.innerHTML=totalPacientes
