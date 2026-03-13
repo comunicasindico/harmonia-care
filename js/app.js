@@ -38,7 +38,15 @@ if(painelSalvo==="clinico"){abrirClinico()}
 else if(painelSalvo==="admin"){abrirAdmin()}
 else{abrirEnfermagem()}
 }
-
+/* ====================================================
+011A – RESTAURAR PAINEL ATUAL
+==================================================== */
+const painelSalvo = localStorage.getItem("painelAtual")
+if(painelSalvo){
+abrirPainel(painelSalvo)
+}else{
+abrirPainel("painelEnfermagem")
+}
 /* ====================================================
 012 – LOGOUT
 ==================================================== */
@@ -79,6 +87,8 @@ if(fim)fim.value=dataLocal
 015 – NAVEGAÇÃO PAINÉIS
 ==================================================== */
 function abrirPainel(id){
+/* salva painel atual */
+localStorage.setItem("painelAtual", id)
 const paineis=["painelEnfermagem","painelClinico","painelAdmin"]
 paineis.forEach(p=>{
 const el=document.getElementById(p)
