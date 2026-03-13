@@ -216,7 +216,7 @@ const classe=r.status==="executado"
 rotinasHTML+=`
 <button
 class="btn-rotina ${classe}"
-onclick="executarRotina('${r.idoso_id}','${r.rotina_id}')">
+onclick="executarRotina('${r.idoso_id}','${r.rotina_id}',this)">
 ${r.rotina}${r.profissional?`<br><small>✔ ${r.profissional}</small>`:""}
 </button>
 `
@@ -310,11 +310,20 @@ tbody.innerHTML=html
 /* ====================================================
 024 – EXECUTAR ROTINA
 ==================================================== */
-async function executarRotina(pacienteId,rotinaId){
+async function executarRotina(pacienteId,rotinaId,botao){
 
 if(!db)return
 
 const dataHoje=document.getElementById("dataInicio")?.value
+
+/* muda visual imediato */
+
+if(botao){
+botao.classList.remove("rotina-pendente")
+botao.classList.add("rotina-executada")
+}
+
+/* salvar no banco */
 
 const {error}=await db
 .from("rotinas_execucao")
@@ -333,7 +342,11 @@ if(error){
 console.error("Erro executar rotina",error)
 }
 
+/* atualização silenciosa */
+
+setTimeout(()=>{
 carregarRotinas()
+},300)
 
 }
 
