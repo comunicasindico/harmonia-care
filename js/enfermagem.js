@@ -349,7 +349,7 @@ const dataHoje=document.getElementById("dataInicio")?.value
 
 /* identificar profissional */
 
-let profissionalId = localStorage.getItem("profissional_id")
+let profissionalId = PROFISSIONAL_ID || localStorage.getItem("profissional_id") || null
 
 /* garantir UUID válido */
 
