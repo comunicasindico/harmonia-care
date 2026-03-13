@@ -241,12 +241,6 @@ html+=`
 
 <div class="progresso-container">
 
-<div class="progresso-bar">
-<div class="progresso-fill"
-style="width:${percentual}%;background:${cor}">
-</div>
-</div>
-
 <span class="progresso-label">
 ${percentual}% (${executadas}/${total})
 </span>
@@ -255,7 +249,7 @@ ${percentual}% (${executadas}/${total})
 Rotinas OK
 </button>
 
-</div>
+</div>faça o 3 em linhas 
 
 </td>
 
