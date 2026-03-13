@@ -387,6 +387,7 @@ if(r5) r5.innerHTML=`🔴 ${risco5}`
 if(r4) r4.innerHTML=`🟠 ${risco4}`
 if(r3) r3.innerHTML=`🟡 ${risco3}`
 if(r12) r12.innerHTML=`🟢 ${risco1+risco2}`
+
 }
 
 /* ====================================================
