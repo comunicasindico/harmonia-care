@@ -316,16 +316,22 @@ if(!db)return
 
 const dataHoje=document.getElementById("dataInicio")?.value
 
-await db
+const {error}=await db
 .from("rotinas_execucao")
 .update({
 status:"executado",
 horario_executado:new Date(),
 profissional_id:localStorage.getItem("profissional_id")
 })
-.eq("idoso_id",pacienteId)
-.eq("rotina_id",rotinaId)
-.eq("data",dataHoje)
+.match({
+idoso_id:pacienteId,
+rotina_id:rotinaId,
+data:dataHoje
+})
+
+if(error){
+console.error("Erro executar rotina",error)
+}
 
 carregarRotinas()
 
