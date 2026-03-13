@@ -115,7 +115,31 @@ pacientes=data?.map(p=>({
 id:p.pacientes.id,
 nome_completo:p.pacientes.nome_completo
 }))||[]
+/* ====================================================
+FALLBACK – SE NÃO HOUVER PACIENTES VINCULADOS
+==================================================== */
+
+if(!pacientes || pacientes.length===0){
+
+console.warn("Fallback ativado: carregando todos pacientes")
+
+const {data:todosPacientes,error:eFallback}=await db
+.from("pacientes")
+.select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+.order("nome_completo")
+
+if(eFallback){
+console.error("Erro fallback pacientes",eFallback)
+return
 }
+
+pacientes=todosPacientes||[]
+
+}
+}
+
 /* se for ADMIN (sem filtro por profissional) */
 else{
 const {data,error}=await db
