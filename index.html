@@ -333,24 +333,32 @@ justify-content:flex-end;
 
 </div>
 
-<script src="./js/globals.js?v=3"></script>
-<script src="./js/supabase.js?v=3"></script>
-<script src="./js/enfermagem.js?v=3"></script>
-<script src="./js/clinico.js?v=3"></script>
-<script src="./js/admin.js?v=3"></script>
-<script src="./js/pdf.js?v=3"></script>
-<script src="./js/app.js?v=3"></script>
-
 <script>
+function carregarJS(arquivo){
+const s=document.createElement("script")
+s.src=arquivo+"?v="+Date.now()
+document.body.appendChild(s)
+}
+
+carregarJS("./js/globals.js")
+carregarJS("./js/supabase.js")
+carregarJS("./js/enfermagem.js")
+carregarJS("./js/clinico.js")
+carregarJS("./js/admin.js")
+carregarJS("./js/pdf.js")
+carregarJS("./js/app.js")
+</script>
+
 window.addEventListener("load",()=>{
 if(!window.db){
-setTimeout(()=>location.reload(),300)
+console.warn("Supabase ainda não carregou")
 }
 })
 </script>
 
 </body>
 </html>
+
 
 
 
