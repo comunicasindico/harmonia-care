@@ -5,13 +5,17 @@ async function login(){
 const usuario=document.getElementById("usuario").value.trim()
 const senha=document.getElementById("senha").value.trim()
 if(!usuario||!senha){alert("Informe usuário e senha");return}
+
 if(usuario==="admin"&&senha==="123456"){
 localStorage.setItem("usuario_nome","Administrador")
-localStorage.setItem("profissional_id",null)
+localStorage.setItem("profissional_id","admin")
+localStorage.setItem("empresa_id",EMPRESA_ID)
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 await iniciarSistema()
-return}
+return
+}
+
 const {data,error}=await db.from("usuarios").select("*").eq("usuario",usuario).limit(1)
 if(error){console.error(error);alert("Erro ao acessar usuários");return}
 if(!data||data.length===0){alert("Usuário não encontrado");return}
