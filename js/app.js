@@ -113,7 +113,6 @@ if(alvo){alvo.style.display="block"}
 
 function abrirEnfermagem(){
 abrirPainel("painelEnfermagem")
-localStorage.setItem("painelAtual","enfermagem")
 if(typeof carregarRotinas==="function"){
 carregarRotinas()
 }
@@ -126,14 +125,12 @@ carregarDadosClinicosPaciente(paciente)
 
 function abrirClinico(){
 abrirPainel("painelClinico")
-localStorage.setItem("painelAtual","clinico")
 const acoes=document.getElementById("acoesClinico")
 if(acoes)acoes.style.display="flex"
 if(typeof carregarClinico==="function"){carregarClinico()}
 }
 
 async function abrirAdmin(){
-localStorage.setItem("painelAtual","admin")
 abrirPainel("painelAdmin")
 if(typeof carregarPacientesDrag==="function"){await carregarPacientesDrag()}
 if(typeof carregarProfissionaisDrag==="function"){await carregarProfissionaisDrag()}
