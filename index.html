@@ -236,25 +236,42 @@ Pesquisar
 <!-- PAINEL DE DIETAS -->
 <div id="painelDietas" style="
 display:flex;
-flex-wrap:wrap;
 gap:8px;
 margin-bottom:10px;
 font-size:12px;
+justify-content:flex-end;
+flex-wrap:wrap;
 ">
-
 <div class="dieta-chip" id="dietaTotal">🍽️ 0</div>
 <div class="dieta-chip" id="dietaHipossodica">🧂 0</div>
 <div class="dieta-chip" id="dietaDiabetica">🍬 0</div>
 <div class="dieta-chip" id="dietaPastosa">🥣 0</div>
 <div class="dieta-chip" id="dietaVegetariana">🥗 0</div>
 <div class="dieta-chip" id="dietaLiquida">🥤 0</div>
+</div>
 
+<!-- PAINEL INDICADORES CLINICOS -->
+<div id="painelIndicadoresClinicos" style="
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+margin-bottom:10px;
+">
+<div class="dieta-chip" id="indicadorHAS">HAS 0</div>
+<div class="dieta-chip" id="indicadorDM">DM 0</div>
+<div class="dieta-chip" id="indicadorDEM">DEM 0</div>
+<div class="dieta-chip" id="indicadorCARDIO">CARDIO 0</div>
+<div class="dieta-chip" id="indicadorACAMADO">ACAM 0</div>
+<div class="dieta-chip" id="indicadorPA">PA 0</div>
+
+<div class="dieta-chip" id="indicadorRISCO5">🔴 0</div>
+<div class="dieta-chip" id="indicadorRISCO4">🟠 0</div>
+<div class="dieta-chip" id="indicadorRISCO3">🟡 0</div>
+<div class="dieta-chip" id="indicadorRISCO12">🟢 0</div>
 </div>
 
 <table id="tabelaClinica">
-
 <thead>
-
 <tr>
 
 <th>Paciente</th>
@@ -338,6 +355,7 @@ setTimeout(()=>location.reload(),300)
 
 </body>
 </html>
+
 
 
 
