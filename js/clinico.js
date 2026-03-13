@@ -378,15 +378,15 @@ if(iCARD) iCARD.innerHTML=`CARD <b>${totalCardio}</b>`
 if(iACAM) iACAM.innerHTML=`ACAM <b>${totalAcamado}</b>`
 if(iPA) iPA.innerHTML=`PA <b>${totalPAAlterada}</b>`
 
-const r5=document.getElementById("indicadorRISCO5")
-const r4=document.getElementById("indicadorRISCO4")
-const r3=document.getElementById("indicadorRISCO3")
-const r12=document.getElementById("indicadorRISCO12")
+const elR5=document.getElementById("indicadorRISCO5")
+const elR4=document.getElementById("indicadorRISCO4")
+const elR3=document.getElementById("indicadorRISCO3")
+const elR12=document.getElementById("indicadorRISCO12")
 
-if(r5) r5.innerHTML=`🔴 ${risco5}`
-if(r4) r4.innerHTML=`🟠 ${risco4}`
-if(r3) r3.innerHTML=`🟡 ${risco3}`
-if(r12) r12.innerHTML=`🟢 ${risco1+risco2}`
+if(elR5) elR5.innerHTML=`🔴 ${risco5}`
+if(elR4) elR4.innerHTML=`🟠 ${risco4}`
+if(elR3) elR3.innerHTML=`🟡 ${risco3}`
+if(elR12) elR12.innerHTML=`🟢 ${risco1+risco2}`
 
 }
 
