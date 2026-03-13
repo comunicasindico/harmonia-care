@@ -208,8 +208,6 @@ let executadas=0
 
 p.rotinas.forEach(r=>{
 
-if(r.status==="executado") executadas++
-
 const classe=r.status==="executado"
 ?"rotina-executada"
 :"rotina-pendente"
