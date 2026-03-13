@@ -50,13 +50,26 @@ location.reload()
 013 – INIT
 ==================================================== */
 window.addEventListener("load",async()=>{
+
+/* aguardar Supabase */
+
+while(!db){
+await new Promise(r=>setTimeout(r,50))
+}
+
 if(typeof carregarEmpresa==="function"){carregarEmpresa()}
+
 const loginSalvo=localStorage.getItem("usuario_nome")
+
 if(loginSalvo){
+
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
+
 await iniciarSistema()
+
 }
+
 })
 window.addEventListener("pageshow",function(e){
 if(e.persisted){location.reload()}
