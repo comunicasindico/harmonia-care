@@ -28,3 +28,6 @@ var ROTINAS_GERADAS=false
 if(typeof MODO_EDICAO_CLINICO==="undefined"){
 var MODO_EDICAO_CLINICO=false
 }
+if(typeof PROFISSIONAL_ID==="undefined"){
+var PROFISSIONAL_ID=localStorage.getItem("profissional_id")||null
+}
