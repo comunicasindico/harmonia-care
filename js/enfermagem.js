@@ -139,7 +139,7 @@ const {data:execucoes,error:e3}=await db
 .from("rotinas_execucao")
 .select(`
 *,
-profissionais(nome_apelido)
+profissionais:profissional_id(nome_apelido)
 `)
 .eq("data",dataHoje)
 if(e3){console.error("Erro execucoes",e3);return}
@@ -148,6 +148,7 @@ pacientes?.forEach(p=>{
 if(paciente!=="todos"&&paciente!==p.id)return
 rotinas?.forEach(r=>{
 const exec=execucoes?.find(e=>e.idoso_id===p.id&&e.rotina_id===r.id)
+
 lista.push({
 id:exec?.id||`${p.id}_${r.id}`,
 idoso_id:p.id,
