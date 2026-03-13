@@ -208,6 +208,8 @@ let executadas=0
 
 p.rotinas.forEach(r=>{
 
+if(r.status==="executado") executadas++
+
 const classe=r.status==="executado"
 ?"rotina-executada"
 :"rotina-pendente"
@@ -219,7 +221,6 @@ onclick="executarRotina('${r.idoso_id}','${r.rotina_id}',this)">
 ${r.rotina}${r.profissional?`<br><small>✔ ${r.profissional}</small>`:""}
 </button>
 `
-
 })
 
 /* CALCULO PROGRESSO */
@@ -264,7 +265,9 @@ ${rotinasHTML}
 LINHA FINAL – TODOS OS PACIENTES
 ============================================ */
 if(lista.length>0 && pacienteSelecionado==="todos"){
+
 const rotinasUnicas={}
+
 lista.forEach(r=>{
 rotinasUnicas[r.rotina_id]=r.rotina
 })
@@ -273,11 +276,13 @@ let rotinasHTML=""
 
 Object.keys(rotinasUnicas).forEach(rotinaId=>{
 
+const nomeRotina=rotinasUnicas[rotinaId]
+
 rotinasHTML+=`
 <button
-class="btn-rotina ${classe}"
-onclick="executarRotina('${r.idoso_id}','${r.rotina_id}',this)">
-${r.rotina}${r.profissional?`<br><small>✔ ${r.profissional}</small>`:""}
+class="btn-rotina"
+onclick="executarRotinaTodos('${rotinaId}')">
+${nomeRotina}
 </button>
 `
 
@@ -315,14 +320,10 @@ if(!db)return
 
 const dataHoje=document.getElementById("dataInicio")?.value
 
-/* muda visual imediatamente */
-
 if(botao){
 botao.classList.remove("rotina-pendente")
 botao.classList.add("rotina-executada")
 }
-
-/* salvar no banco */
 
 const {error}=await db
 .from("rotinas_execucao")
@@ -339,11 +340,9 @@ if(error){
 console.error("Erro executar rotina",error)
 }
 
-/* recarrega silenciosamente */
-
 setTimeout(()=>{
 carregarRotinas()
-},200)
+},150)
 
 }
 
