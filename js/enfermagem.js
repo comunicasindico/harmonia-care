@@ -482,9 +482,10 @@ const {error:e4}=await db
 idoso_id:p.id,
 rotina_id:r.id,
 data:hoje,
-turno:r.turno,
 status:"pendente"
 })
+.onConflict("idoso_id,rotina_id,data")
+.ignore()
 if(e4){
 console.error("Erro insert rotina",e4)
 }
