@@ -96,7 +96,8 @@ const dataHoje=document.getElementById("dataInicio")?.value
 const turno=TURNO_ATUAL
 
 let pacientes=[]
-if(PROFISSIONAL_ID){
+if(PROFISSIONAL_ID && PROFISSIONAL_ID !== "null"){
+
 const {data,error}=await db
 .from("pacientes_profissionais")
 .select(`
