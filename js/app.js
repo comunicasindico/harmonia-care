@@ -8,49 +8,80 @@ await new Promise(r=>setTimeout(r,50))
 }
 const usuario=document.getElementById("usuario").value.trim()
 const senha=document.getElementById("senha").value.trim()
-if(!usuario||!senha){alert("Informe usuário e senha");return}
-
+const btn=document.querySelector("#login button")
+if(btn)btn.disabled=true
+if(!usuario||!senha){
+alert("Informe usuário e senha")
+if(btn)btn.disabled=false
+return
+}
+/* LOGIN ADMIN */
 if(usuario==="admin"&&senha==="123456"){
-
 const {data:admin,error:eAdmin}=await db
 .from("profissionais")
 .select("id,nome_apelido,empresa_id")
 .eq("nome_apelido","admin")
 .single()
-
 if(eAdmin||!admin){
 console.error("Admin não encontrado",eAdmin)
 alert("Administrador não configurado no sistema")
+if(btn)btn.disabled=false
 return
 }
-
 localStorage.setItem("usuario_nome",admin.nome_apelido)
 localStorage.setItem("profissional_id",admin.id)
 localStorage.setItem("empresa_id",admin.empresa_id)
-
+/* atualizar variáveis globais */
+PROFISSIONAL_ID=admin.id
+EMPRESA_ID=admin.empresa_id
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
-
 await iniciarSistema()
-
+if(btn)btn.disabled=false
 return
 }
-
-const {data,error}=await db.from("usuarios").select("*").eq("usuario",usuario).limit(1)
-if(error){console.error(error);alert("Erro ao acessar usuários");return}
-if(!data||data.length===0){alert("Usuário não encontrado");return}
+/* LOGIN USUÁRIO */
+const {data,error}=await db
+.from("usuarios")
+.select("id,nome,senha_hash,empresa_id,ativo")
+.eq("usuario",usuario)
+.limit(1)
+if(error){
+console.error(error)
+alert("Erro ao acessar usuários")
+if(btn)btn.disabled=false
+return
+}
+if(!data||data.length===0){
+alert("Usuário não encontrado")
+if(btn)btn.disabled=false
+return
+}
 const user=data[0]
-if(user.senha_hash!==senha){alert("Senha incorreta");return}
+if(!user.ativo){
+alert("Usuário inativo")
+if(btn)btn.disabled=false
+return
+}
+if(user.senha_hash!==senha){
+alert("Senha incorreta")
+if(btn)btn.disabled=false
+return
+}
 localStorage.setItem("usuario_nome",user.nome)
-localStorage.setItem("profissional_id",user.id)
-
+definirSessaoProfissional(user.id,user.empresa_id)
 /* SALVAR EMPRESA */
 if(user.empresa_id){
 localStorage.setItem("empresa_id",user.empresa_id)
+/* atualizar variável global */
+EMPRESA_ID=user.empresa_id
 }
+/* atualizar variável global */
+PROFISSIONAL_ID=user.id
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 await iniciarSistema()
+if(btn)btn.disabled=false
 }
 /* ====================================================
 011 – INICIAR SISTEMA
