@@ -95,18 +95,46 @@ const paciente=document.getElementById("buscaPaciente")?.value||"todos"
 const dataHoje=document.getElementById("dataInicio")?.value
 const turno=TURNO_ATUAL
 
-const {data:pacientes,error:e1}=await db
+let pacientes=[]
+if(PROFISSIONAL_ID){
+const {data,error}=await db
+.from("pacientes_profissionais")
+.select(`
+paciente_id,
+pacientes(id,nome_completo)
+`)
+.eq("profissional_id",PROFISSIONAL_ID)
+.eq("turno",turno)
+.eq("ativo",true)
+
+if(error){
+console.error("Erro pacientes profissional",error)
+return
+}
+pacientes=data?.map(p=>({
+id:p.pacientes.id,
+nome_completo:p.pacientes.nome_completo
+}))||[]
+}else{
+const {data,error}=await db
 .from("pacientes")
 .select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
 .order("nome_completo")
-if(e1){console.error("Erro pacientes",e1);return}
+if(error){
+console.error("Erro pacientes",error)
+return
+}
+pacientes=data||[]
+}
+
 const {data:rotinas,error:e2}=await db
 .from("rotina_modelos")
 .select("id,nome")
 .eq("turno",turno)
 if(e2){console.error("Erro rotinas",e2);return}
+
 const {data:execucoes,error:e3}=await db
 .from("rotinas_execucao")
 .select(`
