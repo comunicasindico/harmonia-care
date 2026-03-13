@@ -92,7 +92,7 @@ await carregarClinico()
 async function carregarRotinas(){
 if(!db)return
 const paciente=document.getElementById("buscaPaciente")?.value||"todos"
-const dataHoje=document.getElementById("dataInicio")?.value
+const dataHoje=new Date().toISOString().slice(0,10)
 const turno=TURNO_ATUAL
 let profissionalId=PROFISSIONAL_ID||localStorage.getItem("profissional_id")
 let pacientes=[]
@@ -135,6 +135,7 @@ const {data:rotinas,error:e2}=await db
 .select("id,nome,turno")
 const rotinasTurno = rotinas?.filter(r=>r.turno===turno) || []
 if(e2){console.error("Erro rotinas",e2);return}
+
 const {data:execucoes,error:e3}=await db
 .from("rotinas_execucao")
 .select("*")
