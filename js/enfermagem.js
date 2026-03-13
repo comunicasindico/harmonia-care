@@ -381,11 +381,8 @@ if(error){
 console.error("Erro executar rotina",error)
 }
 
-/* recarregar lista */
-
-setTimeout(()=>{
-carregarRotinas()
-},120)
+/* recarregar lista imediatamente */
+await carregarRotinas()
 
 }
 
