@@ -93,7 +93,10 @@ let rotinasHTML="",total=p.rotinas.length,executadas=0
 p.rotinas.forEach(r=>{
 if(r.status==="executado")executadas++
 const classe=r.status==="executado"?"rotina-executada":"rotina-pendente"
-rotinasHTML+=`<button class="btn-rotina ${classe}" onclick="executarRotina('${r.idoso_id}','${r.rotina_id}',this)">${r.rotina}${r.profissional?`<br><span style="font-size:9px;color:#444">✔ ${r.profissional}</span>`:""}</button>`
+rotinasHTML+=`<button 
+class="btn-rotina ${classe}"
+${r.status==="executado"?"":`onclick="executarRotina('${r.idoso_id}','${r.rotina_id}',this)"`}
+>${r.rotina}${r.profissional?`<br><span style="font-size:9px;color:#444">✔ ${r.profissional}</span>`:""}</button>`
 })
 let percentual=total?Math.round((executadas/total)*100):0
 let botaoOK=percentual===100?`<button class="btn-todos">Rotinas OK</button>`:`<button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button>`
@@ -113,15 +116,76 @@ tbody.innerHTML=html
 }
 
 /* ====================================================
-024 – EXECUTAR ROTINA
+024 – EXECUTAR ROTINA (LOCK DE EXECUÇÃO)
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
+
 if(!db)return
-const dataHoje=document.getElementById("dataInicio")?.value||new Date().toISOString().slice(0,10)
-let usuarioId=localStorage.getItem("usuario_id");if(!usuarioId||usuarioId==="null")usuarioId=null
-if(botao){botao.classList.remove("rotina-pendente");botao.classList.add("rotina-executada")}
-const {error}=await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId||PROFISSIONAL_ID||null}).eq("idoso_id",pacienteId).eq("rotina_id",rotinaId).eq("data",dataHoje)
-if(error)console.error("Erro executar rotina",error)
+
+/* BLOQUEIO VISUAL */
+if(botao && botao.classList.contains("rotina-executada")){
+console.log("Rotina já executada. Bloqueado.")
+return
+}
+
+/* LOCK LOCAL PARA EVITAR DUPLO CLIQUE */
+const chaveLock=`lock_${pacienteId}_${rotinaId}`
+if(window[chaveLock]){
+console.log("Execução já em andamento")
+return
+}
+
+window[chaveLock]=true
+
+const dataHoje=document.getElementById("dataInicio")?.value
+|| new Date().toISOString().slice(0,10)
+
+let usuarioId=localStorage.getItem("usuario_id")
+if(!usuarioId || usuarioId==="null"){
+usuarioId=PROFISSIONAL_ID||null
+}
+
+/* VERIFICAR STATUS NO BANCO */
+const {data:existe,error:e1}=await db
+.from("rotinas_execucao")
+.select("status")
+.eq("idoso_id",pacienteId)
+.eq("rotina_id",rotinaId)
+.eq("data",dataHoje)
+.single()
+
+if(e1){
+console.error("Erro verificação",e1)
+window[chaveLock]=false
+return
+}
+/* SE JÁ EXECUTADO NO BANCO, BLOQUEIA */
+if(existe && existe.status==="executado"){
+console.log("Rotina já executada no banco.")
+window[chaveLock]=false
+return
+}
+/* EXECUTAR ROTINA */
+if(botao){
+botao.classList.remove("rotina-pendente")
+botao.classList.add("rotina-executada")
+}
+const {error}=await db
+.from("rotinas_execucao")
+.update({
+status:"executado",
+horario_executado:new Date(),
+usuario_id:usuarioId
+})
+.eq("idoso_id",pacienteId)
+.eq("rotina_id",rotinaId)
+.eq("data",dataHoje)
+
+if(error){
+console.error("Erro executar rotina",error)
+}
+/* LIBERA LOCK */
+window[chaveLock]=false
 await carregarRotinas()
 }
 
