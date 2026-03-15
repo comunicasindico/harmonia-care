@@ -82,21 +82,16 @@ await carregarEmpresa()
 await iniciarSistema()
 
 /* liberar botão admin (executa depois que tudo carregou) */
-
-setTimeout(()=>{
-
-const perfil=(user.perfil||"").toLowerCase()
 const botao=document.getElementById("btnConcluirPendentes")
 
 if(botao){
-if(perfil.includes("admin")){
-botao.style.display="inline-block"
+if((user.perfil||"").toLowerCase().includes("admin")){
+botao.classList.remove("admin-only")
+botao.classList.add("admin-visible")
 }else{
-botao.style.display="none"
+botao.classList.add("admin-only")
 }
 }
-
-},300)
 
 if(btn)btn.disabled=false
 
