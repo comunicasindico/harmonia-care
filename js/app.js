@@ -239,6 +239,23 @@ const alvo=document.getElementById(id)
 
 if(alvo)alvo.style.display="block"
 
+/* ====================================================
+CONTROLAR BOTÃO ADMIN
+==================================================== */
+
+const perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
+const btnAdmin=document.getElementById("btnConcluirPendentes")
+
+if(btnAdmin){
+
+if(perfil.includes("admin") && id==="painelEnfermagem"){
+btnAdmin.style.display="inline-block"
+}else{
+btnAdmin.style.display="none"
+}
+
+}
+
 }
 
 function abrirEnfermagem(){
@@ -281,18 +298,6 @@ await carregarPacientesDrag()
 
 if(typeof carregarProfissionaisDrag==="function"){
 await carregarProfissionaisDrag()
-}
-}
-/* controlar botão admin por painel */
-const perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
-const btnAdmin=document.getElementById("btnConcluirPendentes")
-
-if(btnAdmin){
-
-if(perfil.includes("admin") && id==="painelEnfermagem"){
-btnAdmin.style.display="inline-block"
-}else{
-btnAdmin.style.display="none"
 }
 
 }
