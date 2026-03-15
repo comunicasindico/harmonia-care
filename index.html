@@ -59,6 +59,9 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 .btn-rotina{padding:4px 8px;font-size:12px;border-radius:6px}
 .nome-paciente{font-size:14px;font-weight:600}
 .progresso-label{font-size:12px;font-weight:600;color:#333}
+.admin-only{display:none;}
+.admin-visible{display:inline-block;}
+
 </style>
 
 </head>
@@ -113,7 +116,7 @@ Sair
 <button onclick="abrirEnfermagem()" class="btn-primary">Painel Enfermagem</button>
 <button onclick="abrirClinico()" class="btn-secondary">Painel Clínico</button>
 <button onclick="abrirAdmin()" class="btn-success">Admin</button>
-<button id="btnConcluirPendentes" style="display:none" onclick="concluirPendentes()">
+<button id="btnConcluirPendentes" class="btn-secondary" onclick="concluirPendentes()">
 ✔ Concluir Pendentes
 </button>
 <button onclick="gerarPDFGeral()" class="btn-primary">Gerar PDF</button>
