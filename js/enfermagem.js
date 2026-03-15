@@ -104,7 +104,7 @@ const {data,error}=await db
 paciente_id,
 pacientes(id,nome_completo)
 `)
-.eq("profissional_id",profissionalId)
+.eq("usuario_id",profissionalId)
 .eq("turno",turno)
 .eq("ativo",true)
 if(error){
