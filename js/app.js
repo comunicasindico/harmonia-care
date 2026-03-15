@@ -81,17 +81,8 @@ await carregarEmpresa()
 
 await iniciarSistema()
 
-/* liberar botão admin (executa depois que tudo carregou) */
-const botao=document.getElementById("btnConcluirPendentes")
-
-if(botao){
-if((user.perfil||"").toLowerCase().includes("admin")){
-botao.classList.remove("admin-only")
-botao.classList.add("admin-visible")
-}else{
-botao.classList.add("admin-only")
-}
-}
+/* registrar perfil na sessão */
+localStorage.setItem("usuario_perfil",user.perfil)
 
 if(btn)btn.disabled=false
 
@@ -107,31 +98,63 @@ while(!db){
 await new Promise(r=>setTimeout(r,50))
 }
 
+/* definir data */
+
 definirDataHoje()
+
+/* carregar pacientes */
 
 if(typeof carregarPacientesBusca==="function"){
 await carregarPacientesBusca()
 }
 
+/* gerar rotinas do dia */
+
 if(typeof gerarRotinasDoDia==="function"){
 await gerarRotinasDoDia()
 }
+
+/* restaurar painel */
 
 const painelSalvo=localStorage.getItem("painelAtual")||"painelEnfermagem"
 
 abrirPainel(painelSalvo)
 
+/* carregar rotinas */
+
 if(typeof carregarRotinas==="function"){
 await carregarRotinas()
 }
+
+/* carregar clínico */
 
 if(typeof carregarClinico==="function"){
 await carregarClinico()
 }
 
+/* definir turno */
+
 mudarTurno("manha")
+
+/* ====================================================
+011B – LIBERAR BOTÃO ADMIN
+==================================================== */
+
+const perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
+
+const btnAdmin=document.getElementById("btnConcluirPendentes")
+
+if(btnAdmin){
+
+if(perfil.includes("admin")){
+btnAdmin.style.display="inline-block"
+}else{
+btnAdmin.style.display="none"
 }
 
+}
+
+}
 /* ====================================================
 012 – LOGOUT
 ==================================================== */
