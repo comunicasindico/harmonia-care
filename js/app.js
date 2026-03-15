@@ -79,7 +79,7 @@ await iniciarSistema()
 
 const b=document.getElementById("btnConcluirPendentes")
 
-if(b && user.perfil && user.perfil.toLowerCase()==="administrador"){
+if(b && user.perfil && user.perfil.toLowerCase().includes("admin")){
 b.style.display="inline-block"
 }
 if(btn)btn.disabled=false
