@@ -19,7 +19,7 @@ if(btn)btn.disabled=false
 return
 }
 
-/* LOGIN USUÁRIO (inclui admin) */
+/* LOGIN USUÁRIO */
 
 const {data,error}=await db
 .from("usuarios")
@@ -59,6 +59,7 @@ return
 localStorage.setItem("usuario_nome",user.nome)
 localStorage.setItem("usuario_id",user.id)
 localStorage.setItem("empresa_id",user.empresa_id)
+localStorage.setItem("usuario_perfil",user.perfil)
 
 /* atualizar variáveis globais */
 
@@ -70,18 +71,33 @@ EMPRESA_ID=user.empresa_id
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
 
+/* carregar empresa */
+
 if(typeof carregarEmpresa==="function"){
 await carregarEmpresa()
 }
 
+/* iniciar sistema */
+
 await iniciarSistema()
-/* liberar botão admin */
 
-const b=document.getElementById("btnConcluirPendentes")
+/* liberar botão admin (executa depois que tudo carregou) */
 
-if(b && user.perfil && user.perfil.toLowerCase().includes("admin")){
-b.style.display="inline-block"
+setTimeout(()=>{
+
+const perfil=(user.perfil||"").toLowerCase()
+const botao=document.getElementById("btnConcluirPendentes")
+
+if(botao){
+if(perfil.includes("admin")){
+botao.style.display="inline-block"
+}else{
+botao.style.display="none"
 }
+}
+
+},300)
+
 if(btn)btn.disabled=false
 
 }
