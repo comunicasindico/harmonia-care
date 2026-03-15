@@ -276,3 +276,10 @@ if(typeof carregarDadosClinicosPaciente==="function"){await carregarDadosClinico
 if(typeof carregarClinico==="function"){await carregarClinico(pacienteId)}
 }
 }
+/* ====================================================
+032 – PESQUISAR ROTINAS
+==================================================== */
+async function pesquisarRotinas(){
+await gerarRotinasDoDia()
+await carregarRotinas()
+}
