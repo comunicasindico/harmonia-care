@@ -162,7 +162,10 @@ if(e2){console.error("Erro rotinas",e2);return}
 
 const {data:execucoes,error:e3}=await db
 .from("rotinas_execucao")
-.select("*")
+.select(`
+*,
+usuarios:usuario_id(nome)
+`)
 .eq("data",dataHoje)
 if(e3){console.error("Erro execucoes",e3);return}
 const {data:usuarios}=await db
@@ -419,26 +422,41 @@ if(a)a.innerHTML="⚠ "+atrasado
 /* ====================================================
 026 – EXECUTAR TODAS ROTINAS
 ==================================================== */
+
 async function executarTodos(pacienteId){
+
 if(!db)return
+
+const dataHoje=document.getElementById("dataInicio")?.value
+
 const rotinas=ROTINAS_CACHE.filter(r=>r.idoso_id===pacienteId)
+
 for(const r of rotinas){
+
 if(r.status!=="executado"){
+
 await db
 .from("rotinas_execucao")
 .update({
 status:"executado",
-horario_executado:new Date()
+horario_executado:new Date(),
+usuario_id:PROFISSIONAL_ID
 })
 .eq("idoso_id",r.idoso_id)
 .eq("rotina_id",r.rotina_id)
+.eq("data",dataHoje)
+
 }
+
 }
-carregarRotinas()
+
+await carregarRotinas()
+
 }
 /* ====================================================
 EXECUTAR ROTINA PARA TODOS OS PACIENTES
 ==================================================== */
+
 async function executarRotinaTodos(rotinaId){
 
 if(!db)return
@@ -453,7 +471,8 @@ await db
 .from("rotinas_execucao")
 .update({
 status:"executado",
-horario_executado:new Date()
+horario_executado:new Date(),
+usuario_id:PROFISSIONAL_ID
 })
 .eq("idoso_id",r.idoso_id)
 .eq("rotina_id",r.rotina_id)
@@ -461,7 +480,7 @@ horario_executado:new Date()
 
 }
 
-carregarRotinas()
+await carregarRotinas()
 
 }
 /* ====================================================
