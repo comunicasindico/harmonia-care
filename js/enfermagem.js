@@ -237,7 +237,7 @@ async function gerarRotinasDoDia(){
 if(!db)return
 if(ROTINAS_GERADAS)return
 ROTINAS_GERADAS=true
-const hoje=new Date().toISOString().slice(0,10)
+const hoje=document.getElementById("dataInicio")?.value||new Date().toISOString().slice(0,10)
 const {data:pacientes}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
 const {data:rotinas}=await db.from("rotina_modelos").select("id")
 if(!pacientes?.length||!rotinas?.length)return
@@ -248,6 +248,7 @@ if(!existe||!existe.length){
 await db.from("rotinas_execucao").insert({idoso_id:p.id,rotina_id:r.id,data:hoje,status:"pendente"})
 }}
 }
+await carregarRotinas()
 }
 
 /* ====================================================
