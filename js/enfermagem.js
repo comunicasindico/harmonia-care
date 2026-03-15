@@ -207,10 +207,7 @@ return
 
 const {data:execucoes,error:e3}=await db
 .from("rotinas_execucao")
-.select(`
-*,
-usuarios:usuario_id(nome)
-`)
+.select("*")
 .eq("data",dataHoje)
 
 if(e3){
