@@ -254,11 +254,23 @@ await db.from("rotinas_execucao").insert({idoso_id:p.id,rotina_id:r.id,data:hoje
 029 – SELECIONAR PACIENTE
 ==================================================== */
 async function selecionarPaciente(){
-const select=document.getElementById("buscaPaciente");if(!select)return
-if(typeof carregarRotinas==="function")await carregarRotinas()
-if(typeof carregarClinico==="function")await carregarClinico()
+const select=document.getElementById("buscaPaciente")
+if(!select)return
+const pacienteId=select.value
+/* RECARREGAR ROTINAS */
+if(typeof carregarRotinas==="function"){
+await carregarRotinas()
 }
-
+/* CARREGAR PAINEL CLÍNICO DO PACIENTE */
+if(pacienteId!=="todos"){
+if(typeof carregarDadosClinicosPaciente==="function"){
+await carregarDadosClinicosPaciente(pacienteId)
+}
+if(typeof carregarClinico==="function"){
+await carregarClinico(pacienteId)
+}
+}
+}
 /* ====================================================
 030 – AO SELECIONAR PACIENTE
 ==================================================== */
