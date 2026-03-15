@@ -91,7 +91,6 @@ if(btn)btn.disabled=false
 /* ====================================================
 011 – INICIAR SISTEMA
 ==================================================== */
-
 async function iniciarSistema(){
 
 while(!db){
@@ -157,7 +156,6 @@ btnAdmin.style.display="none"
 /* ====================================================
 012 – LOGOUT
 ==================================================== */
-
 function logout(){
 localStorage.clear()
 location.reload()
@@ -166,7 +164,6 @@ location.reload()
 /* ====================================================
 013 – INIT
 ==================================================== */
-
 window.addEventListener("load",async()=>{
 
 while(!db){
@@ -206,7 +203,6 @@ if(e.persisted){location.reload()}
 /* ====================================================
 014 – DATA HOJE
 ==================================================== */
-
 function definirDataHoje(){
 
 const hoje=new Date()
@@ -228,7 +224,6 @@ if(fim)fim.value=dataLocal
 /* ====================================================
 015 – NAVEGAÇÃO PAINÉIS
 ==================================================== */
-
 function abrirPainel(id){
 
 localStorage.setItem("painelAtual", id)
@@ -287,9 +282,20 @@ await carregarPacientesDrag()
 if(typeof carregarProfissionaisDrag==="function"){
 await carregarProfissionaisDrag()
 }
+}
+/* controlar botão admin por painel */
+const perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
+const btnAdmin=document.getElementById("btnConcluirPendentes")
 
+if(btnAdmin){
+
+if(perfil.includes("admin") && id==="painelEnfermagem"){
+btnAdmin.style.display="inline-block"
+}else{
+btnAdmin.style.display="none"
 }
 
+}
 /* ====================================================
 016 – EMPRESA – CARREGAR DADOS
 ==================================================== */
