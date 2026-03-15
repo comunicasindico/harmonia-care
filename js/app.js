@@ -75,7 +75,11 @@ await carregarEmpresa()
 }
 
 await iniciarSistema()
-
+/* liberar botão admin */
+if(user.usuario_apelido==="admin"){
+const b=document.getElementById("btnConcluirPendentes")
+if(b)b.style.display="inline-block"
+}
 if(btn)btn.disabled=false
 
 }
