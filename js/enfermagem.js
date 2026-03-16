@@ -178,6 +178,11 @@ status:"pendente"
 if(botao){
 botao.classList.remove("rotina-pendente")
 botao.classList.add("rotina-executada")
+let nomeProfissional=localStorage.getItem("usuario_nome")
+if(!nomeProfissional||nomeProfissional==="Administrador")nomeProfissional="admin"
+if(!botao.innerHTML.includes("✔")){
+botao.innerHTML+=`<br><span style="font-size:10px">✔ ${nomeProfissional}</span>`
+}
 }
 const {error}=await db
 .from("rotinas_execucao")
@@ -328,7 +333,7 @@ botoes.forEach(btn=>{
 if(!btn.classList.contains("rotina-executada")){
 btn.classList.remove("rotina-pendente")
 btn.classList.add("rotina-executada")
-if(!btn.innerHTML.includes("Administrador")){
+if(!btn.innerHTML.includes("✔")){
 btn.innerHTML+=`<br><span style="font-size:10px">✔ Administrador</span>`
 }
 }
