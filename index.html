@@ -100,12 +100,8 @@ background-image:url("img/harmoniafrente.png");
 background-size:cover;
 background-position:center;
 background-repeat:no-repeat;
-animation:zoomLogin 35s infinite alternate ease-in-out;
 }
-@keyframes zoomLogin{
-0%{transform:scale(1);}
-100%{transform:scale(1.08);}
-}
+
 body::before{
 content:"";
 position:fixed;
@@ -131,7 +127,6 @@ border-radius:14px;
 padding:30px;
 width:340px;
 box-shadow:0 10px 35px rgba(0,0,0,0.15),0 2px 8px rgba(0,0,0,0.10);
-backdrop-filter:blur(3px);
 }
 .login-card button{
 width:100%;
