@@ -100,6 +100,53 @@ turno:turno
 alert("Rotina adicionada")
 
 }
+/* ====================================================
+060 – CARREGAR USUARIOS ADMIN
+==================================================== */
+async function carregarUsuariosAdmin(){
+if(!db)return
+const tabela=document.getElementById("tabelaUsuariosAdmin")
+if(!tabela)return
+const {data,error}=await db
+.from("usuarios")
+.select("id,empresa_id,nome_completo,usuario_apelido,email,perfil,ativo,created_at,cargo,hierarquia,senha_hash")
+.order("nome_completo",{ascending:true})
+if(error){
+console.error("Erro usuarios",error)
+return
+}
+let html=""
+data?.forEach(u=>{
+html+=`
+<tr>
+<td>${u.id||""}</td>
+<td>${u.empresa_id||""}</td>
+<td contenteditable="true" data-campo="nome_completo" data-id="${u.id}">${u.nome_completo||""}</td>
+<td contenteditable="true" data-campo="usuario_apelido" data-id="${u.id}">${u.usuario_apelido||""}</td>
+<td contenteditable="true" data-campo="email" data-id="${u.id}">${u.email||""}</td>
+<td contenteditable="true" data-campo="perfil" data-id="${u.id}">${u.perfil||""}</td>
+<td contenteditable="true" data-campo="ativo" data-id="${u.id}">${u.ativo}</td>
+<td>${u.created_at||""}</td>
+<td contenteditable="true" data-campo="cargo" data-id="${u.id}">${u.cargo||""}</td>
+<td contenteditable="true" data-campo="hierarquia" data-id="${u.id}">${u.hierarquia||""}</td>
+<td contenteditable="true" data-campo="senha_hash" data-id="${u.id}">${u.senha_hash||""}</td>
+</tr>`
+})
+tabela.innerHTML=html
+}
+/* ====================================================
+061 – SALVAR USUARIO EDITADO
+==================================================== */
+document.addEventListener("blur",async function(e){
+if(!e.target.dataset.campo)return
+const campo=e.target.dataset.campo
+const id=e.target.dataset.id
+const valor=e.target.innerText.trim()
+await db
+.from("usuarios")
+.update({[campo]:valor})
+.eq("id",id)
+},{capture:true})
 
 /* ====================================================
 090 – CONCLUIR PENDENTES (ADMIN)
