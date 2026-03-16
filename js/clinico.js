@@ -13,10 +13,6 @@ if(!data||data.length===0){tabela.innerHTML="";return}
 let html=""
 let totalPacientes=0,totalHas=0,totalDm=0,totalDemencia=0,totalCardio=0,totalAcamado=0,totalPAAlterada=0
 let risco1=0,risco2=0,risco3=0,risco4=0,risco5=0
-
-/* ===============================
-CALCULAR TOTAIS
-=============================== */
 data.forEach(p=>{
 totalPacientes++
 if(p.has)totalHas++
@@ -36,12 +32,7 @@ if(p.grau_risco==3)risco3++
 if(p.grau_risco==4)risco4++
 if(p.grau_risco==5)risco5++
 })
-
 const riscoTotal=risco1+risco2+risco3+risco4+risco5
-
-/* ===============================
-LINHA AMARELA TOTAL (MODELO EXCEL)
-=============================== */
 html+=`
 <tr style="background:#fff200;font-weight:bold;text-align:center">
 <td>Todos</td>
@@ -55,12 +46,7 @@ html+=`
 <td></td>
 <td style="color:#2c3e50">${riscoTotal}</td>
 <td></td>
-</tr>
-`
-
-/* ===============================
-LINHAS DOS PACIENTES
-=============================== */
+</tr>`
 data.forEach(p=>{
 html+=`
 <tr data-id="${p.id}">
@@ -71,16 +57,14 @@ html+=`
 <td>${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_da"><option value="true"${p.da?" selected":""}>✔</option><option value="false"${!p.da?" selected":""}></option></select>`:(p.da?"✔":"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_cardio"><option value="true"${p.cardiopatia?" selected":""}>✔</option><option value="false"${!p.cardiopatia?" selected":""}></option></select>`:(p.cardiopatia?"✔":"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_acamado"><option value="true"${p.acamado?" selected":""}>✔</option><option value="false"${!p.acamado?" selected":""}></option></select>`:(p.acamado?"✔":"")}</td>
-<td>${MODO_EDICAO_CLINICO?`<input class="campo-clinico clin_pa" value="${p.pressao_arterial??""}" placeholder="120/80">`:(()=>{if(!p.pressao_arterial)return"";let pa=p.pressao_arterial.split("/");if(pa.length!==2)return p.pressao_arterial;let sist=parseInt(pa[0]),diast=parseInt(pa[1]);if(sist<=129&&diast<=85)return`<span style="color:#16a34a;font-weight:bold">🟢 ${p.pressao_arterial}</span>`;if((sist>=130&&sist<=139)||(diast>=86&&diast<=89))return`<span style="color:#ca8a04;font-weight:bold">🟡 ${p.pressao_arterial}</span>`;if(sist>=140||diast>=90)return`<span style="color:#dc2626;font-weight:bold">🔴 ${p.pressao_arterial}</span>`;return p.pressao_arterial})()}</td>
-<td style="font-size:11px;white-space:nowrap">${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_dieta" style="font-size:11px;padding:2px 4px"><option value="">Não</option><option value="🧂Hipossódica"${p.dieta_texto=="🧂Hipossódica"?" selected":""}>🧂Hipossódica</option><option value="🍬Diabética"${p.dieta_texto=="🍬Diabética"?" selected":""}>🍬Diabética</option><option value="🥣Pastosa"${p.dieta_texto=="🥣Pastosa"?" selected":""}>🥣Pastosa</option><option value="🥗Vegetariana"${p.dieta_texto=="🥗Vegetariana"?" selected":""}>🥗Vegetariana</option><option value="🥤Líquida"${p.dieta_texto=="🥤Líquida"?" selected":""}>🥤Líquida</option></select>`:(()=>{if(!p.dieta_especial)return"<span style='color:#6b7280;font-size:11px'>- Sem dieta</span>";let d=(p.dieta_texto??"").toLowerCase();if(d.includes("hipossod"))return"<span style='color:#2563eb;font-weight:bold;font-size:11px'>🧂Hipossódica</span>";if(d.includes("diab"))return"<span style='color:#9333ea;font-weight:bold;font-size:11px'>🍬Diabética</span>";if(d.includes("past"))return"<span style='color:#ea580c;font-weight:bold;font-size:11px'>🥣Pastosa</span>";if(d.includes("veget"))return"<span style='color:#16a34a;font-weight:bold;font-size:11px'>🥗Vegetariana</span>";if(d.includes("liquid"))return"<span style='color:#0ea5e9;font-weight:bold;font-size:11px'>🥤Líquida</span>";return`<span style="color:#f59e0b;font-weight:bold;font-size:11px">🍽️ ${p.dieta_texto}</span>`})()}</td>
-<td>${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_risco"><option value="1"${p.grau_risco==1?" selected":""}>1</option><option value="2"${p.grau_risco==2?" selected":""}>2</option><option value="3"${p.grau_risco==3?" selected":""}>3</option><option value="4"${p.grau_risco==4?" selected":""}>4</option><option value="5"${p.grau_risco==5?" selected":""}>5</option></select>`:(()=>{if(!p.grau_risco)return"";if(p.grau_risco==5)return`<span style="color:#dc2626;font-weight:bold">🔴 ${p.grau_risco}</span>`;if(p.grau_risco==4)return`<span style="color:#ea580c;font-weight:bold">🟠 ${p.grau_risco}</span>`;if(p.grau_risco==3)return`<span style="color:#ca8a04;font-weight:bold">🟡 ${p.grau_risco}</span>`;return`<span style="color:#16a34a;font-weight:bold">🟢 ${p.grau_risco}</span>`})()}</td>
+<td>${MODO_EDICAO_CLINICO?`<input class="campo-clinico clin_pa" value="${p.pressao_arterial??""}" placeholder="120/80">`:(p.pressao_arterial??"")}</td>
+<td style="font-size:11px;white-space:nowrap">${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_dieta" style="font-size:11px;padding:2px 4px"><option value="">Não</option><option value="🧂Hipossódica"${p.dieta_texto=="🧂Hipossódica"?" selected":""}>🧂Hipossódica</option><option value="🍬Diabética"${p.dieta_texto=="🍬Diabética"?" selected":""}>🍬Diabética</option><option value="🥣Pastosa"${p.dieta_texto=="🥣Pastosa"?" selected":""}>🥣Pastosa</option><option value="🥗Vegetariana"${p.dieta_texto=="🥗Vegetariana"?" selected":""}>🥗Vegetariana</option><option value="🥤Líquida"${p.dieta_texto=="🥤Líquida"?" selected":""}>🥤Líquida</option></select>`:(p.dieta_texto??"<span style='color:#6b7280;font-size:11px'>- Sem dieta</span>")}</td>
+<td>${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_risco"><option value="1"${p.grau_risco==1?" selected":""}>1</option><option value="2"${p.grau_risco==2?" selected":""}>2</option><option value="3"${p.grau_risco==3?" selected":""}>3</option><option value="4"${p.grau_risco==4?" selected":""}>4</option><option value="5"${p.grau_risco==5?" selected":""}>5</option></select>`:(p.grau_risco??"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<input class="campo-clinico clin_outros" value="${p.outras_comorbidades??""}">`:`<span style="font-size:11px;max-width:160px;display:inline-block;white-space:normal;line-height:1.2">${p.outras_comorbidades??"Não tem"}</span>`}</td>
 <td class="acoesClinico" style="${MODO_EDICAO_CLINICO?'':'display:none'}"><button class="btn-danger" style="font-size:10px;padding:3px 6px" onclick="excluirPaciente('${p.id}',\`${p.nome_completo}\`)">Excluir</button></td>
 </tr>`
 })
-
 tabela.innerHTML=html
-
 /* ===============================
 030A PAINEL NUTRICIONAL
 =============================== */
@@ -93,7 +77,6 @@ if(elDia)elDia.innerText=`🍬 ${diabetica}`
 if(elPas)elPas.innerText=`🥣 ${pastosa}`
 if(elVeg)elVeg.innerText=`🥗 ${vegetariana}`
 if(elLiq)elLiq.innerText=`🥤 ${liquida}`
-
 /* ===============================
 030B PAINEL DE RISCO
 =============================== */
@@ -104,13 +87,10 @@ if(r1)r1.innerText=alto
 if(r2)r2.innerText=medio
 if(r3)r3.innerText=moderado
 if(r4)r4.innerText=baixo
-
 /* ===============================
 030C INDICADORES (DESATIVADO)
-REMOVIDOS DO CABEÇALHO
 =============================== */
-/* indicadores clínicos permanecem apenas na tabela */
-
+/* indicadores permanecem apenas na tabela */
 /* ===============================
 030D INDICADORES VISUAIS
 =============================== */
@@ -118,50 +98,32 @@ const elR5=document.getElementById("indicadorRISCO5")
 const elR4=document.getElementById("indicadorRISCO4")
 const elR3=document.getElementById("indicadorRISCO3")
 const elR12=document.getElementById("indicadorRISCO12")
-
 if(elR5)elR5.innerHTML=`🔴 Alto ${risco5}`
 if(elR4)elR4.innerHTML=`🟠 Médio ${risco4}`
 if(elR3)elR3.innerHTML=`🟡 Moderado ${risco3}`
 if(elR12)elR12.innerHTML=`🟢 Baixo ${risco1+risco2}`
-
 const totalPacientesCard=document.getElementById("totalPacientes")
 if(totalPacientesCard)totalPacientesCard.innerHTML=totalPacientes
 }
-
 /* ====================================================
 031 – CALCULAR IDADE
 ==================================================== */
 function calcularIdade(data){
-
-if(!data) return ""
-
+if(!data)return""
 const nascimento=new Date(data)
 const hoje=new Date()
-
 let idade=hoje.getFullYear()-nascimento.getFullYear()
-
 const m=hoje.getMonth()-nascimento.getMonth()
-
-if(m<0 || (m===0 && hoje.getDate()<nascimento.getDate())){
-idade--
-}
-
+if(m<0||(m===0&&hoje.getDate()<nascimento.getDate()))idade--
 return idade
 }
-
 /* ====================================================
 032 – EDITAR CLINICO GLOBAL
 ==================================================== */
 function editarClinicoGlobal(){
-
-/* ativa modo edição */
-MODO_EDICAO_CLINICO = true
-
-/* recarrega tabela clínica */
+MODO_EDICAO_CLINICO=true
 carregarClinico()
-
 }
-
 /* ====================================================
 033 – SALVAR CLINICO GLOBAL
 ==================================================== */
@@ -170,127 +132,52 @@ const linhas=document.querySelectorAll("#quadroClinico tr")
 for(const linha of linhas){
 const id=linha.dataset.id
 if(!id)continue
+const has=linha.querySelector(".clin_has")
+if(!has)continue
 const dados={
 has:linha.querySelector(".clin_has").value==="true",
 dm:linha.querySelector(".clin_dm").value==="true",
 da:linha.querySelector(".clin_da").value==="true",
 cardiopatia:linha.querySelector(".clin_cardio").value==="true",
 acamado:linha.querySelector(".clin_acamado").value==="true",
-pressao_arterial:linha.querySelector(".clin_pa").value,
-dieta_texto:linha.querySelector(".clin_dieta").value,
-dieta_especial:linha.querySelector(".clin_dieta").value!="",
-grau_risco:parseInt(linha.querySelector(".clin_risco").value),
-outras_comorbidades:linha.querySelector(".clin_outros").value
+pressao_arterial:linha.querySelector(".clin_pa")?.value??"",
+dieta_texto:linha.querySelector(".clin_dieta")?.value??"",
+dieta_especial:(linha.querySelector(".clin_dieta")?.value??"")!=="",
+grau_risco:parseInt(linha.querySelector(".clin_risco")?.value??0),
+outras_comorbidades:linha.querySelector(".clin_outros")?.value??""
 }
-await db
-.from("pacientes")
-.update(dados)
-.eq("id",id)
+await db.from("pacientes").update(dados).eq("id",id)
 }
 alert("Dados clínicos atualizados")
-/* sai do modo edição */
 MODO_EDICAO_CLINICO=false
-/* recarrega tabela */
 await carregarClinico()
 }
 /* ====================================================
-034 – CARREGAR DADOS CLÍNICOS DO PACIENTE (ENFERMAGEM)
+034 – CARREGAR DADOS CLÍNICOS DO PACIENTE
 ==================================================== */
 async function carregarDadosClinicosPaciente(pacienteId){
-
 const box=document.getElementById("dadosClinicosPaciente")
 if(!box)return
-
-/* se for TODOS, limpa */
-if(!pacienteId || pacienteId==="todos"){
-box.innerHTML=""
-return
-}
-
-if(!db){
-console.error("Supabase ainda não carregou")
-return
-}
-
-const {data,error}=await db
-.from("pacientes")
-.select("*")
-.eq("id",pacienteId)
-.single()
-
-if(error){
-console.error("Erro clínico paciente",error)
-return
-}
-
+if(!pacienteId||pacienteId==="todos"){box.innerHTML="";return}
+if(!db){console.error("Supabase ainda não carregou");return}
+const {data,error}=await db.from("pacientes").select("*").eq("id",pacienteId).single()
+if(error){console.error("Erro clínico paciente",error);return}
 let html=`
 <div class="box">
-
 <h3>Dados Clínicos do Paciente</h3>
-
 <table class="tabela-clinica-edicao">
-
-<tr>
-<td><b>Paciente</b></td>
-<td>${data.nome_completo}</td>
-</tr>
-
-<tr>
-<td><b>Idade</b></td>
-<td>${calcularIdade(data.data_nascimento)}</td>
-</tr>
-
-<tr>
-<td><b>HAS</b></td>
-<td>${data.has?"✔ SIM":"—"}</td>
-</tr>
-
-<tr>
-<td><b>Diabetes</b></td>
-<td>${data.dm?"✔ SIM":"—"}</td>
-</tr>
-
-<tr>
-<td><b>Demência</b></td>
-<td>${data.da?"✔ SIM":"—"}</td>
-</tr>
-
-<tr>
-<td><b>Cardiopatia</b></td>
-<td>${data.cardiopatia?"✔ SIM":"—"}</td>
-</tr>
-
-<tr>
-<td><b>Acamado</b></td>
-<td>${data.acamado?"✔ SIM":"—"}</td>
-</tr>
-
-<tr>
-<td><b>Pressão Arterial</b></td>
-<td>${data.pressao_arterial ?? "-"}</td>
-</tr>
-
-<tr>
-<td><b>Dieta Especial</b></td>
-<td>${data.dieta_especial ? "SIM" : "NÃO"} ${data.dieta_texto ?? ""}</td>
-</tr>
-
-<tr>
-<td><b>Grau de Risco</b></td>
-<td>${data.grau_risco ?? "-"}</td>
-</tr>
-
-<tr>
-<td><b>Outras Comorbidades</b></td>
-<td>${data.outras_comorbidades ?? "-"}</td>
-</tr>
-
+<tr><td><b>Paciente</b></td><td>${data.nome_completo}</td></tr>
+<tr><td><b>Idade</b></td><td>${calcularIdade(data.data_nascimento)}</td></tr>
+<tr><td><b>HAS</b></td><td>${data.has?"✔ SIM":"—"}</td></tr>
+<tr><td><b>Diabetes</b></td><td>${data.dm?"✔ SIM":"—"}</td></tr>
+<tr><td><b>Demência</b></td><td>${data.da?"✔ SIM":"—"}</td></tr>
+<tr><td><b>Cardiopatia</b></td><td>${data.cardiopatia?"✔ SIM":"—"}</td></tr>
+<tr><td><b>Acamado</b></td><td>${data.acamado?"✔ SIM":"—"}</td></tr>
+<tr><td><b>Pressão Arterial</b></td><td>${data.pressao_arterial??"-"}</td></tr>
+<tr><td><b>Dieta Especial</b></td><td>${data.dieta_especial?"SIM":"NÃO"} ${data.dieta_texto??""}</td></tr>
+<tr><td><b>Grau de Risco</b></td><td>${data.grau_risco??"-"}</td></tr>
+<tr><td><b>Outras Comorbidades</b></td><td>${data.outras_comorbidades??"-"}</td></tr>
 </table>
-
-</div>
-`
-
+</div>`
 box.innerHTML=html
-
 }
-
