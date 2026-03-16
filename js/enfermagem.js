@@ -137,8 +137,8 @@ return
 
 window[chaveLock]=true
 
-const dataHoje=document.getElementById("dataInicio")?.value
-|| new Date().toISOString().slice(0,10)
+const dataRaw=document.getElementById("dataInicio")?.value
+const dataHoje=dataRaw && dataRaw.includes("/") ? dataRaw.split("/").reverse().join("-") : (dataRaw || new Date().toISOString().slice(0,10))
 
 let usuarioId=localStorage.getItem("usuario_id")
 if(!usuarioId || usuarioId==="null"){
@@ -152,7 +152,7 @@ const {data:existe,error:e1}=await db
 .eq("idoso_id",pacienteId)
 .eq("rotina_id",rotinaId)
 .eq("data",dataHoje)
-.single()
+.maybeSingle()
 
 if(e1){
 console.error("Erro verificação",e1)
@@ -164,6 +164,15 @@ if(existe && existe.status==="executado"){
 console.log("Rotina já executada no banco.")
 window[chaveLock]=false
 return
+}
+/* CRIAR REGISTRO SE NÃO EXISTIR */
+if(!existe){
+await db.from("rotinas_execucao").insert({
+idoso_id:pacienteId,
+rotina_id:rotinaId,
+data:dataHoje,
+status:"pendente"
+})
 }
 /* EXECUTAR ROTINA */
 if(botao){
@@ -282,4 +291,15 @@ if(typeof carregarClinico==="function"){await carregarClinico(pacienteId)}
 async function pesquisarRotinas(){
 await gerarRotinasDoDia()
 await carregarRotinas()
+}
+/* ====================================================
+033 – NORMALIZAR DATA PARA ISO
+==================================================== */
+function normalizarDataISO(v){
+if(!v)return new Date().toISOString().slice(0,10)
+if(v.includes("/")){
+const [d,m,a]=v.split("/")
+return `${a}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`
+}
+return v
 }
