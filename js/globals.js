@@ -2,7 +2,7 @@
 000 – VARIÁVEIS GLOBAIS DO SISTEMA
 ==================================================== */
 if(typeof TURNO_ATUAL==="undefined"){
-var TURNO_ATUAL="manha"
+var TURNO_ATUAL=localStorage.getItem("turno_atual")||"manha"
 }
 if(typeof PACIENTE_ATUAL==="undefined"){
 var PACIENTE_ATUAL=null
