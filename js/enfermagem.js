@@ -97,8 +97,8 @@ rotinasHTML+=`<button
 class="btn-rotina ${classe}"
 ${r.status==="executado"?"":`onclick="executarRotina('${r.idoso_id}','${r.rotina_id}',this)"`}
 >${r.rotina}
-${r.status==="executado"?`<br><span style="font-size:9px;color:#444">✔ ${r.profissional?r.profissional:"admin"}</span>`:""}
-</span>`:""}</button>`
+${r.status==="executado"?`<br><span style="font-size:9px;color:#444">✔ ${(r.profissional&&r.profissional.trim())?r.profissional:"admin"}</span>`:""}
+</button>`
 })
 let percentual=total?Math.round((executadas/total)*100):0
 let botaoOK=percentual===100?`<button class="btn-todos">Rotinas OK</button>`:`<button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button>`
