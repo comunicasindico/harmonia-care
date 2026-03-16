@@ -4,6 +4,7 @@
 function mudarTurno(turno){
 console.log("Turno selecionado:",turno)
 TURNO_ATUAL=turno
+localStorage.setItem("turno_atual",turno)
 const btnManha=document.getElementById("btnManha"),btnTarde=document.getElementById("btnTarde"),btnNoite=document.getElementById("btnNoite")
 if(btnManha)btnManha.classList.remove("turno-ativo")
 if(btnTarde)btnTarde.classList.remove("turno-ativo")
