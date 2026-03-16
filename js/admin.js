@@ -17,15 +17,22 @@ if(el)el.innerHTML=html
 ==================================================== */
 async function carregarProfissionaisDrag(){
 if(!db)return
-const empresaId=localStorage.getItem("empresa_id")
-const {data,error}=await db.from("usuarios").select("id,nome_completo,perfil,ativo").eq("empresa_id",empresaId).order("nome_completo",{ascending:true})
-if(error){console.error(error);return}
+const el=document.getElementById("listaProfissionaisDrag")
+if(!el)return
+const {data,error}=await db
+.from("usuarios")
+.select("id,nome_completo,perfil,ativo")
+.eq("ativo",true)
+.order("nome_completo",{ascending:true})
+if(error){
+console.error("Erro profissionais",error)
+return
+}
 let html=""
 data?.forEach(p=>{
 html+=`<div class="drag-item" id="prof_${p.id}">${p.nome_completo}</div>`
 })
-const el=document.getElementById("listaProfissionaisDrag")
-if(el)el.innerHTML=html
+el.innerHTML=html
 }
 /* ====================================================
 042 – CARREGAR USUARIOS ADMIN
