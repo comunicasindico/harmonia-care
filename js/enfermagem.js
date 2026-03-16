@@ -94,11 +94,21 @@ p.rotinas.forEach(r=>{
 if(r.status==="executado")executadas++
 const classe=r.status==="executado"?"rotina-executada":"rotina-pendente"
 let nomeProf=""
+let corProf="#64748b"
 if(r.status==="executado"){
-if(r.profissional&&r.profissional.trim()!==""){nomeProf=r.profissional}
-else{nomeProf="admin"}
+if(r.profissional && r.profissional.trim()!==""){
+nomeProf=r.profissional
+}else{
+nomeProf="admin"
 }
-rotinasHTML+=`<button class="btn-rotina ${classe}" ${r.status==="executado"?"":`onclick="executarRotina('${r.idoso_id}','${r.rotina_id}',this)"`}>${r.rotina}${r.status==="executado"?`<br><span style="font-size:9px;color:#444">✔ ${nomeProf}</span>`:""}</button>`
+corProf=obterCorUsuario(nomeProf)
+}
+rotinasHTML+=`<button class="btn-rotina ${classe}" ${r.status==="executado"?"":`onclick="executarRotina('${r.idoso_id}','${r.rotina_id}',this)"`}>
+${r.rotina}
+${r.status==="executado"
+?`<br><span style="font-size:9px;font-weight:bold;color:${corProf}">✔ ${nomeProf}</span>`
+:""}
+</button>`
 })
 let percentual=total?Math.round((executadas/total)*100):0
 let botaoOK=percentual===100?`<button class="btn-todos">Rotinas OK</button>`:`<button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button>`
@@ -138,16 +148,18 @@ if(botao){
 botao.classList.remove("rotina-pendente")
 botao.classList.add("rotina-executada")
 let nomeProfissional=localStorage.getItem("usuario_nome")
-if(!nomeProfissional||nomeProfissional==="Administrador"){nomeProfissional="admin"}
+if(!nomeProfissional){
+nomeProfissional="admin"
+}
+let cor=obterCorUsuario(nomeProfissional)
 if(!botao.innerHTML.includes("✔")){
-botao.innerHTML+=`<br><span style="font-size:9px;color:#444">✔ ${nomeProfissional}</span>`
+botao.innerHTML+=`<br><span style="font-size:9px;font-weight:bold;color:${cor}">✔ ${nomeProfissional}</span>`
 }
 }
 await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).eq("idoso_id",pacienteId).eq("rotina_id",rotinaId).eq("data",dataHoje)
 window[chaveLock]=false
 await carregarRotinas()
 }
-
 /* ====================================================
 025 – INDICADORES
 ==================================================== */
@@ -225,21 +237,85 @@ await carregarRotinas()
 027 – EXECUTAR ROTINA PARA TODOS OS PACIENTES
 ==================================================== */
 async function executarRotinaTodos(rotinaId){
+
 if(!db)return
+
 const dataRaw=document.getElementById("dataInicio")?.value
-const dataHoje=dataRaw && dataRaw.includes("/") ? dataRaw.split("/").reverse().join("-") : (dataRaw || new Date().toISOString().slice(0,10))
+const dataHoje=dataRaw && dataRaw.includes("/") 
+? dataRaw.split("/").reverse().join("-") 
+: (dataRaw || new Date().toISOString().slice(0,10))
+
+let nomeUsuario=localStorage.getItem("usuario_nome") || "admin"
+let corUsuario=obterCorUsuario(nomeUsuario)
+
+/* ====================================================
+ATUALIZA VISUAL IMEDIATO (SEM ESPERAR SUPABASE)
+==================================================== */
+document.querySelectorAll(".btn-rotina").forEach(btn=>{
+
+if(btn.innerText.includes("✔"))return
+
+if(btn.innerText.includes(rotinaId)){
+
+btn.classList.remove("rotina-pendente")
+btn.classList.add("rotina-executada")
+
+if(!btn.innerHTML.includes("✔")){
+btn.innerHTML+=`<br><span style="font-size:10px;font-weight:bold;color:${corUsuario}">✔ ${nomeUsuario}</span>`
+}
+
+}
+
+})
+
+/* ====================================================
+SALVAR NO SUPABASE
+==================================================== */
 const rotinas=ROTINAS_CACHE.filter(r=>r.rotina_id===rotinaId)
+
 for(const r of rotinas){
+
 let usuarioId=localStorage.getItem("usuario_id")
 if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
-const {data:existe}=await db.from("rotinas_execucao").select("id,status").eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje).maybeSingle()
+
+const {data:existe}=await db
+.from("rotinas_execucao")
+.select("id,status")
+.eq("idoso_id",r.idoso_id)
+.eq("rotina_id",r.rotina_id)
+.eq("data",dataHoje)
+.maybeSingle()
+
 if(existe && existe.status==="executado")continue
+
 if(!existe){
-await db.from("rotinas_execucao").insert({idoso_id:r.idoso_id,rotina_id:r.rotina_id,data:dataHoje,status:"pendente"})
+
+await db
+.from("rotinas_execucao")
+.insert({
+idoso_id:r.idoso_id,
+rotina_id:r.rotina_id,
+data:dataHoje,
+status:"pendente"
+})
+
 }
-await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje)
+
+await db
+.from("rotinas_execucao")
+.update({
+status:"executado",
+horario_executado:new Date(),
+usuario_id:usuarioId
+})
+.eq("idoso_id",r.idoso_id)
+.eq("rotina_id",r.rotina_id)
+.eq("data",dataHoje)
+
 }
+
 await carregarRotinas()
+
 }
 /* ====================================================
 028 – GERAR ROTINAS DO DIA
