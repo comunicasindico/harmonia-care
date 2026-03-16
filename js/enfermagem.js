@@ -215,12 +215,19 @@ if(a)a.innerHTML="⚠ "+atrasado
 ==================================================== */
 async function executarTodos(pacienteId){
 if(!db)return
-const dataHoje=document.getElementById("dataInicio")?.value
+const dataRaw=document.getElementById("dataInicio")?.value
+const dataHoje=dataRaw && dataRaw.includes("/") ? dataRaw.split("/").reverse().join("-") : (dataRaw || new Date().toISOString().slice(0,10))
 const rotinas=ROTINAS_CACHE.filter(r=>r.idoso_id===pacienteId)
 for(const r of rotinas){
-if(r.status!=="executado"){
-await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:PROFISSIONAL_ID}).eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje)
-}}
+let usuarioId=localStorage.getItem("usuario_id")
+if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
+const {data:existe}=await db.from("rotinas_execucao").select("id,status").eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje).maybeSingle()
+if(existe && existe.status==="executado")continue
+if(!existe){
+await db.from("rotinas_execucao").insert({idoso_id:r.idoso_id,rotina_id:r.rotina_id,data:dataHoje,status:"pendente"})
+}
+await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje)
+}
 await carregarRotinas()
 }
 /* ====================================================
@@ -228,14 +235,18 @@ await carregarRotinas()
 ==================================================== */
 async function executarRotinaTodos(rotinaId){
 if(!db)return
-const dataHoje=document.getElementById("dataInicio")?.value||new Date().toISOString().slice(0,10)
+const dataRaw=document.getElementById("dataInicio")?.value
+const dataHoje=dataRaw && dataRaw.includes("/") ? dataRaw.split("/").reverse().join("-") : (dataRaw || new Date().toISOString().slice(0,10))
 const rotinas=ROTINAS_CACHE.filter(r=>r.rotina_id===rotinaId)
 for(const r of rotinas){
-await db.from("rotinas_execucao").update({
-status:"executado",
-horario_executado:new Date(),
-usuario_id:PROFISSIONAL_ID
-}).eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje)
+let usuarioId=localStorage.getItem("usuario_id")
+if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
+const {data:existe}=await db.from("rotinas_execucao").select("id,status").eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje).maybeSingle()
+if(existe && existe.status==="executado")continue
+if(!existe){
+await db.from("rotinas_execucao").insert({idoso_id:r.idoso_id,rotina_id:r.rotina_id,data:dataHoje,status:"pendente"})
+}
+await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje)
 }
 await carregarRotinas()
 }
@@ -302,4 +313,25 @@ const [d,m,a]=v.split("/")
 return `${a}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`
 }
 return v
+}
+/* ====================================================
+034 – CONCLUIR PENDENTES VISÍVEIS
+==================================================== */
+async function concluirPendentesVisiveis(){
+if(!db)return
+const dataRaw=document.getElementById("dataInicio")?.value
+const dataHoje=dataRaw && dataRaw.includes("/") ? dataRaw.split("/").reverse().join("-") : (dataRaw || new Date().toISOString().slice(0,10))
+let usuarioId=localStorage.getItem("usuario_id")
+if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
+const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
+for(const r of pendentes){
+const {data:existe}=await db.from("rotinas_execucao").select("id,status").eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje).maybeSingle()
+if(existe && existe.status==="executado")continue
+if(!existe){
+await db.from("rotinas_execucao").insert({idoso_id:r.idoso_id,rotina_id:r.rotina_id,data:dataHoje,status:"pendente"})
+}
+await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje)
+}
+await carregarRotinas()
+alert("Pendências concluídas com sucesso")
 }
