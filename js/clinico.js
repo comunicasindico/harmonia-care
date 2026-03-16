@@ -128,25 +128,25 @@ carregarClinico()
 033 – SALVAR CLINICO GLOBAL
 ==================================================== */
 async function salvarClinicoGlobal(){
-const linhas=document.querySelectorAll("#quadroClinico tr")
+if(!db){console.error("Supabase não carregado");return}
+const linhas=document.querySelectorAll("#quadroClinico tr[data-id]")
 for(const linha of linhas){
 const id=linha.dataset.id
 if(!id)continue
-const has=linha.querySelector(".clin_has")
-if(!has)continue
 const dados={
-has:linha.querySelector(".clin_has").value==="true",
-dm:linha.querySelector(".clin_dm").value==="true",
-da:linha.querySelector(".clin_da").value==="true",
-cardiopatia:linha.querySelector(".clin_cardio").value==="true",
-acamado:linha.querySelector(".clin_acamado").value==="true",
-pressao_arterial:linha.querySelector(".clin_pa")?.value??"",
-dieta_texto:linha.querySelector(".clin_dieta")?.value??"",
-dieta_especial:(linha.querySelector(".clin_dieta")?.value??"")!=="",
-grau_risco:parseInt(linha.querySelector(".clin_risco")?.value??0),
-outras_comorbidades:linha.querySelector(".clin_outros")?.value??""
+has:linha.querySelector(".clin_has")?.value==="true",
+dm:linha.querySelector(".clin_dm")?.value==="true",
+da:linha.querySelector(".clin_da")?.value==="true",
+cardiopatia:linha.querySelector(".clin_cardio")?.value==="true",
+acamado:linha.querySelector(".clin_acamado")?.value==="true",
+pressao_arterial:linha.querySelector(".clin_pa")?.value||"",
+dieta_texto:linha.querySelector(".clin_dieta")?.value||"",
+dieta_especial:(linha.querySelector(".clin_dieta")?.value||"")!=="",
+grau_risco:parseInt(linha.querySelector(".clin_risco")?.value||0),
+outras_comorbidades:linha.querySelector(".clin_outros")?.value||""
 }
-await db.from("pacientes").update(dados).eq("id",id)
+const {error}=await db.from("pacientes").update(dados).eq("id",id)
+if(error){console.error("Erro salvar paciente",error);alert("Erro ao salvar dados clínicos");return}
 }
 alert("Dados clínicos atualizados")
 MODO_EDICAO_CLINICO=false
