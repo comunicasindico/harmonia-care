@@ -72,17 +72,6 @@ background-position:center;
 background-repeat:no-repeat;
 background-attachment:fixed;
 }
-/* escurece levemente para destacar o card */
-body::before{
-content:"";
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(255,255,255,0.35);
-z-index:0;
-}
 /* garante que o login fique acima do fundo */
 .login-container,
 .login-card,
@@ -100,18 +89,6 @@ background-image:url("img/harmoniafrente.png");
 background-size:cover;
 background-position:center;
 background-repeat:no-repeat;
-}
-
-body::before{
-content:"";
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-backdrop-filter:blur(6px);
-background:rgba(255,255,255,0.55);
-z-index:0;
 }
 .login-container{
 position:relative;
