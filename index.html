@@ -62,7 +62,92 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 .admin-only{display:none;}
 .admin-visible{display:inline-block;}
 .executado-por{font-size:10px;color:#555;margin-top:2px;}
-
+/* ====================================================
+LOGIN – IMAGEM DE FUNDO HARMONIA
+==================================================== */
+body{
+background-image:url("img/harmoniafrente.png");
+background-size:cover;
+background-position:center;
+background-repeat:no-repeat;
+background-attachment:fixed;
+}
+/* escurece levemente para destacar o card */
+body::before{
+content:"";
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(255,255,255,0.80);
+z-index:0;
+}
+/* garante que o login fique acima do fundo */
+.login-container,
+.login-card,
+.card-login{
+position:relative;
+z-index:2;
+}
+/* ====================================================
+LOGIN PREMIUM – HARMONIA CARE
+==================================================== */
+body{
+margin:0;
+padding:0;
+background-image:url("img/harmoniafrente.png");
+background-size:cover;
+background-position:center;
+background-repeat:no-repeat;
+animation:zoomLogin 35s infinite alternate ease-in-out;
+}
+@keyframes zoomLogin{
+0%{transform:scale(1);}
+100%{transform:scale(1.08);}
+}
+body::before{
+content:"";
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+backdrop-filter:blur(6px);
+background:rgba(255,255,255,0.55);
+z-index:0;
+}
+.login-container{
+position:relative;
+z-index:2;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+.login-card{
+background:white;
+border-radius:14px;
+padding:30px;
+width:340px;
+box-shadow:0 10px 35px rgba(0,0,0,0.15),0 2px 8px rgba(0,0,0,0.10);
+backdrop-filter:blur(3px);
+}
+.login-card button{
+width:100%;
+padding:10px;
+border:none;
+border-radius:8px;
+background:linear-gradient(135deg,#4da3d9,#1f78b4);
+color:white;
+font-weight:600;
+cursor:pointer;
+transition:all .2s;
+}
+.login-card button:hover{
+transform:translateY(-2px);
+box-shadow:0 6px 14px rgba(0,0,0,0.2);
+}
 
 </style>
 
