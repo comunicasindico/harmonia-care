@@ -157,9 +157,15 @@ if(typeof carregarClinico==="function"){carregarClinico()}
 ==================================================== */
 async function abrirAdmin(){
 abrirPainel("painelAdmin")
-if(typeof carregarPacientesDrag==="function"){await carregarPacientesDrag()}
-if(typeof carregarProfissionaisDrag==="function"){await carregarProfissionaisDrag()}
-if(typeof carregarUsuariosAdmin==="function"){await carregarUsuariosAdmin()}
+if(typeof carregarUsuariosAdmin==="function"){
+await carregarUsuariosAdmin()
+}
+if(typeof carregarPacientesDrag==="function"){
+await carregarPacientesDrag()
+}
+if(typeof carregarProfissionaisDrag==="function"){
+await carregarProfissionaisDrag()
+}
 }
 /* ====================================================
 019 – EMPRESA – CARREGAR DADOS
