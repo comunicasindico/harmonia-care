@@ -220,19 +220,60 @@ if(a)a.innerHTML="⚠ "+atrasado
 ==================================================== */
 async function executarTodos(pacienteId){
 if(!db)return
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw && dataRaw.includes("/") ? dataRaw.split("/").reverse().join("-") : (dataRaw || new Date().toISOString().slice(0,10))
+
+/* ATUALIZA VISUAL IMEDIATO */
+const linha=document.querySelectorAll(`[data-paciente="${pacienteId}"] .btn-rotina`)
+linha.forEach(btn=>{
+if(!btn.classList.contains("rotina-executada")){
+btn.classList.remove("rotina-pendente")
+btn.classList.add("rotina-executada")
+if(!btn.innerHTML.includes("✔")){
+btn.innerHTML+=`<br><span style="font-size:10px">✔ admin</span>`
+}
+}
+})
+
 const rotinas=ROTINAS_CACHE.filter(r=>r.idoso_id===pacienteId)
+
 for(const r of rotinas){
+
 let usuarioId=localStorage.getItem("usuario_id")
 if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
-const {data:existe}=await db.from("rotinas_execucao").select("id,status").eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje).maybeSingle()
+
+const {data:existe}=await db
+.from("rotinas_execucao")
+.select("id,status")
+.eq("idoso_id",r.idoso_id)
+.eq("rotina_id",r.rotina_id)
+.eq("data",dataHoje)
+.maybeSingle()
+
 if(existe && existe.status==="executado")continue
+
 if(!existe){
-await db.from("rotinas_execucao").insert({idoso_id:r.idoso_id,rotina_id:r.rotina_id,data:dataHoje,status:"pendente"})
+await db.from("rotinas_execucao").insert({
+idoso_id:r.idoso_id,
+rotina_id:r.rotina_id,
+data:dataHoje,
+status:"pendente"
+})
 }
-await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje)
+
+await db.from("rotinas_execucao")
+.update({
+status:"executado",
+horario_executado:new Date(),
+usuario_id:usuarioId
+})
+.eq("idoso_id",r.idoso_id)
+.eq("rotina_id",r.rotina_id)
+.eq("data",dataHoje)
+
 }
+
 await carregarRotinas()
 }
 /* ====================================================
