@@ -160,11 +160,11 @@ abrirPainel("painelAdmin")
 if(typeof carregarUsuariosAdmin==="function"){
 await carregarUsuariosAdmin()
 }
-if(typeof carregarPacientesDrag==="function"){
-await carregarPacientesDrag()
-}
 if(typeof carregarProfissionaisDrag==="function"){
 await carregarProfissionaisDrag()
+}
+if(typeof carregarPacientesDrag==="function"){
+await carregarPacientesDrag()
 }
 }
 /* ====================================================
