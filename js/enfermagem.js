@@ -323,6 +323,16 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw && dataRaw.includes("/") ? dataRaw.split("/").reverse().join("-") : (dataRaw || new Date().toISOString().slice(0,10))
 let usuarioId=localStorage.getItem("usuario_id")
 if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
+const botoes=document.querySelectorAll(".btn-rotina")
+botoes.forEach(btn=>{
+if(!btn.classList.contains("rotina-executada")){
+btn.classList.remove("rotina-pendente")
+btn.classList.add("rotina-executada")
+if(!btn.innerHTML.includes("Administrador")){
+btn.innerHTML+=`<br><span style="font-size:10px">✔ Administrador</span>`
+}
+}
+})
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
 for(const r of pendentes){
 const {data:existe}=await db.from("rotinas_execucao").select("id,status").eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje).maybeSingle()
