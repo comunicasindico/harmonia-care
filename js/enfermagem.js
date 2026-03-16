@@ -37,7 +37,8 @@ if(typeof carregarClinico==="function")await carregarClinico()
 async function carregarRotinas(){
 if(!db)return
 const paciente=document.getElementById("buscaPaciente")?.value||"todos"
-const dataHoje=document.getElementById("dataInicio")?.value||new Date().toISOString().slice(0,10)
+const dataRaw=document.getElementById("dataInicio")?.value
+const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL
 let profissionalId=PROFISSIONAL_ID||localStorage.getItem("profissional_id")
 let pacientes=[]
@@ -77,7 +78,6 @@ ROTINAS_CACHE=lista
 calcularIndicadores(lista)
 renderizarRotinas(lista)
 }
-
 /* ====================================================
 023 – RENDERIZAR ROTINAS
 ==================================================== */
@@ -93,12 +93,12 @@ let rotinasHTML="",total=p.rotinas.length,executadas=0
 p.rotinas.forEach(r=>{
 if(r.status==="executado")executadas++
 const classe=r.status==="executado"?"rotina-executada":"rotina-pendente"
-rotinasHTML+=`<button 
-class="btn-rotina ${classe}"
-${r.status==="executado"?"":`onclick="executarRotina('${r.idoso_id}','${r.rotina_id}',this)"`}
->${r.rotina}
-${r.status==="executado"?`<br><span style="font-size:9px;color:#444">✔ ${(r.profissional&&r.profissional.trim())?r.profissional:"admin"}</span>`:""}
-</button>`
+let nomeProf=""
+if(r.status==="executado"){
+if(r.profissional&&r.profissional.trim()!==""){nomeProf=r.profissional}
+else{nomeProf="admin"}
+}
+rotinasHTML+=`<button class="btn-rotina ${classe}" ${r.status==="executado"?"":`onclick="executarRotina('${r.idoso_id}','${r.rotina_id}',this)"`}>${r.rotina}${r.status==="executado"?`<br><span style="font-size:9px;color:#444">✔ ${nomeProf}</span>`:""}</button>`
 })
 let percentual=total?Math.round((executadas/total)*100):0
 let botaoOK=percentual===100?`<button class="btn-todos">Rotinas OK</button>`:`<button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button>`
@@ -116,91 +116,34 @@ html+=`<tr style="background:#f0fdf4;font-weight:bold"><td>Todos os Pacientes</t
 }
 tbody.innerHTML=html
 }
-
 /* ====================================================
 024 – EXECUTAR ROTINA (LOCK DE EXECUÇÃO)
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
-
 if(!db)return
-
-/* BLOQUEIO VISUAL */
-if(botao && botao.classList.contains("rotina-executada")){
-console.log("Rotina já executada. Bloqueado.")
-return
-}
-
-/* LOCK LOCAL PARA EVITAR DUPLO CLIQUE */
+if(botao&&botao.classList.contains("rotina-executada")){return}
 const chaveLock=`lock_${pacienteId}_${rotinaId}`
-if(window[chaveLock]){
-console.log("Execução já em andamento")
-return
-}
-
+if(window[chaveLock]){return}
 window[chaveLock]=true
-
 const dataRaw=document.getElementById("dataInicio")?.value
-const dataHoje=dataRaw && dataRaw.includes("/") ? dataRaw.split("/").reverse().join("-") : (dataRaw || new Date().toISOString().slice(0,10))
-
+const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 let usuarioId=localStorage.getItem("usuario_id")
-if(!usuarioId || usuarioId==="null"){
-usuarioId=PROFISSIONAL_ID||null
-}
-
-/* VERIFICAR STATUS NO BANCO */
-const {data:existe,error:e1}=await db
-.from("rotinas_execucao")
-.select("status")
-.eq("idoso_id",pacienteId)
-.eq("rotina_id",rotinaId)
-.eq("data",dataHoje)
-.maybeSingle()
-
-if(e1){
-console.error("Erro verificação",e1)
-window[chaveLock]=false
-return
-}
-/* SE JÁ EXECUTADO NO BANCO, BLOQUEIA */
-if(existe && existe.status==="executado"){
-console.log("Rotina já executada no banco.")
-window[chaveLock]=false
-return
-}
-/* CRIAR REGISTRO SE NÃO EXISTIR */
+if(!usuarioId||usuarioId==="null"){usuarioId=PROFISSIONAL_ID||null}
+const {data:existe}=await db.from("rotinas_execucao").select("status").eq("idoso_id",pacienteId).eq("rotina_id",rotinaId).eq("data",dataHoje).maybeSingle()
+if(existe&&existe.status==="executado"){window[chaveLock]=false;return}
 if(!existe){
-await db.from("rotinas_execucao").insert({
-idoso_id:pacienteId,
-rotina_id:rotinaId,
-data:dataHoje,
-status:"pendente"
-})
+await db.from("rotinas_execucao").insert({idoso_id:pacienteId,rotina_id:rotinaId,data:dataHoje,status:"pendente"})
 }
-/* EXECUTAR ROTINA */
 if(botao){
 botao.classList.remove("rotina-pendente")
 botao.classList.add("rotina-executada")
 let nomeProfissional=localStorage.getItem("usuario_nome")
-if(!nomeProfissional||nomeProfissional==="Administrador")nomeProfissional="admin"
+if(!nomeProfissional||nomeProfissional==="Administrador"){nomeProfissional="admin"}
 if(!botao.innerHTML.includes("✔")){
-botao.innerHTML+=`<br><span style="font-size:10px">✔ ${nomeProfissional}</span>`
+botao.innerHTML+=`<br><span style="font-size:9px;color:#444">✔ ${nomeProfissional}</span>`
 }
 }
-const {error}=await db
-.from("rotinas_execucao")
-.update({
-status:"executado",
-horario_executado:new Date(),
-usuario_id:usuarioId
-})
-.eq("idoso_id",pacienteId)
-.eq("rotina_id",rotinaId)
-.eq("data",dataHoje)
-
-if(error){
-console.error("Erro executar rotina",error)
-}
-/* LIBERA LOCK */
+await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).eq("idoso_id",pacienteId).eq("rotina_id",rotinaId).eq("data",dataHoje)
 window[chaveLock]=false
 await carregarRotinas()
 }
