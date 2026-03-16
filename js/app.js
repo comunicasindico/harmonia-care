@@ -85,9 +85,7 @@ await iniciarSistema()
 localStorage.setItem("usuario_perfil",user.perfil)
 
 if(btn)btn.disabled=false
-
 }
-
 /* ====================================================
 011 – INICIAR SISTEMA
 ==================================================== */
@@ -96,45 +94,29 @@ async function iniciarSistema(){
 while(!db){
 await new Promise(r=>setTimeout(r,50))
 }
-
 /* definir data */
-
 definirDataHoje()
-
 /* carregar pacientes */
-
 if(typeof carregarPacientesBusca==="function"){
 await carregarPacientesBusca()
 }
-
 /* gerar rotinas do dia */
-
 if(typeof gerarRotinasDoDia==="function"){
 await gerarRotinasDoDia()
 }
-
 /* restaurar painel */
-
 const painelSalvo=localStorage.getItem("painelAtual")||"painelEnfermagem"
-
 abrirPainel(painelSalvo)
-
 /* carregar rotinas */
-
 if(typeof carregarRotinas==="function"){
 await carregarRotinas()
 }
-
 /* carregar clínico */
-
 if(typeof carregarClinico==="function"){
 await carregarClinico()
 }
-
 /* definir turno */
-
-mudarTurno("manha")
-
+mudarTurno(TURNO_ATUAL)
 /* ====================================================
 011B – LIBERAR BOTÃO ADMIN SOMENTE NA ENFERMAGEM
 ==================================================== */
