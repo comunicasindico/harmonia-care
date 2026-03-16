@@ -21,7 +21,7 @@ const el=document.getElementById("listaProfissionaisDrag")
 if(!el)return
 const {data,error}=await db
 .from("usuarios")
-.select("id,nome_completo,perfil,ativo")
+.select("id,nome_completo")
 .eq("ativo",true)
 .order("nome_completo",{ascending:true})
 if(error){
