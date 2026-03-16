@@ -25,6 +25,57 @@ var MODO_EDICAO_CLINICO=false
 if(typeof PROFISSIONAL_ID==="undefined"){
 var PROFISSIONAL_ID=localStorage.getItem("profissional_id")||null
 }
+
+/* ====================================================
+000A – CORES DOS USUÁRIOS
+==================================================== */
+
+const CORES_USUARIOS={
+"admin":"#64748b",
+"Administrador":"#64748b",
+
+"visualizador":"#64748b",
+"visualizador(a)":"#64748b",
+"enfermeiro":"#64748b",
+"enfermeiro(a)":"#64748b",
+"medico":"#64748b",
+"medico(a)":"#64748b",
+"supervisor":"#64748b",
+"supervisor(a)":"#64748b",
+"teste":"#64748b"
+}
+
+function obterCorUsuario(nome){
+
+if(!nome)return "#64748b"
+
+const chave=nome.toLowerCase().trim()
+
+if(CORES_USUARIOS[chave]){
+return CORES_USUARIOS[chave]
+}
+
+/* usuários reais recebem cor automática */
+
+let hash=0
+for(let i=0;i<nome.length;i++){
+hash=nome.charCodeAt(i)+((hash<<5)-hash)
+}
+
+const cores=[
+"#2563eb",
+"#059669",
+"#d97706",
+"#7c3aed",
+"#db2777",
+"#0891b2",
+"#4f46e5"
+]
+
+return cores[Math.abs(hash)%cores.length]
+
+}
+
 /* ====================================================
 001 – ATUALIZAR SESSÃO PROFISSIONAL
 ==================================================== */
