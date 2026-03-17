@@ -417,15 +417,21 @@ window.salvandoPendencias=false
 alert("Pendências concluídas com sucesso")
 }
 /* ====================================================
-035 – MONTAR GRADE POR PERÍODO (COM ROTINAS REAIS)
+035 – MONTAR GRADE POR PERÍODO (COM FILTRO CORRETO)
 ==================================================== */
 async function montarGradePeriodo(){
 if(!db)return
+
 const pacienteId=document.getElementById("buscaPaciente")?.value
 const dataInicio=document.getElementById("dataInicio")?.value
 const dataFim=document.getElementById("dataFim")?.value
+
 if(!pacienteId||pacienteId==="todos")return
 
+const turno=TURNO_ATUAL||"manha"
+const empresaId=EMPRESA_ID
+
+/* GERAR DIAS */
 const inicio=new Date(dataInicio)
 const fim=new Date(dataFim)
 const dias=[]
@@ -433,33 +439,44 @@ for(let d=new Date(inicio);d<=fim;d.setDate(d.getDate()+1)){
 dias.push(new Date(d).toISOString().slice(0,10))
 }
 
-/* ROTINAS VINDO DO CACHE */
-const nomesRotinas=[...new Set((ROTINAS_CACHE||[]).map(r=>r.rotina_nome))]
+/* BUSCAR ROTINAS FILTRADAS */
+const {data:rotinasModelos}=await db
+.from("rotina_modelos")
+.select("id,nome")
+.eq("turno",turno)
+.eq("empresa_id",empresaId)
+.eq("ativo",true)
 
-/* EXECUÇÕES DO BANCO */
+if(!rotinasModelos||rotinasModelos.length===0){
+document.getElementById("gradePeriodo").innerHTML="<p>Sem rotinas para este turno</p>"
+return
+}
+
+/* BUSCAR EXECUÇÕES */
 const {data:execucao}=await db
 .from("rotinas_execucao")
-.select("idoso_id,rotina_id,data,status,rotina_nome")
+.select("rotina_id,data,status")
 .eq("idoso_id",pacienteId)
 .gte("data",dataInicio)
 .lte("data",dataFim)
 
+/* MONTAR TABELA */
 let html=`<div style="margin-top:20px"><b>Rotinas por período</b><table style="width:100%;margin-top:10px;border-collapse:collapse">`
 
 html+=`<tr><th style="border:1px solid #ddd;padding:6px">Data</th>`
-for(const nome of nomesRotinas){
-html+=`<th style="border:1px solid #ddd;padding:6px">${nome}</th>`
+for(const r of rotinasModelos){
+html+=`<th style="border:1px solid #ddd;padding:6px">${r.nome}</th>`
 }
 html+=`</tr>`
 
 for(const dia of dias){
 html+=`<tr><td style="border:1px solid #ddd;padding:6px">${dia.split("-").reverse().join("/")}</td>`
 
-for(const nome of nomesRotinas){
+for(const r of rotinasModelos){
 
 const feito=execucao?.find(e=>
 e.data===dia &&
-e.rotina_nome===nome &&
+e.rotina_id===r.id &&
 e.status==="executado"
 )
 
@@ -471,6 +488,5 @@ html+=`</tr>`
 
 html+=`</table></div>`
 
-const container=document.getElementById("gradePeriodo")
-if(container)container.innerHTML=html
+document.getElementById("gradePeriodo").innerHTML=html
 }
