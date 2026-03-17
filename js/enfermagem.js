@@ -387,8 +387,10 @@ return v
 ==================================================== */
 async function concluirPendentesVisiveis(){
 if(!db)return
+if(window.salvandoPendencias){alert("Aguarde finalizar o salvamento.");return}
+window.salvandoPendencias=true
 const dataRaw=document.getElementById("dataInicio")?.value
-const dataHoje=dataRaw && dataRaw.includes("/") ? dataRaw.split("/").reverse().join("-") : (dataRaw || new Date().toISOString().slice(0,10))
+const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 let usuarioId=localStorage.getItem("usuario_id")
 if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
 const botoes=document.querySelectorAll(".btn-rotina")
@@ -398,18 +400,18 @@ btn.classList.remove("rotina-pendente")
 btn.classList.add("rotina-executada")
 if(!btn.innerHTML.includes("✔")){
 btn.innerHTML+=`<br><span style="font-size:10px">✔ Administrador</span>`
-}
-}
+}}
 })
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
 for(const r of pendentes){
 const {data:existe}=await db.from("rotinas_execucao").select("id,status").eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje).maybeSingle()
-if(existe && existe.status==="executado")continue
+if(existe&&existe.status==="executado")continue
 if(!existe){
 await db.from("rotinas_execucao").insert({idoso_id:r.idoso_id,rotina_id:r.rotina_id,data:dataHoje,status:"pendente"})
 }
 await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje)
 }
 await carregarRotinas()
+window.salvandoPendencias=false
 alert("Pendências concluídas com sucesso")
 }
