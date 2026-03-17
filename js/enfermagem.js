@@ -157,7 +157,7 @@ if(!botao.innerHTML.includes("✔")){
 botao.innerHTML+=`<br><span style="font-size:9px;font-weight:bold;color:${cor}">✔ ${nomeProfissional}</span>`
 }
 }
-await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).eq("idoso_id",pacienteId).eq("rotina_id",rotinaId).eq("data",dataHoje)
+await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).or(`idoso_id.eq.${pacienteId},paciente_id.eq.${pacienteId}`).eq("rotina_id",rotinaId).eq("data",dataHoje)
 window[chaveLock]=false
 await carregarRotinas()
 }
@@ -467,13 +467,13 @@ return ia-ib
 })
 const {data:execucao}=await db
 .from("rotinas_execucao")
-.select("rotina_id,data,status,turno,idoso_id,paciente_id")
+.select("rotina_id,data,horario_executado,status,turno,idoso_id,paciente_id")
 let mapa={}
 for(const e of execucao||[]){
 const id=e.idoso_id||e.paciente_id
 if(id!=pacienteId)continue
 
-const dataExec=e.data.split("T")[0]
+const dataExec = (e.horario_executado || e.data)?.slice(0,10)
 const chave=dataExec+"_"+e.rotina_id
 
 if(!mapa[chave])mapa[chave]=[]
