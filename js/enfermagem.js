@@ -487,10 +487,16 @@ const lista=mapa[dia+"_"+r.id]||[]
 let manha=lista.some(e=>e.turno==="manha"&&e.status==="executado")
 let tarde=lista.some(e=>e.turno==="tarde"&&e.status==="executado")
 let noite=lista.some(e=>e.turno==="noite"&&e.status==="executado")
-let celula=""
+let celula = ""
+
 if(manha)celula+=`<span style="color:#2196f3">●</span>`
 if(tarde)celula+=`<span style="color:#ff9800">●</span>`
 if(noite)celula+=`<span style="color:#37474f">●</span>`
+
+/* 🔥 MOSTRAR VAZIO VISUAL */
+if(!celula){
+celula = `<span style="color:#e74c3c">✖</span>`
+}
 html+=`<td style="text-align:center">${celula}</td>`
 }
 html+=`</tr>`
