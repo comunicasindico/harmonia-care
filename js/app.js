@@ -54,6 +54,11 @@ async function iniciarSistema(){
 while(!db){await new Promise(r=>setTimeout(r,50))}
 definirDataHoje()
 if(typeof carregarPacientesBusca==="function"){await carregarPacientesBusca()}
+const pacienteSalvo=localStorage.getItem("pacienteSelecionado")
+const buscaPaciente=document.getElementById("buscaPaciente")
+if(buscaPaciente && pacienteSalvo){
+buscaPaciente.value=pacienteSalvo
+}
 if(typeof gerarRotinasDoDia==="function"){await gerarRotinasDoDia()}
 let painelSalvo=localStorage.getItem("painelAtual")
 if(!painelSalvo){
@@ -83,7 +88,15 @@ localStorage.clear()
 location.reload()
 }
 /* ====================================================
-013 – INIT
+013 – SALVAR PACIENTE SELECIONADO
+==================================================== */
+document.addEventListener("change",function(e){
+if(e.target && e.target.id==="buscaPaciente"){
+localStorage.setItem("pacienteSelecionado",e.target.value)
+}
+})
+/* ====================================================
+014 – INIT
 ==================================================== */
 window.addEventListener("load",async()=>{
 while(!db){await new Promise(r=>setTimeout(r,50))}
@@ -105,7 +118,7 @@ console.log("Página restaurada do cache")
 }
 })
 /* ====================================================
-014 – DATA HOJE
+015 – DATA HOJE
 ==================================================== */
 function definirDataHoje(){
 const hoje=new Date()
@@ -119,7 +132,7 @@ if(inicio)inicio.value=dataLocal
 if(fim)fim.value=dataLocal
 }
 /* ====================================================
-015 – NAVEGAÇÃO PAINÉIS
+016 – NAVEGAÇÃO PAINÉIS
 ==================================================== */
 function abrirPainel(id){
 localStorage.setItem("painelAtual",id)
@@ -141,7 +154,7 @@ btnAdmin.style.display="none"
 }
 }
 /* ====================================================
-016 – ABRIR ENFERMAGEM
+017 – ABRIR ENFERMAGEM
 ==================================================== */
 function abrirEnfermagem(){
 abrirPainel("painelEnfermagem")
@@ -150,7 +163,7 @@ const paciente=document.getElementById("buscaPaciente")?.value
 if(typeof carregarDadosClinicosPaciente==="function"){carregarDadosClinicosPaciente(paciente)}
 }
 /* ====================================================
-017 – ABRIR CLINICO
+018 – ABRIR CLINICO
 ==================================================== */
 function abrirClinico(){
 abrirPainel("painelClinico")
@@ -159,7 +172,7 @@ if(acoes)acoes.style.display="flex"
 if(typeof carregarClinico==="function"){carregarClinico()}
 }
 /* ====================================================
-018 – ABRIR ADMIN
+019 – ABRIR ADMIN
 ==================================================== */
 async function abrirAdmin(){
 abrirPainel("painelAdmin")
@@ -174,7 +187,7 @@ await carregarPacientesDrag()
 }
 }
 /* ====================================================
-019 – EMPRESA – CARREGAR DADOS
+020 – EMPRESA – CARREGAR DADOS
 ==================================================== */
 async function carregarEmpresa(){
 if(!db)return
