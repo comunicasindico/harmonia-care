@@ -489,7 +489,7 @@ const m=String(dt.getMonth()+1).padStart(2,"0")
 const da=String(dt.getDate()).padStart(2,"0")
 
 const dataExec=`${y}-${m}-${da}`
-const chave=dataExec+"_"+e.rotina_id
+const chave=dataExec+"_"+String(e.rotina_id)
 
 if(!mapa[chave])mapa[chave]=[]
 mapa[chave].push(e)
@@ -504,7 +504,7 @@ for(const dia of dias){
 const dataBR=new Date(dia+"T00:00:00").toLocaleDateString("pt-BR")
 html+=`<tr><td style="font-weight:bold">${dataBR}</td>`
 for(const r of rotinasModelos){
-const lista=mapa[dia+"_"+r.id]||[]
+const lista=mapa[dia+"_"+String(r.id)]||[]
 let manha=false,tarde=false,noite=false
 
 for(const e of lista){
