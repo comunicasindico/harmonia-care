@@ -219,7 +219,7 @@ let html=""
 data.forEach(u=>{
 const podeEditar=USUARIO_HIERARQUIA < (u.hierarquia||5)
 
-html+=`<tr data-id="${u.id}" style="${!podeEditar?'opacity:0.6':''}">
+html+=`<tr data-id="${u.id}" style="${!podeEditar?'opacity:0.5':''}">
 <td><input class="u_nome" value="${u.nome_completo||""}" ${!podeEditar?"disabled":""}></td>
 <td><input class="u_apelido" value="${u.nome_apelido||""}" ${!podeEditar?"disabled":""}></td>
 <td><input class="u_email" value="${u.email||""}" ${!podeEditar?"disabled":""}></td>
@@ -242,12 +242,12 @@ html+=`<tr data-id="${u.id}" style="${!podeEditar?'opacity:0.6':''}">
 <option value="5"${u.hierarquia==5?" selected":""}>5</option>
 </select>
 </td>
-<td><input class="u_senha" value="${u.senha||""}" ${!podeEditar?"disabled":""}></td>
+<td><input class="u_senha" type="password" value="${u.senha||""}" ${!podeEditar?"disabled":""}></td>
 <td>
 ${podeEditar?`
 <button onclick="salvarUsuario('${u.id}',this)" class="btn-success">Salvar</button>
 <button onclick="excluirUsuario('${u.id}')" class="btn-danger">Excluir</button>
-`:`<span style="color:#999;font-size:11px">🔒 Bloqueado</span>`}
+`:`<span style="color:#999;font-size:11px">🔒</span>`}
 </td>
 </tr>`
 })
