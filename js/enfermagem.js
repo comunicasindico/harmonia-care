@@ -417,7 +417,7 @@ window.salvandoPendencias=false
 alert("Pendências concluídas com sucesso")
 }
 /* ====================================================
-035 – MONTAR GRADE POR PERÍODO (CORRIGIDO FINAL)
+035 – TESTE SEM FILTROS
 ==================================================== */
 async function montarGradePeriodo(){
 if(!db)return
@@ -428,9 +428,6 @@ const dataFim=document.getElementById("dataFim")?.value
 
 if(!pacienteId||pacienteId==="todos")return
 
-const turno=TURNO_ATUAL||"manha"
-const empresaId=EMPRESA_ID
-
 const inicio=new Date(dataInicio)
 const fim=new Date(dataFim)
 const dias=[]
@@ -438,21 +435,15 @@ for(let d=new Date(inicio);d<=fim;d.setDate(d.getDate()+1)){
 dias.push(new Date(d).toISOString().slice(0,10))
 }
 
-/* 🔥 CORREÇÃO AQUI */
+/* 🔥 SEM FILTRO */
 const {data:rotinasModelos,error:e1}=await db
 .from("rotina_modelos")
 .select("id,nome")
-.eq("turno",turno)
-.eq("empresa_id_uuid",empresaId)
-.eq("ativo",true)
 
-if(e1){
-console.error("Erro rotinasModelos",e1)
-return
-}
+console.log("ROTINAS MODELOS:",rotinasModelos)
 
 if(!rotinasModelos||rotinasModelos.length===0){
-document.getElementById("gradePeriodo").innerHTML="<p>Sem rotinas para este turno</p>"
+document.getElementById("gradePeriodo").innerHTML="<p>Sem rotinas (teste)</p>"
 return
 }
 
@@ -463,31 +454,26 @@ const {data:execucao,error:e2}=await db
 .gte("data",dataInicio)
 .lte("data",dataFim)
 
-if(e2){
-console.error("Erro execucao",e2)
-return
-}
+console.log("EXECUCAO:",execucao)
 
 let html=`<div style="margin-top:20px"><b>Rotinas por período</b><table style="width:100%;margin-top:10px;border-collapse:collapse">`
 
-html+=`<tr><th style="border:1px solid #ddd;padding:6px">Data</th>`
+html+=`<tr><th>Data</th>`
 for(const r of rotinasModelos){
-html+=`<th style="border:1px solid #ddd;padding:6px">${r.nome}</th>`
+html+=`<th>${r.nome}</th>`
 }
 html+=`</tr>`
 
 for(const dia of dias){
-html+=`<tr><td style="border:1px solid #ddd;padding:6px">${dia.split("-").reverse().join("/")}</td>`
+html+=`<tr><td>${dia}</td>`
 
 for(const r of rotinasModelos){
-
 const feito=execucao?.find(e=>
 e.data===dia &&
 e.rotina_id===r.id &&
 e.status==="executado"
 )
-
-html+=`<td style="border:1px solid #ddd;text-align:center">${feito?"✔":""}</td>`
+html+=`<td>${feito?"✔":""}</td>`
 }
 
 html+=`</tr>`
