@@ -112,6 +112,22 @@ transform:translateY(-2px);
 box-shadow:0 6px 14px rgba(0,0,0,0.25);
 }
 
+#tabelaUsuarios input,
+#tabelaUsuarios select{
+border:1px solid #ddd;
+border-radius:6px;
+font-size:12px;
+padding:4px;
+width:100%;
+}
+#tabelaUsuarios th{
+background:#f1f5f9;
+font-weight:600;
+}
+#tabelaUsuarios tr:hover{
+background:#f9fafb;
+}
+
 </style>
 
 </head>
@@ -320,6 +336,29 @@ Sair
 <button onclick="inserirUsuario()" class="btn-primary">+ Adicionar</button>
 </div>
 </div>
+<!-- ITEM 080 – FILTROS + BUSCA -->
+<div id="filtrosUsuarios" style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+<input id="buscaUsuario" placeholder="Buscar nome/email..." style="padding:6px;width:200px">
+<select id="filtroPerfil">
+<option value="">Todos Perfis</option>
+<option>Administrador(a)</option>
+<option>Médico(a)</option>
+<option>Fisioterapeuta</option>
+<option>Enfermeiro(a)</option>
+<option>Cuidador(a)</option>
+<option>Estagiário(a)</option>
+</select>
+<select id="filtroHierarquia">
+<option value="">Todas Hierarquias</option>
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+</select>
+<button onclick="carregarUsuarios()" class="btn-primary">Filtrar</button>
+</div>
+
 <table id="tabelaUsuarios" style="width:100%;border-collapse:collapse">
 <thead>
 <tr>
