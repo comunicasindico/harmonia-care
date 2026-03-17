@@ -47,3 +47,20 @@ console.log("Erro keep alive")
 }
 
 },300000)
+/* ====================================================
+004 – AUDITORIA GLOBAL
+==================================================== */
+async function registrarAuditoria({acao,tabela,registro_id,antes,depois}){
+if(!db)return
+const usuario_id=localStorage.getItem("usuario_id")
+const usuario_nome=localStorage.getItem("usuario_nome")
+await db.from("auditoria").insert({
+usuario_id,
+usuario_nome,
+acao,
+tabela,
+registro_id,
+dados_antes:antes||null,
+dados_depois:depois||null
+})
+}
