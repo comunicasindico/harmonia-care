@@ -478,10 +478,24 @@ const ordemDesejada = [
 "Higiene Noturna (noite)",
 "Troca de Fralda (noite)"
 ]
-
+console.log("ANTES ORDENAR:", rotinasModelos.map(r=>r.nome))
 rotinasModelos.sort((a,b)=>{
-return ordemDesejada.indexOf(a.nome) - ordemDesejada.indexOf(b.nome)
+const normalizar = (txt) => txt
+?.normalize("NFD")
+.replace(/[\u0300-\u036f]/g, "")
+.toLowerCase()
+.trim()
+
+const ia = ordemDesejada.map(normalizar).indexOf(normalizar(a.nome))
+const ib = ordemDesejada.map(normalizar).indexOf(normalizar(b.nome))
+
+if(ia === -1 && ib === -1) return 0
+if(ia === -1) return 1
+if(ib === -1) return -1
+
+return ia - ib
 })
+console.log("DEPOIS ORDENAR:", rotinasModelos.map(r=>r.nome))
 
 const {data:execucao,error:e2}=await db
 .from("rotinas_execucao")
@@ -511,7 +525,8 @@ LINHAS
 for(const dia of dias){
 
 /* DATA BR */
-const dataBR = dia.split("-").reverse().join("/")
+const d = new Date(dia + "T00:00:00")
+const dataBR = d.toLocaleDateString("pt-BR")
 
 html+=`<tr><td style="font-weight:bold">${dataBR}</td>`
 
