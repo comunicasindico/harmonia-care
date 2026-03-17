@@ -40,7 +40,7 @@ localStorage.setItem("usuario_nome",user.nome_completo)
 localStorage.setItem("usuario_id",user.id)
 localStorage.setItem("empresa_id",user.empresa_id)
 localStorage.setItem("usuario_perfil",user.perfil)
-localStorage.setItem("usuario_hierarquia",usuario.hierarquia||5)
+localStorage.setItem("usuario_hierarquia",user.hierarquia||5)
 PROFISSIONAL_ID=user.id
 EMPRESA_ID=user.empresa_id
 document.getElementById("login").style.display="none"
