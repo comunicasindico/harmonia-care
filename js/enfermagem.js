@@ -427,7 +427,7 @@ window.salvandoPendencias=false
 alert("Pendências concluídas com sucesso")
 }
 /* ====================================================
-035 – TESTE SEM FILTROS
+035 – TESTE SEM FILTROS (VERSÃO FINAL CORRIGIDA)
 ==================================================== */
 async function montarGradePeriodo(){
 if(!db)return
@@ -442,28 +442,45 @@ if(el)el.innerHTML=""
 return
 }
 
-const inicio=new Date(dataInicio)
-const fim=new Date(dataFim)
+/* =========================
+GERAR DIAS
+========================= */
+const inicio=new Date(dataInicio+"T00:00:00")
+const fim=new Date(dataFim+"T00:00:00")
 const dias=[]
+
 for(let d=new Date(inicio);d<=fim;d.setDate(d.getDate()+1)){
 dias.push(new Date(d).toISOString().slice(0,10))
 }
 
-/* 🔥 SEM FILTRO */
+/* =========================
+BUSCAR MODELOS (COM TURNO!)
+========================= */
 const {data:rotinasModelos,error:e1}=await db
 .from("rotina_modelos")
-.select("id,nome")
+.select("id,nome,turno")
 
 console.log("ROTINAS MODELOS:",rotinasModelos)
 
 if(!rotinasModelos||rotinasModelos.length===0){
-document.getElementById("gradePeriodo").innerHTML="<p>Sem rotinas (teste)</p>"
+document.getElementById("gradePeriodo").innerHTML="<p>Sem rotinas</p>"
 return
 }
 
 /* =========================
-ORDENAR COLUNAS (AJUSTE AQUI)
+NORMALIZADOR
 ========================= */
+const normalizar = (txt) => txt
+?.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.toLowerCase()
+.trim()
+
+/* =========================
+ORDEM
+========================= */
+const ordemTurno = ["manha","tarde","noite"]
+
 const ordemDesejada = [
 "Banho",
 "Alimentação",
@@ -478,16 +495,23 @@ const ordemDesejada = [
 "Higiene Noturna (noite)",
 "Troca de Fralda (noite)"
 ]
-console.log("ANTES ORDENAR:", rotinasModelos.map(r=>r.nome))
-rotinasModelos.sort((a,b)=>{
-const normalizar = (txt) => txt
-?.normalize("NFD")
-.replace(/[\u0300-\u036f]/g, "")
-.toLowerCase()
-.trim()
 
-const ia = ordemDesejada.map(normalizar).indexOf(normalizar(a.nome))
-const ib = ordemDesejada.map(normalizar).indexOf(normalizar(b.nome))
+const ordemNormalizada = ordemDesejada.map(normalizar)
+
+/* =========================
+ORDENAR CORRETAMENTE
+========================= */
+rotinasModelos.sort((a,b)=>{
+
+const turnoA = ordemTurno.indexOf(a.turno||"")
+const turnoB = ordemTurno.indexOf(b.turno||"")
+
+if(turnoA !== turnoB){
+return turnoA - turnoB
+}
+
+const ia = ordemNormalizada.indexOf(normalizar(a.nome))
+const ib = ordemNormalizada.indexOf(normalizar(b.nome))
 
 if(ia === -1 && ib === -1) return 0
 if(ia === -1) return 1
@@ -495,8 +519,12 @@ if(ib === -1) return -1
 
 return ia - ib
 })
-console.log("DEPOIS ORDENAR:", rotinasModelos.map(r=>r.nome))
 
+console.log("DEPOIS ORDENAR:", rotinasModelos.map(r=>`${r.turno} - ${r.nome}`))
+
+/* =========================
+BUSCAR EXECUÇÃO
+========================= */
 const {data:execucao,error:e2}=await db
 .from("rotinas_execucao")
 .select("rotina_id,data,status,turno")
@@ -507,7 +535,7 @@ const {data:execucao,error:e2}=await db
 console.log("EXECUCAO:",execucao)
 
 /* =========================
-INÍCIO HTML
+HTML
 ========================= */
 let html=`<div style="margin-top:20px"><b>Rotinas por período</b>
 <table style="width:100%;margin-top:10px;border-collapse:collapse;font-size:12px">`
@@ -524,9 +552,7 @@ LINHAS
 ========================= */
 for(const dia of dias){
 
-/* DATA BR */
-const d = new Date(dia + "T00:00:00")
-const dataBR = d.toLocaleDateString("pt-BR")
+const dataBR = new Date(dia+"T00:00:00").toLocaleDateString("pt-BR")
 
 html+=`<tr><td style="font-weight:bold">${dataBR}</td>`
 
@@ -538,12 +564,11 @@ e.rotina_id===r.id &&
 e.status==="executado"
 )
 
-/* VERIFICAR TURNOS */
+/* TURNOS */
 let manha = registros?.some(e=>e.turno==="manha")
 let tarde = registros?.some(e=>e.turno==="tarde")
 let noite = registros?.some(e=>e.turno==="noite")
 
-/* CORES POR TURNO */
 let celula = ""
 
 if(manha) celula += `<span style="color:#2196f3">●</span>`
@@ -558,7 +583,6 @@ html+=`</tr>`
 
 html+=`</table>
 
-/* LEGENDA */
 <div style="margin-top:10px;font-size:12px">
 <span style="color:#2196f3">●</span> Manhã 
 <span style="color:#ff9800;margin-left:10px">●</span> Tarde 
