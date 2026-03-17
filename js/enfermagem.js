@@ -490,9 +490,27 @@ const dataBR=new Date(dia+"T00:00:00").toLocaleDateString("pt-BR")
 html+=`<tr><td style="font-weight:bold">${dataBR}</td>`
 for(const r of rotinasModelos){
 const lista=mapa[dia+"_"+r.id]||[]
-let manha=lista.some(e=>e.turno==="manha"&&e.status==="executado")
-let tarde=lista.some(e=>e.turno==="tarde"&&e.status==="executado")
-let noite=lista.some(e=>e.turno==="noite"&&e.status==="executado")
+let manha=false,tarde=false,noite=false
+
+for(const e of lista){
+
+const statusOK=(e.status||"").toLowerCase().trim()==="executado"
+if(!statusOK)continue
+
+// 🔥 PRIORIDADE: usar turno se existir
+if(e.turno==="manha")manha=true
+else if(e.turno==="tarde")tarde=true
+else if(e.turno==="noite")noite=true
+
+// 🔥 SE turno for NULL → usa horário
+else if(e.horario_executado){
+const hora=new Date(e.horario_executado).getHours()
+
+if(hora<12)manha=true
+else if(hora<18)tarde=true
+else noite=true
+}
+}
 let celula = ""
 
 if(manha)celula+=`<span style="color:#2196f3">●</span>`
