@@ -293,52 +293,59 @@ Sair
 </div>
 
 <!-- ADMIN -->
-<!-- ADMIN -->
-
 <div id="painelAdmin" style="display:none">
-
 <div class="box">
 <h3>Usuários do Sistema</h3>
-
-<table>
+<div id="boxUsuarios" style="background:#fff;padding:12px;border-radius:10px;margin-bottom:10px;box-shadow:0 2px 6px rgba(0,0,0,0.08)">
+<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+<input id="u_nome" placeholder="Nome" style="padding:6px">
+<input id="u_apelido" placeholder="Apelido" style="padding:6px">
+<input id="u_email" placeholder="Email" style="padding:6px">
+<select id="u_perfil">
+<option>Administrador(a)</option>
+<option>Médico(a)</option>
+<option>Fisioterapeuta</option>
+<option>Enfermeiro(a)</option>
+<option>Cuidador(a)</option>
+<option>Estagiário(a)</option>
+</select>
+<select id="u_hierarquia">
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+</select>
+<input id="u_senha" placeholder="Senha" type="password" style="padding:6px">
+<button onclick="inserirUsuario()" class="btn-primary">+ Adicionar</button>
+</div>
+</div>
+<table id="tabelaUsuarios" style="width:100%;border-collapse:collapse">
 <thead>
 <tr>
-<th>ID</th>
-<th>Empresa</th>
 <th>Nome</th>
 <th>Apelido</th>
 <th>Email</th>
 <th>Perfil</th>
-<th>Ativo</th>
-<th>Criado</th>
-<th>Cargo</th>
 <th>Hierarquia</th>
 <th>Senha</th>
+<th>Ações</th>
 </tr>
 </thead>
-
 <tbody id="tabelaUsuariosAdmin"></tbody>
-
 </table>
-
 </div>
-
 <div class="box">
 <h3>Profissionais</h3>
 <div id="listaProfissionaisDrag"></div>
 </div>
-
 <div class="box">
 <h3>Pacientes</h3>
 <div id="listaPacientesDrag"></div>
 </div>
-
-</div>
-
 </div>
 
 <!-- ORDEM CORRETA DOS SCRIPTS -->
-
 <script src="./js/globals.js"></script>
 <script src="./js/supabase.js"></script>
 <script src="./js/enfermagem.js"></script>
@@ -346,6 +353,5 @@ Sair
 <script src="./js/admin.js"></script>
 <script src="./js/pdf.js"></script>
 <script src="./js/app.js"></script>
-
 </body>
 </html>
