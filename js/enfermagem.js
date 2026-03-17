@@ -65,14 +65,14 @@ const {data:usuarios}=await db.from("usuarios").select("id,nome_apelido")
 const mapaProfissionais={}
 usuarios?.forEach(u=>{mapaProfissionais[u.id]=u.nome_apelido})
 const mapaExecucoes={}
-execucoes?.forEach(e=>{mapaExecucoes[`${e.idoso_id}_${e.rotina_id}`]=e})
+execucoes?.forEach(e=>{mapaExecucoes[`${e.paciente_id}_${e.rotina_id}`]=e})
 let lista=[]
 pacientes?.forEach(p=>{
 if(paciente!=="todos"&&paciente!=p.id)return
 rotinasTurno.forEach(r=>{
 const chave=`${p.id}_${r.id}`
 const exec=mapaExecucoes[chave]
-lista.push({id:exec?.id||chave,idoso_id:p.id,rotina_id:r.id,paciente:p.nome_completo,rotina:r.nome,status:exec?.status||"pendente",profissional:exec?.usuario_id?mapaProfissionais[exec.usuario_id]:""})
+lista.push({id:exec?.id||chave,paciente_id:p.id,rotina_id:r.id,paciente:p.nome_completo,rotina:r.nome,status:exec?.status||"pendente",profissional:exec?.usuario_id?mapaProfissionais[exec.usuario_id]:""})
 })
 })
 ROTINAS_CACHE=lista
@@ -87,7 +87,7 @@ const tbody=document.getElementById("rotinas");if(!tbody)return
 let html=""
 const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todos"
 const pacientes={}
-lista.forEach(r=>{if(!pacientes[r.idoso_id])pacientes[r.idoso_id]={nome:r.paciente,rotinas:[]};pacientes[r.idoso_id].rotinas.push(r)})
+lista.forEach(r=>{if(!pacientes[r.paciente_id])pacientes[r.paciente_id]={nome:r.paciente,rotinas:[]};pacientes[r.paciente_id].rotinas.push(r)})
 Object.keys(pacientes).forEach(pid=>{
 const p=pacientes[pid]
 let rotinasHTML="",total=p.rotinas.length,executadas=0
@@ -104,7 +104,7 @@ nomeProf="admin"
 }
 corProf=obterCorUsuario(nomeProf)
 }
-rotinasHTML+=`<button class="btn-rotina ${classe}" ${r.status==="executado"?"":`onclick="executarRotina('${r.idoso_id}','${r.rotina_id}',this)"`}>
+rotinasHTML+=`<button class="btn-rotina ${classe}" ${r.status==="executado"?"":`onclick="executarRotina('${r.paciente_id}','${r.rotina_id}',this)"`}>
 ${r.rotina}
 ${r.status==="executado"
 ?`<br><span style="font-size:9px;font-weight:bold;color:${corProf}">✔ ${nomeProf}</span>`
@@ -140,10 +140,10 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 let usuarioId=localStorage.getItem("usuario_id")
 if(!usuarioId||usuarioId==="null"){usuarioId=PROFISSIONAL_ID||null}
-const {data:existe}=await db.from("rotinas_execucao").select("status").eq("idoso_id",pacienteId).eq("rotina_id",rotinaId).eq("data",dataHoje).maybeSingle()
+const {data:existe}=await db.from("rotinas_execucao").select("status").eq("paciente_id",pacienteId).eq("rotina_id",rotinaId).eq("data",dataHoje).maybeSingle()
 if(existe&&existe.status==="executado"){window[chaveLock]=false;return}
 if(!existe){
-await db.from("rotinas_execucao").insert({idoso_id:pacienteId,rotina_id:rotinaId,data:dataHoje,status:"pendente"})
+await db.from("rotinas_execucao").insert({paciente_id:pacienteId,rotina_id:rotinaId,data:dataHoje,status:"pendente"})
 }
 if(botao){
 botao.classList.remove("rotina-pendente")
@@ -157,7 +157,7 @@ if(!botao.innerHTML.includes("✔")){
 botao.innerHTML+=`<br><span style="font-size:9px;font-weight:bold;color:${cor}">✔ ${nomeProfissional}</span>`
 }
 }
-await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).eq("idoso_id", pacienteId).eq("rotina_id",rotinaId).eq("data",dataHoje)
+await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).eq("paciente_id", pacienteId).eq("rotina_id",rotinaId).eq("data",dataHoje)
 window[chaveLock]=false
 await carregarRotinas()
 }
@@ -194,7 +194,7 @@ btn.innerHTML+=`<br><span style="font-size:10px">✔ admin</span>`
 }
 })
 
-const rotinas=ROTINAS_CACHE.filter(r=>r.idoso_id===pacienteId)
+const rotinas=ROTINAS_CACHE.filter(r=>r.paciente_id===pacienteId)
 
 for(const r of rotinas){
 
@@ -204,7 +204,7 @@ if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
 const {data:existe}=await db
 .from("rotinas_execucao")
 .select("id,status")
-.eq("idoso_id",r.idoso_id)
+.eq("paciente_id",r.paciente_id)
 .eq("rotina_id",r.rotina_id)
 .eq("data",dataHoje)
 .maybeSingle()
@@ -213,7 +213,7 @@ if(existe && existe.status==="executado")continue
 
 if(!existe){
 await db.from("rotinas_execucao").insert({
-idoso_id:r.idoso_id,
+paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
 status:"pendente"
@@ -226,7 +226,7 @@ status:"executado",
 horario_executado:new Date(),
 usuario_id:usuarioId
 })
-.eq("idoso_id",r.idoso_id)
+.eq("paciente_id",r.paciente_id)
 .eq("rotina_id",r.rotina_id)
 .eq("data",dataHoje)
 
@@ -282,7 +282,7 @@ if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
 const {data:existe}=await db
 .from("rotinas_execucao")
 .select("id,status")
-.eq("idoso_id",r.idoso_id)
+.eq("paciente_id",r.paciente_id)
 .eq("rotina_id",r.rotina_id)
 .eq("data",dataHoje)
 .maybeSingle()
@@ -294,7 +294,7 @@ if(!existe){
 await db
 .from("rotinas_execucao")
 .insert({
-idoso_id:r.idoso_id,
+paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
 status:"pendente"
@@ -309,7 +309,7 @@ status:"executado",
 horario_executado:new Date(),
 usuario_id:usuarioId
 })
-.eq("idoso_id",r.idoso_id)
+.eq("paciente_id",r.paciente_id)
 .eq("rotina_id",r.rotina_id)
 .eq("data",dataHoje)
 
@@ -469,12 +469,12 @@ btn.innerHTML+=`<br><span style="font-size:10px">✔ Administrador</span>`
 })
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
 for(const r of pendentes){
-const {data:existe}=await db.from("rotinas_execucao").select("id,status").eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje).maybeSingle()
+const {data:existe}=await db.from("rotinas_execucao").select("id,status").eq("paciente_id",r.paciente_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje).maybeSingle()
 if(existe&&existe.status==="executado")continue
 if(!existe){
-await db.from("rotinas_execucao").insert({idoso_id:r.idoso_id,rotina_id:r.rotina_id,data:dataHoje,status:"pendente"})
+await db.from("rotinas_execucao").insert({paciente_id:r.paciente_id,rotina_id:r.rotina_id,data:dataHoje,status:"pendente"})
 }
-await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).eq("idoso_id",r.idoso_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje)
+await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).eq("paciente_id",r.paciente_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje)
 }
 await carregarRotinas()
 window.salvandoPendencias=false
