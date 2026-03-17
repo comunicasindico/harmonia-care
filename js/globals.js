@@ -9,8 +9,35 @@ if(typeof ROTINAS_CACHE==="undefined"){var ROTINAS_CACHE=[]}
 if(typeof ROTINAS_GERADAS==="undefined"){var ROTINAS_GERADAS=false}
 if(typeof MODO_EDICAO_CLINICO==="undefined"){var MODO_EDICAO_CLINICO=false}
 if(typeof PROFISSIONAL_ID==="undefined"){var PROFISSIONAL_ID=localStorage.getItem("profissional_id")||null}
-/* ITEM 090 – MODO EDIÇÃO ADMIN */
-if(typeof MODO_EDICAO_ADMIN==="undefined"){var MODO_EDICAO_ADMIN=false}
+if(typeof USUARIO_HIERARQUIA==="undefined"){var USUARIO_HIERARQUIA=parseInt(localStorage.getItem("usuario_hierarquia")||5)}
+/* ====================================================
+090 – MODO EDIÇÃO ADMIN
+==================================================== */
+if(typeof MODO_EDICAO_ADMIN==="undefined"){var MODO_EDICAO_ADMIN=localStorage.getItem("modo_edicao_admin")==="true"}
+/* ====================================================
+091 – ATIVAR EDIÇÃO ADMIN
+==================================================== */
+function editarUsuarios(){
+MODO_EDICAO_ADMIN=true
+localStorage.setItem("modo_edicao_admin","true")
+if(typeof carregarUsuarios==="function")carregarUsuarios()
+}
+/* ====================================================
+092 – CANCELAR EDIÇÃO ADMIN
+==================================================== */
+function cancelarEdicaoUsuarios(){
+MODO_EDICAO_ADMIN=false
+localStorage.setItem("modo_edicao_admin","false")
+if(typeof carregarUsuarios==="function")carregarUsuarios()
+}
+/* ====================================================
+093 – TOGGLE EDIÇÃO ADMIN
+==================================================== */
+function toggleEdicaoUsuarios(){
+MODO_EDICAO_ADMIN=!MODO_EDICAO_ADMIN
+localStorage.setItem("modo_edicao_admin",MODO_EDICAO_ADMIN)
+if(typeof carregarUsuarios==="function")carregarUsuarios()
+}
 /* ====================================================
 000A – CORES DOS USUÁRIOS
 ==================================================== */
