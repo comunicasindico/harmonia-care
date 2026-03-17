@@ -180,3 +180,91 @@ let html=`
 </div>`
 box.innerHTML=html
 }
+/* ====================================================
+035 – INSERIR USUÁRIO
+==================================================== */
+async function inserirUsuario(){
+if(!db)return
+const novo={
+empresa_id:EMPRESA_ID,
+nome_completo:document.getElementById("u_nome").value,
+nome_apelido:document.getElementById("u_apelido").value,
+email:document.getElementById("u_email").value,
+perfil:document.getElementById("u_perfil").value,
+hierarquia:parseInt(document.getElementById("u_hierarquia").value),
+senha:document.getElementById("u_senha").value,
+ativo:true
+}
+const {error}=await db.from("usuarios").insert(novo)
+if(error){alert("Erro ao inserir");console.error(error);return}
+carregarUsuarios()
+}
+/* ====================================================
+036 – CARREGAR USUÁRIOS (ADMIN)
+==================================================== */
+async function carregarUsuarios(){
+if(!db)return
+const {data,error}=await db.from("usuarios").select("*").eq("empresa_id",EMPRESA_ID).order("nome_completo")
+if(error){console.error("Erro usuários",error);return}
+const tabela=document.getElementById("tabelaUsuariosAdmin")
+if(!tabela)return
+let html=""
+data.forEach(u=>{
+html+=`<tr data-id="${u.id}">
+<td><input class="u_nome" value="${u.nome_completo||""}"></td>
+<td><input class="u_apelido" value="${u.nome_apelido||""}"></td>
+<td><input class="u_email" value="${u.email||""}"></td>
+<td>
+<select class="u_perfil">
+<option ${u.perfil=="Administrador(a)"?"selected":""}>Administrador(a)</option>
+<option ${u.perfil=="Médico(a)"?"selected":""}>Médico(a)</option>
+<option ${u.perfil=="Fisioterapeuta"?"selected":""}>Fisioterapeuta</option>
+<option ${u.perfil=="Enfermeiro(a)"?"selected":""}>Enfermeiro(a)</option>
+<option ${u.perfil=="Cuidador(a)"?"selected":""}>Cuidador(a)</option>
+<option ${u.perfil=="Estagiário(a)"?"selected":""}>Estagiário(a)</option>
+</select>
+</td>
+<td>
+<select class="u_hierarquia">
+<option value="1"${u.hierarquia==1?" selected":""}>1</option>
+<option value="2"${u.hierarquia==2?" selected":""}>2</option>
+<option value="3"${u.hierarquia==3?" selected":""}>3</option>
+<option value="4"${u.hierarquia==4?" selected":""}>4</option>
+<option value="5"${u.hierarquia==5?" selected":""}>5</option>
+</select>
+</td>
+<td><input class="u_senha" value="${u.senha||""}"></td>
+<td>
+<button onclick="salvarUsuario('${u.id}',this)" class="btn-success">Salvar</button>
+<button onclick="excluirUsuario('${u.id}')" class="btn-danger">Excluir</button>
+</td>
+</tr>`
+})
+tabela.innerHTML=html
+}
+/* ====================================================
+037 – SALVAR USUÁRIO
+==================================================== */
+async function salvarUsuario(id,btn){
+const tr=btn.closest("tr")
+const dados={
+nome_completo:tr.querySelector(".u_nome").value,
+nome_apelido:tr.querySelector(".u_apelido").value,
+email:tr.querySelector(".u_email").value,
+perfil:tr.querySelector(".u_perfil").value,
+hierarquia:parseInt(tr.querySelector(".u_hierarquia").value),
+senha:tr.querySelector(".u_senha").value
+}
+const {error}=await db.from("usuarios").update(dados).eq("id",id)
+if(error){alert("Erro ao salvar");console.error(error);return}
+btn.innerText="✔"
+setTimeout(()=>btn.innerText="Salvar",1500)
+}
+/* ====================================================
+038 – EXCLUIR USUÁRIO
+==================================================== */
+async function excluirUsuario(id){
+if(!confirm("Excluir usuário?"))return
+await db.from("usuarios").delete().eq("id",id)
+carregarUsuarios()
+}
