@@ -461,39 +461,96 @@ document.getElementById("gradePeriodo").innerHTML="<p>Sem rotinas (teste)</p>"
 return
 }
 
+/* =========================
+ORDENAR COLUNAS (AJUSTE AQUI)
+========================= */
+const ordemDesejada = [
+"Banho",
+"Alimentação",
+"Café",
+"Higiene Bucal",
+"Medicação",
+"Oferta de Água",
+"Almoço",
+"Lanche",
+"Higiene (tarde)",
+"Jantar",
+"Higiene Noturna (noite)",
+"Troca de Fralda (noite)"
+]
+
+rotinasModelos.sort((a,b)=>{
+return ordemDesejada.indexOf(a.nome) - ordemDesejada.indexOf(b.nome)
+})
+
 const {data:execucao,error:e2}=await db
 .from("rotinas_execucao")
-.select("rotina_id,data,status")
+.select("rotina_id,data,status,turno")
 .eq("idoso_id",pacienteId)
 .gte("data",dataInicio)
 .lte("data",dataFim)
 
 console.log("EXECUCAO:",execucao)
 
-let html=`<div style="margin-top:20px"><b>Rotinas por período</b><table style="width:100%;margin-top:10px;border-collapse:collapse">`
+/* =========================
+INÍCIO HTML
+========================= */
+let html=`<div style="margin-top:20px"><b>Rotinas por período</b>
+<table style="width:100%;margin-top:10px;border-collapse:collapse;font-size:12px">`
 
-html+=`<tr><th>Data</th>`
+html+=`<tr style="background:#f1f1f1"><th>Data</th>`
+
 for(const r of rotinasModelos){
-html+=`<th>${r.nome}</th>`
+html+=`<th style="padding:4px">${r.nome}</th>`
 }
 html+=`</tr>`
 
+/* =========================
+LINHAS
+========================= */
 for(const dia of dias){
-html+=`<tr><td>${dia}</td>`
+
+/* DATA BR */
+const dataBR = dia.split("-").reverse().join("/")
+
+html+=`<tr><td style="font-weight:bold">${dataBR}</td>`
 
 for(const r of rotinasModelos){
-const feito=execucao?.find(e=>
+
+const registros = execucao?.filter(e=>
 e.data===dia &&
 e.rotina_id===r.id &&
 e.status==="executado"
 )
-html+=`<td>${feito?"✔":""}</td>`
+
+/* VERIFICAR TURNOS */
+let manha = registros?.some(e=>e.turno==="manha")
+let tarde = registros?.some(e=>e.turno==="tarde")
+let noite = registros?.some(e=>e.turno==="noite")
+
+/* CORES POR TURNO */
+let celula = ""
+
+if(manha) celula += `<span style="color:#2196f3">●</span>`
+if(tarde) celula += `<span style="color:#ff9800">●</span>`
+if(noite) celula += `<span style="color:#37474f">●</span>`
+
+html+=`<td style="text-align:center">${celula}</td>`
 }
 
 html+=`</tr>`
 }
 
-html+=`</table></div>`
+html+=`</table>
+
+/* LEGENDA */
+<div style="margin-top:10px;font-size:12px">
+<span style="color:#2196f3">●</span> Manhã 
+<span style="color:#ff9800;margin-left:10px">●</span> Tarde 
+<span style="color:#37474f;margin-left:10px">●</span> Noite
+</div>
+
+</div>`
 
 document.getElementById("gradePeriodo").innerHTML=html
 }
