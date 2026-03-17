@@ -415,3 +415,38 @@ await carregarRotinas()
 window.salvandoPendencias=false
 alert("Pendências concluídas com sucesso")
 }
+/* ====================================================
+035 – MONTAR GRADE POR PERÍODO (COM VAZIOS)
+==================================================== */
+async function montarGradePeriodo(){
+if(!db)return
+const pacienteId=document.getElementById("buscaPaciente")?.value
+const dataInicio=document.getElementById("dataInicio")?.value
+const dataFim=document.getElementById("dataFim")?.value
+if(!pacienteId||pacienteId==="todos")return
+const inicio=new Date(dataInicio)
+const fim=new Date(dataFim)
+const dias=[]
+for(let d=new Date(inicio);d<=fim;d.setDate(d.getDate()+1)){
+dias.push(new Date(d).toISOString().slice(0,10))
+}
+const {data:rotinas}=await db.from("rotinas").select("id,nome")
+const {data:execucao}=await db.from("rotinas_execucao").select("idoso_id,rotina_id,data,status").eq("idoso_id",pacienteId).gte("data",dataInicio).lte("data",dataFim)
+let html=`<div style="margin-top:20px"><b>Rotinas por período</b><table style="width:100%;margin-top:10px;border-collapse:collapse">`
+html+=`<tr><th style="border:1px solid #ddd;padding:6px">Data</th>`
+for(const r of rotinas||[]){
+html+=`<th style="border:1px solid #ddd;padding:6px">${r.nome}</th>`
+}
+html+=`</tr>`
+for(const dia of dias){
+html+=`<tr><td style="border:1px solid #ddd;padding:6px">${dia.split("-").reverse().join("/")}</td>`
+for(const r of rotinas||[]){
+const feito=execucao?.find(e=>e.data===dia&&e.rotina_id===r.id&&e.status==="executado")
+html+=`<td style="border:1px solid #ddd;text-align:center">${feito?"✔":""}</td>`
+}
+html+=`</tr>`
+}
+html+=`</table></div>`
+const container=document.getElementById("gradePeriodo")
+if(container)container.innerHTML=html
+}
