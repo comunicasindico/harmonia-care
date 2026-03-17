@@ -566,11 +566,17 @@ html+=`<tr><td><b>${new Date(dia+"T00:00:00").toLocaleDateString("pt-BR")}</b></
 rotinasIds.forEach(rid=>{
 const lista = (mapa[dia]||[]).filter(e=>String(e.rotina_id)===String(rid))
 
-let executado = lista.some(e=>e.status==="executado")
+const total = lista.length
+const executadas = lista.filter(e => e.status === "executado").length
 
-let celula = executado
-? `<span style="color:#2ecc71">✔</span>`
-: `<span style="color:#e74c3c">✖</span>`
+let celula=""
+if(total>0&&executadas===total){
+celula=`<span title="Completo (${executadas}/${total})" style="color:#2ecc71;font-weight:bold">✔</span>`
+}else if(executadas>0){
+celula=`<span title="Parcial (${executadas}/${total})" style="color:#f39c12;font-weight:bold">⚠️</span>`
+}else{
+celula=`<span title="Não executado (0/${total})" style="color:#e74c3c;font-weight:bold">✖</span>`
+}
 
 html+=`<td style="text-align:center">${celula}</td>`
 })
