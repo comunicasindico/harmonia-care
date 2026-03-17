@@ -471,8 +471,7 @@ return ia-ib
 const {data:execucao}=await db
 .from("rotinas_execucao")
 .select("rotina_id,data,horario_executado,status,turno,idoso_id,paciente_id")
-.or(`data.gte.${dataInicio},horario_executado.gte.${dataInicio}`)
-.or(`data.lte.${dataFim},horario_executado.lte.${dataFim}`)
+.or(`and(data.gte.${dataInicio},data.lte.${dataFim}),and(horario_executado.gte.${dataInicio},horario_executado.lte.${dataFim})`)
 let mapa={}
 for(const e of execucao||[]){
 const id=(e.idoso_id||e.paciente_id)?.toString().trim()
