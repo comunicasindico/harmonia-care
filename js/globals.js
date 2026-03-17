@@ -87,3 +87,7 @@ localStorage.setItem("empresa_id",empresa)
 }
 localStorage.setItem("profissional_id",id)
 }
+/* ====================================================
+050 – USUÁRIO LOGADO (HIERARQUIA)
+==================================================== */
+let USUARIO_HIERARQUIA=parseInt(localStorage.getItem("usuario_hierarquia")||5)
