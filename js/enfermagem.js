@@ -370,6 +370,7 @@ if(typeof carregarClinico==="function"){await carregarClinico(pacienteId)}
 async function pesquisarRotinas(){
 await gerarRotinasDoDia()
 await carregarRotinas()
+if(typeof montarGradePeriodo==="function"){await montarGradePeriodo()}
 }
 /* ====================================================
 033 – NORMALIZAR DATA PARA ISO
