@@ -443,7 +443,7 @@ const inicio=new Date(dataInicio+"T00:00:00")
 const fim=new Date(dataFim+"T00:00:00")
 const dias=[]
 for(let d=new Date(inicio);d<=fim;d.setDate(d.getDate()+1)){
-dias.push(new Date(d).toISOString().slice(0,10))
+dias.push(new Date(d).toLocaleDateString("en-CA"))
 }
 const {data:rotinasModelos}=await db.from("rotina_modelos").select("id,nome,turno")
 if(!rotinasModelos||rotinasModelos.length===0){
@@ -468,7 +468,7 @@ return ia-ib
 const {data:execucao}=await db.from("rotinas_execucao").select("rotina_id,data,status,turno").eq("idoso_id",pacienteId)
 let mapa={}
 for(const e of execucao||[]){
-const dataExec=e.data?.slice(0,10)
+const dataExec = e.data.split("T")[0]
 const chave=dataExec+"_"+e.rotina_id
 if(!mapa[chave])mapa[chave]=[]
 mapa[chave].push(e)
