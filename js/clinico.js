@@ -49,8 +49,7 @@ html+=`
 </tr>`
 data.forEach(p=>{
 html+=`
-<tr data-id="${p.id}">
-<td>${(()=>{let alerta="";if(p.grau_risco>=4)alerta+="🔴 ";if(p.acamado)alerta+="⚫ ";if(p.da)alerta+="🧠 ";return alerta+(p.nome_completo??"")})()}</td>
+<tr data-id="${p.id}" style="${p.grau_risco>=4?'background:#ffe5e5':''}"><td>${p.nome_apelido || p.nome_completo || ""}</td>
 <td>${calcularIdade(p.data_nascimento)}</td>
 <td>${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_has"><option value="true"${p.has?" selected":""}>✔</option><option value="false"${!p.has?" selected":""}></option></select>`:(p.has?"✔":"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<select class="campo-clinico clin_dm"><option value="true"${p.dm?" selected":""}>✔</option><option value="false"${!p.dm?" selected":""}></option></select>`:(p.dm?"✔":"")}</td>
