@@ -558,11 +558,14 @@ html+=`<tr><td style="font-weight:bold">${dataBR}</td>`
 
 for(const r of rotinasModelos){
 
-const registros = execucao?.filter(e=>
-e.data===dia &&
-e.rotina_id===r.id &&
-e.status==="executado"
+const registros = execucao?.filter(e=>{
+const dataExec = new Date(e.data).toISOString().slice(0,10) // 🔥 CORREÇÃO AQUI
+return (
+dataExec === dia &&
+e.rotina_id === r.id &&
+e.status === "executado"
 )
+})
 
 /* TURNOS */
 let manha = registros?.some(e=>e.turno==="manha")
