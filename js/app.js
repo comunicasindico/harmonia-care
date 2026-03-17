@@ -71,6 +71,10 @@ abrirPainel(painelSalvo)
 if(typeof carregarRotinas==="function"){await carregarRotinas()}
 if(typeof carregarClinico==="function"){await carregarClinico()}
 if(typeof carregarUsuarios==="function"){await carregarUsuarios()}
+const inputBusca=document.getElementById("buscaUsuario")
+if(inputBusca){
+inputBusca.addEventListener("input",()=>carregarUsuarios())
+}
 if(painelSalvo==="painelAdmin"){
 await carregarUsuarios()
 }
@@ -186,8 +190,8 @@ if(typeof carregarClinico==="function"){carregarClinico()}
 ==================================================== */
 async function abrirAdmin(){
 abrirPainel("painelAdmin")
-if(typeof carregarUsuariosAdmin==="function"){
-await carregarUsuariosAdmin()
+if(typeof carregarUsuarios==="function"){
+await carregarUsuarios()
 }
 if(typeof carregarProfissionaisDrag==="function"){
 await carregarProfissionaisDrag()
@@ -195,6 +199,13 @@ await carregarProfissionaisDrag()
 if(typeof carregarPacientesDrag==="function"){
 await carregarPacientesDrag()
 }
+/* ITEM 084 – BUSCA EM TEMPO REAL */
+setTimeout(()=>{
+const inputBusca=document.getElementById("buscaUsuario")
+if(inputBusca){
+inputBusca.addEventListener("input",()=>carregarUsuarios())
+}
+},200)
 }
 /* ====================================================
 020 – EMPRESA – CARREGAR DADOS
