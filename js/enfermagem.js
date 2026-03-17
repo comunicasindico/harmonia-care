@@ -417,7 +417,7 @@ window.salvandoPendencias=false
 alert("Pendências concluídas com sucesso")
 }
 /* ====================================================
-035 – MONTAR GRADE POR PERÍODO (COM FILTRO CORRETO)
+035 – MONTAR GRADE POR PERÍODO (CORRIGIDO FINAL)
 ==================================================== */
 async function montarGradePeriodo(){
 if(!db)return
@@ -431,7 +431,6 @@ if(!pacienteId||pacienteId==="todos")return
 const turno=TURNO_ATUAL||"manha"
 const empresaId=EMPRESA_ID
 
-/* GERAR DIAS */
 const inicio=new Date(dataInicio)
 const fim=new Date(dataFim)
 const dias=[]
@@ -439,28 +438,36 @@ for(let d=new Date(inicio);d<=fim;d.setDate(d.getDate()+1)){
 dias.push(new Date(d).toISOString().slice(0,10))
 }
 
-/* BUSCAR ROTINAS FILTRADAS */
-const {data:rotinasModelos}=await db
+/* 🔥 CORREÇÃO AQUI */
+const {data:rotinasModelos,error:e1}=await db
 .from("rotina_modelos")
 .select("id,nome")
 .eq("turno",turno)
-.eq("empresa_id",empresaId)
+.eq("empresa_id_uuid",empresaId)
 .eq("ativo",true)
+
+if(e1){
+console.error("Erro rotinasModelos",e1)
+return
+}
 
 if(!rotinasModelos||rotinasModelos.length===0){
 document.getElementById("gradePeriodo").innerHTML="<p>Sem rotinas para este turno</p>"
 return
 }
 
-/* BUSCAR EXECUÇÕES */
-const {data:execucao}=await db
+const {data:execucao,error:e2}=await db
 .from("rotinas_execucao")
 .select("rotina_id,data,status")
 .eq("idoso_id",pacienteId)
 .gte("data",dataInicio)
 .lte("data",dataFim)
 
-/* MONTAR TABELA */
+if(e2){
+console.error("Erro execucao",e2)
+return
+}
+
 let html=`<div style="margin-top:20px"><b>Rotinas por período</b><table style="width:100%;margin-top:10px;border-collapse:collapse">`
 
 html+=`<tr><th style="border:1px solid #ddd;padding:6px">Data</th>`
