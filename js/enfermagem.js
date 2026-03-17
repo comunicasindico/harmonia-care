@@ -370,7 +370,17 @@ if(typeof carregarClinico==="function"){await carregarClinico(pacienteId)}
 async function pesquisarRotinas(){
 await gerarRotinasDoDia()
 await carregarRotinas()
-if(typeof montarGradePeriodo==="function"){await montarGradePeriodo()}
+
+const paciente=document.getElementById("buscaPaciente")?.value
+
+if(paciente && paciente!=="todos"){
+if(typeof montarGradePeriodo==="function"){
+await montarGradePeriodo()
+}
+}else{
+const el=document.getElementById("gradePeriodo")
+if(el)el.innerHTML=""
+}
 }
 /* ====================================================
 033 – NORMALIZAR DATA PARA ISO
@@ -426,7 +436,11 @@ const pacienteId=document.getElementById("buscaPaciente")?.value
 const dataInicio=document.getElementById("dataInicio")?.value
 const dataFim=document.getElementById("dataFim")?.value
 
-if(!pacienteId||pacienteId==="todos")return
+if(!pacienteId||pacienteId==="todos"){
+const el=document.getElementById("gradePeriodo")
+if(el)el.innerHTML=""
+return
+}
 
 const inicio=new Date(dataInicio)
 const fim=new Date(dataFim)
