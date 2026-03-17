@@ -446,7 +446,7 @@ return
 const {data:execucoes,error}=await db
 .from("rotinas_execucao")
 .select("*")
-.eq("idoso_id", pacienteId)
+.eq("paciente_id", pacienteId)
 .gte("data", dataInicio)
 .lte("data", dataFim)
 
