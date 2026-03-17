@@ -55,7 +55,11 @@ while(!db){await new Promise(r=>setTimeout(r,50))}
 definirDataHoje()
 if(typeof carregarPacientesBusca==="function"){await carregarPacientesBusca()}
 if(typeof gerarRotinasDoDia==="function"){await gerarRotinasDoDia()}
-const painelSalvo=localStorage.getItem("painelAtual")||"painelEnfermagem"
+let painelSalvo=localStorage.getItem("painelAtual")
+if(!painelSalvo){
+painelSalvo="painelEnfermagem"
+localStorage.setItem("painelAtual","painelEnfermagem")
+}
 abrirPainel(painelSalvo)
 if(typeof carregarRotinas==="function"){await carregarRotinas()}
 if(typeof carregarClinico==="function"){await carregarClinico()}
@@ -96,7 +100,9 @@ if(typeof carregarEmpresa==="function"){await carregarEmpresa()}
 }
 })
 window.addEventListener("pageshow",function(e){
-if(e.persisted){location.reload()}
+if(e.persisted){
+console.log("Página restaurada do cache")
+}
 })
 /* ====================================================
 014 – DATA HOJE
