@@ -427,118 +427,104 @@ window.salvandoPendencias=false
 alert("Pendências concluídas com sucesso")
 }
 /* ====================================================
-035 – TESTE SEM FILTROS FINAL
+035 – GRADE REAL BASEADA NO BANCO (SIMPLES E CORRETA)
 ==================================================== */
 async function montarGradePeriodo(){
+
 if(!db)return
+
 const pacienteId=document.getElementById("buscaPaciente")?.value
 const dataInicio=document.getElementById("dataInicio")?.value
 const dataFim=document.getElementById("dataFim")?.value
-if(!pacienteId||pacienteId==="todos"){
-const el=document.getElementById("gradePeriodo")
-if(el)el.innerHTML=""
+
+if(!pacienteId || pacienteId==="todos"){
+document.getElementById("gradePeriodo").innerHTML=""
 return
 }
-const inicio=new Date(dataInicio+"T00:00:00")
-const fim=new Date(dataFim+"T00:00:00")
-const dias=[]
-for(let d=new Date(inicio);d<=fim;d.setDate(d.getDate()+1)){
-const y=d.getFullYear()
-const m=String(d.getMonth()+1).padStart(2,"0")
-const da=String(d.getDate()).padStart(2,"0")
-dias.push(`${y}-${m}-${da}`)
-}
-const {data:rotinasModelos}=await db.from("rotina_modelos").select("id,nome,turno")
-if(!rotinasModelos||rotinasModelos.length===0){
-document.getElementById("gradePeriodo").innerHTML="<p>Sem rotinas</p>"
-return
-}
-const normalizar=(txt)=>txt?.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim()
-const ordemTurno=["manha","tarde","noite"]
-const ordemDesejada=["Banho","Alimentação","Café","Higiene Bucal","Medicação","Oferta de Água","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene Noturna (noite)","Troca de Fralda (noite)"]
-const ordemNormalizada=ordemDesejada.map(normalizar)
-rotinasModelos.sort((a,b)=>{
-const tA=ordemTurno.indexOf(a.turno||"")
-const tB=ordemTurno.indexOf(b.turno||"")
-if(tA!==tB)return tA-tB
-const ia=ordemNormalizada.indexOf(normalizar(a.nome))
-const ib=ordemNormalizada.indexOf(normalizar(b.nome))
-if(ia===-1&&ib===-1)return 0
-if(ia===-1)return 1
-if(ib===-1)return -1
-return ia-ib
-})
-const {data:execucao}=await db
+
+/* 🔹 BUSCA DIRETO DO BANCO */
+const {data:execucoes,error}=await db
 .from("rotinas_execucao")
-.select("rotina_id,data,horario_executado,status,turno,idoso_id,paciente_id")
-.or(`and(data.gte.${dataInicio},data.lte.${dataFim}),and(horario_executado.gte.${dataInicio},horario_executado.lte.${dataFim})`)
-let mapa={}
-for(const e of execucao||[]){
-const id=(e.idoso_id||e.paciente_id)?.toString().trim()
-const pacienteSel=pacienteId?.toString().trim()
-console.log("ID BANCO:", id, "ID SELECT:", pacienteSel)
-if(id!==pacienteSel)continue
+.select("*")
+.eq("idoso_id", pacienteId)
+.gte("data", dataInicio)
+.lte("data", dataFim)
 
-let base = e.data ? e.data : e.horario_executado
-if(!base)continue
-
-const dt=new Date(base)
-const y=dt.getFullYear()
-const m=String(dt.getMonth()+1).padStart(2,"0")
-const da=String(dt.getDate()).padStart(2,"0")
-
-const dataExec=`${y}-${m}-${da}`
-const chave=dataExec+"_"+String(e.rotina_id)
-
-if(!mapa[chave])mapa[chave]=[]
-mapa[chave].push(e)
+if(error){
+console.error("Erro ao buscar execuções", error)
+return
 }
-let html=`<div style="margin-top:20px"><b>Rotinas por período</b><table style="width:100%;margin-top:10px;border-collapse:collapse;font-size:12px">`
+
+/* 🔹 AGRUPAR POR DATA */
+const mapa = {}
+
+execucoes.forEach(e=>{
+const data = e.data
+if(!mapa[data]) mapa[data] = []
+mapa[data].push(e)
+})
+
+/* 🔹 PEGAR ROTINAS EXISTENTES */
+const rotinasSet = new Set()
+execucoes.forEach(e=>{
+rotinasSet.add(e.rotina_id)
+})
+
+const rotinasIds = Array.from(rotinasSet)
+
+/* 🔹 BUSCAR NOMES DAS ROTINAS */
+const {data:rotinas}=await db
+.from("rotina_modelos")
+.select("id,nome")
+.in("id", rotinasIds)
+
+/* 🔹 MAPA ID → NOME */
+const nomesRotinas = {}
+rotinas.forEach(r=>{
+nomesRotinas[r.id] = r.nome
+})
+
+/* 🔹 GERAR DIAS DO PERÍODO */
+const dias=[]
+let d=new Date(dataInicio+"T00:00:00")
+const fim=new Date(dataFim+"T00:00:00")
+
+while(d<=fim){
+dias.push(d.toISOString().slice(0,10))
+d.setDate(d.getDate()+1)
+}
+
+/* 🔹 MONTAR HTML */
+let html=`<div style="margin-top:20px"><b>Rotinas por período</b>
+<table style="width:100%;border-collapse:collapse;font-size:12px">`
+
+/* CABEÇALHO */
 html+=`<tr style="background:#f1f1f1"><th>Data</th>`
-for(const r of rotinasModelos){
-html+=`<th style="padding:4px">${r.nome}</th>`
-}
+rotinasIds.forEach(id=>{
+html+=`<th>${nomesRotinas[id]||id}</th>`
+})
 html+=`</tr>`
-for(const dia of dias){
-const dataBR=new Date(dia+"T00:00:00").toLocaleDateString("pt-BR")
-html+=`<tr><td style="font-weight:bold">${dataBR}</td>`
-for(const r of rotinasModelos){
-const lista=mapa[dia+"_"+String(r.id)]||[]
-let manha=false,tarde=false,noite=false
 
-for(const e of lista){
+/* LINHAS */
+dias.forEach(dia=>{
+html+=`<tr><td><b>${new Date(dia+"T00:00:00").toLocaleDateString("pt-BR")}</b></td>`
 
-const statusOK=(e.status||"").toLowerCase().trim()==="executado"
-if(!statusOK)continue
+rotinasIds.forEach(rid=>{
+const lista = (mapa[dia]||[]).filter(e=>String(e.rotina_id)===String(rid))
 
-// 🔥 PRIORIDADE: usar turno se existir
-if(e.turno==="manha")manha=true
-else if(e.turno==="tarde")tarde=true
-else if(e.turno==="noite")noite=true
+let executado = lista.some(e=>e.status==="executado")
 
-// 🔥 SE turno for NULL → usa horário
-else if(e.horario_executado){
-const hora=new Date(e.horario_executado).getHours()
+let celula = executado
+? `<span style="color:#2ecc71">✔</span>`
+: `<span style="color:#e74c3c">✖</span>`
 
-if(hora<12)manha=true
-else if(hora<18)tarde=true
-else noite=true
-}
-}
-let celula = ""
-
-if(manha)celula+=`<span style="color:#2196f3">●</span>`
-if(tarde)celula+=`<span style="color:#ff9800">●</span>`
-if(noite)celula+=`<span style="color:#37474f">●</span>`
-
-/* 🔥 MOSTRAR VAZIO VISUAL */
-if(!celula){
-celula = `<span style="color:#e74c3c">✖</span>`
-}
 html+=`<td style="text-align:center">${celula}</td>`
-}
+})
+
 html+=`</tr>`
-}
-html+=`</table><div style="margin-top:10px;font-size:12px"><span style="color:#2196f3">●</span> Manhã <span style="color:#ff9800;margin-left:10px">●</span> Tarde <span style="color:#37474f;margin-left:10px">●</span> Noite</div></div>`
+})
+
+html+=`</table></div>`
+
 document.getElementById("gradePeriodo").innerHTML=html
 }
