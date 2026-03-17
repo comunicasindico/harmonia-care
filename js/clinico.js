@@ -195,7 +195,14 @@ hierarquia:parseInt(document.getElementById("u_hierarquia").value),
 senha:document.getElementById("u_senha").value,
 ativo:true
 }
-const {error}=await db.from("usuarios").insert(novo)
+const {data,error}=await db.from("usuarios").insert(novo).select().single()
+await registrarAuditoria({
+acao:"INSERT",
+tabela:"usuarios",
+registro_id:data?.id||null,
+antes:null,
+depois:novo
+})
 if(error){alert("Erro ao inserir");console.error(error);return}
 carregarUsuarios()
 }
@@ -251,6 +258,14 @@ tabela.innerHTML=html
 ==================================================== */
 async function salvarUsuario(id,btn){
 const tr=btn.closest("tr")
+const dadosAntes={
+nome_completo:tr.querySelector(".u_nome").defaultValue,
+nome_apelido:tr.querySelector(".u_apelido").defaultValue,
+email:tr.querySelector(".u_email").defaultValue,
+perfil:tr.querySelector(".u_perfil").value,
+hierarquia:parseInt(tr.querySelector(".u_hierarquia").value),
+senha:"***"
+}
 /* ITEM 052 – BLOQUEIO POR HIERARQUIA */
 const nivelAlvo=parseInt(tr.querySelector(".u_hierarquia").value||5)
 if(USUARIO_HIERARQUIA>=nivelAlvo){
@@ -266,7 +281,13 @@ hierarquia:parseInt(tr.querySelector(".u_hierarquia").value),
 senha:tr.querySelector(".u_senha").value
 }
 const {error}=await db.from("usuarios").update(dados).eq("id",id)
-
+await registrarAuditoria({
+acao:"UPDATE",
+tabela:"usuarios",
+registro_id:id,
+antes:dadosAntes,
+depois:dados
+})
 if(error){
 alert("Erro ao salvar")
 console.error(error)
