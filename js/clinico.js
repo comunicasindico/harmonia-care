@@ -210,12 +210,14 @@ const tabela=document.getElementById("tabelaUsuariosAdmin")
 if(!tabela)return
 let html=""
 data.forEach(u=>{
-html+=`<tr data-id="${u.id}">
-<td><input class="u_nome" value="${u.nome_completo||""}"></td>
-<td><input class="u_apelido" value="${u.nome_apelido||""}"></td>
-<td><input class="u_email" value="${u.email||""}"></td>
+const podeEditar=USUARIO_HIERARQUIA < (u.hierarquia||5)
+
+html+=`<tr data-id="${u.id}" style="${!podeEditar?'opacity:0.6':''}">
+<td><input class="u_nome" value="${u.nome_completo||""}" ${!podeEditar?"disabled":""}></td>
+<td><input class="u_apelido" value="${u.nome_apelido||""}" ${!podeEditar?"disabled":""}></td>
+<td><input class="u_email" value="${u.email||""}" ${!podeEditar?"disabled":""}></td>
 <td>
-<select class="u_perfil">
+<select class="u_perfil" ${!podeEditar?"disabled":""}>
 <option ${u.perfil=="Administrador(a)"?"selected":""}>Administrador(a)</option>
 <option ${u.perfil=="Médico(a)"?"selected":""}>Médico(a)</option>
 <option ${u.perfil=="Fisioterapeuta"?"selected":""}>Fisioterapeuta</option>
@@ -225,7 +227,7 @@ html+=`<tr data-id="${u.id}">
 </select>
 </td>
 <td>
-<select class="u_hierarquia">
+<select class="u_hierarquia" ${!podeEditar?"disabled":""}>
 <option value="1"${u.hierarquia==1?" selected":""}>1</option>
 <option value="2"${u.hierarquia==2?" selected":""}>2</option>
 <option value="3"${u.hierarquia==3?" selected":""}>3</option>
@@ -233,10 +235,12 @@ html+=`<tr data-id="${u.id}">
 <option value="5"${u.hierarquia==5?" selected":""}>5</option>
 </select>
 </td>
-<td><input class="u_senha" value="${u.senha||""}"></td>
+<td><input class="u_senha" value="${u.senha||""}" ${!podeEditar?"disabled":""}></td>
 <td>
+${podeEditar?`
 <button onclick="salvarUsuario('${u.id}',this)" class="btn-success">Salvar</button>
 <button onclick="excluirUsuario('${u.id}')" class="btn-danger">Excluir</button>
+`:`<span style="color:#999;font-size:11px">🔒 Bloqueado</span>`}
 </td>
 </tr>`
 })
@@ -247,6 +251,12 @@ tabela.innerHTML=html
 ==================================================== */
 async function salvarUsuario(id,btn){
 const tr=btn.closest("tr")
+/* ITEM 052 – BLOQUEIO POR HIERARQUIA */
+const nivelAlvo=parseInt(tr.querySelector(".u_hierarquia").value||5)
+if(USUARIO_HIERARQUIA>=nivelAlvo){
+alert("Sem permissão para editar este usuário")
+return
+}
 const dados={
 nome_completo:tr.querySelector(".u_nome").value,
 nome_apelido:tr.querySelector(".u_apelido").value,
@@ -256,7 +266,13 @@ hierarquia:parseInt(tr.querySelector(".u_hierarquia").value),
 senha:tr.querySelector(".u_senha").value
 }
 const {error}=await db.from("usuarios").update(dados).eq("id",id)
-if(error){alert("Erro ao salvar");console.error(error);return}
+
+if(error){
+alert("Erro ao salvar")
+console.error(error)
+return
+}
+
 btn.innerText="✔"
 setTimeout(()=>btn.innerText="Salvar",1500)
 }
@@ -264,6 +280,12 @@ setTimeout(()=>btn.innerText="Salvar",1500)
 038 – EXCLUIR USUÁRIO
 ==================================================== */
 async function excluirUsuario(id){
+const tr=document.querySelector(`tr[data-id="${id}"]`)
+const nivel=parseInt(tr.querySelector(".u_hierarquia")?.value||5)
+if(USUARIO_HIERARQUIA>=nivel){
+alert("Sem permissão para excluir")
+return
+}
 if(!confirm("Excluir usuário?"))return
 await db.from("usuarios").delete().eq("id",id)
 carregarUsuarios()
