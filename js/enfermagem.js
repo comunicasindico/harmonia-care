@@ -427,172 +427,74 @@ window.salvandoPendencias=false
 alert("Pendências concluídas com sucesso")
 }
 /* ====================================================
-035 – TESTE SEM FILTROS (VERSÃO FINAL CORRIGIDA)
+035 – TESTE SEM FILTROS FINAL
 ==================================================== */
 async function montarGradePeriodo(){
 if(!db)return
-
 const pacienteId=document.getElementById("buscaPaciente")?.value
 const dataInicio=document.getElementById("dataInicio")?.value
 const dataFim=document.getElementById("dataFim")?.value
-
 if(!pacienteId||pacienteId==="todos"){
 const el=document.getElementById("gradePeriodo")
 if(el)el.innerHTML=""
 return
 }
-
-/* =========================
-GERAR DIAS
-========================= */
 const inicio=new Date(dataInicio+"T00:00:00")
 const fim=new Date(dataFim+"T00:00:00")
 const dias=[]
-
 for(let d=new Date(inicio);d<=fim;d.setDate(d.getDate()+1)){
 dias.push(new Date(d).toISOString().slice(0,10))
 }
-
-/* =========================
-BUSCAR MODELOS (COM TURNO!)
-========================= */
-const {data:rotinasModelos,error:e1}=await db
-.from("rotina_modelos")
-.select("id,nome,turno")
-
-console.log("ROTINAS MODELOS:",rotinasModelos)
-
+const {data:rotinasModelos}=await db.from("rotina_modelos").select("id,nome,turno")
 if(!rotinasModelos||rotinasModelos.length===0){
 document.getElementById("gradePeriodo").innerHTML="<p>Sem rotinas</p>"
 return
 }
-
-/* =========================
-NORMALIZADOR
-========================= */
-const normalizar = (txt) => txt
-?.normalize("NFD")
-.replace(/[\u0300-\u036f]/g,"")
-.toLowerCase()
-.trim()
-
-/* =========================
-ORDEM
-========================= */
-const ordemTurno = ["manha","tarde","noite"]
-
-const ordemDesejada = [
-"Banho",
-"Alimentação",
-"Café",
-"Higiene Bucal",
-"Medicação",
-"Oferta de Água",
-"Almoço",
-"Lanche",
-"Higiene (tarde)",
-"Jantar",
-"Higiene Noturna (noite)",
-"Troca de Fralda (noite)"
-]
-
-const ordemNormalizada = ordemDesejada.map(normalizar)
-
-/* =========================
-ORDENAR CORRETAMENTE
-========================= */
+const normalizar=(txt)=>txt?.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim()
+const ordemTurno=["manha","tarde","noite"]
+const ordemDesejada=["Banho","Alimentação","Café","Higiene Bucal","Medicação","Oferta de Água","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene Noturna (noite)","Troca de Fralda (noite)"]
+const ordemNormalizada=ordemDesejada.map(normalizar)
 rotinasModelos.sort((a,b)=>{
-
-const turnoA = ordemTurno.indexOf(a.turno||"")
-const turnoB = ordemTurno.indexOf(b.turno||"")
-
-if(turnoA !== turnoB){
-return turnoA - turnoB
-}
-
-const ia = ordemNormalizada.indexOf(normalizar(a.nome))
-const ib = ordemNormalizada.indexOf(normalizar(b.nome))
-
-if(ia === -1 && ib === -1) return 0
-if(ia === -1) return 1
-if(ib === -1) return -1
-
-return ia - ib
+const tA=ordemTurno.indexOf(a.turno||"")
+const tB=ordemTurno.indexOf(b.turno||"")
+if(tA!==tB)return tA-tB
+const ia=ordemNormalizada.indexOf(normalizar(a.nome))
+const ib=ordemNormalizada.indexOf(normalizar(b.nome))
+if(ia===-1&&ib===-1)return 0
+if(ia===-1)return 1
+if(ib===-1)return -1
+return ia-ib
 })
-
-console.log("DEPOIS ORDENAR:", rotinasModelos.map(r=>`${r.turno} - ${r.nome}`))
-
-/* =========================
-BUSCAR EXECUÇÃO
-========================= */
-const {data:execucao,error:e2}=await db
-.from("rotinas_execucao")
-.select("rotina_id,data,status,turno")
-.eq("idoso_id",pacienteId)
-.gte("data",dataInicio)
-.lte("data",dataFim)
-
-console.log("EXECUCAO:",execucao)
-
-/* =========================
-HTML
-========================= */
-let html=`<div style="margin-top:20px"><b>Rotinas por período</b>
-<table style="width:100%;margin-top:10px;border-collapse:collapse;font-size:12px">`
-
+const {data:execucao}=await db.from("rotinas_execucao").select("rotina_id,data,status,turno").eq("idoso_id",pacienteId)
+let mapa={}
+for(const e of execucao||[]){
+const dataExec=e.data?.slice(0,10)
+const chave=dataExec+"_"+e.rotina_id
+if(!mapa[chave])mapa[chave]=[]
+mapa[chave].push(e)
+}
+let html=`<div style="margin-top:20px"><b>Rotinas por período</b><table style="width:100%;margin-top:10px;border-collapse:collapse;font-size:12px">`
 html+=`<tr style="background:#f1f1f1"><th>Data</th>`
-
 for(const r of rotinasModelos){
 html+=`<th style="padding:4px">${r.nome}</th>`
 }
 html+=`</tr>`
-
-/* =========================
-LINHAS
-========================= */
 for(const dia of dias){
-
-const dataBR = new Date(dia+"T00:00:00").toLocaleDateString("pt-BR")
-
+const dataBR=new Date(dia+"T00:00:00").toLocaleDateString("pt-BR")
 html+=`<tr><td style="font-weight:bold">${dataBR}</td>`
-
 for(const r of rotinasModelos){
-
-const registros = execucao?.filter(e=>{
-const dataExec = new Date(e.data).toISOString().slice(0,10) // 🔥 CORREÇÃO AQUI
-return (
-dataExec === dia &&
-e.rotina_id === r.id &&
-e.status === "executado"
-)
-})
-
-/* TURNOS */
-let manha = registros?.some(e=>e.turno==="manha")
-let tarde = registros?.some(e=>e.turno==="tarde")
-let noite = registros?.some(e=>e.turno==="noite")
-
-let celula = ""
-
-if(manha) celula += `<span style="color:#2196f3">●</span>`
-if(tarde) celula += `<span style="color:#ff9800">●</span>`
-if(noite) celula += `<span style="color:#37474f">●</span>`
-
+const lista=mapa[dia+"_"+r.id]||[]
+let manha=lista.some(e=>e.turno==="manha"&&e.status==="executado")
+let tarde=lista.some(e=>e.turno==="tarde"&&e.status==="executado")
+let noite=lista.some(e=>e.turno==="noite"&&e.status==="executado")
+let celula=""
+if(manha)celula+=`<span style="color:#2196f3">●</span>`
+if(tarde)celula+=`<span style="color:#ff9800">●</span>`
+if(noite)celula+=`<span style="color:#37474f">●</span>`
 html+=`<td style="text-align:center">${celula}</td>`
 }
-
 html+=`</tr>`
 }
-
-html+=`</table>
-
-<div style="margin-top:10px;font-size:12px">
-<span style="color:#2196f3">●</span> Manhã 
-<span style="color:#ff9800;margin-left:10px">●</span> Tarde 
-<span style="color:#37474f;margin-left:10px">●</span> Noite
-</div>
-
-</div>`
-
+html+=`</table><div style="margin-top:10px;font-size:12px"><span style="color:#2196f3">●</span> Manhã <span style="color:#ff9800;margin-left:10px">●</span> Tarde <span style="color:#37474f;margin-left:10px">●</span> Noite</div></div>`
 document.getElementById("gradePeriodo").innerHTML=html
 }
