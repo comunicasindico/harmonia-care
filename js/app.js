@@ -1,3 +1,4 @@
+let salvandoPendencias=false
 /* ====================================================
 010 – LOGIN
 ==================================================== */
@@ -135,6 +136,10 @@ if(fim)fim.value=dataLocal
 016 – NAVEGAÇÃO PAINÉIS
 ==================================================== */
 function abrirPainel(id){
+if(window.salvandoPendencias){
+alert("Aguarde finalizar o salvamento das pendências.")
+return
+}
 localStorage.setItem("painelAtual",id)
 const paineis=["painelEnfermagem","painelClinico","painelAdmin"]
 paineis.forEach(p=>{
