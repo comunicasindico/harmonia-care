@@ -1,4 +1,4 @@
-let salvandoPendencias=false
+window.salvandoPendencias=false
 /* ====================================================
 010 – LOGIN
 ==================================================== */
