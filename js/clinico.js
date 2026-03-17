@@ -211,20 +211,42 @@ carregarUsuarios()
 ==================================================== */
 async function carregarUsuarios(){
 if(!db)return
-const {data,error}=await db.from("usuarios").select("*").eq("empresa_id",EMPRESA_ID).order("nome_completo")
+let query=db.from("usuarios").select("*").eq("empresa_id",EMPRESA_ID)
+
+const busca=document.getElementById("buscaUsuario")?.value?.toLowerCase()||""
+const perfilFiltro=document.getElementById("filtroPerfil")?.value||""
+const hierarquiaFiltro=document.getElementById("filtroHierarquia")?.value||""
+
+if(perfilFiltro)query=query.eq("perfil",perfilFiltro)
+if(hierarquiaFiltro)query=query.eq("hierarquia",parseInt(hierarquiaFiltro))
+
+const {data,error}=await query.order("nome_completo")
 if(error){console.error("Erro usuários",error);return}
+
+const listaFiltrada=data.filter(u=>{
+if(!busca)return true
+return (u.nome_completo||"").toLowerCase().includes(busca)
+|| (u.email||"").toLowerCase().includes(busca)
+})
 const tabela=document.getElementById("tabelaUsuariosAdmin")
 if(!tabela)return
 let html=""
-data.forEach(u=>{
+listaFiltrada.forEach(u=>{
 const podeEditar=USUARIO_HIERARQUIA < (u.hierarquia||5)
+let cor="#fff"
+if(u.perfil?.includes("Administrador"))cor="#e3f2fd"
+else if(u.perfil?.includes("Médico"))cor="#fdecea"
+else if(u.perfil?.includes("Enfermeiro"))cor="#e8f5e9"
+else if(u.perfil?.includes("Cuidador"))cor="#fff8e1"
+else if(u.perfil?.includes("Fisioterapeuta"))cor="#f3e5f5"
 
-html+=`<tr data-id="${u.id}" style="${!podeEditar?'opacity:0.5':''}">
+html+=`<tr data-id="${u.id}" style="background:${cor};${!podeEditar?'opacity:0.5':''}">
 <td><input class="u_nome" value="${u.nome_completo||""}" ${!podeEditar?"disabled":""}></td>
 <td><input class="u_apelido" value="${u.nome_apelido||""}" ${!podeEditar?"disabled":""}></td>
 <td><input class="u_email" value="${u.email||""}" ${!podeEditar?"disabled":""}></td>
 <td>
-<select class="u_perfil" ${!podeEditar?"disabled":""}>
+${podeEditar?`
+<select class="u_perfil">
 <option ${u.perfil=="Administrador(a)"?"selected":""}>Administrador(a)</option>
 <option ${u.perfil=="Médico(a)"?"selected":""}>Médico(a)</option>
 <option ${u.perfil=="Fisioterapeuta"?"selected":""}>Fisioterapeuta</option>
@@ -232,6 +254,18 @@ html+=`<tr data-id="${u.id}" style="${!podeEditar?'opacity:0.5':''}">
 <option ${u.perfil=="Cuidador(a)"?"selected":""}>Cuidador(a)</option>
 <option ${u.perfil=="Estagiário(a)"?"selected":""}>Estagiário(a)</option>
 </select>
+`:
+`<span style="
+padding:4px 8px;
+border-radius:6px;
+font-size:11px;
+font-weight:600;
+background:${cor};color:#000;font-weight:700;
+border:1px solid #ddd;
+display:inline-block">
+${u.perfil||""}
+</span>`
+}
 </td>
 <td>
 <select class="u_hierarquia" ${!podeEditar?"disabled":""}>
@@ -249,6 +283,7 @@ ${podeEditar?`
 <button onclick="excluirUsuario('${u.id}')" class="btn-danger">Excluir</button>
 `:`<span style="color:#999;font-size:11px">🔒</span>`}
 </td>
+
 </tr>`
 })
 tabela.innerHTML=html
