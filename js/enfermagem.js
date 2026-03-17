@@ -465,11 +465,17 @@ if(ia===-1)return 1
 if(ib===-1)return -1
 return ia-ib
 })
-const {data:execucao}=await db.from("rotinas_execucao").select("rotina_id,data,status,turno").eq("idoso_id",pacienteId)
+const {data:execucao}=await db
+.from("rotinas_execucao")
+.select("rotina_id,data,status,turno,idoso_id,paciente_id")
 let mapa={}
 for(const e of execucao||[]){
-const dataExec = e.data.split("T")[0]
+const id=e.idoso_id||e.paciente_id
+if(id!=pacienteId)continue
+
+const dataExec=e.data.split("T")[0]
 const chave=dataExec+"_"+e.rotina_id
+
 if(!mapa[chave])mapa[chave]=[]
 mapa[chave].push(e)
 }
