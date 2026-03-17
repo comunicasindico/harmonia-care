@@ -443,7 +443,10 @@ const inicio=new Date(dataInicio+"T00:00:00")
 const fim=new Date(dataFim+"T00:00:00")
 const dias=[]
 for(let d=new Date(inicio);d<=fim;d.setDate(d.getDate()+1)){
-dias.push(new Date(d).toLocaleDateString("en-CA"))
+const y=d.getFullYear()
+const m=String(d.getMonth()+1).padStart(2,"0")
+const da=String(d.getDate()).padStart(2,"0")
+dias.push(`${y}-${m}-${da}`)
 }
 const {data:rotinasModelos}=await db.from("rotina_modelos").select("id,nome,turno")
 if(!rotinasModelos||rotinasModelos.length===0){
@@ -470,10 +473,20 @@ const {data:execucao}=await db
 .select("rotina_id,data,horario_executado,status,turno,idoso_id,paciente_id")
 let mapa={}
 for(const e of execucao||[]){
-const id=e.idoso_id||e.paciente_id
-if(id!=pacienteId)continue
+const id=(e.idoso_id||e.paciente_id)?.toString().trim()
+const pacienteSel=pacienteId?.toString().trim()
+console.log("ID BANCO:", id, "ID SELECT:", pacienteSel)
+if(id!==pacienteSel)continue
 
-const dataExec = (e.horario_executado || e.data)?.slice(0,10)
+let base=e.horario_executado||e.data
+if(!base)continue
+
+const dt=new Date(base)
+const y=dt.getFullYear()
+const m=String(dt.getMonth()+1).padStart(2,"0")
+const da=String(dt.getDate()).padStart(2,"0")
+
+const dataExec=`${y}-${m}-${da}`
 const chave=dataExec+"_"+e.rotina_id
 
 if(!mapa[chave])mapa[chave]=[]
