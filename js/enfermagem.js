@@ -471,6 +471,8 @@ return ia-ib
 const {data:execucao}=await db
 .from("rotinas_execucao")
 .select("rotina_id,data,horario_executado,status,turno,idoso_id,paciente_id")
+.gte("data", dataInicio)
+.lte("data", dataFim)
 let mapa={}
 for(const e of execucao||[]){
 const id=(e.idoso_id||e.paciente_id)?.toString().trim()
@@ -478,7 +480,7 @@ const pacienteSel=pacienteId?.toString().trim()
 console.log("ID BANCO:", id, "ID SELECT:", pacienteSel)
 if(id!==pacienteSel)continue
 
-let base=e.horario_executado||e.data
+let base = e.data || e.horario_executado
 if(!base)continue
 
 const dt=new Date(base)
