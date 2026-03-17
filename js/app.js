@@ -69,6 +69,10 @@ localStorage.setItem("painelAtual","painelEnfermagem")
 abrirPainel(painelSalvo)
 if(typeof carregarRotinas==="function"){await carregarRotinas()}
 if(typeof carregarClinico==="function"){await carregarClinico()}
+if(typeof carregarUsuarios==="function"){await carregarUsuarios()}
+if(painelSalvo==="painelAdmin"){
+await carregarUsuarios()
+}
 mudarTurno(TURNO_ATUAL)
 const perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
 const painelAtual=localStorage.getItem("painelAtual")||"painelEnfermagem"
