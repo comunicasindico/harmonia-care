@@ -157,7 +157,7 @@ if(!botao.innerHTML.includes("✔")){
 botao.innerHTML+=`<br><span style="font-size:9px;font-weight:bold;color:${cor}">✔ ${nomeProfissional}</span>`
 }
 }
-await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).or(`idoso_id.eq.${pacienteId},paciente_id.eq.${pacienteId}`).eq("rotina_id",rotinaId).eq("data",dataHoje)
+await db.from("rotinas_execucao").update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId}).eq("idoso_id", pacienteId).eq("rotina_id",rotinaId).eq("data",dataHoje)
 window[chaveLock]=false
 await carregarRotinas()
 }
@@ -471,8 +471,8 @@ return ia-ib
 const {data:execucao}=await db
 .from("rotinas_execucao")
 .select("rotina_id,data,horario_executado,status,turno,idoso_id,paciente_id")
-.gte("data", dataInicio)
-.lte("data", dataFim)
+.or(`data.gte.${dataInicio},horario_executado.gte.${dataInicio}`)
+.or(`data.lte.${dataFim},horario_executado.lte.${dataFim}`)
 let mapa={}
 for(const e of execucao||[]){
 const id=(e.idoso_id||e.paciente_id)?.toString().trim()
@@ -480,7 +480,7 @@ const pacienteSel=pacienteId?.toString().trim()
 console.log("ID BANCO:", id, "ID SELECT:", pacienteSel)
 if(id!==pacienteSel)continue
 
-let base = e.data || e.horario_executado
+let base = e.data ? e.data : e.horario_executado
 if(!base)continue
 
 const dt=new Date(base)
