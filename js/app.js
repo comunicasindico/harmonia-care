@@ -13,7 +13,7 @@ alert("Informe usuário e senha")
 if(btn)btn.disabled=false
 return
 }
-const {data,error}=await db.from("usuarios").select("id,nome_completo,senha_hash,empresa_id,ativo,perfil").eq("usuario_apelido",usuario).limit(1)
+const {data,error}=await db.from("usuarios").select("id,nome_completo,senha_hash,empresa_id,ativo,perfil").eq("nome_apelido",usuario).limit(1)
 if(error){
 console.error(error)
 alert("Erro ao acessar usuários")
