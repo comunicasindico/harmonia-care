@@ -184,7 +184,8 @@ const tabela=document.getElementById("tabelaUsuariosAdmin")
 if(!tabela)return
 let html=""
 listaFiltrada.forEach(u=>{
-const podeEditar = MODO_EDICAO_ADMIN && USUARIO_HIERARQUIA <= (u.hierarquia || 5)let cor="#fff"
+const podeEditar = MODO_EDICAO_ADMIN && USUARIO_HIERARQUIA <= (u.hierarquia || 5)
+let cor="#fff"
 if(u.perfil?.includes("Administrador"))cor="#e3f2fd"
 else if(u.perfil?.includes("Médico"))cor="#fdecea"
 else if(u.perfil?.includes("Enfermeiro"))cor="#e8f5e9"
