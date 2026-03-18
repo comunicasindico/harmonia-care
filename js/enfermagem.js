@@ -2,15 +2,21 @@
 020 – CORES POR USUÁRIO
 ==================================================== */
 function obterCorUsuario(nome){
-if(!nome)return"#999"
-nome=nome.toLowerCase()
-if(nome==="admin")return"#27ae60"
-if(nome==="administrador")return"#2c3e50"
-if(nome.includes("enfermeiro"))return"#2980b9"
-if(nome.includes("medico"))return"#c0392b"
-if(nome.includes("cuidador"))return"#f39c12"
-if(nome.includes("fisio"))return"#8e44ad"
-return"#7f8c8d"
+if(!nome)return"#64748b"
+
+let hash=0
+for(let i=0;i<nome.length;i++){
+hash=nome.charCodeAt(i)+((hash<<5)-hash)
+}
+
+/* gera cor consistente */
+let cor="#"
+for(let i=0;i<3;i++){
+let value=(hash>>(i*8))&255
+cor+=("00"+value.toString(16)).slice(-2)
+}
+
+return cor
 }
 /* ====================================================
 021 – MUDAR TURNO
@@ -121,13 +127,15 @@ const classe=r.status==="executado"?"rotina-executada":"rotina-pendente"
 let nomeProf=""
 let corProf="#64748b"
 if(r.status==="executado"){
-if(r.profissional && r.profissional.trim()!==""){
-nomeProf=r.profissional
-}else{
-nomeProf="admin"
-}
+/* 🔥 PRIORIDADE CORRETA */
+nomeProf=
+r.profissional_nome || 
+r.profissional || 
+localStorage.getItem("usuario_nome") || 
+"admin"
 corProf=obterCorUsuario(nomeProf)
 }
+
 rotinasHTML+=`<button class="btn-rotina ${classe}" ${r.status==="executado"?"":`onclick="executarRotina('${r.paciente_id}','${r.rotina_id}',this)"`}>
 ${r.rotina}
 ${r.status==="executado"
@@ -176,7 +184,7 @@ await db.from("rotinas_execucao").insert({paciente_id:pacienteId,rotina_id:rotin
 if(botao){
 botao.classList.remove("rotina-pendente")
 botao.classList.add("rotina-executada")
-let nomeProfissional="admin"
+let nomeProfissional=localStorage.getItem("usuario_nome")||"admin"
 let cor=obterCorUsuario(nomeProfissional)
 if(!botao.innerHTML.includes("✔")){
 botao.innerHTML+=`<br><span style="font-size:9px;font-weight:bold;color:${cor}">✔ ${nomeProfissional}</span>`
@@ -187,7 +195,7 @@ await db.from("rotinas_execucao")
 status:"executado",
 horario_executado:new Date(),
 usuario_id:usuarioId,
-profissional_nome:"admin"
+profissional_nome:nomeProfissional
 })
 .eq("paciente_id",pacienteId)
 .eq("rotina_id",rotinaId)
@@ -236,7 +244,7 @@ async function executarTodos(pacienteId){
 if(!db)return
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw && dataRaw.includes("/") ? dataRaw.split("/").reverse().join("-") : (dataRaw || new Date().toISOString().slice(0,10))
-let nomeUsuario="admin"
+let nomeUsuario=localStorage.getItem("usuario_nome")||"admin"
 let corUsuario=obterCorUsuario(nomeUsuario)
 /* ATUALIZA VISUAL IMEDIATO */
 const linha=document.querySelectorAll(`[data-paciente="${pacienteId}"] .btn-rotina`)
@@ -273,7 +281,7 @@ await db.from("rotinas_execucao")
 status:"executado",
 horario_executado:new Date(),
 usuario_id:usuarioId,
-profissional_nome:"admin"
+profissional_nome:nomeUsuario
 })
 .eq("paciente_id",r.paciente_id)
 .eq("rotina_id",r.rotina_id)
@@ -515,7 +523,7 @@ await db.from("rotinas_execucao")
 status:"executado",
 horario_executado:new Date(),
 usuario_id:usuarioId,
-profissional_nome:"administrador"
+profissional_nome:localStorage.getItem("usuario_nome")||"admin"
 })
 .eq("paciente_id",r.paciente_id)
 .eq("rotina_id",r.rotina_id)
