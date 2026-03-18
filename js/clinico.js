@@ -164,28 +164,45 @@ let html=`<div class="box"><h3>Dados Clínicos do Paciente</h3><table class="tab
 box.innerHTML=html
 }
 /* ====================================================
-035 – INSERIR USUÁRIO (CORRIGIDO)
+035 – INSERIR USUÁRIO (CORRIGIDO FINAL)
 ==================================================== */
 async function inserirUsuario(){
 if(!db)return
 
+/* 🔥 MAPEAR PERFIL */
+let perfilUI=document.getElementById("u_perfil")?.value||""
+
+let perfilMap={
+"Administrador(a)":"administrador",
+"Médico(a)":"medico",
+"Enfermeiro(a)":"enfermeiro",
+"Cuidador(a)":"cuidador",
+"Fisioterapeuta":"fisioterapeuta",
+"Estagiário(a)":"estagiario"
+}
+
+let perfil=perfilMap[perfilUI]||"cuidador"
+
+/* 🔥 OBJETO */
 const novo={
 empresa_id:EMPRESA_ID,
-nome:document.getElementById("u_nome")?.value||"", // 🔥 AQUI
+nome:document.getElementById("u_nome")?.value||"", // obrigatório no banco
 nome_completo:document.getElementById("u_nome")?.value||"",
 nome_apelido:document.getElementById("u_apelido")?.value||"",
 email:document.getElementById("u_email")?.value||"",
-perfil:document.getElementById("u_perfil")?.value||"",
+perfil:perfil, // 🔥 CORRIGIDO
 hierarquia:parseInt(document.getElementById("u_hierarquia")?.value||5),
 senha_hash:document.getElementById("u_senha")?.value||"",
 ativo:true
 }
 
-if(!novo.nome_completo || !novo.email){
+/* 🔥 VALIDAÇÃO */
+if(!novo.nome || !novo.email){
 alert("Preencha nome e email")
 return
 }
 
+/* 🔥 INSERT */
 const {error}=await db.from("usuarios").insert([novo])
 
 if(error){
@@ -195,6 +212,14 @@ return
 }
 
 alert("Usuário inserido com sucesso")
+
+/* 🔄 LIMPA CAMPOS */
+document.getElementById("u_nome").value=""
+document.getElementById("u_apelido").value=""
+document.getElementById("u_email").value=""
+document.getElementById("u_senha").value=""
+
+/* 🔄 RECARREGA */
 carregarUsuarios()
 }
 /* ====================================================
@@ -291,12 +316,28 @@ tabela.innerHTML=html
 037 – SALVAR USUÁRIO
 ==================================================== */
 async function salvarUsuario(id,btn){
+
 const tr=btn.closest("tr")
+
 const nivelAlvo=parseInt(tr.querySelector(".u_hierarquia")?.value||5)
 if(USUARIO_HIERARQUIA>=nivelAlvo){
-
 return
 }
+
+/* 🔥 PERFIL (CORREÇÃO COMPLETA) */
+let perfilUI=tr.querySelector(".u_perfil")?.value||""
+
+let perfilMap={
+"Administrador(a)":"administrador",
+"Médico(a)":"medico",
+"Enfermeiro(a)":"enfermeiro",
+"Cuidador(a)":"cuidador",
+"Fisioterapeuta":"fisioterapeuta",
+"Estagiário(a)":"estagiario"
+}
+
+let perfil=perfilMap[perfilUI]||"cuidador"
+
 /* CAPTURA REAL DO ESTADO ANTERIOR */
 const dadosAntes={
 nome_completo:tr.querySelector(".u_nome")?.getAttribute("value")||"",
@@ -306,28 +347,27 @@ perfil:perfil,
 hierarquia:parseInt(tr.querySelector(".u_hierarquia")?.value||5),
 senha:"***"
 }
-let perfil=tr.querySelector(".u_perfil")?.value||""
-perfil=perfil
-.replace("(a)","")
-.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-.toLowerCase()
+
 /* NOVOS DADOS */
 const dados={
 nome_completo:tr.querySelector(".u_nome")?.value||"",
 nome_apelido:tr.querySelector(".u_apelido")?.value||"",
 email:tr.querySelector(".u_email")?.value||"",
-perfil:tr.querySelector(".u_perfil")?.value||"",
+perfil:perfil, // 🔥 AGORA CORRETO
 hierarquia:parseInt(tr.querySelector(".u_hierarquia")?.value||5),
 senha_hash:tr.querySelector(".u_senha")?.value||"",
 ativo:true
 }
+
 const {error}=await db.from("usuarios").update(dados).eq("id",id)
+
 if(error){
 alert("Erro ao salvar")
 console.error(error)
 return
 }
-/* AUDITORIA COMPLETA */
+
+/* AUDITORIA */
 if(typeof registrarAuditoria==="function"){
 await registrarAuditoria({
 acao:"UPDATE",
@@ -337,6 +377,7 @@ antes:dadosAntes,
 depois:dados
 })
 }
+
 btn.innerText="✔"
 setTimeout(()=>btn.innerText="Salvar",1200)
 }
