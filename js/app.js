@@ -3,51 +3,56 @@ window.salvandoPendencias=false
 010 – LOGIN
 ==================================================== */
 async function login(){
-while(!db){await new Promise(r=>setTimeout(r,50))}
-const usuario=document.getElementById("usuario").value.trim()
-const senha=document.getElementById("senha").value.trim()
-const btn=document.querySelector("#login button")
-if(btn)btn.disabled=true
-if(!usuario||!senha){
-alert("Informe usuário e senha")
-if(btn)btn.disabled=false
+
+if(!db){
+alert("Sistema carregando")
 return
 }
-const {data,error}=await db.from("usuarios").select("id,nome_completo,senha_hash,empresa_id,ativo,perfil").eq("nome_apelido",usuario).limit(1)
+
+const usuario=document.getElementById("usuario")?.value?.trim().toLowerCase()
+const senha=document.getElementById("senha")?.value?.trim()
+
+if(!usuario || !senha){
+alert("Informe usuário e senha")
+return
+}
+
+const {data,error}=await db
+.from("usuarios")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+
 if(error){
 console.error(error)
-alert("Erro ao acessar usuários")
-if(btn)btn.disabled=false
+alert("Erro no login")
 return
 }
-if(!data||data.length===0){
-alert("Usuário não encontrado")
-if(btn)btn.disabled=false
+/* 🔥 CORREÇÃO AQUI */
+const user=data.find(u=>
+(
+(u.nome_apelido||"").toLowerCase()===usuario ||
+(u.email||"").toLowerCase()===usuario ||
+(u.nome_completo||"").toLowerCase()===usuario
+)
+&& String(u.senha_hash)===senha
+)
+
+if(!user){
+alert("Usuário ou senha inválidos")
 return
 }
-const user=data[0]
-if(!user.ativo){
-alert("Usuário inativo")
-if(btn)btn.disabled=false
-return
-}
-if(user.senha_hash!==senha){
-alert("Senha incorreta")
-if(btn)btn.disabled=false
-return
-}
-localStorage.setItem("usuario_nome",user.nome_completo)
+/* LOGIN OK */
 localStorage.setItem("usuario_id",user.id)
-localStorage.setItem("empresa_id",user.empresa_id)
-localStorage.setItem("usuario_perfil",user.perfil)
+localStorage.setItem("usuario_nome",user.nome_apelido||user.nome_completo)
 localStorage.setItem("usuario_hierarquia",user.hierarquia||5)
-PROFISSIONAL_ID=user.id
-EMPRESA_ID=user.empresa_id
+localStorage.setItem("perfil",user.perfil||"cuidador")
+
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
-if(typeof carregarEmpresa==="function"){await carregarEmpresa()}
-await iniciarSistema()
-if(btn)btn.disabled=false
+
+if(typeof carregarRotinas==="function")carregarRotinas()
+if(typeof carregarClinico==="function")carregarClinico()
 }
 /* ====================================================
 011 – INICIAR SISTEMA
