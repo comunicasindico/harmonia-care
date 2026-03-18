@@ -184,7 +184,9 @@ const tabela=document.getElementById("tabelaUsuariosAdmin")
 if(!tabela)return
 let html=""
 listaFiltrada.forEach(u=>{
-const podeEditar = MODO_EDICAO_ADMIN && USUARIO_HIERARQUIA <= (u.hierarquia || 5)
+const podeEditar = MODO_EDICAO_ADMIN && (
+USUARIO_HIERARQUIA <= (u.hierarquia ?? 5) || USUARIO_HIERARQUIA === 1
+)
 let cor="#fff"
 if(u.perfil?.includes("Administrador"))cor="#e3f2fd"
 else if(u.perfil?.includes("Médico"))cor="#fdecea"
@@ -230,7 +232,7 @@ async function salvarUsuario(id,btn){
 const tr=btn.closest("tr")
 const nivelAlvo=parseInt(tr.querySelector(".u_hierarquia")?.value||5)
 if(USUARIO_HIERARQUIA>=nivelAlvo){
-alert("Sem permissão para editar este usuário")
+
 return
 }
 /* CAPTURA REAL DO ESTADO ANTERIOR */
