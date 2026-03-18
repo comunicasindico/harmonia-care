@@ -40,6 +40,7 @@ if(typeof carregarRotinas==="function")carregarRotinas()
 ==================================================== */
 async function carregarPacientesBusca(){
 if(!db){console.warn("Supabase ainda não carregado");return}
+if(!EMPRESA_ID){console.error("EMPRESA_ID null");return}  // 👈 AQUI
 const select=document.getElementById("buscaPaciente")
 if(!select)return
 const {data,error}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo",{ascending:true})
@@ -57,6 +58,7 @@ if(typeof carregarClinico==="function")await carregarClinico()
 ==================================================== */
 async function carregarRotinas(){
 if(!db)return
+if(!EMPRESA_ID)return   // 👈 AQUI
 const paciente=document.getElementById("buscaPaciente")?.value||"todos"
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
@@ -170,6 +172,7 @@ tbody.innerHTML=html
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db)return
+if(!EMPRESA_ID)return   // 👈 AQUI
 if(botao&&botao.classList.contains("rotina-executada")){return}
 
 const chaveLock=`lock_${pacienteId}_${rotinaId}`
@@ -380,7 +383,7 @@ await carregarRotinas()
 async function gerarRotinasDoDia(){
 
 if(!db) return
-
+if(!EMPRESA_ID)return   // 👈 AQUI
 // 🔒 trava contra loop
 if(window._gerandoRotinas) return
 window._gerandoRotinas = true
