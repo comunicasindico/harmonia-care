@@ -253,12 +253,12 @@ html+=`
 
 <td>
 <select class="u_perfil">
-<option ${u.perfil=="Administrador(a)"?"selected":""}>Administrador(a)</option>
-<option ${u.perfil=="Médico(a)"?"selected":""}>Médico(a)</option>
-<option ${u.perfil=="Fisioterapeuta"?"selected":""}>Fisioterapeuta</option>
-<option ${u.perfil=="Enfermeiro(a)"?"selected":""}>Enfermeiro(a)</option>
-<option ${u.perfil=="Cuidador(a)"?"selected":""}>Cuidador(a)</option>
-<option ${u.perfil=="Estagiário(a)"?"selected":""}>Estagiário(a)</option>
+<option value="administrador">Administrador</option>
+<option value="medico">Médico</option>
+<option value="enfermeiro">Enfermeiro</option>
+<option value="cuidador">Cuidador</option>
+<option value="fisioterapeuta">Fisioterapeuta</option>
+<option value="estagiario">Estagiário</option>
 </select>
 </td>
 
@@ -302,10 +302,15 @@ const dadosAntes={
 nome_completo:tr.querySelector(".u_nome")?.getAttribute("value")||"",
 nome_apelido:tr.querySelector(".u_apelido")?.getAttribute("value")||"",
 email:tr.querySelector(".u_email")?.getAttribute("value")||"",
-perfil:tr.querySelector(".u_perfil")?.value||"",
+perfil:perfil,
 hierarquia:parseInt(tr.querySelector(".u_hierarquia")?.value||5),
 senha:"***"
 }
+let perfil=tr.querySelector(".u_perfil")?.value||""
+perfil=perfil
+.replace("(a)","")
+.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+.toLowerCase()
 /* NOVOS DADOS */
 const dados={
 nome_completo:tr.querySelector(".u_nome")?.value||"",
