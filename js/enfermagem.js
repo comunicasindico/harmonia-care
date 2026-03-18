@@ -555,12 +555,10 @@ await db.from("rotinas_execucao")
 status:"executado",
 horario_executado:new Date(),
 usuario_id:usuarioId,
-profissional_nome:localStorage.getItem("usuario_nome")||"admin"
-})
+profissional_nome:"administrador"})
 .eq("paciente_id",r.paciente_id)
 .eq("rotina_id",r.rotina_id)
 .eq("data",dataHoje)
-
 }
 
 await carregarRotinas()
