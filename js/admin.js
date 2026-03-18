@@ -45,7 +45,7 @@ const {data,error}=await db.from("usuarios").select("id,empresa_id,nome_completo
 if(error){console.error("Erro usuarios",error);return}
 let html=""
 data?.forEach(u=>{
-html+=`<tr>
+html+=`<tr data-id="${u.id}">
 <td>${u.id||""}</td>
 <td>${u.empresa_id||""}</td>
 <td contenteditable="true" data-campo="nome_completo" data-id="${u.id}">${u.nome_completo||""}</td>
@@ -57,6 +57,10 @@ html+=`<tr>
 <td contenteditable="true" data-campo="cargo" data-id="${u.id}">${u.cargo||""}</td>
 <td contenteditable="true" data-campo="hierarquia" data-id="${u.id}">${u.hierarquia||""}</td>
 <td contenteditable="true" data-campo="senha_hash" data-id="${u.id}">${u.senha_hash||""}</td>
+<td>
+<button onclick="salvarUsuarioLinha('${u.id}')">Salvar</button>
+<button onclick="excluirUsuario('${u.id}')">Excluir</button>
+</td>
 </tr>`
 })
 tabela.innerHTML=html
@@ -95,4 +99,36 @@ const {error}=await db.from("rotinas_execucao").update({status:"executado",usuar
 if(error){console.error(error);alert("Erro ao concluir pendentes");return}
 alert("Pendências concluídas com sucesso")
 if(typeof carregarRotinas==="function"){await carregarRotinas()}
+}
+/* ====================================================
+046 – SALVAR USUARIO (BOTÃO)
+==================================================== */
+async function salvarUsuarioLinha(id){
+if(!db)return
+
+const linha=document.querySelector(`tr[data-id="${id}"]`)
+if(!linha)return
+
+const campos=linha.querySelectorAll("[data-campo]")
+let dados={}
+
+campos.forEach(c=>{
+let campo=c.dataset.campo
+let valor=c.innerText.trim()
+
+if(campo==="hierarquia")valor=parseInt(valor||5)
+if(campo==="ativo")valor=(valor==="true"||valor==="1")
+
+dados[campo]=valor
+})
+
+const {error}=await db.from("usuarios").update(dados).eq("id",id)
+
+if(error){
+console.error(error)
+alert("Erro ao salvar")
+return
+}
+
+alert("Salvo com sucesso")
 }
