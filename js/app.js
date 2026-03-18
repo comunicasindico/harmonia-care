@@ -58,8 +58,8 @@ if(typeof carregarClinico==="function")carregarClinico()
 011 – INICIAR SISTEMA
 ==================================================== */
 async function iniciarSistema(){
-while(!db){await new Promise(r=>setTimeout(r,50))}
 definirDataHoje()
+while(!db){await new Promise(r=>setTimeout(r,50))}
 if(typeof carregarPacientesBusca==="function"){await carregarPacientesBusca()}
 const pacienteSalvo=localStorage.getItem("pacienteSelecionado")
 const buscaPaciente=document.getElementById("buscaPaciente")
