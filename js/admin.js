@@ -300,22 +300,55 @@ await db.from("rotina_modelos").insert({empresa_id:EMPRESA_ID,paciente_id:pacien
 alert("Rotina adicionada")
 }
 /* ====================================================
-069 – CONCLUIR PENDENTES (ADMIN)
+069 – CONCLUIR PENDENTES (BASE VISÍVEL + ADMIN)
 ==================================================== */
 async function concluirPendentes(){
 if(!db)return
-const dataInicio=document.getElementById("dataInicio")?.value
-const dataFim=document.getElementById("dataFim")?.value
-if(!dataInicio){alert("Informe a data inicial");return}
-const usuarioId=localStorage.getItem("usuario_id")
-const {error}=await db
-       .from("rotinas_execucao")
-       .update({status:"executado",usuario_id:usuarioId,profissional_nome:"administrador",horario_executado:new Date()}) 
-       .eq("status","pendente").gte("data",dataInicio)
-       .lte("data",dataFim)
-if(error){console.error(error);alert("Erro ao concluir pendentes");return}
+if(!EMPRESA_ID){
+console.error("EMPRESA_ID NULL")
+return
+}
+if(SALVANDO){alert("Aguarde finalizar...");return}
+SALVANDO=true
+const dataRaw=document.getElementById("dataInicio")?.value
+const dataHoje=dataRaw&&dataRaw.includes("/") 
+? dataRaw.split("/").reverse().join("-") 
+: (dataRaw||new Date().toISOString().slice(0,10))
+const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
+let total=pendentes.length
+let atual=0
+for(const r of pendentes){
+atual++
+const {data:existe}=await db
+.from("rotinas_execucao")
+.select("id,status")
+.eq("paciente_id",r.paciente_id)
+.eq("rotina_id",r.rotina_id)
+.eq("data",dataHoje)
+.maybeSingle()
+if(existe && existe.status==="executado")continue
+if(!existe){
+await db.from("rotinas_execucao").insert({
+paciente_id:r.paciente_id,
+rotina_id:r.rotina_id,
+data:dataHoje,
+status:"pendente"
+})
+}
+await db.from("rotinas_execucao")
+.update({
+status:"executado",
+horario_executado:new Date(),
+usuario_id:localStorage.getItem("usuario_id")||null,
+profissional_nome:"administrador" // 👈 AQUI É O SEGREDO
+})
+.eq("paciente_id",r.paciente_id)
+.eq("rotina_id",r.rotina_id)
+.eq("data",dataHoje)
+}
+SALVANDO=false
+await carregarRotinas()
 alert("Pendências concluídas com sucesso")
-if(typeof carregarRotinas==="function"){await carregarRotinas()}
 }
 /* ====================================================
 070 – SALVAR USUARIO (BOTÃO)
