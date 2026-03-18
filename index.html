@@ -71,126 +71,87 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 #tabelaUsuarios tr:hover{background:#f9fafb;transform:scale(1.01);transition:.2s;box-shadow:0 2px 6px rgba(0,0,0,0.08);}
 #tabelaUsuarios thead{position:sticky;top:0;background:#fff;z-index:10;}
 .tag-comorb{display:inline-block;background:#fee2e2;color:#991b1b;padding:2px 6px;border-radius:6px;font-size:10px;margin-right:3px;font-weight:bold;}
+
+
 </style>
-
-
 </head>
-
 <body>
 <!-- ====================================================
 003 – LOGIN
 ==================================================== -->
 <div id="login">
 <div class="login-box">
-
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
 <img src="logo-harmonia.png" style="height:38px">
 <h2 style="margin:0">Harmonia Care</h2>
 </div>
-
 <div id="dadosEmpresa"></div>
-
 <input id="usuario" placeholder="Usuário">
 <input id="senha" type="password" placeholder="Senha">
-
-<button onclick="login()" class="btn-primary" style="width:100%">
-Entrar
-</button>
-
+<button onclick="login()" class="btn-primary" style="width:100%">Entrar</button>
 </div>
 </div>
-
 <!-- ====================================================
 004 – APP PRINCIPAL
 ==================================================== -->
 <div id="app">
-
 <h1 style="display:flex;justify-content:space-between;align-items:center">
-
 <div style="display:flex;gap:10px;align-items:center">
 <img src="logo-harmonia.png" style="height:32px">
 <span>Harmonia Care</span>
 </div>
-
-<button onclick="logout()" class="btn-danger">
-Sair
-</button>
-
+<button onclick="logout()" class="btn-danger">Sair</button>
 </h1>
-
 <div class="menu">
-
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-
-<div style="display:flex;gap:10px">
-
+<div style="display:flex;gap:10px;flex-wrap:wrap">
 <button onclick="abrirEnfermagem()" class="btn-primary">Painel Enfermagem</button>
 <button onclick="abrirClinico()" class="btn-secondary">Painel Clínico</button>
 <button onclick="abrirAdmin()" class="btn-success">Admin</button>
-<button id="btnConcluirPendentes" class="btn-secondary" onclick="concluirPendentesVisiveis()">
-✔ Concluir Pendentes
-</button>
+<button id="btnConcluirPendentes" class="btn-secondary" onclick="concluirPendentesVisiveis()">✔ Concluir Pendentes</button>
 <button onclick="gerarPDFGeral()" class="btn-primary">Gerar PDF</button>
 <button onclick="gerarPDFPaciente()" class="btn-primary">PDF do Paciente</button>
-
 <div id="acoesClinico" style="display:none;gap:8px;margin-left:10px">
 <button onclick="editarClinicoGlobal()" class="btn-secondary">Editar Clínico</button>
 <button onclick="salvarClinicoGlobal()" class="btn-success">Salvar</button>
 </div>
-
 </div>
-
 <div style="display:flex;gap:10px;font-weight:bold">
-
 <div id="indicadorExecutado" style="background:#2ecc71;color:#fff;padding:6px 10px;border-radius:8px">✔ 0</div>
 <div id="indicadorPendente" style="background:#f39c12;color:#fff;padding:6px 10px;border-radius:8px">🔴 0</div>
 <div id="indicadorAtrasado" style="background:#e74c3c;color:#fff;padding:6px 10px;border-radius:8px">⚠ 0</div>
-
 </div>
-
 </div>
-
 </div>
-
 <!-- ENFERMAGEM -->
-
 <div id="painelEnfermagem">
 <div class="box">
 <h3>Rotinas do Turno</h3>
-
 <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px">
-
 <div>
 <label>Paciente</label><br>
 <select id="buscaPaciente" onchange="selecionarPaciente()">
 <option value="todos">TODOS</option>
 </select>
 </div>
-
 <div>
 <label>Data início</label><br>
 <input type="date" id="dataInicio">
 </div>
-
 <div>
 <label>Data fim</label><br>
 <input type="date" id="dataFim">
 </div>
-
 <div style="display:flex;align-items:end">
 <button onclick="pesquisarRotinas()" class="btn-primary">Pesquisar</button>
 </div>
-
 </div>
-
 <div id="dadosClinicosPaciente"></div>
-
 <div class="turnos">
 <button id="btnManha" class="turno-btn turno-manha" onclick="mudarTurno('manha')">Manhã</button>
 <button id="btnTarde" class="turno-btn turno-tarde" onclick="mudarTurno('tarde')">Tarde</button>
 <button id="btnNoite" class="turno-btn turno-noite" onclick="mudarTurno('noite')">Noite</button>
 </div>
-
 <table>
 <thead>
 <tr>
@@ -202,17 +163,12 @@ Sair
 <tbody id="rotinas"></tbody>
 </table>
 <div id="gradePeriodo"></div>
-</table>
-
 </div>
 </div>
-
 <!-- CLINICO -->
-
 <div id="painelClinico" style="display:none">
 <div class="box">
-
-<div id="painelDietas" style="display:flex;gap:8px;margin-bottom:10px;font-size:12px;justify-content:flex-end;flex-wrap:wrap;">
+<div id="painelDietas" style="display:flex;gap:8px;margin-bottom:10px;font-size:12px;justify-content:flex-end;flex-wrap:wrap">
 <div class="dieta-chip" id="dietaTotal">🍽️ 0</div>
 <div class="dieta-chip" id="dietaHipossodica">🧂 0</div>
 <div class="dieta-chip" id="dietaDiabetica">🍬 0</div>
@@ -220,14 +176,12 @@ Sair
 <div class="dieta-chip" id="dietaVegetariana">🥗 0</div>
 <div class="dieta-chip" id="dietaLiquida">🥤 0</div>
 </div>
-
-<div id="painelIndicadoresClinicos" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;font-size:11px;justify-content:flex-end;">
+<div id="painelIndicadoresClinicos" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;font-size:11px;justify-content:flex-end">
 <div class="dieta-chip" id="indicadorRISCO5" style="background:#fee2e2">🔴 Alto 0</div>
 <div class="dieta-chip" id="indicadorRISCO4" style="background:#fed7aa">🟠 Médio 0</div>
 <div class="dieta-chip" id="indicadorRISCO3" style="background:#fef3c7">🟡 Moderado 0</div>
 <div class="dieta-chip" id="indicadorRISCO12" style="background:#dcfce7">🟢 Baixo 0</div>
 </div>
-
 <table id="tabelaClinica">
 <thead>
 <tr>
@@ -245,11 +199,8 @@ Sair
 <th id="colAcoes" style="display:none">Ações</th>
 </tr>
 </thead>
-
 <tbody id="quadroClinico"></tbody>
-
 </table>
-
 </div>
 </div>
 <!-- ADMIN -->
@@ -280,7 +231,6 @@ Sair
 <button onclick="inserirUsuario()" class="btn-primary">+ Adicionar</button>
 </div>
 </div>
-<!-- ITEM 080 – FILTROS + BUSCA -->
 <div id="filtrosUsuarios" style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
 <input id="buscaUsuario" placeholder="Buscar nome/email..." style="padding:6px;width:200px">
 <select id="filtroPerfil">
@@ -302,12 +252,11 @@ Sair
 </select>
 <button onclick="carregarUsuarios()" class="btn-primary">Filtrar</button>
 </div>
-<!-- ITEM 091 – BOTÕES DE CONTROLE (ESTILO CLÍNICO) -->
 <div style="display:flex;gap:8px;margin-bottom:10px">
 <button onclick="editarUsuarios()" class="btn-secondary">Editar</button>
 <button onclick="salvarUsuarios()" class="btn-success">Salvar</button>
 </div>
-<table id="tabelaUsuarios" style="width:100%;border-collapse:collapse">
+<table id="tabelaUsuarios">
 <thead>
 <tr>
 <th>Nome</th>
@@ -331,22 +280,10 @@ Sair
 <div id="listaPacientesDrag"></div>
 </div>
 </div>
-
-
 <script>
 (async function(){
 const v=Date.now()
-
-const scripts=[
-"js/globals.js",
-"js/supabase.js",
-"js/app.js",
-"js/enfermagem.js",
-"js/clinico.js",
-"js/admin.js",
-"js/pdf.js"
-]
-
+const scripts=["js/globals.js","js/supabase.js","js/app.js","js/enfermagem.js","js/clinico.js","js/admin.js","js/pdf.js"]
 for(const src of scripts){
 await new Promise((resolve,reject)=>{
 const s=document.createElement("script")
@@ -356,13 +293,10 @@ s.onerror=reject
 document.head.appendChild(s)
 })
 }
-
 })()
 </script>
-
 <div id="barraProgresso" style="display:none;position:fixed;top:0;left:0;width:100%;height:6px;background:#e5e7eb;z-index:9999">
 <div id="barraInterna" style="width:0%;height:100%;background:#22c55e;transition:width 0.3s"></div>
 </div>
-  
 </body>
 </html>
