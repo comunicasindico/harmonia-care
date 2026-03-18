@@ -54,7 +54,7 @@ carregarUsuarios()
 ==================================================== */
 async function carregarUsuarios(){
 if(!db)return
-
+if(!EMPRESA_ID){console.error("EMPRESA_ID null");return}  // 👈 AQUI
 let query=db
 .from("usuarios")
 .select("id,empresa_id,nome_completo,nome_apelido,email,perfil,hierarquia,senha_hash,ativo")
@@ -251,6 +251,7 @@ el.innerHTML=html
 ==================================================== */
 async function carregarUsuariosAdmin(){
 if(!db)return
+if(!EMPRESA_ID){console.error("EMPRESA_ID null");return}  // 👈 AQUI
 const tabela=document.getElementById("tabelaUsuariosAdmin")
 if(!tabela)return
 const {data,error}=await db.from("usuarios").select("id,empresa_id,nome_completo,nome_apelido,email,perfil,ativo,created_at,cargo,hierarquia,senha_hash").order("nome_completo",{ascending:true})
