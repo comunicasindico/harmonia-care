@@ -100,7 +100,7 @@ if(r.status==="executado"){
 if(r.profissional && r.profissional.trim()!==""){
 nomeProf=r.profissional
 }else{
-nomeProf=obterNomeProfissional()
+nomeProf="admin"
 }
 corProf=obterCorUsuario(nomeProf)
 }
@@ -150,7 +150,7 @@ botao.classList.remove("rotina-pendente")
 botao.classList.add("rotina-executada")
 let nomeProfissional=localStorage.getItem("usuario_nome")
 if(!nomeProfissional){
-nomeProfissional=obterNomeProfissional()
+nomeProfissional="admin"
 }
 let cor=obterCorUsuario(nomeProfissional)
 if(!botao.innerHTML.includes("✔")){
@@ -189,7 +189,7 @@ if(!btn.classList.contains("rotina-executada")){
 btn.classList.remove("rotina-pendente")
 btn.classList.add("rotina-executada")
 if(!btn.innerHTML.includes("✔")){
-btn.innerHTML+=`<br><span style="font-size:10px">✔ ${obterNomeProfissional()}</span>`}
+btn.innerHTML+=`<br><span style="font-size:10px">✔ admin</span>`}
 }
 })
 
@@ -245,7 +245,7 @@ const dataHoje=dataRaw && dataRaw.includes("/")
 ? dataRaw.split("/").reverse().join("-") 
 : (dataRaw || new Date().toISOString().slice(0,10))
 
-let nomeUsuario=obterNomeProfissional()
+let nomeUsuario="admin"
 let corUsuario=obterCorUsuario(nomeUsuario)
 
 /* ====================================================
