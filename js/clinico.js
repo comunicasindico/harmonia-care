@@ -201,7 +201,8 @@ carregarUsuarios()
 ==================================================== */
 async function carregarUsuarios(){
 if(!db)return
-let query=db.from("usuarios").select("id,empresa_id,nome_completo,nome_apelido,email,perfil,hierarquia,senha,ativo").eq("empresa_id",EMPRESA_ID)const busca=document.getElementById("buscaUsuario")?.value?.toLowerCase()||""
+let query=db.from("usuarios").select("id,empresa_id,nome_completo,nome_apelido,email,perfil,hierarquia,senha,ativo").eq("empresa_id",EMPRESA_ID);
+const busca=document.getElementById("buscaUsuario")?.value?.toLowerCase()||""
 const perfilFiltro=document.getElementById("filtroPerfil")?.value||""
 const hierarquiaFiltro=document.getElementById("filtroHierarquia")?.value||""
 if(perfilFiltro)query=query.eq("perfil",perfilFiltro)
