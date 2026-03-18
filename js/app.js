@@ -136,15 +136,19 @@ console.log("Página restaurada do cache")
 015 – DATA HOJE
 ==================================================== */
 function definirDataHoje(){
+
 const hoje=new Date()
 const ano=hoje.getFullYear()
 const mes=String(hoje.getMonth()+1).padStart(2,'0')
 const dia=String(hoje.getDate()).padStart(2,'0')
 const dataLocal=`${ano}-${mes}-${dia}`
+
 const inicio=document.getElementById("dataInicio")
 const fim=document.getElementById("dataFim")
-if(inicio)inicio.value=dataLocal
-if(fim)fim.value=dataLocal
+
+if(inicio && !inicio.value)inicio.value=dataLocal
+if(fim && !fim.value)fim.value=dataLocal
+
 }
 /* ====================================================
 016 – NAVEGAÇÃO PAINÉIS
