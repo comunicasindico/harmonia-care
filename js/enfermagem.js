@@ -162,24 +162,45 @@ await db.from("rotinas_execucao").insert({paciente_id:pacienteId,rotina_id:rotin
 if(botao){
 botao.classList.remove("rotina-pendente")
 botao.classList.add("rotina-executada")
-let nomeProfissional=localStorage.getItem("usuario_nome")
-if(!nomeProfissional){
-nomeProfissional="admin"
-}
+let nomeProfissional="admin"
 let cor=obterCorUsuario(nomeProfissional)
 if(!botao.innerHTML.includes("✔")){
 botao.innerHTML+=`<br><span style="font-size:9px;font-weight:bold;color:${cor}">✔ ${nomeProfissional}</span>`
 }
 }
 await db.from("rotinas_execucao")
-update({
+.update({
 status:"executado",
 horario_executado:new Date(),
 usuario_id:usuarioId,
 profissional_nome:"admin"
 })
-.eq("paciente_id", pacienteId).eq("rotina_id",rotinaId).eq("data",dataHoje)
+.eq("paciente_id",pacienteId)
+.eq("rotina_id",rotinaId)
+.eq("data",dataHoje)
 window[chaveLock]=false
+await carregarRotinas()
+}
+/* ====================================================
+025 – CONCLUIR TODAS (POR PACIENTE)
+==================================================== */
+async function concluirTodas(pacienteId){
+if(!db)return
+const dataRaw=document.getElementById("dataInicio")?.value
+const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
+let usuarioId=localStorage.getItem("usuario_id")
+if(!usuarioId||usuarioId==="null"){usuarioId=PROFISSIONAL_ID||null}
+const {data:rotinas}=await db.from("rotinas").select("id")
+for(const r of rotinas||[]){
+const {data:existe}=await db.from("rotinas_execucao").select("id,status").eq("paciente_id",pacienteId).eq("rotina_id",r.id).eq("data",dataHoje).maybeSingle()
+if(!existe){
+await db.from("rotinas_execucao").insert({paciente_id:pacienteId,rotina_id:r.id,data:dataHoje,status:"executado",usuario_id:usuarioId,horario_executado:new Date(),profissional_nome:"admin"})
+}else if(existe.status!=="executado"){
+await db.from("rotinas_execucao")
+.update({status:"executado",usuario_id:usuarioId,horario_executado:new Date(),profissional_nome:"admin"})
+.eq("id",existe.id)
+}
+}
 await carregarRotinas()
 }
 /* ====================================================
