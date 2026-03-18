@@ -14,28 +14,50 @@ let html=""
 let totalPacientes=0,totalHas=0,totalDm=0,totalDemencia=0,totalCardio=0,totalAcamado=0,totalPAAlterada=0
 let risco1=0,risco2=0,risco3=0,risco4=0,risco5=0
 data.forEach(p=>{
+
+p.has = p.has===true || p.has==="true" || p.has==1
+p.dm = p.dm===true || p.dm==="true" || p.dm==1
+p.da = p.da===true || p.da==="true" || p.da==1
+p.cardiopatia = p.cardiopatia===true || p.cardiopatia==="true" || p.cardiopatia==1
+p.acamado = p.acamado===true || p.acamado==="true" || p.acamado==1
+
+p.grau_risco = parseInt(p.grau_risco)||0
+
+let paS=0,paD=0
+if(p.pressao_arterial){
+let pa=p.pressao_arterial.replace(/\s/g,"").split("/")
+if(pa.length===2){
+paS=parseInt(pa[0])||0
+paD=parseInt(pa[1])||0
+}
+}
+p.pa_alterada = (paS>=140 || paD>=90)
+
 totalPacientes++
 if(p.has)totalHas++
 if(p.dm)totalDm++
 if(p.da)totalDemencia++
 if(p.cardiopatia)totalCardio++
 if(p.acamado)totalAcamado++
-if(p.pressao_arterial){
-let pa=p.pressao_arterial.split("/")
-if(pa.length===2){
-let s=parseInt(pa[0]),d=parseInt(pa[1])
-if(s>=140||d>=90)totalPAAlterada++
-}}
-if(p.grau_risco==1)risco1++
-if(p.grau_risco==2)risco2++
-if(p.grau_risco==3)risco3++
-if(p.grau_risco==4)risco4++
-if(p.grau_risco==5)risco5++
+if(p.pa_alterada)totalPAAlterada++
+
+if(p.grau_risco===1)risco1++
+if(p.grau_risco===2)risco2++
+if(p.grau_risco===3)risco3++
+if(p.grau_risco===4)risco4++
+if(p.grau_risco===5)risco5++
+/* 🔥 BONUS AQUI */
+if(p.pa_alterada && p.grau_risco>=4){
+console.warn("PACIENTE CRÍTICO:",p.nome_completo)
+}
 })
 const riscoTotal=risco1+risco2+risco3+risco4+risco5
 html+=`<tr style="background:#fff200;font-weight:bold;text-align:center"><td>Todos</td><td></td><td style="color:#e74c3c">${totalHas}</td><td style="color:#f39c12">${totalDm}</td><td style="color:#8e44ad">${totalDemencia}</td><td style="color:#c0392b">${totalCardio}</td><td style="color:#34495e">${totalAcamado}</td><td style="color:#e67e22">${totalPAAlterada}</td><td></td><td style="color:#2c3e50">${riscoTotal}</td><td></td></tr>`
 data.forEach(p=>{
-html+=`<tr data-id="${p.id}" style="${p.grau_risco>=4?'background:#ffe5e5':''}">
+html+=`<tr data-id="${p.id}" style="
+${p.grau_risco>=4?'background:#ffe5e5':''}
+${p.pa_alterada?'border-left:6px solid #e74c3c':''}
+">
 <td>${p.nome_apelido||p.nome_completo||""}</td>
 <td>${calcularIdade(p.data_nascimento)}</td>
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_has"><option value="true"${p.has?" selected":""}>✔</option><option value="false"${!p.has?" selected":""}></option></select>`:(p.has?"✔":"")}</td>
@@ -43,9 +65,9 @@ html+=`<tr data-id="${p.id}" style="${p.grau_risco>=4?'background:#ffe5e5':''}">
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_da"><option value="true"${p.da?" selected":""}>✔</option><option value="false"${!p.da?" selected":""}></option></select>`:(p.da?"✔":"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_cardio"><option value="true"${p.cardiopatia?" selected":""}>✔</option><option value="false"${!p.cardiopatia?" selected":""}></option></select>`:(p.cardiopatia?"✔":"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_acamado"><option value="true"${p.acamado?" selected":""}>✔</option><option value="false"${!p.acamado?" selected":""}></option></select>`:(p.acamado?"✔":"")}</td>
-<td>${MODO_EDICAO_CLINICO?`<input class="clin_pa" value="${p.pressao_arterial||""}" placeholder="120/80">`:(p.pressao_arterial||"")}</td>
+<td>${MODO_EDICAO_CLINICO?`<input class="clin_pa" value="${p.pressao_arterial||""}" placeholder="120/80">`:(p.pressao_arterial? (p.pa_alterada?`<span style="color:#e74c3c;font-weight:bold">${p.pressao_arterial}</span>`:p.pressao_arterial):"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<input class="clin_dieta" value="${p.dieta_texto||""}">`:(p.dieta_texto||"-")}</td>
-<td>${MODO_EDICAO_CLINICO?`<select class="clin_risco"><option value="1"${p.grau_risco==1?" selected":""}>1</option><option value="2"${p.grau_risco==2?" selected":""}>2</option><option value="3"${p.grau_risco==3?" selected":""}>3</option><option value="4"${p.grau_risco==4?" selected":""}>4</option><option value="5"${p.grau_risco==5?" selected":""}>5</option></select>`:(p.grau_risco||"")}</td>
+<td>${MODO_EDICAO_CLINICO?`<select class="clin_risco"><option value="1"${p.grau_risco==1?" selected":""}>1</option><option value="2"${p.grau_risco==2?" selected":""}>2</option><option value="3"${p.grau_risco==3?" selected":""}>3</option><option value="4"${p.grau_risco==4?" selected":""}>4</option><option value="5"${p.grau_risco==5?" selected":""}>5</option></select>`:(p.grau_risco?`<b style="color:${p.grau_risco>=4?'#e74c3c':'#2c3e50'}">${p.grau_risco}</b>`:"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<input class="clin_outros" value="${p.outras_comorbidades||""}">`:(p.outras_comorbidades||"Não tem")}</td>
 <td class="acoesClinico" style="${MODO_EDICAO_CLINICO?'':'display:none'}"><button class="btn-danger" onclick="excluirPaciente('${p.id}')">Excluir</button></td>
 </tr>`
