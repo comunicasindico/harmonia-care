@@ -463,7 +463,7 @@ if(!btn.classList.contains("rotina-executada")){
 btn.classList.remove("rotina-pendente")
 btn.classList.add("rotina-executada")
 if(!btn.innerHTML.includes("✔")){
-btn.innerHTML+=`<br><span style="font-size:10px">✔ ${obterNomeProfissional()}</span>`
+btn.innerHTML+=`<br><span style="font-size:10px">✔ ${obterNomeProfissional("pendente")}</span>`
 }}
 })
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
