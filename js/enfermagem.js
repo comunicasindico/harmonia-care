@@ -48,7 +48,9 @@ const {data,error}=await db.from("pacientes_profissionais").select("paciente_id"
 if(error){console.error("Erro pacientes profissional",error);return}
 if(data?.length){
 const ids=data.map(p=>p.paciente_id)
-const {data:lista}=await db.from("pacientes").select("id,nome_completo").in("id",ids)
+const {data:lista}=await db.from("pacientes")
+.select("id,nome_completo,has,dm,demencia,cardiopatia,acamado,pa")
+.in("id",ids)
 pacientes=lista||[]
 }}
 if(!pacientes.length){
@@ -90,6 +92,14 @@ const pacientes={}
 lista.forEach(r=>{if(!pacientes[r.paciente_id])pacientes[r.paciente_id]={nome:r.paciente,rotinas:[]};pacientes[r.paciente_id].rotinas.push(r)})
 Object.keys(pacientes).forEach(pid=>{
 const p=pacientes[pid]
+let comorbidadesHTML=""
+if(p.has)comorbidadesHTML+="<span class='tag-comorb'>HAS</span>"
+if(p.dm)comorbidadesHTML+="<span class='tag-comorb'>DM</span>"
+if(p.demencia)comorbidadesHTML+="<span class='tag-comorb'>DEM</span>"
+if(p.cardiopatia)comorbidadesHTML+="<span class='tag-comorb'>CARD</span>"
+if(p.acamado)comorbidadesHTML+="<span class='tag-comorb'>ACAM</span>"
+if(p.pa)comorbidadesHTML+="<span class='tag-comorb'>PA</span>"
+  
 let rotinasHTML="",total=p.rotinas.length,executadas=0
 p.rotinas.forEach(r=>{
 if(r.status==="executado")executadas++
@@ -113,7 +123,11 @@ ${r.status==="executado"
 })
 let percentual=total?Math.round((executadas/total)*100):0
 let botaoOK=percentual===100?`<button class="btn-todos">Rotinas OK</button>`:`<button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button>`
-html+=`<tr><td class="nome-paciente">${p.nome}</td><td><div class="progresso-container"><span class="progresso-label">${percentual}% (${executadas}/${total})</span>${botaoOK}</div></td><td class="rotinas-linha">${rotinasHTML}</td></tr>`
+html+=`<tr><td class="nome-paciente">
+${p.nome}
+<div style="margin-top:4px">${comorbidadesHTML}</div>
+</td>
+<td><div class="progresso-container"><span class="progresso-label">${percentual}% (${executadas}/${total})</span>${botaoOK}</div></td><td class="rotinas-linha">${rotinasHTML}</td></tr>`
 })
 if(lista.length>0&&pacienteSelecionado==="todos"){
 const rotinasUnicas={}
