@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-/* ====================================================
+<!-- ====================================================
 001 – HEAD CONFIGURAÇÕES GERAIS
-==================================================== */
+==================================================== -->
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -19,9 +19,9 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
-/* ====================================================
+<!-- ====================================================
 002 – ESTILOS GLOBAIS
-==================================================== */
+==================================================== -->
 <style>
 body{margin:0;font-family:Arial;background:#f4f6f9;}
 button{padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;}
@@ -37,9 +37,9 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 </head>
 
 <body>
-/* ====================================================
+<!-- ====================================================
 003 – LOGIN
-==================================================== */
+==================================================== -->
 <div id="login">
 <div class="login-box">
 <img src="logo-harmonia.png" style="height:38px">
@@ -50,31 +50,31 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 </div>
 </div>
 
-/* ====================================================
+<!-- ====================================================
 004 – APP PRINCIPAL
-==================================================== */
+==================================================== -->
 <div id="app" style="display:none">
 
-/* ====================================================
+<!-- ====================================================
 005 – HEADER
-==================================================== */
+==================================================== -->
 <h1>
 <span>Harmonia Care</span>
 <button onclick="logout()" class="btn-danger">Sair</button>
 </h1>
 
-/* ====================================================
+<!-- ====================================================
 006 – MENU
-==================================================== */
+==================================================== -->
 <div class="menu">
 <button onclick="abrirEnfermagem()" class="btn-primary">Enfermagem</button>
 <button onclick="abrirClinico()" class="btn-secondary">Clínico</button>
 <button onclick="abrirAdmin()" class="btn-success">Admin</button>
 </div>
 
-/* ====================================================
+<!-- ====================================================
 007 – PAINEL ENFERMAGEM
-==================================================== */
+==================================================== -->
 <div id="painelEnfermagem">
 <div class="box">
 <h3>Rotinas</h3>
@@ -85,9 +85,9 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 </div>
 </div>
 
-/* ====================================================
+<!-- ====================================================
 008 – PAINEL CLÍNICO
-==================================================== */
+==================================================== -->
 <div id="painelClinico" style="display:none">
 <div class="box">
 <table id="tabelaClinica">
@@ -96,9 +96,9 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 </div>
 </div>
 
-/* ====================================================
+<!-- ====================================================
 009 – PAINEL ADMIN
-==================================================== */
+==================================================== -->
 <div id="painelAdmin" style="display:none">
 <div class="box">
 <h3>Usuários</h3>
@@ -110,9 +110,9 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 
 </div>
 
-/* ====================================================
+<!-- ====================================================
 010 – LOAD DE SCRIPTS
-==================================================== */
+==================================================== -->
 <script>
 (async function(){
 const v=Date.now()
