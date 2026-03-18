@@ -3,54 +3,45 @@ window.salvandoPendencias=false
 010 – LOGIN
 ==================================================== */
 async function login(){
-
-if(!db){
-alert("Sistema carregando")
-return
-}
+if(!db){alert("Sistema carregando");return}
 
 const usuario=document.getElementById("usuario")?.value?.trim().toLowerCase()
 const senha=document.getElementById("senha")?.value?.trim()
 
-if(!usuario || !senha){
-alert("Informe usuário e senha")
-return
-}
-
+if(!usuario||!senha){alert("Informe usuário e senha");return}
+/* 🔥 NÃO DEPENDER MAIS DO EMPRESA_ID */
 const {data,error}=await db
 .from("usuarios")
 .select("*")
-.eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
 
-if(error){
-console.error(error)
-alert("Erro no login")
-return
-}
-/* 🔥 CORREÇÃO AQUI */
+if(error){console.error(error);alert("Erro no login");return}
+/* 🔍 LOCALIZA USUÁRIO */
 const user=data.find(u=>
 (
-(u.nome_apelido||"").toLowerCase()===usuario ||
-(u.email||"").toLowerCase()===usuario ||
+(u.nome_apelido||"").toLowerCase()===usuario||
+(u.email||"").toLowerCase()===usuario||
 (u.nome_completo||"").toLowerCase()===usuario
 )
 && String(u.senha_hash)===senha
 )
 
-if(!user){
-alert("Usuário ou senha inválidos")
-return
-}
-/* LOGIN OK */
+if(!user){alert("Usuário ou senha inválidos");return}
+/* ✅ SALVAR SESSÃO COMPLETA */
 localStorage.setItem("usuario_id",user.id)
 localStorage.setItem("usuario_nome",user.nome_apelido||user.nome_completo)
 localStorage.setItem("usuario_hierarquia",user.hierarquia||5)
 localStorage.setItem("perfil",user.perfil||"cuidador")
-
+/* 🔥 CORREÇÃO PRINCIPAL */
+localStorage.setItem("empresa_id",user.empresa_id)
+/* 🔄 ATUALIZA VARIÁVEL GLOBAL */
+EMPRESA_ID=user.empresa_id
+/* UI */
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
-
+/* INICIALIZA */
+if(typeof definirDataHoje==="function")definirDataHoje()
+if(typeof carregarPacientesBusca==="function")carregarPacientesBusca()
 if(typeof carregarRotinas==="function")carregarRotinas()
 if(typeof carregarClinico==="function")carregarClinico()
 }
