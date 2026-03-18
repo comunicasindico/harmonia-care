@@ -168,21 +168,32 @@ box.innerHTML=html
 ==================================================== */
 async function inserirUsuario(){
 if(!db)return
+
 const novo={
 empresa_id:EMPRESA_ID,
-nome_completo:document.getElementById("u_nome").value,
-nome_apelido:document.getElementById("u_apelido").value,
-email:document.getElementById("u_email").value,
-perfil:document.getElementById("u_perfil").value,
-hierarquia:parseInt(document.getElementById("u_hierarquia").value),
-senha:document.getElementById("u_senha").value,
+nome_completo:document.getElementById("u_nome")?.value||"",
+nome_apelido:document.getElementById("u_apelido")?.value||"",
+email:document.getElementById("u_email")?.value||"",
+perfil:document.getElementById("u_perfil")?.value||"",
+hierarquia:parseInt(document.getElementById("u_hierarquia")?.value||5),
+senha:document.getElementById("u_senha")?.value||"",
 ativo:true
 }
-const {data,error}=await db.from("usuarios").insert(novo).select().single()
-if(error){alert("Erro ao inserir");console.error(error);return}
-if(typeof registrarAuditoria==="function"){
-await registrarAuditoria({acao:"INSERT",tabela:"usuarios",registro_id:data?.id||null,antes:null,depois:novo})
+
+if(!novo.nome_completo || !novo.email){
+alert("Preencha nome e email")
+return
 }
+
+const {error}=await db.from("usuarios").insert([novo])
+
+if(error){
+console.error(error)
+alert("Erro ao inserir: "+error.message)
+return
+}
+
+alert("Usuário inserido com sucesso")
 carregarUsuarios()
 }
 /* ====================================================
@@ -190,8 +201,7 @@ carregarUsuarios()
 ==================================================== */
 async function carregarUsuarios(){
 if(!db)return
-let query=db.from("usuarios").select("*").eq("empresa_id",EMPRESA_ID)
-const busca=document.getElementById("buscaUsuario")?.value?.toLowerCase()||""
+let query=db.from("usuarios").select("id,empresa_id,nome_completo,nome_apelido,email,perfil,hierarquia,senha,ativo").eq("empresa_id",EMPRESA_ID)const busca=document.getElementById("buscaUsuario")?.value?.toLowerCase()||""
 const perfilFiltro=document.getElementById("filtroPerfil")?.value||""
 const hierarquiaFiltro=document.getElementById("filtroHierarquia")?.value||""
 if(perfilFiltro)query=query.eq("perfil",perfilFiltro)
@@ -268,12 +278,13 @@ senha:"***"
 }
 /* NOVOS DADOS */
 const dados={
-nome_completo:tr.querySelector(".u_nome").value,
-nome_apelido:tr.querySelector(".u_apelido").value,
-email:tr.querySelector(".u_email").value,
-perfil:tr.querySelector(".u_perfil").value,
-hierarquia:parseInt(tr.querySelector(".u_hierarquia").value),
-senha:tr.querySelector(".u_senha").value
+nome_completo:tr.querySelector(".u_nome")?.value||"",
+nome_apelido:tr.querySelector(".u_apelido")?.value||"",
+email:tr.querySelector(".u_email")?.value||"",
+perfil:tr.querySelector(".u_perfil")?.value||"",
+hierarquia:parseInt(tr.querySelector(".u_hierarquia")?.value||5),
+senha:tr.querySelector(".u_senha")?.value||"",
+ativo:true
 }
 const {error}=await db.from("usuarios").update(dados).eq("id",id)
 if(error){
