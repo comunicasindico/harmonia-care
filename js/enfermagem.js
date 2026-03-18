@@ -1,4 +1,18 @@
 /* ====================================================
+001 – CORES POR USUÁRIO
+==================================================== */
+function obterCorUsuario(nome){
+if(!nome)return"#999"
+nome=nome.toLowerCase()
+if(nome==="admin")return"#27ae60"
+if(nome==="administrador")return"#2c3e50"
+if(nome.includes("enfermeiro"))return"#2980b9"
+if(nome.includes("medico"))return"#c0392b"
+if(nome.includes("cuidador"))return"#f39c12"
+if(nome.includes("fisio"))return"#8e44ad"
+return"#7f8c8d"
+}
+/* ====================================================
 020 – MUDAR TURNO
 ==================================================== */
 function mudarTurno(turno){
@@ -220,10 +234,10 @@ if(a)a.innerHTML="⚠ "+atrasado
 ==================================================== */
 async function executarTodos(pacienteId){
 if(!db)return
-
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw && dataRaw.includes("/") ? dataRaw.split("/").reverse().join("-") : (dataRaw || new Date().toISOString().slice(0,10))
-
+let nomeUsuario="admin"
+let corUsuario=obterCorUsuario(nomeUsuario)
 /* ATUALIZA VISUAL IMEDIATO */
 const linha=document.querySelectorAll(`[data-paciente="${pacienteId}"] .btn-rotina`)
 linha.forEach(btn=>{
@@ -231,17 +245,13 @@ if(!btn.classList.contains("rotina-executada")){
 btn.classList.remove("rotina-pendente")
 btn.classList.add("rotina-executada")
 if(!btn.innerHTML.includes("✔")){
-btn.innerHTML+=`<br><span style="font-size:10px">✔ admin</span>`}
+btn.innerHTML+=`<br><span style="font-size:10px;font-weight:bold;color:${corUsuario}">✔ ${nomeUsuario}</span>`}
 }
 })
-
 const rotinas=ROTINAS_CACHE.filter(r=>r.paciente_id===pacienteId)
-
 for(const r of rotinas){
-
 let usuarioId=localStorage.getItem("usuario_id")
 if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
-
 const {data:existe}=await db
 .from("rotinas_execucao")
 .select("id,status")
@@ -249,9 +259,7 @@ const {data:existe}=await db
 .eq("rotina_id",r.rotina_id)
 .eq("data",dataHoje)
 .maybeSingle()
-
 if(existe && existe.status==="executado")continue
-
 if(!existe){
 await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
@@ -260,66 +268,43 @@ data:dataHoje,
 status:"pendente"
 })
 }
-
 await db.from("rotinas_execucao")
 .update({
 status:"executado",
 horario_executado:new Date(),
-usuario_id:usuarioId
+usuario_id:usuarioId,
+profissional_nome:"admin"
 })
 .eq("paciente_id",r.paciente_id)
 .eq("rotina_id",r.rotina_id)
 .eq("data",dataHoje)
-
 }
-
 await carregarRotinas()
 }
 /* ====================================================
 027 – EXECUTAR ROTINA PARA TODOS OS PACIENTES
 ==================================================== */
 async function executarRotinaTodos(rotinaId){
-
 if(!db)return
-
 const dataRaw=document.getElementById("dataInicio")?.value
-const dataHoje=dataRaw && dataRaw.includes("/") 
-? dataRaw.split("/").reverse().join("-") 
-: (dataRaw || new Date().toISOString().slice(0,10))
-
+const dataHoje=dataRaw && dataRaw.includes("/") ? dataRaw.split("/").reverse().join("-") : (dataRaw || new Date().toISOString().slice(0,10))
 let nomeUsuario="admin"
 let corUsuario=obterCorUsuario(nomeUsuario)
-
-/* ====================================================
-ATUALIZA VISUAL IMEDIATO (SEM ESPERAR SUPABASE)
-==================================================== */
+/* ATUALIZA VISUAL IMEDIATO */
 document.querySelectorAll(".btn-rotina").forEach(btn=>{
-
 if(btn.innerText.includes("✔"))return
-
 if(btn.innerText.includes(rotinaId)){
-
 btn.classList.remove("rotina-pendente")
 btn.classList.add("rotina-executada")
-
 if(!btn.innerHTML.includes("✔")){
 btn.innerHTML+=`<br><span style="font-size:10px;font-weight:bold;color:${corUsuario}">✔ ${nomeUsuario}</span>`
 }
-
 }
-
 })
-
-/* ====================================================
-SALVAR NO SUPABASE
-==================================================== */
 const rotinas=ROTINAS_CACHE.filter(r=>r.rotina_id===rotinaId)
-
 for(const r of rotinas){
-
 let usuarioId=localStorage.getItem("usuario_id")
 if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
-
 const {data:existe}=await db
 .from("rotinas_execucao")
 .select("id,status")
@@ -327,37 +312,28 @@ const {data:existe}=await db
 .eq("rotina_id",r.rotina_id)
 .eq("data",dataHoje)
 .maybeSingle()
-
 if(existe && existe.status==="executado")continue
-
 if(!existe){
-
-await db
-.from("rotinas_execucao")
-.insert({
+await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
 status:"pendente"
 })
-
 }
-
 await db
 .from("rotinas_execucao")
 .update({
 status:"executado",
 horario_executado:new Date(),
-usuario_id:usuarioId
+usuario_id:usuarioId,
+profissional_nome:"admin"
 })
 .eq("paciente_id",r.paciente_id)
 .eq("rotina_id",r.rotina_id)
 .eq("data",dataHoje)
-
 }
-
 await carregarRotinas()
-
 }
 /* ====================================================
 028 – GERAR ROTINAS DO DIA (CORRIGIDO)
