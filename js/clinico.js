@@ -164,7 +164,7 @@ let html=`<div class="box"><h3>Dados Clínicos do Paciente</h3><table class="tab
 box.innerHTML=html
 }
 /* ====================================================
-035 – INSERIR USUÁRIO
+035 – INSERIR USUÁRIO (CORRIGIDO)
 ==================================================== */
 async function inserirUsuario(){
 if(!db)return
@@ -176,7 +176,7 @@ nome_apelido:document.getElementById("u_apelido")?.value||"",
 email:document.getElementById("u_email")?.value||"",
 perfil:document.getElementById("u_perfil")?.value||"",
 hierarquia:parseInt(document.getElementById("u_hierarquia")?.value||5),
-senha:document.getElementById("u_senha")?.value||"",
+senha_hash:document.getElementById("u_senha")?.value||"", // 🔥 AQUI
 ativo:true
 }
 
@@ -201,7 +201,7 @@ carregarUsuarios()
 ==================================================== */
 async function carregarUsuarios(){
 if(!db)return
-let query=db.from("usuarios").select("id,empresa_id,nome_completo,nome_apelido,email,perfil,hierarquia,senha,ativo").eq("empresa_id",EMPRESA_ID);
+let query=db.from("usuarios").select("id,empresa_id,nome_completo,nome_apelido,email,perfil,hierarquia,senha_hash,ativo").eq("empresa_id",EMPRESA_ID);
 const busca=document.getElementById("buscaUsuario")?.value?.toLowerCase()||""
 const perfilFiltro=document.getElementById("filtroPerfil")?.value||""
 const hierarquiaFiltro=document.getElementById("filtroHierarquia")?.value||""
@@ -284,8 +284,7 @@ nome_apelido:tr.querySelector(".u_apelido")?.value||"",
 email:tr.querySelector(".u_email")?.value||"",
 perfil:tr.querySelector(".u_perfil")?.value||"",
 hierarquia:parseInt(tr.querySelector(".u_hierarquia")?.value||5),
-senha:tr.querySelector(".u_senha")?.value||"",
-ativo:true
+senha_hash:tr.querySelector(".u_senha")?.value||"",ativo:true
 }
 const {error}=await db.from("usuarios").update(dados).eq("id",id)
 if(error){
