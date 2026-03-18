@@ -1,5 +1,5 @@
 /* ====================================================
-001 – CORES POR USUÁRIO
+020 – CORES POR USUÁRIO
 ==================================================== */
 function obterCorUsuario(nome){
 if(!nome)return"#999"
@@ -13,7 +13,7 @@ if(nome.includes("fisio"))return"#8e44ad"
 return"#7f8c8d"
 }
 /* ====================================================
-020 – MUDAR TURNO
+021 – MUDAR TURNO
 ==================================================== */
 function mudarTurno(turno){
 console.log("Turno selecionado:",turno)
@@ -30,7 +30,7 @@ if(typeof carregarRotinas==="function")carregarRotinas()
 }
 
 /* ====================================================
-021 – CARREGAR PACIENTES BUSCA
+022 – CARREGAR PACIENTES BUSCA
 ==================================================== */
 async function carregarPacientesBusca(){
 if(!db){console.warn("Supabase ainda não carregado");return}
@@ -47,7 +47,7 @@ if(typeof carregarClinico==="function")await carregarClinico()
 }
 
 /* ====================================================
-022 – CARREGAR ROTINAS
+023 – CARREGAR ROTINAS
 ==================================================== */
 async function carregarRotinas(){
 if(!db)return
@@ -96,7 +96,7 @@ calcularIndicadores(lista)
 renderizarRotinas(lista)
 }
 /* ====================================================
-023 – RENDERIZAR ROTINAS
+024 – RENDERIZAR ROTINAS
 ==================================================== */
 function renderizarRotinas(lista){
 const tbody=document.getElementById("rotinas");if(!tbody)return
@@ -156,7 +156,7 @@ html+=`<tr style="background:#f0fdf4;font-weight:bold"><td>Todos os Pacientes</t
 tbody.innerHTML=html
 }
 /* ====================================================
-024 – EXECUTAR ROTINA (LOCK DE EXECUÇÃO)
+025 – EXECUTAR ROTINA (LOCK DE EXECUÇÃO)
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db)return
@@ -196,7 +196,7 @@ window[chaveLock]=false
 await carregarRotinas()
 }
 /* ====================================================
-025 – CONCLUIR TODAS (POR PACIENTE)
+026 – CONCLUIR TODAS (POR PACIENTE)
 ==================================================== */
 async function concluirTodas(pacienteId){
 if(!db)return
@@ -218,7 +218,7 @@ await db.from("rotinas_execucao")
 await carregarRotinas()
 }
 /* ====================================================
-025 – INDICADORES
+027 – INDICADORES
 ==================================================== */
 function calcularIndicadores(lista){
 let executado=0,pendente=0,atrasado=0
@@ -230,7 +230,7 @@ if(a)a.innerHTML="⚠ "+atrasado
 }
 
 /* ====================================================
-026 – EXECUTAR TODAS ROTINAS
+028 – EXECUTAR TODAS ROTINAS
 ==================================================== */
 async function executarTodos(pacienteId){
 if(!db)return
@@ -282,7 +282,7 @@ profissional_nome:"admin"
 await carregarRotinas()
 }
 /* ====================================================
-027 – EXECUTAR ROTINA PARA TODOS OS PACIENTES
+029 – EXECUTAR ROTINA PARA TODOS OS PACIENTES
 ==================================================== */
 async function executarRotinaTodos(rotinaId){
 if(!db)return
@@ -336,7 +336,7 @@ profissional_nome:"admin"
 await carregarRotinas()
 }
 /* ====================================================
-028 – GERAR ROTINAS DO DIA (CORRIGIDO)
+030 – GERAR ROTINAS DO DIA (CORRIGIDO)
 ==================================================== */
 async function gerarRotinasDoDia(){
 
@@ -407,23 +407,22 @@ console.error("Erro geral gerarRotinasDoDia",err)
 }finally{
 window._gerandoRotinas = false
 }
-
 }
 
 /* ====================================================
-029 – SELECIONAR PACIENTE
+031 – SELECIONAR PACIENTE
 ==================================================== */
 async function selecionarPaciente(){
 await processarSelecaoPaciente()
 }
 /* ====================================================
-030 – AO SELECIONAR PACIENTE
+032 – AO SELECIONAR PACIENTE
 ==================================================== */
 async function aoSelecionarPaciente(){
 await processarSelecaoPaciente()
 }
 /* ====================================================
-031 – PROCESSAR SELEÇÃO DE PACIENTE
+033 – PROCESSAR SELEÇÃO DE PACIENTE
 ==================================================== */
 async function processarSelecaoPaciente(){
 const select=document.getElementById("buscaPaciente")
@@ -436,7 +435,7 @@ if(typeof carregarClinico==="function"){await carregarClinico(pacienteId)}
 }
 }
 /* ====================================================
-032 – PESQUISAR ROTINAS
+034 – PESQUISAR ROTINAS
 ==================================================== */
 async function pesquisarRotinas(){
 await gerarRotinasDoDia()
@@ -454,7 +453,7 @@ if(el)el.innerHTML=""
 }
 }
 /* ====================================================
-033 – NORMALIZAR DATA PARA ISO
+035 – NORMALIZAR DATA PARA ISO
 ==================================================== */
 function normalizarDataISO(v){
 if(!v)return new Date().toISOString().slice(0,10)
@@ -465,7 +464,7 @@ return `${a}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`
 return v
 }
 /* ====================================================
-034 – CONCLUIR PENDENTES VISÍVEIS
+036 – CONCLUIR PENDENTES VISÍVEIS
 ==================================================== */
 async function concluirPendentesVisiveis(){
 
@@ -535,7 +534,7 @@ alert("Pendências concluídas com sucesso")
 
 }
 /* ====================================================
-035 – GRADE REAL BASEADA NO BANCO (SIMPLES E CORRETA)
+037 – GRADE REAL BASEADA NO BANCO (SIMPLES E CORRETA)
 ==================================================== */
 async function montarGradePeriodo(){
 
