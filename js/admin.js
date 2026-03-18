@@ -41,7 +41,7 @@ async function carregarUsuariosAdmin(){
 if(!db)return
 const tabela=document.getElementById("tabelaUsuariosAdmin")
 if(!tabela)return
-const {data,error}=await db.from("usuarios").select("id,empresa_id,nome_completo,usuario_apelido,email,perfil,ativo,created_at,cargo,hierarquia,senha_hash").order("nome_completo",{ascending:true})
+const {data,error}=await db.from("usuarios").select("id,empresa_id,nome_completo,nome_apelido,email,perfil,ativo,created_at,cargo,hierarquia,senha_hash").order("nome_completo",{ascending:true})
 if(error){console.error("Erro usuarios",error);return}
 let html=""
 data?.forEach(u=>{
@@ -49,7 +49,7 @@ html+=`<tr>
 <td>${u.id||""}</td>
 <td>${u.empresa_id||""}</td>
 <td contenteditable="true" data-campo="nome_completo" data-id="${u.id}">${u.nome_completo||""}</td>
-<td contenteditable="true" data-campo="usuario_apelido" data-id="${u.id}">${u.usuario_apelido||""}</td>
+<td contenteditable="true" data-campo="nome_apelido" data-id="${u.id}">${u.nome_apelido||""}</td>
 <td contenteditable="true" data-campo="email" data-id="${u.id}">${u.email||""}</td>
 <td contenteditable="true" data-campo="perfil" data-id="${u.id}">${u.perfil||""}</td>
 <td contenteditable="true" data-campo="ativo" data-id="${u.id}">${u.ativo}</td>
