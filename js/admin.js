@@ -308,7 +308,11 @@ const dataInicio=document.getElementById("dataInicio")?.value
 const dataFim=document.getElementById("dataFim")?.value
 if(!dataInicio){alert("Informe a data inicial");return}
 const usuarioId=localStorage.getItem("usuario_id")
-const {error}=await db.from("rotinas_execucao").update({status:"executado",usuario_id:usuarioId,horario_executado:new Date()}).eq("status","pendente").gte("data",dataInicio).lte("data",dataFim)
+const {error}=await db
+       .from("rotinas_execucao")
+       .update({status:"executado",usuario_id:usuarioId,profissional_nome:"administrador",horario_executado:new Date()}) 
+       .eq("status","pendente").gte("data",dataInicio)
+       .lte("data",dataFim)
 if(error){console.error(error);alert("Erro ao concluir pendentes");return}
 alert("Pendências concluídas com sucesso")
 if(typeof carregarRotinas==="function"){await carregarRotinas()}
