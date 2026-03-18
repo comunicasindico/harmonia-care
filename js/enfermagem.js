@@ -457,36 +457,71 @@ return v
 034 – CONCLUIR PENDENTES VISÍVEIS
 ==================================================== */
 async function concluirPendentesVisiveis(){
+
 if(!db)return
-if(window.salvandoPendencias){alert("Aguarde finalizar o salvamento.");return}
-window.salvandoPendencias=true
+if(SALVANDO){alert("Aguarde finalizar...");return}
+
+SALVANDO=true
+bloquearTela()
+mostrarProgresso()
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
+
 let usuarioId=localStorage.getItem("usuario_id")
 if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
-const botoes=document.querySelectorAll(".btn-rotina")
-botoes.forEach(btn=>{
-if(!btn.classList.contains("rotina-executada")){
-btn.classList.remove("rotina-pendente")
-btn.classList.add("rotina-executada")
-if(!btn.innerHTML.includes("✔")){
-btn.innerHTML+=`<br><span style="font-size:10px">✔ ${obterNomeProfissional("pendente")}</span>`
-}}
-})
+
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
+
+let total=pendentes.length
+let atual=0
+
 for(const r of pendentes){
-const {data:existe}=await db.from("rotinas_execucao").select("id,status").eq("paciente_id",r.paciente_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje).maybeSingle()
-if(existe&&existe.status==="executado")continue
+
+atual++
+atualizarProgresso(Math.round((atual/total)*100))
+
+const {data:existe}=await db
+.from("rotinas_execucao")
+.select("id,status")
+.eq("paciente_id",r.paciente_id)
+.eq("rotina_id",r.rotina_id)
+.eq("data",dataHoje)
+.maybeSingle()
+
+if(existe && existe.status==="executado")continue
+
 if(!existe){
-await db.from("rotinas_execucao").insert({paciente_id:r.paciente_id,rotina_id:r.rotina_id,data:dataHoje,status:"pendente"})
+await db.from("rotinas_execucao").insert({
+paciente_id:r.paciente_id,
+rotina_id:r.rotina_id,
+data:dataHoje,
+status:"pendente"
+})
 }
+
 await db.from("rotinas_execucao")
-.update({status:"executado",horario_executado:new Date(),usuario_id:usuarioId,profissional_nome:"administrador"})
-.eq("paciente_id",r.paciente_id).eq("rotina_id",r.rotina_id).eq("data",dataHoje)
+.update({
+status:"executado",
+horario_executado:new Date(),
+usuario_id:usuarioId,
+profissional_nome:"administrador"
+})
+.eq("paciente_id",r.paciente_id)
+.eq("rotina_id",r.rotina_id)
+.eq("data",dataHoje)
+
 }
+
 await carregarRotinas()
-window.salvandoPendencias=false
+
+esconderProgresso()
+desbloquearTela()
+
+SALVANDO=false
+
 alert("Pendências concluídas com sucesso")
+
 }
 /* ====================================================
 035 – GRADE REAL BASEADA NO BANCO (SIMPLES E CORRETA)
@@ -623,3 +658,9 @@ function desbloquearTela(){
 document.body.style.pointerEvents="auto"
 document.body.style.opacity="1"
 }
+window.addEventListener("beforeunload",function(e){
+if(SALVANDO){
+e.preventDefault()
+e.returnValue="Aguarde concluir o salvamento"
+}
+})
