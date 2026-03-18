@@ -10,10 +10,10 @@ if(typeof ROTINAS_GERADAS==="undefined"){var ROTINAS_GERADAS=false}
 if(typeof MODO_EDICAO_CLINICO==="undefined"){var MODO_EDICAO_CLINICO=false}
 if(typeof PROFISSIONAL_ID==="undefined"){var PROFISSIONAL_ID=localStorage.getItem("profissional_id")||null}
 if(typeof USUARIO_HIERARQUIA==="undefined"){var USUARIO_HIERARQUIA=parseInt(localStorage.getItem("usuario_hierarquia")||5)}
-function obterNomeProfissional(){
-const nome=localStorage.getItem("usuario_nome")||localStorage.getItem("nome_apelido")||localStorage.getItem("usuario")||"administrador"
-if(nome==="admin")return"administrador"
-return nome
+function obterNomeProfissional(tipo="normal"){
+const nome=localStorage.getItem("usuario_nome")||localStorage.getItem("nome_apelido")||localStorage.getItem("usuario")||"admin"
+if(tipo==="pendente")return"administrador"
+return nome||"admin"
 }
 /* ====================================================
 090 – MODO EDIÇÃO ADMIN
