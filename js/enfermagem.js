@@ -596,3 +596,30 @@ html+=`</table></div>`
 
 document.getElementById("gradePeriodo").innerHTML=html
 }
+
+function mostrarProgresso(){
+const barra=document.getElementById("barraProgresso")
+const interna=document.getElementById("barraInterna")
+if(barra)barra.style.display="block"
+if(interna)interna.style.width="0%"
+}
+
+function atualizarProgresso(p){
+const interna=document.getElementById("barraInterna")
+if(interna)interna.style.width=p+"%"
+}
+
+function esconderProgresso(){
+const barra=document.getElementById("barraProgresso")
+if(barra)barra.style.display="none"
+}
+
+function bloquearTela(){
+document.body.style.pointerEvents="none"
+document.body.style.opacity="0.6"
+}
+
+function desbloquearTela(){
+document.body.style.pointerEvents="auto"
+document.body.style.opacity="1"
+}
