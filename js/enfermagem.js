@@ -172,7 +172,6 @@ tbody.innerHTML=html
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db)return
-if(!EMPRESA_ID)return   // 👈 AQUI
 if(botao&&botao.classList.contains("rotina-executada")){return}
 
 const chaveLock=`lock_${pacienteId}_${rotinaId}`
@@ -212,7 +211,6 @@ data:dataHoje,
 status:"pendente"
 })
 }
-let nomeProfissional=localStorage.getItem("usuario_nome")||"admin"
 /* UI */
 if(botao){
 botao.classList.remove("rotina-pendente")
