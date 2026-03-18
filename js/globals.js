@@ -15,6 +15,7 @@ const nome=localStorage.getItem("usuario_nome")||localStorage.getItem("nome_apel
 if(tipo==="pendente")return"administrador"
 return nome||"admin"
 }
+var SALVANDO=false
 /* ====================================================
 090 – MODO EDIÇÃO ADMIN
 ==================================================== */
