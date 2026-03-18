@@ -126,14 +126,16 @@ if(r.status==="executado")executadas++
 const classe=r.status==="executado"?"rotina-executada":"rotina-pendente"
 let nomeProf=""
 let corProf="#64748b"
+
 if(r.status==="executado"){
-/* 🔥 PRIORIDADE CORRETA */
-nomeProf=
-r.profissional_nome || 
-r.profissional || 
-localStorage.getItem("usuario_nome") || 
-"admin"
+
+if(r.profissional && r.profissional.trim()!==""){
+nomeProf=r.profissional
+}else{
+nomeProf=obterNomeUsuarioAtual()
+}
 corProf=obterCorUsuario(nomeProf)
+
 }
 
 rotinasHTML+=`<button class="btn-rotina ${classe}" ${r.status==="executado"?"":`onclick="executarRotina('${r.paciente_id}','${r.rotina_id}',this)"`}>
@@ -169,27 +171,55 @@ tbody.innerHTML=html
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db)return
 if(botao&&botao.classList.contains("rotina-executada")){return}
+
 const chaveLock=`lock_${pacienteId}_${rotinaId}`
 if(window[chaveLock]){return}
 window[chaveLock]=true
+/* 🔴 PROTEÇÃO EMPRESA */
+if(!EMPRESA_ID){
+console.error("EMPRESA_ID NULL")
+window[chaveLock]=false
+return
+}
+/* DATA */
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-let usuarioId=localStorage.getItem("usuario_id")
-if(!usuarioId||usuarioId==="null"){usuarioId=PROFISSIONAL_ID||null}
-const {data:existe}=await db.from("rotinas_execucao").select("status").eq("paciente_id",pacienteId).eq("rotina_id",rotinaId).eq("data",dataHoje).maybeSingle()
-if(existe&&existe.status==="executado"){window[chaveLock]=false;return}
-if(!existe){
-await db.from("rotinas_execucao").insert({paciente_id:pacienteId,rotina_id:rotinaId,data:dataHoje,status:"pendente"})
+/* USUÁRIO */
+const usuario=obterUsuarioLogado()
+const usuarioId=usuario.id
+const nomeProfissional=usuario.nome
+/* VERIFICA EXISTE */
+const {data:existe}=await db
+.from("rotinas_execucao")
+.select("status")
+.eq("paciente_id",pacienteId)
+.eq("rotina_id",rotinaId)
+.eq("data",dataHoje)
+.maybeSingle()
+if(existe&&existe.status==="executado"){
+window[chaveLock]=false
+return
 }
+/* INSERE SE NÃO EXISTE */
+if(!existe){
+await db.from("rotinas_execucao").insert({
+paciente_id:pacienteId,
+rotina_id:rotinaId,
+data:dataHoje,
+status:"pendente"
+})
+}
+let nomeProfissional=localStorage.getItem("usuario_nome")||"admin"
+/* UI */
 if(botao){
 botao.classList.remove("rotina-pendente")
 botao.classList.add("rotina-executada")
-let nomeProfissional=localStorage.getItem("usuario_nome")||"admin"
 let cor=obterCorUsuario(nomeProfissional)
 if(!botao.innerHTML.includes("✔")){
 botao.innerHTML+=`<br><span style="font-size:9px;font-weight:bold;color:${cor}">✔ ${nomeProfissional}</span>`
 }
 }
+/* UPDATE FINAL */
 await db.from("rotinas_execucao")
 .update({
 status:"executado",
@@ -202,6 +232,7 @@ profissional_nome:nomeProfissional
 .eq("data",dataHoje)
 window[chaveLock]=false
 await carregarRotinas()
+
 }
 /* ====================================================
 026 – CONCLUIR TODAS (POR PACIENTE)
