@@ -100,7 +100,7 @@ if(r.status==="executado"){
 if(r.profissional && r.profissional.trim()!==""){
 nomeProf=r.profissional
 }else{
-nomeProf="admin"
+nomeProf=obterNomeProfissional()
 }
 corProf=obterCorUsuario(nomeProf)
 }
@@ -150,7 +150,7 @@ botao.classList.remove("rotina-pendente")
 botao.classList.add("rotina-executada")
 let nomeProfissional=localStorage.getItem("usuario_nome")
 if(!nomeProfissional){
-nomeProfissional="admin"
+nomeProfissional=obterNomeProfissional()
 }
 let cor=obterCorUsuario(nomeProfissional)
 if(!botao.innerHTML.includes("✔")){
@@ -189,8 +189,7 @@ if(!btn.classList.contains("rotina-executada")){
 btn.classList.remove("rotina-pendente")
 btn.classList.add("rotina-executada")
 if(!btn.innerHTML.includes("✔")){
-btn.innerHTML+=`<br><span style="font-size:10px">✔ admin</span>`
-}
+btn.innerHTML+=`<br><span style="font-size:10px">✔ ${obterNomeProfissional()}</span>`}
 }
 })
 
@@ -246,7 +245,7 @@ const dataHoje=dataRaw && dataRaw.includes("/")
 ? dataRaw.split("/").reverse().join("-") 
 : (dataRaw || new Date().toISOString().slice(0,10))
 
-let nomeUsuario=localStorage.getItem("usuario_nome") || "admin"
+let nomeUsuario=obterNomeProfissional()
 let corUsuario=obterCorUsuario(nomeUsuario)
 
 /* ====================================================
@@ -464,7 +463,7 @@ if(!btn.classList.contains("rotina-executada")){
 btn.classList.remove("rotina-pendente")
 btn.classList.add("rotina-executada")
 if(!btn.innerHTML.includes("✔")){
-btn.innerHTML+=`<br><span style="font-size:10px">✔ Administrador</span>`
+btn.innerHTML+=`<br><span style="font-size:10px">✔ ${obterNomeProfissional()}</span>`
 }}
 })
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
