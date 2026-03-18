@@ -504,75 +504,7 @@ return `${a}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`
 return v
 }
 /* ====================================================
-036 – CONCLUIR PENDENTES VISÍVEIS
-==================================================== */
-async function concluirPendentesVisiveis(){
-
-if(!db)return
-if(SALVANDO){alert("Aguarde finalizar...");return}
-
-SALVANDO=true
-bloquearTela()
-mostrarProgresso()
-
-const dataRaw=document.getElementById("dataInicio")?.value
-const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-
-let usuarioId=localStorage.getItem("usuario_id")
-if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
-
-const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
-
-let total=pendentes.length
-let atual=0
-
-for(const r of pendentes){
-
-atual++
-atualizarProgresso(Math.round((atual/total)*100))
-
-const {data:existe}=await db
-.from("rotinas_execucao")
-.select("id,status")
-.eq("paciente_id",r.paciente_id)
-.eq("rotina_id",r.rotina_id)
-.eq("data",dataHoje)
-.maybeSingle()
-
-if(existe && existe.status==="executado")continue
-
-if(!existe){
-await db.from("rotinas_execucao").insert({
-paciente_id:r.paciente_id,
-rotina_id:r.rotina_id,
-data:dataHoje,
-status:"pendente"
-})
-}
-
-await db.from("rotinas_execucao")
-.update({
-status:"executado",
-horario_executado:new Date(),
-usuario_id:usuarioId,
-profissional_nome:"administrador"})
-.eq("paciente_id",r.paciente_id)
-.eq("rotina_id",r.rotina_id)
-.eq("data",dataHoje)
-}
-
-await carregarRotinas()
-
-esconderProgresso()
-desbloquearTela()
-
-SALVANDO=false
-
-alert("Pendências concluídas com sucesso")
-
-}
-/* ====================================================
-037 – GRADE REAL BASEADA NO BANCO (SIMPLES E CORRETA)
+036 – GRADE REAL BASEADA NO BANCO (SIMPLES E CORRETA)
 ==================================================== */
 async function montarGradePeriodo(){
 
