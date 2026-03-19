@@ -54,7 +54,8 @@ carregarUsuarios()
 ==================================================== */
 async function carregarUsuarios(){
 if(!db)return
-if(!EMPRESA_ID){console.error("EMPRESA_ID null");return}  // 👈 AQUI
+if(!EMPRESA_ID){console.error("EMPRESA_ID null");return}
+
 let query=db
 .from("usuarios")
 .select("id,empresa_id,nome_completo,nome_apelido,email,perfil,hierarquia,senha_hash,ativo")
@@ -77,7 +78,7 @@ return
 const listaFiltrada=data.filter(u=>{
 if(!busca)return true
 return (u.nome_completo||"").toLowerCase().includes(busca) ||
-       (u.email||"").toLowerCase().includes(busca)
+(u.email||"").toLowerCase().includes(busca)
 })
 
 const tabela=document.getElementById("tabelaUsuariosAdmin")
@@ -88,27 +89,47 @@ let html=""
 listaFiltrada.forEach(u=>{
 
 let cor="#fff"
-if(u.perfil?.includes("Administrador"))cor="#e3f2fd"
-else if(u.perfil?.includes("Médico"))cor="#fdecea"
-else if(u.perfil?.includes("Enfermeiro"))cor="#e8f5e9"
-else if(u.perfil?.includes("Cuidador"))cor="#fff8e1"
-else if(u.perfil?.includes("Fisioterapeuta"))cor="#f3e5f5"
+if(u.perfil==="administrador")cor="#e3f2fd"
+else if(u.perfil==="medico")cor="#fdecea"
+else if(u.perfil==="enfermeiro")cor="#e8f5e9"
+else if(u.perfil==="cuidador")cor="#fff8e1"
+else if(u.perfil==="fisioterapeuta")cor="#f3e5f5"
+else if(u.perfil==="estagiario")cor="#ede7f6"
+
+if(!MODO_EDICAO_ADMIN){
+
+html+=`
+<tr data-id="${u.id}" style="background:${cor}">
+<td>${u.nome_completo||""}</td>
+<td>${u.nome_apelido||""}</td>
+<td>${u.email||""}</td>
+<td>${u.perfil||""}</td>
+<td>${u.hierarquia||""}</td>
+<td>
+<button onclick="excluirUsuario('${u.id}')" class="btn-danger">Excluir</button>
+</td>
+</tr>
+`
+
+}else{
 
 html+=`
 <tr data-id="${u.id}" style="background:${cor}">
 <td><input class="u_nome" value="${u.nome_completo||""}"></td>
 <td><input class="u_apelido" value="${u.nome_apelido||""}"></td>
 <td><input class="u_email" value="${u.email||""}"></td>
+
 <td>
 <select class="u_perfil">
-<option value="administrador">Administrador</option>
-<option value="medico">Médico</option>
-<option value="enfermeiro">Enfermeiro</option>
-<option value="cuidador">Cuidador</option>
-<option value="fisioterapeuta">Fisioterapeuta</option>
-<option value="estagiario">Estagiário</option>
+<option value="administrador" ${u.perfil==="administrador"?"selected":""}>Administrador</option>
+<option value="medico" ${u.perfil==="medico"?"selected":""}>Médico</option>
+<option value="enfermeiro" ${u.perfil==="enfermeiro"?"selected":""}>Enfermeiro</option>
+<option value="cuidador" ${u.perfil==="cuidador"?"selected":""}>Cuidador</option>
+<option value="fisioterapeuta" ${u.perfil==="fisioterapeuta"?"selected":""}>Fisioterapeuta</option>
+<option value="estagiario" ${u.perfil==="estagiario"?"selected":""}>Estagiário</option>
 </select>
 </td>
+
 <td>
 <select class="u_hierarquia">
 <option value="1"${u.hierarquia==1?" selected":""}>1</option>
@@ -118,16 +139,19 @@ html+=`
 <option value="5"${u.hierarquia==5?" selected":""}>5</option>
 </select>
 </td>
+
+<td><input class="u_senha" type="password" placeholder="nova senha"></td>
+
 <td>
-<input class="u_senha" type="password" placeholder="nova senha">
-</td>
-<td>
-<button onclick="salvarUsuario('${u.id}',this)" class="btn-success">Salvar</button>
 <button onclick="excluirUsuario('${u.id}')" class="btn-danger">Excluir</button>
 </td>
 </tr>
 `
+
+}
+
 })
+
 tabela.innerHTML=html
 }
 /* ====================================================
@@ -240,49 +264,7 @@ html+=`<div class="drag-item" id="prof_${p.id}">${p.nome_completo}</div>`
 el.innerHTML=html
 }
 /* ====================================================
-066 – CARREGAR USUARIOS ADMIN
-==================================================== */
-async function carregarUsuariosAdmin(){
-if(!db)return
-if(!EMPRESA_ID){console.error("EMPRESA_ID null");return}  // 👈 AQUI
-const tabela=document.getElementById("tabelaUsuariosAdmin")
-if(!tabela)return
-const {data,error}=await db.from("usuarios").select("id,empresa_id,nome_completo,nome_apelido,email,perfil,ativo,created_at,cargo,hierarquia,senha_hash").order("nome_completo",{ascending:true})
-if(error){console.error("Erro usuarios",error);return}
-let html=""
-data?.forEach(u=>{
-if(!MODO_EDICAO_ADMIN){
-html+=`
-<tr data-id="${u.id}">
-<td>${u.nome_completo||""}</td>
-<td>${u.nome_apelido||""}</td>
-<td>${u.email||""}</td>
-<td>${u.perfil||""}</td>
-<td>${u.hierarquia||""}</td>
-<td>
-<button onclick="excluirUsuario('${u.id}')" class="btn-danger">Excluir</button>
-</td>
-</tr>
-`
-}else{
-html+=`
-<tr data-id="${u.id}">
-<td><input class="u_nome" value="${u.nome_completo||""}"></td>
-<td><input class="u_apelido" value="${u.nome_apelido||""}"></td>
-<td><input class="u_email" value="${u.email||""}"></td>
-<td><input class="u_perfil" value="${u.perfil||""}"></td>
-<td><input class="u_hierarquia" value="${u.hierarquia||""}"></td>
-<td>
-<button onclick="excluirUsuario('${u.id}')" class="btn-danger">Excluir</button>
-</td>
-</tr>
-`
-}
-})
-tabela.innerHTML=html
-}
-/* ====================================================
-067 – SALVAR USUARIO EDITADO
+066 – SALVAR USUARIO EDITADO
 ==================================================== */
 document.addEventListener("blur",async function(e){
 if(!e.target.dataset.campo)return
@@ -292,7 +274,7 @@ const valor=e.target.innerText.trim()
 await db.from("usuarios").update({[campo]:valor}).eq("id",id)
 },{capture:true})
 /* ====================================================
-068 – ADICIONAR ROTINA
+067 – ADICIONAR ROTINA
 ==================================================== */
 async function adicionarRotina(){
 if(!db)return
@@ -303,7 +285,7 @@ await db.from("rotina_modelos").insert({empresa_id:EMPRESA_ID,paciente_id:pacien
 alert("Rotina adicionada")
 }
 /* ====================================================
-069 – CONCLUIR PENDENTES (BASE VISÍVEL + ADMIN)
+068 – CONCLUIR PENDENTES (BASE VISÍVEL + ADMIN)
 ==================================================== */
 async function concluirPendentes(){
 if(!db)return
@@ -354,7 +336,7 @@ await carregarRotinas()
 alert("Pendências concluídas com sucesso")
 }
 /* ====================================================
-070 – SALVAR USUARIO (BOTÃO)
+069 – SALVAR USUARIO (BOTÃO)
 ==================================================== */
 async function salvarUsuarioLinha(id){
 if(!db)return
@@ -386,14 +368,14 @@ return
 alert("Salvo com sucesso")
 }
 /* ====================================================
-071 – EDITAR USUARIOS
+070 – EDITAR USUARIOS
 ==================================================== */
 function editarUsuarios(){
 MODO_EDICAO_ADMIN=true
 carregarUsuariosAdmin()
 }
 /* ====================================================
-072 – SALVAR USUÁRIOS (GERAL)
+071 – SALVAR USUÁRIOS (GERAL)
 ==================================================== */
 async function salvarUsuarios(){
 if(!db)return
