@@ -31,6 +31,7 @@ const dataInicio=document.getElementById("dataInicio")?.value
 const dataFim=document.getElementById("dataFim")?.value
 if(!pacienteId||pacienteId==="todos"){alert("Selecione um paciente");return}
 const {data:paciente}=await db.from("pacientes").select("*").eq("id",pacienteId).single()
+console.log("PACIENTE >>>",paciente)
 const {data:rotinasExec}=await db.from("rotinas_execucao").select("*").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim)
 const {data:rotinasBase}=await db.from("rotina_modelos").select("id,nome")
 const {jsPDF}=window.jspdf
@@ -64,7 +65,7 @@ const dadosClinicos=[
 ["PA",paciente.pa||""],
 ["Dieta",paciente.dieta||""],
 ["Risco",paciente.risco||""],
-["Outras",paciente.outras||""]
+["Outras",(paciente.outras_comorbidades||paciente.comorbidades||paciente.outras||"")]
 ]
 dadosClinicos.forEach(d=>{
 doc.text(`${d[0]}:`,12,y)
