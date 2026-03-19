@@ -191,9 +191,10 @@ nome_apelido:tr.querySelector(".u_apelido")?.value||"",
 email:tr.querySelector(".u_email")?.value||"",
 perfil:perfil, // 🔥 AGORA CORRETO
 hierarquia:parseInt(tr.querySelector(".u_hierarquia")?.value||5),
-senha_hash:tr.querySelector(".u_senha")?.value||"",
 ativo:true
 }
+const novaSenha=tr.querySelector(".u_senha")?.value
+if(novaSenha)dados.senha_hash=novaSenha
 const {error}=await db.from("usuarios").update(dados).eq("id",id)
 if(error){
 alert("Erro ao salvar")
@@ -388,9 +389,10 @@ nome_apelido:tr.querySelector(".u_apelido")?.value||"",
 email:tr.querySelector(".u_email")?.value||"",
 perfil:tr.querySelector(".u_perfil")?.value||"",
 hierarquia:parseInt(tr.querySelector(".u_hierarquia")?.value||5),
-senha_hash:tr.querySelector(".u_senha")?.value||"",
 ativo:true
 }
+const novaSenha=tr.querySelector(".u_senha")?.value
+if(novaSenha)dados.senha_hash=novaSenha
 await db.from("usuarios").update(dados).eq("id",id)
 }
 MODO_EDICAO_ADMIN=false
