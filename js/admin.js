@@ -13,7 +13,6 @@ let perfilMap={
 "Fisioterapeuta":"fisioterapeuta",
 "Estagiário(a)":"estagiario"
 }
-
 let perfil=perfilMap[perfilUI]||"cuidador"
 /* 🔥 OBJETO */
 const novo={
@@ -34,7 +33,6 @@ return
 }
 /* 🔥 INSERT */
 const {error}=await db.from("usuarios").insert([novo])
-
 if(error){
 console.error(error)
 alert("Erro ao inserir: "+error.message)
@@ -50,12 +48,12 @@ document.getElementById("u_senha").value=""
 carregarUsuarios()
 }
 /* ====================================================
-061 – CARREGAR USUÁRIOS (ADMIN)
+061 – CARREGAR USUÁRIOS 
 ==================================================== */
 async function carregarUsuarios(){
 if(!db)return
 if(!EMPRESA_ID){console.error("EMPRESA_ID null");return}
-
+MODO_EDICAO_ADMIN = localStorage.getItem("modo_edicao_admin")==="true"
 let query=db
 .from("usuarios")
 .select("id,empresa_id,nome_completo,nome_apelido,email,perfil,hierarquia,senha_hash,ativo")
@@ -129,7 +127,6 @@ html+=`
 <option value="estagiario" ${u.perfil==="estagiario"?"selected":""}>Estagiário</option>
 </select>
 </td>
-
 <td>
 <select class="u_hierarquia">
 <option value="1"${u.hierarquia==1?" selected":""}>1</option>
@@ -139,7 +136,6 @@ html+=`
 <option value="5"${u.hierarquia==5?" selected":""}>5</option>
 </select>
 </td>
-
 <td><input class="u_senha" type="password" placeholder="nova senha"></td>
 
 <td>
@@ -147,11 +143,8 @@ html+=`
 </td>
 </tr>
 `
-
 }
-
 })
-
 tabela.innerHTML=html
 }
 /* ====================================================
@@ -341,40 +334,32 @@ alert("Pendências concluídas com sucesso")
 ==================================================== */
 async function salvarUsuarioLinha(id){
 if(!db)return
-
 const linha=document.querySelector(`tr[data-id="${id}"]`)
 if(!linha)return
-
 const campos=linha.querySelectorAll("[data-campo]")
 let dados={}
-
 campos.forEach(c=>{
 let campo=c.dataset.campo
 let valor=c.innerText.trim()
-
 if(campo==="hierarquia")valor=parseInt(valor||5)
 if(campo==="ativo")valor=(valor==="true"||valor==="1")
-
 dados[campo]=valor
 })
-
 const {error}=await db.from("usuarios").update(dados).eq("id",id)
-
 if(error){
 console.error(error)
 alert("Erro ao salvar")
 return
 }
-
 alert("Salvo com sucesso")
 }
 /* ====================================================
 070 – EDITAR USUARIOS
 ==================================================== */
 function editarUsuarios(){
-MODO_EDICAO_ADMIN=true
 localStorage.setItem("modo_edicao_admin","true")
-carregarUsuariosAdmin()
+MODO_EDICAO_ADMIN=true
+carregarUsuarios()
 }
 /* ====================================================
 071 – SALVAR USUÁRIOS (GERAL)
