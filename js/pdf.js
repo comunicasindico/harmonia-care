@@ -30,7 +30,24 @@ const pacienteId=document.getElementById("buscaPaciente")?.value
 const dataInicio=document.getElementById("dataInicio")?.value
 const dataFim=document.getElementById("dataFim")?.value
 if(!pacienteId||pacienteId==="todos"){alert("Selecione um paciente");return}
-const {data:paciente}=await db.from("pacientes").select("*").eq("id",pacienteId).single()
+const {data:paciente}=await db
+.from("pacientes")
+.select(`
+id,
+nome_completo,
+idade,
+has,
+dm,
+demencia,
+cardiopatia,
+acamado,
+pressao_arterial,
+dieta_texto,
+grau_risco,
+outras_comorbidades
+`)
+.eq("id",pacienteId)
+.single()
 console.log("PACIENTE >>>",paciente)
 const {data:rotinasExec}=await db.from("rotinas_execucao").select("*").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim)
 const {data:rotinasBase}=await db.from("rotina_modelos").select("id,nome")
@@ -65,7 +82,7 @@ const dadosClinicos=[
 ["PA",paciente.pa||""],
 ["Dieta",paciente.dieta||""],
 ["Risco",paciente.risco||""],
-["Outras",(paciente.outras_comorbidades||paciente.comorbidades||paciente.outras_comorbidades||"")]
+["Outras",paciente.outras_comorbidades|| ""]
 ]
 dadosClinicos.forEach(d=>{
 doc.text(`${d[0]}:`,12,y)
