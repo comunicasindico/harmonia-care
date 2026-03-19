@@ -87,7 +87,7 @@ const dadosClinicos=[
 ["Cardiopatia",paciente.cardiopatia?"SIM":"—"],
 ["Acamado",paciente.acamado?"SIM":"—"],
 ["PA",paciente.pressao_arterial||""],
-["Dieta",paciente.dieta_texto||""],
+["Dieta",paciente.dieta_especial?(paciente.dieta_texto?`SIM ${paciente.dieta_texto}`:"SIM"):"NÃO"],
 ["Risco",paciente.grau_risco||""],
 ["Outras",paciente.outras_comorbidades||""]
 ]
