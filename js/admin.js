@@ -373,6 +373,7 @@ alert("Salvo com sucesso")
 ==================================================== */
 function editarUsuarios(){
 MODO_EDICAO_ADMIN=true
+localStorage.setItem("modo_edicao_admin","true")
 carregarUsuariosAdmin()
 }
 /* ====================================================
