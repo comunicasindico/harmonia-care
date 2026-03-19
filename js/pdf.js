@@ -45,19 +45,33 @@ y+=10
 doc.setFontSize(14)
 doc.text("RELATÓRIO DO PACIENTE",105,y,{align:"center"})
 y+=10
-/* DADOS PACIENTE */
+/* DADOS CLÍNICOS (BOX PROFISSIONAL) */
+doc.setFillColor(240,240,240)
+doc.rect(10,y-5,190,60,"F")
 doc.setFontSize(10)
-doc.text(`Paciente: ${paciente.nome_completo||""}`,10,y);y+=6
-doc.text(`Idade: ${paciente.idade||""}`,10,y);y+=6
-doc.text(`HAS: ${paciente.has?"SIM":"—"}`,10,y);y+=6
-doc.text(`Diabetes: ${paciente.dm?"SIM":"—"}`,10,y);y+=6
-doc.text(`Demência: ${paciente.demencia?"SIM":"—"}`,10,y);y+=6
-doc.text(`Cardiopatia: ${paciente.cardio?"SIM":"—"}`,10,y);y+=6
-doc.text(`Acamado: ${paciente.acamado?"SIM":"—"}`,10,y);y+=6
-doc.text(`PA: ${paciente.pa||""}`,10,y);y+=6
-doc.text(`Dieta: ${paciente.dieta||""}`,10,y);y+=6
-doc.text(`Risco: ${paciente.risco||""}`,10,y);y+=6
-doc.text(`Outras: ${paciente.outras||""}`,10,y);y+=10
+doc.setFont(undefined,"bold")
+doc.text("DADOS CLÍNICOS DO PACIENTE",10,y)
+y+=6
+doc.setFont(undefined,"normal")
+const dadosClinicos=[
+["Paciente",paciente.nome_completo||""],
+["Idade",paciente.idade||""],
+["HAS",paciente.has?"SIM":"—"],
+["Diabetes",paciente.dm?"SIM":"—"],
+["Demência",paciente.demencia?"SIM":"—"],
+["Cardiopatia",paciente.cardio?"SIM":"—"],
+["Acamado",paciente.acamado?"SIM":"—"],
+["PA",paciente.pa||""],
+["Dieta",paciente.dieta||""],
+["Risco",paciente.risco||""],
+["Outras",paciente.outras||""]
+]
+dadosClinicos.forEach(d=>{
+doc.text(`${d[0]}:`,12,y)
+doc.text(String(d[1]),60,y)
+y+=5
+})
+y+=5
 if(y>250){doc.addPage();y=15}
 /* MATRIZ DE ROTINAS */
 const colunas=["Almoço","Troca de Fralda (noite)","Lanche","Higiene (tarde)","Alimentação","Banho","Café","Higiene Bucal","Medicação","Oferta de Água","Jantar","Higiene Noturna (noite)"]
@@ -74,7 +88,7 @@ Object.keys(matriz).sort().forEach(data=>{
 let linha=[data]
 colunas.forEach(col=>{
 const status=matriz[data][col]
-if(status==="executado")linha.push("✔")
+if(status==="executado")linha.push("Ok")
 else linha.push("✖")
 })
 body.push(linha)
@@ -83,12 +97,30 @@ doc.autoTable({
 startY:y,
 head:[["Data",...colunas]],
 body:body,
-styles:{fontSize:7,halign:"center"},
-headStyles:{fillColor:[52,152,219]},
+theme:"grid",
+styles:{
+fontSize:7,
+halign:"center",
+cellPadding:2
+},
+headStyles:{
+fillColor:[41,128,185],
+textColor:255,
+fontStyle:"bold"
+},
+alternateRowStyles:{
+fillColor:[245,245,245]
+},
 didParseCell:function(d){
-if(d.row.section==="body"&&d.column.index>0){
-if(d.cell.raw==="✔"){d.cell.styles.textColor=[39,174,96]}
-if(d.cell.raw==="✖"){d.cell.styles.textColor=[231,76,60]}
+if(d.row.section==="body" && d.column.index>0){
+if(d.cell.raw==="OK"){
+d.cell.styles.textColor=[39,174,96]
+d.cell.styles.fontStyle="bold"
+}
+if(d.cell.raw==="X"){
+d.cell.styles.textColor=[231,76,60]
+d.cell.styles.fontStyle="bold"
+}
 }
 },
 didDrawPage:function(){
