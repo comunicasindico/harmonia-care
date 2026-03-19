@@ -1,3 +1,25 @@
+doc.addFileToVFS("Roboto-Regular.ttf","BASE64_AQUI")
+doc.addFont("Roboto-Regular.ttf","Roboto","normal")
+doc.setFont("Roboto")
+
+const doc=new jsPDF("p","mm","a4")
+
+function limparTextoPDF(txt){
+if(!txt)return""
+return txt
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.replace(/[^\x00-\x7F]/g,"")
+}
+function formatarDataBR(dataISO){
+if(!dataISO)return""
+const d=new Date(dataISO)
+const dia=String(d.getDate()).padStart(2,"0")
+const mes=String(d.getMonth()+1).padStart(2,"0")
+const ano=d.getFullYear()
+return `${dia}-${mes}-${ano}`
+}
+
 /* ====================================================
 080 – PDF PACIENTE
 ==================================================== */
@@ -55,13 +77,13 @@ const dadosClinicos=[
 ["Cardiopatia",paciente.cardiopatia?"SIM":"—"],
 ["Acamado",paciente.acamado?"SIM":"—"],
 ["PA",paciente.pressao_arterial||""],
-["Dieta",paciente.dieta_especial?(paciente.dieta_texto?`SIM ${paciente.dieta_texto}`:"SIM"):"NÃO","dieta"],
+["Dieta",paciente.dieta_especial?(paciente.dieta_texto?`SIM ${limparTextoPDF(paciente.dieta_texto)}`:"SIM"):"NAO","dieta"],
 ["Risco",paciente.grau_risco||""],
 ["Outras",paciente.outras_comorbidades||""]
 ]
 dadosClinicos.forEach(d=>{
 let label=d[0]
-let valor=String(d[1]||"")
+let valor=limparTextoPDF(String(d[1]||""))
 let tipo=d[2]||null
 if(tipo==="dieta"&&paciente.dieta_especial){
 doc.addImage(imgDieta,"PNG",12,y-2.5,3.5,3.5)
@@ -128,7 +150,7 @@ y+=4
 doc.setFont(undefined,"normal")
 Object.keys(matriz).sort().forEach(data=>{
 let x=10
-doc.text(data,x,y)
+doc.text(formatarDataBR(data),x,y)
 x+=20
 colunas.forEach(c=>{
 let status=null
@@ -152,7 +174,7 @@ if(y>270){doc.addPage();y=20}
 })
 if(y>260){doc.addPage();y=20}
 doc.setFontSize(10)
-doc.text(`Data da impressão: ${new Date().toLocaleDateString()}`,10,y);y+=15
+doc.text(`Data da impressão: ${formatarDataBR(new Date())}`,10,y);y+=15
 doc.text("__________________________________________",10,y)
 y+=6
 doc.text("Responsável Técnico",10,y)
