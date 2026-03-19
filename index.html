@@ -231,28 +231,8 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 <button onclick="inserirUsuario()" class="btn-primary">+ Adicionar</button>
 </div>
 </div>
-<div id="filtrosUsuarios" style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-<input id="buscaUsuario" placeholder="Buscar nome/email..." style="padding:6px;width:200px">
-<select id="filtroPerfil">
-<option value="">Todos Perfis</option>
-<option>Administrador(a)</option>
-<option>Médico(a)</option>
-<option>Fisioterapeuta</option>
-<option>Enfermeiro(a)</option>
-<option>Cuidador(a)</option>
-<option>Estagiário(a)</option>
-</select>
-<select id="filtroHierarquia">
-<option value="">Todas Hierarquias</option>
-<option value="1">1</option>
-<option value="2">2</option>
-<option value="3">3</option>
-<option value="4">4</option>
-<option value="5">5</option>
-</select>
-<button onclick="carregarUsuarios()" class="btn-primary">Filtrar</button>
-</div>
 <div style="display:flex;gap:8px;margin-bottom:10px">
+<input id="buscaUsuario" placeholder="Buscar nome/email..." style="padding:6px;width:220px">
 <button onclick="editarUsuarios()" class="btn-secondary">Editar</button>
 <button onclick="salvarUsuarios()" class="btn-success">Salvar</button>
 </div>
