@@ -105,9 +105,9 @@ html+=`
 <td>${u.email||""}</td>
 <td>${u.perfil||""}</td>
 <td>${u.hierarquia||""}</td>
-<td>
-<button onclick="excluirUsuario('${u.id}')" class="btn-danger">Excluir</button>
-</td>
+${MODO_EDICAO_ADMIN 
+? `<td><button onclick="excluirUsuario('${u.id}')" class="btn-excluir-mini">✖</button></td>` 
+: `<td></td>`}
 </tr>
 `
 
@@ -399,5 +399,5 @@ await db.from("usuarios").update(dados).eq("id",id)
 MODO_EDICAO_ADMIN=false
 localStorage.setItem("modo_edicao_admin","false")
 alert("Todos os usuários salvos com sucesso")
-carregarUsuariosAdmin()
+carregarUsuarios()
 }
