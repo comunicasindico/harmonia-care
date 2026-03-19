@@ -2,6 +2,12 @@
 080 – PDF PACIENTE
 ==================================================== */
 async function gerarPDFPaciente(){
+const imgDieta=new Image()
+imgDieta.src="img/icone-dieta.png" // caminho da sua imagem
+await new Promise((resolve,reject)=>{
+imgDieta.onload=resolve
+imgDieta.onerror=reject
+})
 if(!db)return
 const pacienteId=document.getElementById("buscaPaciente")?.value
 const dataInicio=document.getElementById("dataInicio")?.value
@@ -11,7 +17,7 @@ const {data:paciente,error}=await db.from("pacientes").select("id,nome_completo,
 if(error||!paciente){console.error("ERRO PACIENTE",error);alert("Erro ao carregar paciente");return}
 const {data:rotinasExec}=await db.from("rotinas_execucao").select("*").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim)
 const {data:rotinasBase}=await db.from("rotina_modelos").select("id,nome")
-const ICON_DIETA="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZjM5YzEyIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyIDJhMTAgMTAgMCAxIDAgMCAyMCAxMCAxMCAwIDAgMCAwLTIwem0wIDE4YTggOCAwIDEgMSAwLTE2IDggOCAwIDAgMSAwIDE2em0tMS04VjZoMnY2em0wIDRoLTJ2MmgyVjE2eiIvPjwvc3ZnPg=="
+const ICON_DIETA="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAKElEQVRIS2NkoBAwUqifgXGB4T8DA8M/AwPDfwYGBgYGhv8MDAwMDAwMDAAAAwA4kgN1S7n1VQAAAABJRU5ErkJggg=="
 const {jsPDF}=window.jspdf
 const doc=new jsPDF("p","mm","a4")
 let y=15
@@ -58,7 +64,7 @@ let label=d[0]
 let valor=String(d[1]||"")
 let tipo=d[2]||null
 if(tipo==="dieta"&&paciente.dieta_especial){
-doc.addImage(ICON_DIETA,"PNG",12,y-3,4,4)
+doc.addImage(imgDieta,"PNG",12,y-2.5,3.5,3.5)
 doc.text(label+":",18,y)
 doc.setTextColor(243,156,18)
 doc.text(valor,60,y)
