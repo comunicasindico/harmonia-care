@@ -29,7 +29,7 @@ for(let i=1;i<=totalPages;i++){
 doc.setPage(i)
 doc.setFontSize(8)
 doc.setTextColor(120)
-doc.text(rodape,105,290,{align:"center"})
+doc.text(`${rodape} | Página ${i} de ${totalPages}`,105,290,{align:"center"})
 doc.setTextColor(0)
 }
 }
@@ -156,7 +156,6 @@ doc.text(`Data da impressão: ${new Date().toLocaleDateString()}`,10,y);y+=15
 doc.text("__________________________________________",10,y)
 y+=6
 doc.text("Responsável Técnico",10,y)
-doc.text(`${rodape} | Página ${i} de ${totalPages}`,105,290,{align:"center"})
 adicionarRodape()
 doc.save(`Relatorio_${paciente.nome_completo}.pdf`)
 }
