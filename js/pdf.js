@@ -22,7 +22,7 @@ startY:30
 doc.save("relatorio_rotinas.pdf")
 }
 /* ====================================================
-081 – PDF PACIENTE (SUPREMO TCE)
+081 – PDF PACIENTE
 ==================================================== */
 async function gerarPDFPaciente(){
 if(!db)return
@@ -73,59 +73,82 @@ y+=5
 })
 y+=5
 if(y>250){doc.addPage();y=15}
-/* MATRIZ DE ROTINAS */
-const colunas=["Almoço","Troca de Fralda (noite)","Lanche","Higiene (tarde)","Alimentação","Banho","Café","Higiene Bucal","Medicação","Oferta de Água","Jantar","Higiene Noturna (noite)"]
+/* ===============================
+MATRIZ VISUAL (PADRÃO TELA)
+=============================== */
+
+const colunas=["Café","Medicação","Oferta de Água","Banho","Almoço","Alimentação","Lanche","Jantar","Higiene Noturna (noite)","Higiene Bucal","Higiene (tarde)","Troca de Fralda (noite)"]
+
 let mapa={}
 rotinasBase?.forEach(r=>{mapa[r.id]=r.nome})
+
 let matriz={}
 rotinasExec?.forEach(r=>{
 if(!matriz[r.data])matriz[r.data]={}
 const nome=mapa[r.rotina_id]
 if(nome)matriz[r.data][nome]=r.status
 })
-let body=[]
+
+/* TÍTULO */
+doc.setFontSize(12)
+doc.setFont(undefined,"bold")
+doc.text("Rotinas por período",10,y)
+y+=6
+
+doc.setFontSize(7)
+doc.setFont(undefined,"bold")
+
+/* HEADER */
+let x=10
+doc.text("Data",x,y)
+x+=22
+
+colunas.forEach(col=>{
+doc.text(col.substring(0,10),x,y)
+x+=14
+})
+
+y+=4
+
+/* LINHA HEADER */
+doc.setDrawColor(180)
+doc.line(10,y,200,y)
+y+=4
+
+doc.setFont(undefined,"normal")
+
+/* LINHAS */
 Object.keys(matriz).sort().forEach(data=>{
-let linha=[data]
+
+let x=10
+
+/* DATA */
+doc.text(data,x,y)
+x+=22
+
 colunas.forEach(col=>{
 const status=matriz[data][col]
-if(status==="executado")linha.push("Ok")
-else linha.push("✖")
+if(status==="executado"){
+doc.setTextColor(39,174,96)
+doc.text("OK",x,y)
+}else{
+doc.setTextColor(231,76,60)
+doc.text("X",x,y)
+}
+x+=14
 })
-body.push(linha)
-})
-doc.autoTable({
-startY:y,
-head:[["Data",...colunas]],
-body:body,
-theme:"grid",
-styles:{
-fontSize:7,
-halign:"center",
-cellPadding:2
-},
-headStyles:{
-fillColor:[41,128,185],
-textColor:255,
-fontStyle:"bold"
-},
-alternateRowStyles:{
-fillColor:[245,245,245]
-},
-didParseCell:function(d){
-if(d.row.section==="body" && d.column.index>0){
-if(d.cell.raw==="OK"){
-d.cell.styles.textColor=[39,174,96]
-d.cell.styles.fontStyle="bold"
-}
-if(d.cell.raw==="X"){
-d.cell.styles.textColor=[231,76,60]
-d.cell.styles.fontStyle="bold"
-}
-}
-},
-didDrawPage:function(){
-doc.setFontSize(8)
-doc.text(rodape,105,290,{align:"center"})
+
+doc.setTextColor(0,0,0)
+
+/* linha separadora */
+doc.setDrawColor(230)
+doc.line(10,y+2,200,y+2)
+
+y+=6
+
+if(y>270){
+doc.addPage()
+y=20
 }
 })
 y=doc.lastAutoTable.finalY+15
