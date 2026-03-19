@@ -30,24 +30,31 @@ const pacienteId=document.getElementById("buscaPaciente")?.value
 const dataInicio=document.getElementById("dataInicio")?.value
 const dataFim=document.getElementById("dataFim")?.value
 if(!pacienteId||pacienteId==="todos"){alert("Selecione um paciente");return}
-const {data:paciente}=await db
+const {data:paciente,error}=await db
 .from("pacientes")
 .select(`
 id,
 nome_completo,
-idade,
+data_nascimento,
 has,
 dm,
 demencia,
 cardiopatia,
 acamado,
-pressao_arterial,
+dieta_especial,
 dieta_texto,
+outras_comorbidades,
 grau_risco,
-outras_comorbidades
+pressao_arterial
 `)
 .eq("id",pacienteId)
 .single()
+
+if(error||!paciente){
+console.error("ERRO PACIENTE",error)
+alert("Erro ao carregar paciente")
+return
+}
 console.log("PACIENTE >>>",paciente)
 const {data:rotinasExec}=await db.from("rotinas_execucao").select("*").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim)
 const {data:rotinasBase}=await db.from("rotina_modelos").select("id,nome")
@@ -73,16 +80,16 @@ y+=6
 doc.setFont(undefined,"normal")
 const dadosClinicos=[
 ["Paciente",paciente.nome_completo||""],
-["Idade",paciente.idade||""],
+["Idade",calcularIdade(paciente.data_nascimento)],
 ["HAS",paciente.has?"SIM":"—"],
 ["Diabetes",paciente.dm?"SIM":"—"],
 ["Demência",paciente.demencia?"SIM":"—"],
-["Cardiopatia",paciente.cardio?"SIM":"—"],
+["Cardiopatia",paciente.cardiopatia?"SIM":"—"],
 ["Acamado",paciente.acamado?"SIM":"—"],
-["PA",paciente.pa||""],
-["Dieta",paciente.dieta||""],
-["Risco",paciente.risco||""],
-["Outras",paciente.outras_comorbidades|| ""]
+["PA",paciente.pressao_arterial||""],
+["Dieta",paciente.dieta_texto||""],
+["Risco",paciente.grau_risco||""],
+["Outras",paciente.outras_comorbidades||""]
 ]
 dadosClinicos.forEach(d=>{
 doc.text(`${d[0]}:`,12,y)
