@@ -72,6 +72,10 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 #tabelaUsuarios thead{position:sticky;top:0;background:#fff;z-index:10;}
 .tag-comorb{display:inline-block;background:#fee2e2;color:#991b1b;padding:2px 6px;border-radius:6px;font-size:10px;margin-right:3px;font-weight:bold;}
 .btn-excluir-mini{background:#e74c3c;color:#fff;border:none;padding:3px 7px;font-size:11px;border-radius:6px;cursor:pointer;}
+.topo-sistema{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;background:rgba(255,255,255,0.85);backdrop-filter:blur(6px);border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+.titulo-sistema{display:flex;align-items:center;gap:12px;}
+.logo-topo{height:38px;}
+.titulo-3d{font-size:28px;font-weight:900;letter-spacing:1px;color:#ffffff;text-shadow:0 1px 0 #ccc,0 2px 0 #bbb,0 3px 0 #aaa,0 4px 0 #999,0 5px 10px rgba(0,0,0,0.5);background:linear-gradient(45deg,#16a085,#2ecc71);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 
 
 </style>
@@ -96,10 +100,10 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 004 – APP PRINCIPAL
 ==================================================== -->
 <div id="app">
-<h1 style="display:flex;justify-content:space-between;align-items:center">
-<div style="display:flex;gap:10px;align-items:center">
-<img src="logo-harmonia.png" style="height:32px">
-<span>Harmonia Care</span>
+<h1 class="topo-sistema">
+<div class="titulo-sistema">
+<img src="logo-harmonia.png" class="logo-topo">
+<span class="titulo-3d">HARMONIA-CARE</span>
 </div>
 <button onclick="logout()" class="btn-danger">Sair</button>
 </h1>
