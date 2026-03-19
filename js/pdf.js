@@ -1,15 +1,10 @@
-doc.addFileToVFS("Roboto-Regular.ttf","BASE64_AQUI")
+async function carregarFonteRoboto(doc){
+const response=await fetch("fonts/Roboto-Regular.ttf")
+const buffer=await response.arrayBuffer()
+const base64=btoa(new Uint8Array(buffer).reduce((data,byte)=>data+String.fromCharCode(byte),""))
+doc.addFileToVFS("Roboto-Regular.ttf",base64)
 doc.addFont("Roboto-Regular.ttf","Roboto","normal")
 doc.setFont("Roboto")
-
-const doc=new jsPDF("p","mm","a4")
-
-function limparTextoPDF(txt){
-if(!txt)return""
-return txt
-.normalize("NFD")
-.replace(/[\u0300-\u036f]/g,"")
-.replace(/[^\x00-\x7F]/g,"")
 }
 function formatarDataBR(dataISO){
 if(!dataISO)return""
@@ -17,19 +12,15 @@ const d=new Date(dataISO)
 const dia=String(d.getDate()).padStart(2,"0")
 const mes=String(d.getMonth()+1).padStart(2,"0")
 const ano=d.getFullYear()
-return `${dia}-${mes}-${ano}`
+return`${dia}-${mes}-${ano}`
 }
-
 /* ====================================================
 080 – PDF PACIENTE
 ==================================================== */
 async function gerarPDFPaciente(){
 const imgDieta=new Image()
-imgDieta.src="img/icone-dieta.png" // caminho da sua imagem
-await new Promise((resolve,reject)=>{
-imgDieta.onload=resolve
-imgDieta.onerror=reject
-})
+imgDieta.src="img/icone-dieta.png"
+await new Promise((resolve,reject)=>{imgDieta.onload=resolve;imgDieta.onerror=reject})
 if(!db)return
 const pacienteId=document.getElementById("buscaPaciente")?.value
 const dataInicio=document.getElementById("dataInicio")?.value
@@ -39,9 +30,9 @@ const {data:paciente,error}=await db.from("pacientes").select("id,nome_completo,
 if(error||!paciente){console.error("ERRO PACIENTE",error);alert("Erro ao carregar paciente");return}
 const {data:rotinasExec}=await db.from("rotinas_execucao").select("*").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim)
 const {data:rotinasBase}=await db.from("rotina_modelos").select("id,nome")
-const ICON_DIETA="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAKElEQVRIS2NkoBAwUqifgXGB4T8DA8M/AwPDfwYGBgYGhv8MDAwMDAwMDAAAAwA4kgN1S7n1VQAAAABJRU5ErkJggg=="
 const {jsPDF}=window.jspdf
 const doc=new jsPDF("p","mm","a4")
+await carregarFonteRoboto(doc)
 let y=15
 const cabecalho="Lar Geriátrico Harmonia\nTel: (81) 3461-3109"
 const rodape="CNPJ 11197111000156 - Rua Doutor Manoel Benício Fontenelle, 38 - Piedade - Jaboatão dos Guararapes – PE"
@@ -59,15 +50,16 @@ doc.setFontSize(12)
 doc.text(cabecalho,105,y,{align:"center"})
 y+=10
 doc.setFontSize(14)
+doc.setFont("Roboto","bold")
 doc.text("RELATÓRIO DO PACIENTE",105,y,{align:"center"})
 y+=10
 doc.setFillColor(240,240,240)
 doc.rect(10,y-5,190,60,"F")
 doc.setFontSize(10)
-doc.setFont(undefined,"bold")
+doc.setFont("Roboto","bold")
 doc.text("DADOS CLÍNICOS DO PACIENTE",10,y)
 y+=6
-doc.setFont(undefined,"normal")
+doc.setFont("Roboto","normal")
 const dadosClinicos=[
 ["Paciente",paciente.nome_completo||""],
 ["Idade",calcularIdade(paciente.data_nascimento)],
@@ -77,13 +69,13 @@ const dadosClinicos=[
 ["Cardiopatia",paciente.cardiopatia?"SIM":"—"],
 ["Acamado",paciente.acamado?"SIM":"—"],
 ["PA",paciente.pressao_arterial||""],
-["Dieta",paciente.dieta_especial?(paciente.dieta_texto?`SIM ${limparTextoPDF(paciente.dieta_texto)}`:"SIM"):"NAO","dieta"],
+["Dieta",paciente.dieta_especial?(paciente.dieta_texto?`SIM ${paciente.dieta_texto}`:"SIM"):"NÃO","dieta"],
 ["Risco",paciente.grau_risco||""],
 ["Outras",paciente.outras_comorbidades||""]
 ]
 dadosClinicos.forEach(d=>{
 let label=d[0]
-let valor=limparTextoPDF(String(d[1]||""))
+let valor=String(d[1]||"")
 let tipo=d[2]||null
 if(tipo==="dieta"&&paciente.dieta_especial){
 doc.addImage(imgDieta,"PNG",12,y-2.5,3.5,3.5)
@@ -121,11 +113,11 @@ const nome=(mapa[r.rotina_id]||"").trim()
 if(nome){matriz[r.data][nome]=r.status}
 })
 doc.setFontSize(12)
-doc.setFont(undefined,"bold")
+doc.setFont("Roboto","bold")
 doc.text("Rotinas por período",10,y)
 y+=6
 doc.setFontSize(6)
-doc.setFont(undefined,"bold")
+doc.setFont("Roboto","bold")
 let x=10
 doc.text("Data",x,y,{align:"center"})
 x+=20
@@ -147,7 +139,7 @@ y+=6
 doc.setDrawColor(180)
 doc.line(10,y,200,y)
 y+=4
-doc.setFont(undefined,"normal")
+doc.setFont("Roboto","normal")
 Object.keys(matriz).sort().forEach(data=>{
 let x=10
 doc.text(formatarDataBR(data),x,y)
