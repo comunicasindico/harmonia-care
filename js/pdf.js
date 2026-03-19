@@ -1,28 +1,5 @@
 /* ====================================================
-080 – PDF GERAL
-==================================================== */
-async function gerarPDFGeral(){
-const { jsPDF } = window.jspdf
-const doc=new jsPDF()
-doc.text("Relatório Geral de Rotinas",20,20)
-const linhas=[]
-ROTINAS_CACHE.forEach(r=>{
-linhas.push([
-r.paciente,
-r.rotina,
-r.turno,
-r.status
-])
-})
-doc.autoTable({
-head:[["Paciente","Rotina","Turno","Status"]],
-body:linhas,
-startY:30
-})
-doc.save("relatorio_rotinas.pdf")
-}
-/* ====================================================
-081 – PDF PACIENTE
+080 – PDF PACIENTE
 ==================================================== */
 async function gerarPDFPaciente(){
 if(!db)return
@@ -79,18 +56,17 @@ if(y>250){doc.addPage();y=15}
 MATRIZ VISUAL (PADRÃO TELA)
 =============================== */
 const colunas=[
-"Café","Cafe",
-"Medicação","Medicacao",
-"Oferta de Água","Oferta de agua",
-"Banho",
-"Almoço","Almoco",
-"Alimentação","Alimentacao",
-"Lanche",
-"Jantar",
-"Higiene Noturna (noite)","Higiene noturna",
-"Higiene Bucal","Higiene bucal",
-"Higiene (tarde)",
-"Troca de Fralda (noite)","Troca de fralda"
+{nome:"Café",turno:"manha"},
+{nome:"Medicação",turno:"manha"},
+{nome:"Oferta de Água",turno:"manha"},
+{nome:"Banho",turno:"manha"},
+{nome:"Almoço",turno:"manha"},
+{nome:"Alimentação",turno:"tarde"},
+{nome:"Lanche",turno:"tarde"},
+{nome:"Higiene Bucal",turno:"tarde"},
+{nome:"Jantar",turno:"noite"},
+{nome:"Higiene Noturna",turno:"noite"},
+{nome:"Troca de Fralda",turno:"noite"}
 ]
 let mapa={}
 rotinasBase?.forEach(r=>{mapa[r.id]=r.nome})
@@ -116,13 +92,17 @@ doc.setFont(undefined,"bold")
 /* HEADER */
 let x=10
 doc.text("Data",x,y)
-x+=22
+x+=20
 
-colunas.forEach(col=>{
-doc.text(col.substring(0,10),x,y)
-x+=14
+colunas.forEach(c=>{
+if(c.turno==="manha")doc.setTextColor(41,128,185)
+if(c.turno==="tarde")doc.setTextColor(243,156,18)
+if(c.turno==="noite")doc.setTextColor(44,62,80)
+doc.text(c.nome.substring(0,12),x,y)
+x+=15
 })
 
+doc.setTextColor(0,0,0)
 y+=4
 
 /* LINHA HEADER */
@@ -139,15 +119,17 @@ let x=10
 
 /* DATA */
 doc.text(data,x,y)
-x+=22
+x+=20
 
-colunas.forEach(col=>{
+colunas.forEach(c=>{
 let status=null
+
 Object.keys(matriz[data]||{}).forEach(k=>{
-if(k.toLowerCase().includes(col.toLowerCase())){
+if(k.toLowerCase().trim()===c.nome.toLowerCase()){
 status=matriz[data][k]
 }
 })
+
 if(status==="executado"){
 doc.setTextColor(39,174,96)
 doc.text("OK",x,y)
@@ -155,7 +137,8 @@ doc.text("OK",x,y)
 doc.setTextColor(231,76,60)
 doc.text("X",x,y)
 }
-x+=14
+
+x+=15
 })
 
 doc.setTextColor(0,0,0)
@@ -171,12 +154,38 @@ doc.addPage()
 y=20
 }
 })
+
 if(y>260){doc.addPage();y=20}
+
 /* ASSINATURA */
 doc.setFontSize(10)
 doc.text(`Data da impressão: ${new Date().toLocaleDateString()}`,10,y);y+=15
 doc.text("__________________________________________",10,y)
 y+=6
 doc.text("Responsável Técnico",10,y)
+
 doc.save(`Relatorio_${paciente.nome_completo}.pdf`)
+}
+/* ====================================================
+081 – PDF GERAL
+==================================================== */
+async function gerarPDFGeral(){
+const { jsPDF } = window.jspdf
+const doc=new jsPDF()
+doc.text("Relatório Geral de Rotinas",20,20)
+const linhas=[]
+ROTINAS_CACHE.forEach(r=>{
+linhas.push([
+r.paciente,
+r.rotina,
+r.turno,
+r.status
+])
+})
+doc.autoTable({
+head:[["Paciente","Rotina","Turno","Status"]],
+body:linhas,
+startY:30
+})
+doc.save("relatorio_rotinas.pdf")
 }
