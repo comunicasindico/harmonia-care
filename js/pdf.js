@@ -17,6 +17,16 @@ const doc=new jsPDF("p","mm","a4")
 let y=15
 const cabecalho="Lar Geriátrico Harmonia\nTel: (81) 3461-3109"
 const rodape="CNPJ 11197111000156 - Rua Doutor Manoel Benício Fontenelle, 38 - Piedade - Jaboatão dos Guararapes – PE"
+function adicionarRodape(){
+const totalPages=doc.getNumberOfPages()
+for(let i=1;i<=totalPages;i++){
+doc.setPage(i)
+doc.setFontSize(8)
+doc.setTextColor(120)
+doc.text(rodape,105,290,{align:"center"})
+doc.setTextColor(0)
+}
+}
 doc.setFontSize(12)
 doc.text(cabecalho,105,y,{align:"center"})
 y+=10
@@ -140,6 +150,8 @@ doc.text(`Data da impressão: ${new Date().toLocaleDateString()}`,10,y);y+=15
 doc.text("__________________________________________",10,y)
 y+=6
 doc.text("Responsável Técnico",10,y)
+doc.text(`${rodape} | Página ${i} de ${totalPages}`,105,290,{align:"center"})
+adicionarRodape()
 doc.save(`Relatorio_${paciente.nome_completo}.pdf`)
 }
 /* ====================================================
