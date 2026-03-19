@@ -32,7 +32,7 @@ const dataFim=document.getElementById("dataFim")?.value
 if(!pacienteId||pacienteId==="todos"){alert("Selecione um paciente");return}
 const {data:paciente}=await db.from("pacientes").select("*").eq("id",pacienteId).single()
 const {data:rotinasExec}=await db.from("rotinas_execucao").select("*").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim)
-const {data:rotinasBase}=await db.from("rotinas").select("id,nome")
+const {data:rotinasBase}=await db.from("rotina_modelos").select("id,nome")
 const {jsPDF}=window.jspdf
 const doc=new jsPDF("p","mm","a4")
 let y=15
@@ -68,7 +68,7 @@ const dadosClinicos=[
 ]
 dadosClinicos.forEach(d=>{
 doc.text(`${d[0]}:`,12,y)
-doc.text(String(d[1]),60,y)
+doc.text(String(d[1]||""),60,y)
 y+=5
 })
 y+=5
@@ -76,17 +76,30 @@ if(y>250){doc.addPage();y=15}
 /* ===============================
 MATRIZ VISUAL (PADRÃO TELA)
 =============================== */
-
-const colunas=["Café","Medicação","Oferta de Água","Banho","Almoço","Alimentação","Lanche","Jantar","Higiene Noturna (noite)","Higiene Bucal","Higiene (tarde)","Troca de Fralda (noite)"]
-
+const colunas=[
+"Café","Cafe",
+"Medicação","Medicacao",
+"Oferta de Água","Oferta de agua",
+"Banho",
+"Almoço","Almoco",
+"Alimentação","Alimentacao",
+"Lanche",
+"Jantar",
+"Higiene Noturna (noite)","Higiene noturna",
+"Higiene Bucal","Higiene bucal",
+"Higiene (tarde)",
+"Troca de Fralda (noite)","Troca de fralda"
+]
 let mapa={}
 rotinasBase?.forEach(r=>{mapa[r.id]=r.nome})
 
 let matriz={}
 rotinasExec?.forEach(r=>{
 if(!matriz[r.data])matriz[r.data]={}
-const nome=mapa[r.rotina_id]
-if(nome)matriz[r.data][nome]=r.status
+const nome=(mapa[r.rotina_id]||"").trim()
+if(nome){
+matriz[r.data][nome]=r.status
+}
 })
 
 /* TÍTULO */
@@ -127,7 +140,12 @@ doc.text(data,x,y)
 x+=22
 
 colunas.forEach(col=>{
-const status=matriz[data][col]
+let status=null
+Object.keys(matriz[data]||{}).forEach(k=>{
+if(k.toLowerCase().includes(col.toLowerCase())){
+status=matriz[data][k]
+}
+})
 if(status==="executado"){
 doc.setTextColor(39,174,96)
 doc.text("OK",x,y)
@@ -151,7 +169,6 @@ doc.addPage()
 y=20
 }
 })
-y=doc.lastAutoTable.finalY+15
 if(y>260){doc.addPage();y=20}
 /* ASSINATURA */
 doc.setFontSize(10)
