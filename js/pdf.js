@@ -65,7 +65,7 @@ const dadosClinicos=[
 ["PA",paciente.pa||""],
 ["Dieta",paciente.dieta||""],
 ["Risco",paciente.risco||""],
-["Outras",(paciente.outras_comorbidades||paciente.comorbidades||paciente.outras||"")]
+["Outras",(paciente.outras_comorbidades||paciente.comorbidades||paciente.outras_comorbidades||"")]
 ]
 dadosClinicos.forEach(d=>{
 doc.text(`${d[0]}:`,12,y)
