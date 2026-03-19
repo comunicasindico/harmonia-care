@@ -128,7 +128,6 @@ html+=`
 </tr>
 `
 })
-
 tabela.innerHTML=html
 }
 /* ====================================================
@@ -140,7 +139,6 @@ const nivelAlvo=parseInt(tr.querySelector(".u_hierarquia")?.value||5)
 if(USUARIO_HIERARQUIA>=nivelAlvo){
 return
 }
-
 /* 🔥 PERFIL (CORREÇÃO COMPLETA) */
 let perfilUI=tr.querySelector(".u_perfil")?.value||""
 
@@ -152,7 +150,6 @@ let perfilMap={
 "Fisioterapeuta":"fisioterapeuta",
 "Estagiário(a)":"estagiario"
 }
-
 let perfil=perfilMap[perfilUI]||"cuidador"
 /* CAPTURA REAL DO ESTADO ANTERIOR */
 const dadosAntes={
@@ -173,9 +170,7 @@ hierarquia:parseInt(tr.querySelector(".u_hierarquia")?.value||5),
 senha_hash:tr.querySelector(".u_senha")?.value||"",
 ativo:true
 }
-
 const {error}=await db.from("usuarios").update(dados).eq("id",id)
-
 if(error){
 alert("Erro ao salvar")
 console.error(error)
@@ -191,7 +186,6 @@ antes:dadosAntes,
 depois:dados
 })
 }
-
 btn.innerText="✔"
 setTimeout(()=>btn.innerText="Salvar",1200)
 }
@@ -209,7 +203,6 @@ await registrarAuditoria({acao:"DELETE",tabela:"usuarios",registro_id:id})
 }
 carregarUsuarios()
 }
-
 /* ====================================================
 064 – PACIENTES DRAG
 ==================================================== */
@@ -258,23 +251,33 @@ const {data,error}=await db.from("usuarios").select("id,empresa_id,nome_completo
 if(error){console.error("Erro usuarios",error);return}
 let html=""
 data?.forEach(u=>{
-html+=`<tr data-id="${u.id}">
-<td>${u.id||""}</td>
-<td>${u.empresa_id||""}</td>
-<td contenteditable="true" data-campo="nome_completo" data-id="${u.id}">${u.nome_completo||""}</td>
-<td contenteditable="true" data-campo="nome_apelido" data-id="${u.id}">${u.nome_apelido||""}</td>
-<td contenteditable="true" data-campo="email" data-id="${u.id}">${u.email||""}</td>
-<td contenteditable="true" data-campo="perfil" data-id="${u.id}">${u.perfil||""}</td>
-<td contenteditable="true" data-campo="ativo" data-id="${u.id}">${u.ativo}</td>
-<td>${u.created_at||""}</td>
-<td contenteditable="true" data-campo="cargo" data-id="${u.id}">${u.cargo||""}</td>
-<td contenteditable="true" data-campo="hierarquia" data-id="${u.id}">${u.hierarquia||""}</td>
-<td contenteditable="true" data-campo="senha_hash" data-id="${u.id}">${u.senha_hash||""}</td>
+if(!MODO_EDICAO_ADMIN){
+html+=`
+<tr data-id="${u.id}">
+<td>${u.nome_completo||""}</td>
+<td>${u.nome_apelido||""}</td>
+<td>${u.email||""}</td>
+<td>${u.perfil||""}</td>
+<td>${u.hierarquia||""}</td>
 <td>
-<button onclick="salvarUsuarioLinha('${u.id}')">Salvar</button>
-<button onclick="excluirUsuario('${u.id}')">Excluir</button>
+<button onclick="excluirUsuario('${u.id}')" class="btn-danger">Excluir</button>
 </td>
-</tr>`
+</tr>
+`
+}else{
+html+=`
+<tr data-id="${u.id}">
+<td><input class="u_nome" value="${u.nome_completo||""}"></td>
+<td><input class="u_apelido" value="${u.nome_apelido||""}"></td>
+<td><input class="u_email" value="${u.email||""}"></td>
+<td><input class="u_perfil" value="${u.perfil||""}"></td>
+<td><input class="u_hierarquia" value="${u.hierarquia||""}"></td>
+<td>
+<button onclick="excluirUsuario('${u.id}')" class="btn-danger">Excluir</button>
+</td>
+</tr>
+`
+}
 })
 tabela.innerHTML=html
 }
@@ -381,4 +384,35 @@ return
 }
 
 alert("Salvo com sucesso")
+}
+/* ====================================================
+071 – EDITAR USUARIOS
+==================================================== */
+function editarUsuarios(){
+MODO_EDICAO_ADMIN=true
+carregarUsuariosAdmin()
+}
+/* ====================================================
+072 – SALVAR USUÁRIOS (GERAL)
+==================================================== */
+async function salvarUsuarios(){
+if(!db)return
+const linhas=document.querySelectorAll("#tabelaUsuariosAdmin tr[data-id]")
+for(const tr of linhas){
+const id=tr.getAttribute("data-id")
+const dados={
+nome_completo:tr.querySelector(".u_nome")?.value||"",
+nome_apelido:tr.querySelector(".u_apelido")?.value||"",
+email:tr.querySelector(".u_email")?.value||"",
+perfil:tr.querySelector(".u_perfil")?.value||"",
+hierarquia:parseInt(tr.querySelector(".u_hierarquia")?.value||5),
+senha_hash:tr.querySelector(".u_senha")?.value||"",
+ativo:true
+}
+await db.from("usuarios").update(dados).eq("id",id)
+}
+MODO_EDICAO_ADMIN=false
+localStorage.setItem("modo_edicao_admin","false")
+alert("Todos os usuários salvos com sucesso")
+carregarUsuariosAdmin()
 }
