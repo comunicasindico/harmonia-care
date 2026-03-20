@@ -123,11 +123,17 @@ colunas.forEach(c=>{
 if(c.turno==="manha")doc.setTextColor(41,128,185)
 if(c.turno==="tarde")doc.setTextColor(243,156,18)
 if(c.turno==="noite")doc.setTextColor(44,62,80)
-doc.text(c.nome.split("\n"),x,y,{align:"center"})
-x+=12
+const linhas=c.nome.split("\n")
+if(linhas.length===2){
+doc.text(linhas[0],x,y,{align:"center"})
+doc.text(linhas[1],x,y+3,{align:"center"})
+}else{
+doc.text(c.nome,x,y,{align:"center"})
+}
+x+=15
 })
 doc.setTextColor(0,0,0)
-y+=6
+y+=8
 doc.setDrawColor(180)
 doc.line(10,y,200,y)
 y+=4
