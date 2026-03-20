@@ -85,11 +85,11 @@ const {data,error}=await db.from("pacientes_profissionais").select("paciente_id"
 if(error){console.error("Erro pacientes profissional",error);return}
 if(data?.length){
 const ids=data.map(p=>p.paciente_id)
-const {data:lista}=await db.from("pacientes").select("id,nome_completo,has,dm,demencia,cardiopatia,acamado,pa").in("id",ids)
+const {data:lista}=await db.from("pacientes").select("id,nome_completo,has,dm,da,cardiopatia,acamado,pa").in("id",ids)
 pacientes=lista||[]
 }}
 if(!pacientes.length){
-const {data,error}=await db.from("pacientes").select("id,nome_completo,has,dm,demencia,cardiopatia,acamado,pa").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo")
+const {data,error}=await db.from("pacientes").select("id,nome_completo,has,dm,da,cardiopatia,acamado,pa").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo")
 if(error){console.error("Erro pacientes",error);return}
 pacientes=data||[]
 }
@@ -119,7 +119,7 @@ rotina:r.nome,
 ordem:r.ordem||99,
 status:exec?.status||"pendente",
 profissional:exec?.profissional_nome||(exec?.usuario_id?mapaProfissionais[exec.usuario_id]:""),
-has:p.has,dm:p.dm,demencia:p.demencia,cardiopatia:p.cardiopatia,acamado:p.acamado,pa:p.pa
+has:p.has,dm:p.dm,demencia:p.da,cardiopatia:p.cardiopatia,acamado:p.acamado,pa:p.pa
 })
 })
 })
@@ -143,6 +143,7 @@ const pacientes={}
 lista.forEach(r=>{if(!pacientes[r.paciente_id])pacientes[r.paciente_id]={nome:r.paciente,rotinas:[],has:r.has,dm:r.dm,demencia:r.demencia,cardiopatia:r.cardiopatia,acamado:r.acamado,pa:r.pa};pacientes[r.paciente_id].rotinas.push(r)})
 Object.keys(pacientes).forEach(pid=>{
 const p=pacientes[pid]
+p.rotinas.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
 let comorbidadesHTML=""
 if(p.has)comorbidadesHTML+="<span class='tag-comorb'>HAS</span>"
 if(p.dm)comorbidadesHTML+="<span class='tag-comorb'>DM</span>"
