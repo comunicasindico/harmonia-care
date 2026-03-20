@@ -19,6 +19,21 @@ cor+=("00"+value.toString(16)).slice(-2)
 return cor
 }
 /* ====================================================
+020A – BARRA DE PROGRESSO
+==================================================== */
+function atualizarBarraProgresso(percentual){
+const barra=document.getElementById("barraProgresso")
+if(!barra)return
+barra.style.width=percentual+"%"
+if(percentual<50){
+barra.style.background="red"
+}else if(percentual<80){
+barra.style.background="orange"
+}else{
+barra.style.background="green"
+}
+}
+/* ====================================================
 021 – MUDAR TURNO
 ==================================================== */
 function mudarTurno(turno){
