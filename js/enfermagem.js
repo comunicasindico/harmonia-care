@@ -93,11 +93,13 @@ const {data,error}=await db.from("pacientes").select("id,nome_completo,has,dm,da
 if(error){console.error("Erro pacientes",error);return}
 pacientes=data||[]
 }
-const {data:rotinas,error:e2}=await db.from("rotina_modelos").select("id,nome,turno,ordem")
+const {data:rotinas,error:e2}=await db.from("rotina_modelos").select("id,nome,turno,ordem").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
 if(e2){console.error("Erro rotinas",e2);return}
 let rotinasTurno=(rotinas||[]).filter(r=>r.turno===turno)
 rotinasTurno.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
-const {data:execucoes,error:e3}=await db.from("rotinas_execucao").select("*,rotina_modelos(id,nome,ordem,turno)").eq("data",dataHoje)
+const {data:execucoes,error:e3}=await db.from("rotinas_execucao")
+.select("id,paciente_id,rotina_id,status,usuario_id,profissional_nome,ordem")
+.eq("data",dataHoje)
 if(e3){console.error("Erro execucoes",e3);return}
 const {data:usuarios}=await db.from("usuarios").select("id,nome_apelido")
 const mapaProfissionais={}
@@ -119,7 +121,12 @@ rotina:r.nome,
 ordem:r.ordem||99,
 status:exec?.status||"pendente",
 profissional:exec?.profissional_nome||(exec?.usuario_id?mapaProfissionais[exec.usuario_id]:""),
-has:p.has,dm:p.dm,demencia:p.da,cardiopatia:p.cardiopatia,acamado:p.acamado,pa:p.pressao_arterial
+has:p.has,
+dm:p.dm,
+demencia:p.da,
+cardiopatia:p.cardiopatia,
+acamado:p.acamado,
+pa:p.pressao_arterial
 })
 })
 })
