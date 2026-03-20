@@ -265,11 +265,24 @@ ${r.status==="executado"
 })
 let percentual=total?Math.round((executadas/total)*100):0
 let botaoOK=percentual===100?`<button class="btn-todos">Rotinas OK</button>`:`<button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button>`
-html+=`<tr><td class="nome-paciente">
+
+const analise=gerarAnalisePaciente(p)
+html+=`<tr>
+<td class="nome-paciente">
 ${p.nome}
 <div style="margin-top:4px">${comorbidadesHTML}</div>
 </td>
-<td><div class="progresso-container"><span class="progresso-label">${percentual}% (${executadas}/${total})</span>${botaoOK}</div></td><td class="rotinas-linha">${rotinasHTML}</td></tr>`
+<td>
+<div class="progresso-container">
+<span class="progresso-label">${percentual}% (${executadas}/${total})</span>
+${botaoOK}
+</div>
+</td>
+<td>
+<div class="rotinas-linha">${rotinasHTML}</div>
+<div class="analise-clinica">${analise}</div>
+</td>
+</tr>`
 })
 if(lista.length>0&&pacienteSelecionado==="todos"){
 const rotinasUnicas={}
