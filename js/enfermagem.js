@@ -74,44 +74,105 @@ if(typeof carregarClinico==="function")await carregarClinico()
 async function carregarRotinas(){
 if(!db)return
 if(!EMPRESA_ID)return
+
 const paciente=document.getElementById("buscaPaciente")?.value||"todos"
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
+
 const turno=TURNO_ATUAL
+
 let profissionalId=PROFISSIONAL_ID||localStorage.getItem("profissional_id")
 let pacientes=[]
+
+/* 🔹 PACIENTES DO PROFISSIONAL */
 if(profissionalId&&profissionalId!=="null"&&profissionalId!=="admin"){
-const {data,error}=await db.from("pacientes_profissionais").select("paciente_id").eq("usuario_id",profissionalId).eq("turno",turno).eq("ativo",true)
+const {data,error}=await db
+.from("pacientes_profissionais")
+.select("paciente_id")
+.eq("usuario_id",profissionalId)
+.eq("turno",turno)
+.eq("ativo",true)
+
 if(error){console.error("Erro pacientes profissional",error);return}
+
 if(data?.length){
 const ids=data.map(p=>p.paciente_id)
-const {data:lista}=await db.from("pacientes").select("id,nome_completo,has,dm,da,cardiopatia,acamado,pressao_arterial").in("id",ids)
+
+const {data:lista}=await db
+.from("pacientes")
+.select("id,nome_completo,has,dm,da,cardiopatia,acamado,pressao_arterial")
+.in("id",ids)
+
 pacientes=lista||[]
-}}
+}
+}
+
+/* 🔹 TODOS PACIENTES */
 if(!pacientes.length){
-const {data,error}=await db.from("pacientes").select("id,nome_completo,has,dm,da,cardiopatia,acamado,pressao_arterial").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo")
+const {data,error}=await db
+.from("pacientes")
+.select("id,nome_completo,has,dm,da,cardiopatia,acamado,pressao_arterial")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+.order("nome_completo")
+
 if(error){console.error("Erro pacientes",error);return}
+
 pacientes=data||[]
 }
-const {data:rotinas,error:e2}=await db.from("rotina_modelos").select("id,nome,turno,ordem").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
+
+/* 🔹 ROTINAS ORDENADAS CORRETAMENTE */
+const {data:rotinas,error:e2}=await db
+.from("rotina_modelos")
+.select("id,nome,turno,ordem")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+.order("ordem",{ascending:true})
+
 if(e2){console.error("Erro rotinas",e2);return}
-let rotinasTurno=(rotinas||[]).filter(r=>r.turno===turno)
-rotinasTurno.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
-const {data:execucoes,error:e3}=await db.from("rotinas_execucao")
-.select("id,paciente_id,rotina_id,status,usuario_id,profissional_nome,ordem")
+
+const rotinasOrdenadas=rotinas||[]
+
+/* 🔹 FILTRAR POR TURNO */
+let rotinasTurno=rotinasOrdenadas.filter(r=>r.turno===turno)
+
+/* 🔹 EXECUÇÕES */
+const {data:execucoes,error:e3}=await db
+.from("rotinas_execucao")
+.select("id,paciente_id,rotina_id,status,usuario_id,profissional_nome")
 .eq("data",dataHoje)
+
 if(e3){console.error("Erro execucoes",e3);return}
-const {data:usuarios}=await db.from("usuarios").select("id,nome_apelido")
+
+/* 🔹 USUÁRIOS */
+const {data:usuarios}=await db
+.from("usuarios")
+.select("id,nome_apelido")
+
 const mapaProfissionais={}
-usuarios?.forEach(u=>{mapaProfissionais[u.id]=u.nome_apelido})
+usuarios?.forEach(u=>{
+mapaProfissionais[u.id]=u.nome_apelido
+})
+
+/* 🔹 MAPA EXECUÇÕES */
 const mapaExecucoes={}
-execucoes?.forEach(e=>{mapaExecucoes[`${e.paciente_id}_${e.rotina_id}`]=e})
+execucoes?.forEach(e=>{
+mapaExecucoes[`${e.paciente_id}_${e.rotina_id}`]=e
+})
+
+/* 🔹 MONTAR LISTA */
 let lista=[]
+
 pacientes?.forEach(p=>{
+
 if(paciente!=="todos"&&paciente!=p.id)return
+
 rotinasTurno.forEach(r=>{
+
 const chave=`${p.id}_${r.id}`
 const exec=mapaExecucoes[chave]
+
 lista.push({
 id:exec?.id||chave,
 paciente_id:p.id,
@@ -128,54 +189,98 @@ cardiopatia:p.cardiopatia,
 acamado:p.acamado,
 pa:p.pressao_arterial
 })
+
 })
+
 })
+
+/* 🔹 ORDENAÇÃO FINAL */
 lista.sort((a,b)=>{
 if(a.paciente<b.paciente)return-1
 if(a.paciente>b.paciente)return 1
 return (a.ordem||99)-(b.ordem||99)
 })
+
 ROTINAS_CACHE=lista
+
 calcularIndicadores(lista)
 renderizarRotinas(lista)
 }
+
 /* ====================================================
 037 – ANALISE CLINICA PACIENTE
 ==================================================== */
 function gerarAnalisePaciente(p){
+
 let total=p.rotinas.length
 let executadas=p.rotinas.filter(r=>r.status==="executado").length
 let percentual=total?Math.round((executadas/total)*100):0
+
 let classificacao="Estável"
 if(percentual<80)classificacao="Atenção"
 if(percentual<60)classificacao="Crítico"
+
 let comorb=[]
 if(p.has)comorb.push("HAS")
 if(p.dm)comorb.push("DM")
 if(p.demencia)comorb.push("DEM")
 if(p.cardiopatia)comorb.push("CARD")
 if(p.acamado)comorb.push("ACAM")
+
 let texto=`${classificacao} | Execução: ${percentual}%`
+
 if(comorb.length)texto+=` | ${comorb.join(", ")}`
+
 if(percentual<80)texto+=" | Atenção nas rotinas"
 if(p.acamado)texto+=" | Prevenir LPP"
 if(p.dm)texto+=" | Controle glicêmico"
 if(p.has||p.cardiopatia)texto+=" | Monitorar PA"
+
 return texto
 }
+
 /* ====================================================
 024 – RENDERIZAR ROTINAS
 ==================================================== */
 function renderizarRotinas(lista){
-const tbody=document.getElementById("rotinas");if(!tbody)return
+
+const tbody=document.getElementById("rotinas")
+if(!tbody)return
+
 let html=""
+
 const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todos"
+
 const pacientes={}
-lista.forEach(r=>{if(!pacientes[r.paciente_id])pacientes[r.paciente_id]={nome:r.paciente,rotinas:[],has:r.has,dm:r.dm,demencia:r.demencia,cardiopatia:r.cardiopatia,acamado:r.acamado,pa:r.pa};pacientes[r.paciente_id].rotinas.push(r)})
+
+/* 🔹 AGRUPAR */
+lista.forEach(r=>{
+if(!pacientes[r.paciente_id]){
+pacientes[r.paciente_id]={
+nome:r.paciente,
+rotinas:[],
+has:r.has,
+dm:r.dm,
+demencia:r.demencia,
+cardiopatia:r.cardiopatia,
+acamado:r.acamado,
+pa:r.pa
+}
+}
+pacientes[r.paciente_id].rotinas.push(r)
+})
+
+/* 🔹 LOOP */
 Object.keys(pacientes).forEach(pid=>{
+
 const p=pacientes[pid]
+
 const analiseTexto=gerarAnalisePaciente(p)
+
+/* 🔹 ORDEM */
 p.rotinas.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
+
+/* 🔹 COMORBIDADES */
 let comorbidadesHTML=""
 if(p.has)comorbidadesHTML+="<span class='tag-comorb'>HAS</span>"
 if(p.dm)comorbidadesHTML+="<span class='tag-comorb'>DM</span>"
@@ -183,11 +288,18 @@ if(p.demencia)comorbidadesHTML+="<span class='tag-comorb'>DEM</span>"
 if(p.cardiopatia)comorbidadesHTML+="<span class='tag-comorb'>CARD</span>"
 if(p.acamado)comorbidadesHTML+="<span class='tag-comorb'>ACAM</span>"
 if(p.pa)comorbidadesHTML+="<span class='tag-comorb'>PA</span>"
-  
-let rotinasHTML="",total=p.rotinas.length,executadas=0
+
+/* 🔹 ROTINAS */
+let rotinasHTML=""
+let total=p.rotinas.length
+let executadas=0
+
 p.rotinas.forEach(r=>{
+
 if(r.status==="executado")executadas++
+
 const classe=r.status==="executado"?"rotina-executada":"rotina-pendente"
+
 let nomeProf=""
 let corProf="#64748b"
 
@@ -198,8 +310,8 @@ nomeProf=r.profissional
 }else{
 nomeProf=obterNomeUsuarioAtual()
 }
-corProf=obterCorUsuario(nomeProf)
 
+corProf=obterCorUsuario(nomeProf)
 }
 
 rotinasHTML+=`<button class="btn-rotina ${classe}" ${r.status==="executado"?"":`onclick="executarRotina('${r.paciente_id}','${r.rotina_id}',this)"`}>
@@ -209,36 +321,57 @@ ${r.status==="executado"
 :""}
 </button>`
 })
-let percentual=total?Math.round((executadas/total)*100):0
-let botaoOK=percentual===100?`<button class="btn-todos">Rotinas OK</button>`:`<button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button>`
 
+let percentual=total?Math.round((executadas/total)*100):0
+
+let botaoOK=percentual===100
+?`<button class="btn-todos">Rotinas OK</button>`
+:`<button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button>`
+
+/* 🔹 HTML FINAL */
 html+=`<tr>
 <td class="nome-paciente">
 ${p.nome}
 <div style="margin-top:4px">${comorbidadesHTML}</div>
 </td>
+
 <td>
 <div class="progresso-container">
 <span class="progresso-label">${percentual}% (${executadas}/${total})</span>
 ${botaoOK}
 </div>
 </td>
+
 <td>
 <div class="rotinas-linha">${rotinasHTML}</div>
 <div class="analise-clinica">${analiseTexto}</div>
 </td>
 </tr>`
+
 })
+
+/* 🔹 TODOS */
 if(lista.length>0&&pacienteSelecionado==="todos"){
+
 const rotinasUnicas={}
-lista.forEach(r=>{rotinasUnicas[r.rotina_id]=r.rotina})
-let rotinasHTML=""
-Object.keys(rotinasUnicas).forEach(rotinaId=>{
-const nomeRotina=rotinasUnicas[rotinaId]
-rotinasHTML+=`<button class="btn-rotina" onclick="executarRotinaTodos('${rotinaId}')">${nomeRotina}</button>`
+
+lista.forEach(r=>{
+rotinasUnicas[r.rotina_id]=r.rotina
 })
-html+=`<tr style="background:#f0fdf4;font-weight:bold"><td>Todos os Pacientes</td><td>—</td><td class="rotinas-linha">${rotinasHTML}</td></tr>`
+
+let rotinasHTML=""
+
+Object.keys(rotinasUnicas).forEach(rotinaId=>{
+rotinasHTML+=`<button class="btn-rotina" onclick="executarRotinaTodos('${rotinaId}')">${rotinasUnicas[rotinaId]}</button>`
+})
+
+html+=`<tr style="background:#f0fdf4;font-weight:bold">
+<td>Todos os Pacientes</td>
+<td>—</td>
+<td class="rotinas-linha">${rotinasHTML}</td>
+</tr>`
 }
+
 tbody.innerHTML=html
 }
 /* ====================================================
