@@ -139,7 +139,37 @@ ROTINAS_CACHE=lista
 calcularIndicadores(lista)
 renderizarRotinas(lista)
 }
+/* ====================================================
+037 – ANALISE CLINICA PACIENTE
+==================================================== */
+function gerarAnalisePaciente(p){
 
+let total=p.rotinas.length
+let executadas=p.rotinas.filter(r=>r.status==="executado").length
+let percentual=total?Math.round((executadas/total)*100):0
+
+let classificacao="Estável"
+if(percentual<80)classificacao="Atenção"
+if(percentual<60)classificacao="Crítico"
+
+let comorb=[]
+if(p.has)comorb.push("HAS")
+if(p.dm)comorb.push("DM")
+if(p.demencia)comorb.push("DEM")
+if(p.cardiopatia)comorb.push("CARD")
+if(p.acamado)comorb.push("ACAM")
+
+let texto=`${classificacao} | Execução: ${percentual}%`
+
+if(comorb.length)texto+=` | ${comorb.join(", ")}`
+
+if(percentual<80)texto+=" | Atenção nas rotinas"
+if(p.acamado)texto+=" | Prevenir LPP"
+if(p.dm)texto+=" | Controle glicêmico"
+if(p.has||p.cardiopatia)texto+=" | Monitorar PA"
+
+return texto
+}
 /* ====================================================
 024 – RENDERIZAR ROTINAS
 ==================================================== */
