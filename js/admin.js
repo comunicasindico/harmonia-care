@@ -282,6 +282,7 @@ alert("Rotina adicionada")
 068 – CONCLUIR PENDENTES (BASE VISÍVEL + ADMIN)
 ==================================================== */
 async function concluirPendentes(){
+atualizarBarraProgresso(0)
 if(!db)return
 if(!EMPRESA_ID){
 console.error("EMPRESA_ID NULL")
@@ -295,9 +296,14 @@ const dataHoje=dataRaw&&dataRaw.includes("/")
 : (dataRaw||new Date().toISOString().slice(0,10))
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
 let total=pendentes.length
+if(total===0){
+atualizarBarraProgresso(100)
+setTimeout(()=>{atualizarBarraProgresso(0)},1000)
+SALVANDO=false
+return
+}
 let atual=0
 for(const r of pendentes){
-atual++
 const {data:existe}=await db
 .from("rotinas_execucao")
 .select("id,status")
@@ -314,6 +320,10 @@ data:dataHoje,
 status:"pendente"
 })
 }
+atual++
+let progresso=Math.floor((atual/total)*100)
+atualizarBarraProgresso(progresso)
+
 await db.from("rotinas_execucao")
 .update({
 status:"executado",
@@ -328,6 +338,8 @@ profissional_nome:"administrador" // 👈 AQUI É O SEGREDO
 SALVANDO=false
 await carregarRotinas()
 alert("Pendências concluídas com sucesso")
+atualizarBarraProgresso(100)
+setTimeout(()=>{atualizarBarraProgresso(0)},1500)
 }
 /* ====================================================
 069 – SALVAR USUARIO (BOTÃO)
