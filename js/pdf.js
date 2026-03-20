@@ -176,23 +176,21 @@ x+=12
 })
 
 /* ====================================================
-ANÁLISE CLÍNICA AUTOMÁTICA
+080B – ANALISE FINAL CONSOLIDADA
 ==================================================== */
-y+=6
-if(y>260){doc.addPage();y=20}
-
+y+=8
+if(y>250){doc.addPage();y=20}
 doc.setFont("Roboto","bold")
-doc.setFontSize(11)
-doc.text("Análise do quadro geral do paciente",10,y)
-y+=6
-
+doc.setFontSize(12)
+doc.setTextColor(39,174,96)
+doc.text("Análise consolidada do quadro geral do paciente",10,y)
+y+=7
 doc.setFont("Roboto","normal")
-doc.setFontSize(9)
-
+doc.setFontSize(10)
+doc.setTextColor(0,0,0)
 /* IDADE */
 const idade=calcularIdade(paciente.data_nascimento)
-
-/* CONTAGEM EXECUÇÃO */
+/* TOTAL GERAL */
 let total=0,executado=0
 Object.values(matriz).forEach(dia=>{
 Object.values(dia).forEach(st=>{
@@ -200,14 +198,11 @@ total++
 if(st==="executado")executado++
 })
 })
-
 let percentual=total?Math.round((executado/total)*100):0
-
 /* CLASSIFICAÇÃO */
 let classificacao="Estável"
 if(percentual<80)classificacao="Atenção"
 if(percentual<60)classificacao="Crítico"
-
 /* COMORBIDADES */
 let comorb=[]
 if(paciente.has)comorb.push("hipertensão")
@@ -215,41 +210,30 @@ if(paciente.dm)comorb.push("diabetes")
 if(paciente.da)comorb.push("demência")
 if(paciente.cardiopatia)comorb.push("cardiopatia")
 if(paciente.acamado)comorb.push("restrição de mobilidade")
-
-/* TEXTO */
+/* TEXTO FINAL */
 let texto=[]
-
 texto.push(`Paciente com ${idade} anos, apresentando quadro geral classificado como ${classificacao.toLowerCase()}.`)
-
 if(comorb.length){
 texto.push(`Possui histórico de ${comorb.join(", ")}, o que exige atenção contínua da equipe.`)
 }
-
-texto.push(`A taxa de execução das rotinas no período foi de ${percentual}%, refletindo o nível de adesão aos cuidados propostos.`)
-
-/* RECOMENDAÇÕES */
+texto.push(`A taxa global de execução das rotinas no período foi de ${percentual}%, refletindo o nível de adesão aos cuidados.`)
 if(percentual<80){
-texto.push("Recomenda-se reforço na execução das rotinas diárias, especialmente nas atividades básicas de cuidado.")
+texto.push("Recomenda-se reforço na execução das rotinas diárias.")
 }
-
 if(paciente.acamado){
-texto.push("Manter mudanças de decúbito frequentes e atenção redobrada com prevenção de lesões por pressão.")
+texto.push("Manter mudanças de decúbito frequentes e prevenção de lesões por pressão.")
 }
-
 if(paciente.dm){
-texto.push("Monitorar alimentação e sinais glicêmicos, mantendo regularidade nas refeições.")
+texto.push("Monitorar alimentação e controle glicêmico.")
 }
-
 if(paciente.has||paciente.cardiopatia){
-texto.push("Observar sinais cardiovasculares e manter controle rigoroso da pressão arterial.")
+texto.push("Manter controle rigoroso da pressão arterial.")
 }
-
-texto.push("Manter acompanhamento contínuo da equipe, garantindo segurança, dignidade e qualidade de vida ao paciente.")
-
-/* IMPRESSÃO */
+texto.push("Garantir acompanhamento contínuo da equipe, assegurando qualidade de vida e segurança ao paciente.")
+/* PRINT */
 texto.forEach(linha=>{
 doc.text(linha,10,y,{maxWidth:180})
-y+=5
+y+=6
 if(y>280){doc.addPage();y=20}
 })
 
