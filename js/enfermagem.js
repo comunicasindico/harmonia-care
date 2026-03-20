@@ -73,7 +73,7 @@ if(typeof carregarClinico==="function")await carregarClinico()
 ==================================================== */
 async function carregarRotinas(){
 if(!db)return
-if(!EMPRESA_ID)return   // 👈 AQUI
+if(!EMPRESA_ID)return
 const paciente=document.getElementById("buscaPaciente")?.value||"todos"
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
@@ -85,20 +85,19 @@ const {data,error}=await db.from("pacientes_profissionais").select("paciente_id"
 if(error){console.error("Erro pacientes profissional",error);return}
 if(data?.length){
 const ids=data.map(p=>p.paciente_id)
-const {data:lista}=await db.from("pacientes")
-.select("id,nome_completo,has,dm,demencia,cardiopatia,acamado,pa")
-.in("id",ids)
+const {data:lista}=await db.from("pacientes").select("id,nome_completo,has,dm,demencia,cardiopatia,acamado,pa").in("id",ids)
 pacientes=lista||[]
 }}
 if(!pacientes.length){
-const {data,error}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo")
+const {data,error}=await db.from("pacientes").select("id,nome_completo,has,dm,demencia,cardiopatia,acamado,pa").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo")
 if(error){console.error("Erro pacientes",error);return}
 pacientes=data||[]
 }
-const {data:rotinas,error:e2}=await db.from("rotina_modelos").select("id,nome,turno")
+const {data:rotinas,error:e2}=await db.from("rotina_modelos").select("id,nome,turno,ordem")
 if(e2){console.error("Erro rotinas",e2);return}
-const rotinasTurno=rotinas?.filter(r=>r.turno===turno)||[]
-const {data:execucoes,error:e3}=await db.from("rotinas_execucao").select("*").eq("data",dataHoje)
+let rotinasTurno=(rotinas||[]).filter(r=>r.turno===turno)
+rotinasTurno.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
+const {data:execucoes,error:e3}=await db.from("rotinas_execucao").select("*,rotina_modelos(id,nome,ordem,turno)").eq("data",dataHoje)
 if(e3){console.error("Erro execucoes",e3);return}
 const {data:usuarios}=await db.from("usuarios").select("id,nome_apelido")
 const mapaProfissionais={}
@@ -111,8 +110,23 @@ if(paciente!=="todos"&&paciente!=p.id)return
 rotinasTurno.forEach(r=>{
 const chave=`${p.id}_${r.id}`
 const exec=mapaExecucoes[chave]
-lista.push({id:exec?.id||chave,paciente_id:p.id,rotina_id:r.id,paciente:p.nome_completo,rotina:r.nome,status:exec?.status||"pendente",profissional:exec?.profissional_nome || (exec?.usuario_id ? mapaProfissionais[exec.usuario_id] : "")})
+lista.push({
+id:exec?.id||chave,
+paciente_id:p.id,
+rotina_id:r.id,
+paciente:p.nome_completo,
+rotina:r.nome,
+ordem:r.ordem||99,
+status:exec?.status||"pendente",
+profissional:exec?.profissional_nome||(exec?.usuario_id?mapaProfissionais[exec.usuario_id]:""),
+has:p.has,dm:p.dm,demencia:p.demencia,cardiopatia:p.cardiopatia,acamado:p.acamado,pa:p.pa
 })
+})
+})
+lista.sort((a,b)=>{
+if(a.paciente<b.paciente)return-1
+if(a.paciente>b.paciente)return 1
+return (a.ordem||99)-(b.ordem||99)
 })
 ROTINAS_CACHE=lista
 calcularIndicadores(lista)
@@ -126,7 +140,7 @@ const tbody=document.getElementById("rotinas");if(!tbody)return
 let html=""
 const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todos"
 const pacientes={}
-lista.forEach(r=>{if(!pacientes[r.paciente_id])pacientes[r.paciente_id]={nome:r.paciente,rotinas:[]};pacientes[r.paciente_id].rotinas.push(r)})
+lista.forEach(r=>{if(!pacientes[r.paciente_id])pacientes[r.paciente_id]={nome:r.paciente,rotinas:[],has:r.has,dm:r.dm,demencia:r.demencia,cardiopatia:r.cardiopatia,acamado:r.acamado,pa:r.pa};pacientes[r.paciente_id].rotinas.push(r)})
 Object.keys(pacientes).forEach(pid=>{
 const p=pacientes[pid]
 let comorbidadesHTML=""
