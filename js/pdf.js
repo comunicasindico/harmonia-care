@@ -103,22 +103,21 @@ y+=5
 if(y>250){doc.addPage();y=15}
 
 /* ====================================================
-COLUNAS NUMERADAS
+080C – COLUNAS NUMERADAS POR TURNO
 ==================================================== */
-
 const colunas=[
-"Banho",
-"Higiene (manhã)",
-"Troca de Fraldas (manhã)",
-"Oferta de Água",
-"Café",
-"Medicação",
-"Almoço",
-"Lanche",
-"Higiene (tarde)",
-"Jantar",
-"Higiene (noite)",
-"Troca de Fraldas (noite)"
+{n:1,nome:"Banho",turno:"manha"},
+{n:2,nome:"Higiene (manhã)",turno:"manha"},
+{n:3,nome:"Troca de Fraldas (manhã)",turno:"manha"},
+{n:4,nome:"Oferta de Água",turno:"manha"},
+{n:5,nome:"Café",turno:"manha"},
+{n:6,nome:"Medicação",turno:"tarde"},
+{n:7,nome:"Almoço",turno:"tarde"},
+{n:8,nome:"Lanche",turno:"tarde"},
+{n:9,nome:"Higiene (tarde)",turno:"tarde"},
+{n:10,nome:"Jantar",turno:"noite"},
+{n:11,nome:"Higiene (noite)",turno:"noite"},
+{n:12,nome:"Troca de Fraldas (noite)",turno:"noite"}
 ]
 
 /* MATRIZ */
@@ -138,10 +137,26 @@ y+=6
 doc.setFontSize(7)
 doc.setFont("Roboto","bold")
 
-/* HEADER NUMÉRICO */
+/* ====================================================
+080C – HEADER NUMERADO COM CORES POR TURNO
+==================================================== */
 let x=10
-doc.text("Data",x,y)
+doc.text("Data",x,y,{align:"center"})
 x+=20
+
+colunas.forEach(c=>{
+let cor=[0,0,0]
+if(c.turno==="manha")cor=[41,128,185]
+if(c.turno==="tarde")cor=[243,156,18]
+if(c.turno==="noite")cor=[44,62,80]
+doc.setTextColor(...cor)
+doc.text(String(c.n),x,y,{align:"center"})
+x+=12
+})
+
+doc.setTextColor(0,0,0)
+y+=6
+
 
 colunas.forEach((c,i)=>{
 doc.text(String(i+1),x,y,{align:"center"})
@@ -163,7 +178,6 @@ x+=20
 
 colunas.forEach(c=>{
 let status=matriz[data][c]||null
-
 if(status==="executado"){
 doc.setTextColor(39,174,96)
 doc.text("OK",x,y,{align:"center"})
@@ -171,10 +185,25 @@ doc.text("OK",x,y,{align:"center"})
 doc.setTextColor(231,76,60)
 doc.text("X",x,y,{align:"center"})
 }
-
 x+=12
 })
+/* ====================================================
+080C – LEGENDA DAS ROTINAS
+==================================================== */
+y+=8
+if(y>260){doc.addPage();y=20}
 
+doc.setFont("Roboto","bold")
+doc.setFontSize(10)
+doc.text("Legenda das rotinas:",10,y)
+y+=6
+doc.setFont("Roboto","normal")
+doc.setFontSize(9)
+colunas.forEach(c=>{
+doc.text(`${c.n} – ${c.nome}`,10,y)
+y+=5
+if(y>280){doc.addPage();y=20}
+})
 /* ====================================================
 080B – ANALISE FINAL CONSOLIDADA
 ==================================================== */
