@@ -140,6 +140,84 @@ calcularIndicadores(lista)
 renderizarRotinas(lista)
 }
 /* ====================================================
+ANÁLISE CLÍNICA AUTOMÁTICA
+==================================================== */
+y+=6
+if(y>260){doc.addPage();y=20}
+
+doc.setFont("Roboto","bold")
+doc.setFontSize(11)
+doc.text("Análise do quadro geral do paciente",10,y)
+y+=6
+
+doc.setFont("Roboto","normal")
+doc.setFontSize(9)
+
+/* IDADE */
+const idade=calcularIdade(paciente.data_nascimento)
+
+/* CONTAGEM EXECUÇÃO */
+let total=0,executado=0
+Object.values(matriz).forEach(dia=>{
+Object.values(dia).forEach(st=>{
+total++
+if(st==="executado")executado++
+})
+})
+
+let percentual=total?Math.round((executado/total)*100):0
+
+/* CLASSIFICAÇÃO */
+let classificacao="Estável"
+if(percentual<80)classificacao="Atenção"
+if(percentual<60)classificacao="Crítico"
+
+/* COMORBIDADES */
+let comorb=[]
+if(paciente.has)comorb.push("hipertensão")
+if(paciente.dm)comorb.push("diabetes")
+if(paciente.da)comorb.push("demência")
+if(paciente.cardiopatia)comorb.push("cardiopatia")
+if(paciente.acamado)comorb.push("restrição de mobilidade")
+
+/* TEXTO */
+let texto=[]
+
+texto.push(`Paciente com ${idade} anos, apresentando quadro geral classificado como ${classificacao.toLowerCase()}.`)
+
+if(comorb.length){
+texto.push(`Possui histórico de ${comorb.join(", ")}, o que exige atenção contínua da equipe.`)
+}
+
+texto.push(`A taxa de execução das rotinas no período foi de ${percentual}%, refletindo o nível de adesão aos cuidados propostos.`)
+
+/* RECOMENDAÇÕES */
+if(percentual<80){
+texto.push("Recomenda-se reforço na execução das rotinas diárias, especialmente nas atividades básicas de cuidado.")
+}
+
+if(paciente.acamado){
+texto.push("Manter mudanças de decúbito frequentes e atenção redobrada com prevenção de lesões por pressão.")
+}
+
+if(paciente.dm){
+texto.push("Monitorar alimentação e sinais glicêmicos, mantendo regularidade nas refeições.")
+}
+
+if(paciente.has||paciente.cardiopatia){
+texto.push("Observar sinais cardiovasculares e manter controle rigoroso da pressão arterial.")
+}
+
+texto.push("Manter acompanhamento contínuo da equipe, garantindo segurança, dignidade e qualidade de vida ao paciente.")
+
+/* IMPRESSÃO */
+texto.forEach(linha=>{
+doc.text(linha,10,y,{maxWidth:180})
+y+=5
+if(y>280){doc.addPage();y=20}
+})
+
+/* ====================================================
 024 – RENDERIZAR ROTINAS
 ==================================================== */
 function renderizarRotinas(lista){
@@ -150,6 +228,7 @@ const pacientes={}
 lista.forEach(r=>{if(!pacientes[r.paciente_id])pacientes[r.paciente_id]={nome:r.paciente,rotinas:[],has:r.has,dm:r.dm,demencia:r.demencia,cardiopatia:r.cardiopatia,acamado:r.acamado,pa:r.pa};pacientes[r.paciente_id].rotinas.push(r)})
 Object.keys(pacientes).forEach(pid=>{
 const p=pacientes[pid]
+const analise=gerarAnalisePaciente(p)
 p.rotinas.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
 let comorbidadesHTML=""
 if(p.has)comorbidadesHTML+="<span class='tag-comorb'>HAS</span>"
