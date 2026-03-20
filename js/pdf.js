@@ -91,39 +91,23 @@ y+=5
 if(y>250){doc.addPage();y=15}
 const colunas=[
 {nome:"Banho",turno:"manha"},
-{nome:"Higiene\nBucal",turno:"manha"},
-{nome:"Troca\nManhã",turno:"manha"},
-{nome:"Oferta de\nÁgua",turno:"manha"},
+{nome:"Higiene (manhã)",turno:"manha"},
+{nome:"Troca de Fraldas (manhã)",turno:"manha"},
+{nome:"Oferta de Água",turno:"manha"},
 {nome:"Café",turno:"manha"},
 {nome:"Medicação",turno:"tarde"},
 {nome:"Almoço",turno:"tarde"},
 {nome:"Lanche",turno:"tarde"},
-{nome:"Higiene\nTarde",turno:"tarde"},
+{nome:"Higiene (tarde)",turno:"tarde"},
 {nome:"Jantar",turno:"noite"},
-{nome:"Higiene\nNoite",turno:"noite"},
-{nome:"Troca\nNoite",turno:"noite"}
+{nome:"Higiene (noite)",turno:"noite"},
+{nome:"Troca de Fraldas (noite)",turno:"noite"}
 ]
-function nomePadraoPDF(nome){
-if(!nome)return""
-nome=nome.toLowerCase()
-if(nome.includes("banho"))return"Banho"
-if(nome.includes("higiene")&&nome.includes("bucal"))return"Higiene\nBucal"
-if(nome.includes("fralda")&&nome.includes("manha"))return"Troca\nManhã"
-if(nome.includes("agua"))return"Oferta de\nÁgua"
-if(nome.includes("cafe"))return"Café"
-if(nome.includes("medic"))return"Medicação"
-if(nome.includes("almoco"))return"Almoço"
-if(nome.includes("lanche"))return"Lanche"
-if(nome.includes("higiene")&&nome.includes("tarde"))return"Higiene\nTarde"
-if(nome.includes("jantar"))return"Jantar"
-if(nome.includes("higiene")&&(nome.includes("noite")||nome.includes("noturna")))return"Higiene\nNoite"
-if(nome.includes("fralda")&&nome.includes("noite"))return"Troca\nNoite"
-return nome
-}
+
 let matriz={}
 rotinasExec?.forEach(r=>{
 if(!matriz[r.data])matriz[r.data]={}
-const nome=nomePadraoPDF(r.rotina_modelos?.nome||"")
+const nome=r.rotina_modelos?.nome||""
 if(nome){matriz[r.data][nome]=r.status}
 })
 doc.setFontSize(12)
