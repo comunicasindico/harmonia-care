@@ -85,11 +85,11 @@ const {data,error}=await db.from("pacientes_profissionais").select("paciente_id"
 if(error){console.error("Erro pacientes profissional",error);return}
 if(data?.length){
 const ids=data.map(p=>p.paciente_id)
-const {data:lista}=await db.from("pacientes").select("id,nome_completo,has,dm,da,cardiopatia,acamado,pa").in("id",ids)
+const {data:lista}=await db.from("vw_pacientes").select("id,nome_completo,has,dm,da,cardiopatia,acamado,pressao_arterial").in("id",ids)
 pacientes=lista||[]
 }}
 if(!pacientes.length){
-const {data,error}=await db.from("pacientes").select("id,nome_completo,has,dm,da,cardiopatia,acamado,pa").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo")
+const {data,error}=await db.from("vw_pacientes").select("id,nome_completo,has,dm,da,cardiopatia,acamado,pressao_arterial").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo")
 if(error){console.error("Erro pacientes",error);return}
 pacientes=data||[]
 }
@@ -119,7 +119,7 @@ rotina:r.nome,
 ordem:r.ordem||99,
 status:exec?.status||"pendente",
 profissional:exec?.profissional_nome||(exec?.usuario_id?mapaProfissionais[exec.usuario_id]:""),
-has:p.has,dm:p.dm,demencia:p.da,cardiopatia:p.cardiopatia,acamado:p.acamado,pa:p.pa
+has:p.has,dm:p.dm,demencia:p.da,cardiopatia:p.cardiopatia,acamado:p.acamado,pa:p.pressao_arterial
 })
 })
 })
