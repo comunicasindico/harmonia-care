@@ -28,8 +28,7 @@ const dataFim=document.getElementById("dataFim")?.value
 if(!pacienteId||pacienteId==="todos"){alert("Selecione um paciente");return}
 const {data:paciente,error}=await db.from("pacientes").select("id,nome_completo,data_nascimento,has,dm,da,cardiopatia,acamado,dieta_especial,dieta_texto,outras_comorbidades,grau_risco,pressao_arterial").eq("id",pacienteId).single()
 if(error||!paciente){console.error("ERRO PACIENTE",error);alert("Erro ao carregar paciente");return}
-const {data:rotinasExec}=await db.from("rotinas_execucao").select("*").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim)
-const {data:rotinasBase}=await db.from("rotina_modelos").select("id,nome")
+const {data:rotinasExec}=await db.from("rotinas_execucao").select("*,rotina_modelos(id,nome,ordem,turno)").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim)
 const {jsPDF}=window.jspdf
 const doc=new jsPDF("p","mm","a4")
 await carregarFonteRoboto(doc)
@@ -44,8 +43,7 @@ doc.setFontSize(8)
 doc.setTextColor(120)
 doc.text(`${rodape} | Página ${i} de ${totalPages}`,105,290,{align:"center"})
 doc.setTextColor(0)
-}
-}
+}}
 doc.setFontSize(12)
 doc.text(cabecalho,105,y,{align:"center"})
 y+=10
@@ -92,24 +90,40 @@ y+=5
 y+=5
 if(y>250){doc.addPage();y=15}
 const colunas=[
-{nome:"Café",turno:"manha"},
-{nome:"Medicação",turno:"manha"},
-{nome:"Oferta de Água",turno:"manha"},
 {nome:"Banho",turno:"manha"},
-{nome:"Almoço",turno:"manha"},
-{nome:"Alimentação",turno:"tarde"},
+{nome:"Higiene\nBucal",turno:"manha"},
+{nome:"Troca\nManhã",turno:"manha"},
+{nome:"Oferta de\nÁgua",turno:"manha"},
+{nome:"Café",turno:"manha"},
+{nome:"Medicação",turno:"tarde"},
+{nome:"Almoço",turno:"tarde"},
 {nome:"Lanche",turno:"tarde"},
-{nome:"Higiene Bucal",turno:"tarde"},
+{nome:"Higiene\nTarde",turno:"tarde"},
 {nome:"Jantar",turno:"noite"},
-{nome:"Higiene Noturna",turno:"noite"},
-{nome:"Troca de Fralda",turno:"noite"}
+{nome:"Higiene\nNoite",turno:"noite"},
+{nome:"Troca\nNoite",turno:"noite"}
 ]
-let mapa={}
-rotinasBase?.forEach(r=>{mapa[r.id]=r.nome})
+function nomePadraoPDF(nome){
+if(!nome)return""
+nome=nome.toLowerCase()
+if(nome.includes("banho"))return"Banho"
+if(nome.includes("higiene")&&nome.includes("bucal"))return"Higiene\nBucal"
+if(nome.includes("fralda")&&nome.includes("manha"))return"Troca\nManhã"
+if(nome.includes("agua"))return"Oferta de\nÁgua"
+if(nome.includes("cafe"))return"Café"
+if(nome.includes("medic"))return"Medicação"
+if(nome.includes("almoco"))return"Almoço"
+if(nome.includes("lanche"))return"Lanche"
+if(nome.includes("higiene")&&nome.includes("tarde"))return"Higiene\nTarde"
+if(nome.includes("jantar"))return"Jantar"
+if(nome.includes("higiene")&&(nome.includes("noite")||nome.includes("noturna")))return"Higiene\nNoite"
+if(nome.includes("fralda")&&nome.includes("noite"))return"Troca\nNoite"
+return nome
+}
 let matriz={}
 rotinasExec?.forEach(r=>{
 if(!matriz[r.data])matriz[r.data]={}
-const nome=(mapa[r.rotina_id]||"").trim()
+const nome=nomePadraoPDF(r.rotina_modelos?.nome||"")
 if(nome){matriz[r.data][nome]=r.status}
 })
 doc.setFontSize(12)
@@ -125,14 +139,8 @@ colunas.forEach(c=>{
 if(c.turno==="manha")doc.setTextColor(41,128,185)
 if(c.turno==="tarde")doc.setTextColor(243,156,18)
 if(c.turno==="noite")doc.setTextColor(44,62,80)
-let partes=c.nome.split(" ")
-if(partes.length>1){
-doc.text(partes[0],x,y,{align:"center"})
-doc.text(partes.slice(1).join(" "),x,y+3,{align:"center"})
-}else{
-doc.text(c.nome,x,y,{align:"center"})
-}
-x+=15
+doc.text(c.nome.split("\n"),x,y,{align:"center"})
+x+=12
 })
 doc.setTextColor(0,0,0)
 y+=6
@@ -145,10 +153,7 @@ let x=10
 doc.text(formatarDataBR(data),x,y)
 x+=20
 colunas.forEach(c=>{
-let status=null
-Object.keys(matriz[data]||{}).forEach(k=>{
-if(k.toLowerCase().trim()===c.nome.toLowerCase()){status=matriz[data][k]}
-})
+let status=matriz[data][c.nome]||null
 if(status==="executado"){
 doc.setTextColor(39,174,96)
 doc.text("OK",x,y,{align:"center"})
@@ -156,7 +161,7 @@ doc.text("OK",x,y,{align:"center"})
 doc.setTextColor(231,76,60)
 doc.text("X",x,y,{align:"center"})
 }
-x+=15
+x+=12
 })
 doc.setTextColor(0,0,0)
 doc.setDrawColor(230)
