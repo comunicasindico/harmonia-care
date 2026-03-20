@@ -284,16 +284,11 @@ alert("Rotina adicionada")
 async function concluirPendentes(){
 atualizarBarraProgresso(0)
 if(!db)return
-if(!EMPRESA_ID){
-console.error("EMPRESA_ID NULL")
-return
-}
+if(!EMPRESA_ID){console.error("EMPRESA_ID NULL");return}
 if(SALVANDO){alert("Aguarde finalizar...");return}
 SALVANDO=true
 const dataRaw=document.getElementById("dataInicio")?.value
-const dataHoje=dataRaw&&dataRaw.includes("/") 
-? dataRaw.split("/").reverse().join("-") 
-: (dataRaw||new Date().toISOString().slice(0,10))
+const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
 let total=pendentes.length
 if(total===0){
@@ -304,6 +299,7 @@ return
 }
 let atual=0
 for(const r of pendentes){
+
 const {data:existe}=await db
 .from("rotinas_execucao")
 .select("id,status")
@@ -311,35 +307,38 @@ const {data:existe}=await db
 .eq("rotina_id",r.rotina_id)
 .eq("data",dataHoje)
 .maybeSingle()
-if(existe && existe.status==="executado")continue
+
 if(!existe){
 await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
-status:"pendente"
+status:"executado",
+horario_executado:new Date(),
+usuario_id:localStorage.getItem("usuario_id")||null,
+profissional_nome:"administrador"
 })
-}
-atual++
-let progresso=Math.floor((atual/total)*100)
-atualizarBarraProgresso(progresso)
-
+}else if(existe.status!=="executado"){
 await db.from("rotinas_execucao")
 .update({
 status:"executado",
 horario_executado:new Date(),
 usuario_id:localStorage.getItem("usuario_id")||null,
-profissional_nome:"administrador" // 👈 AQUI É O SEGREDO
+profissional_nome:"administrador"
 })
-.eq("paciente_id",r.paciente_id)
-.eq("rotina_id",r.rotina_id)
-.eq("data",dataHoje)
+.eq("id",existe.id)
+}
+
+atual++
+let progresso=Math.floor((atual/total)*100)
+atualizarBarraProgresso(progresso)
+
 }
 SALVANDO=false
 await carregarRotinas()
-alert("Pendências concluídas com sucesso")
 atualizarBarraProgresso(100)
 setTimeout(()=>{atualizarBarraProgresso(0)},1500)
+alert("Pendências concluídas com sucesso")
 }
 /* ====================================================
 069 – SALVAR USUARIO (BOTÃO)
