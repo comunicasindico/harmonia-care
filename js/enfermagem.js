@@ -279,7 +279,7 @@ ${botaoOK}
 </td>
 <td>
 <div class="rotinas-linha">${rotinasHTML}</div>
-<div class="analise-clinica">${analise}</div>
+<div class="analise-clinica">${analiseTexto}</div>
 </td>
 </tr>`
 })
