@@ -15,7 +15,7 @@ const ano=d.getFullYear()
 return`${dia}-${mes}-${ano}`
 }
 /* ====================================================
-080 – PDF PACIENTE
+080 – PDF PACIENTE (CORRIGIDO DEFINITIVO)
 ==================================================== */
 async function gerarPDFPaciente(){
 const imgDieta=new Image()
@@ -29,16 +29,12 @@ if(!pacienteId||pacienteId==="todos"){alert("Selecione um paciente");return}
 const {data:paciente,error}=await db.from("pacientes").select("id,nome_completo,data_nascimento,has,dm,da,cardiopatia,acamado,dieta_especial,dieta_texto,outras_comorbidades,grau_risco,pressao_arterial").eq("id",pacienteId).single()
 if(error||!paciente){console.error("ERRO PACIENTE",error);alert("Erro ao carregar paciente");return}
 const {data:rotinasExec}=await db.from("rotinas_execucao").select("*,rotina_modelos(id,nome,ordem,turno)").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim)
-
 const {jsPDF}=window.jspdf
 const doc=new jsPDF("p","mm","a4")
 await carregarFonteRoboto(doc)
-
 let y=15
-
 const cabecalho="Lar Geriátrico Harmonia\nTel: (81) 3461-3109"
 const rodape="CNPJ 11197111000156 - Rua Doutor Manoel Benício Fontenelle, 38 - Piedade - Jaboatão dos Guararapes – PE"
-
 function adicionarRodape(){
 const totalPages=doc.getNumberOfPages()
 for(let i=1;i<=totalPages;i++){
@@ -48,26 +44,20 @@ doc.setTextColor(120)
 doc.text(`${rodape} | Página ${i} de ${totalPages}`,105,290,{align:"center"})
 doc.setTextColor(0)
 }}
-
 doc.setFontSize(12)
 doc.text(cabecalho,105,y,{align:"center"})
 y+=10
-
 doc.setFontSize(14)
 doc.setFont("Roboto","bold")
 doc.text("RELATÓRIO DO PACIENTE",105,y,{align:"center"})
 y+=10
-
 doc.setFillColor(240,240,240)
 doc.rect(10,y-5,190,60,"F")
-
 doc.setFontSize(10)
 doc.setFont("Roboto","bold")
 doc.text("DADOS CLÍNICOS DO PACIENTE",10,y)
 y+=6
-
 doc.setFont("Roboto","normal")
-
 const dadosClinicos=[
 ["Paciente",paciente.nome_completo||""],
 ["Idade",calcularIdade(paciente.data_nascimento)],
@@ -81,7 +71,6 @@ const dadosClinicos=[
 ["Risco",paciente.grau_risco||""],
 ["Outras",paciente.outras_comorbidades||""]
 ]
-
 dadosClinicos.forEach(d=>{
 let label=d[0]
 let valor=String(d[1]||"")
@@ -98,12 +87,10 @@ doc.text(valor,60,y)
 }
 y+=5
 })
-
 y+=5
 if(y>250){doc.addPage();y=15}
-
 /* ====================================================
-080C – COLUNAS NUMERADAS POR TURNO
+080C – COLUNAS NUMERADAS
 ==================================================== */
 const colunas=[
 {n:1,nome:"Banho",turno:"manha"},
@@ -119,7 +106,6 @@ const colunas=[
 {n:11,nome:"Higiene (noite)",turno:"noite"},
 {n:12,nome:"Troca de Fraldas (noite)",turno:"noite"}
 ]
-
 /* MATRIZ */
 let matriz={}
 rotinasExec?.forEach(r=>{
@@ -127,23 +113,17 @@ if(!matriz[r.data])matriz[r.data]={}
 const nome=r.rotina_modelos?.nome||""
 if(nome)matriz[r.data][nome]=r.status
 })
-
 /* TÍTULO */
 doc.setFontSize(12)
 doc.setFont("Roboto","bold")
 doc.text("Rotinas por período",10,y)
 y+=6
-
 doc.setFontSize(7)
 doc.setFont("Roboto","bold")
-
-/* ====================================================
-080C – HEADER NUMERADO COM CORES POR TURNO
-==================================================== */
+/* HEADER */
 let x=10
 doc.text("Data",x,y,{align:"center"})
 x+=20
-
 colunas.forEach(c=>{
 let cor=[0,0,0]
 if(c.turno==="manha")cor=[41,128,185]
@@ -153,31 +133,19 @@ doc.setTextColor(...cor)
 doc.text(String(c.n),x,y,{align:"center"})
 x+=12
 })
-
 doc.setTextColor(0,0,0)
 y+=6
-
-
-colunas.forEach((c,i)=>{
-doc.text(String(i+1),x,y,{align:"center"})
-x+=12
-})
-
-y+=4
 doc.setDrawColor(180)
 doc.line(10,y,200,y)
 y+=4
-
 doc.setFont("Roboto","normal")
-
 /* LINHAS */
 Object.keys(matriz).sort().forEach(data=>{
 let x=10
 doc.text(formatarDataBR(data),x,y)
 x+=20
-
 colunas.forEach(c=>{
-let status=matriz[data][c]||null
+let status=matriz[data][c.nome]||null
 if(status==="executado"){
 doc.setTextColor(39,174,96)
 doc.text("OK",x,y,{align:"center"})
@@ -187,12 +155,17 @@ doc.text("X",x,y,{align:"center"})
 }
 x+=12
 })
+doc.setTextColor(0,0,0)
+doc.setDrawColor(230)
+doc.line(10,y+2,200,y+2)
+y+=6
+if(y>270){doc.addPage();y=20}
+})
 /* ====================================================
-080C – LEGENDA DAS ROTINAS
+080C – LEGENDA
 ==================================================== */
 y+=8
 if(y>260){doc.addPage();y=20}
-
 doc.setFont("Roboto","bold")
 doc.setFontSize(10)
 doc.text("Legenda das rotinas:",10,y)
@@ -205,21 +178,19 @@ y+=5
 if(y>280){doc.addPage();y=20}
 })
 /* ====================================================
-080B – ANALISE FINAL CONSOLIDADA
+080B – ANALISE ÚNICA FINAL
 ==================================================== */
 y+=8
 if(y>250){doc.addPage();y=20}
 doc.setFont("Roboto","bold")
 doc.setFontSize(12)
 doc.setTextColor(39,174,96)
-doc.text("Análise consolidada do quadro geral do paciente",10,y)
+doc.text("Análise consolidada do paciente",10,y)
 y+=7
 doc.setFont("Roboto","normal")
 doc.setFontSize(10)
 doc.setTextColor(0,0,0)
-/* IDADE */
 const idade=calcularIdade(paciente.data_nascimento)
-/* TOTAL GERAL */
 let total=0,executado=0
 Object.values(matriz).forEach(dia=>{
 Object.values(dia).forEach(st=>{
@@ -228,82 +199,38 @@ if(st==="executado")executado++
 })
 })
 let percentual=total?Math.round((executado/total)*100):0
-/* CLASSIFICAÇÃO */
 let classificacao="Estável"
 if(percentual<80)classificacao="Atenção"
 if(percentual<60)classificacao="Crítico"
-/* COMORBIDADES */
 let comorb=[]
 if(paciente.has)comorb.push("hipertensão")
 if(paciente.dm)comorb.push("diabetes")
 if(paciente.da)comorb.push("demência")
 if(paciente.cardiopatia)comorb.push("cardiopatia")
 if(paciente.acamado)comorb.push("restrição de mobilidade")
-/* TEXTO FINAL */
 let texto=[]
-texto.push(`Paciente com ${idade} anos, apresentando quadro geral classificado como ${classificacao.toLowerCase()}.`)
-if(comorb.length){
-texto.push(`Possui histórico de ${comorb.join(", ")}, o que exige atenção contínua da equipe.`)
-}
-texto.push(`A taxa global de execução das rotinas no período foi de ${percentual}%, refletindo o nível de adesão aos cuidados.`)
-if(percentual<80){
-texto.push("Recomenda-se reforço na execução das rotinas diárias.")
-}
-if(paciente.acamado){
-texto.push("Manter mudanças de decúbito frequentes e prevenção de lesões por pressão.")
-}
-if(paciente.dm){
-texto.push("Monitorar alimentação e controle glicêmico.")
-}
-if(paciente.has||paciente.cardiopatia){
-texto.push("Manter controle rigoroso da pressão arterial.")
-}
-texto.push("Garantir acompanhamento contínuo da equipe, assegurando qualidade de vida e segurança ao paciente.")
-/* PRINT */
+texto.push(`Paciente com ${idade} anos, classificado como ${classificacao.toLowerCase()}.`)
+if(comorb.length){texto.push(`Histórico de ${comorb.join(", ")}.`)}
+texto.push(`Execução das rotinas: ${percentual}%.`)
+if(percentual<80){texto.push("Reforçar cuidados diários.")}
+if(paciente.acamado){texto.push("Prevenção de lesões por pressão.")}
+if(paciente.dm){texto.push("Controle glicêmico.")}
+if(paciente.has||paciente.cardiopatia){texto.push("Monitorar pressão arterial.")}
+texto.push("Manter acompanhamento contínuo da equipe.")
 texto.forEach(linha=>{
 doc.text(linha,10,y,{maxWidth:180})
 y+=6
 if(y>280){doc.addPage();y=20}
 })
-
-doc.setTextColor(0,0,0)
-doc.line(10,y+2,200,y+2)
-y+=6
-
-if(y>270){doc.addPage();y=20}
-})
-
-/* ====================================================
-LEGENDA
-==================================================== */
-
-y+=8
-doc.setFont("Roboto","bold")
-doc.setFontSize(10)
-doc.text("Legenda:",10,y)
-y+=5
-
-doc.setFont("Roboto","normal")
-doc.setFontSize(8)
-
-colunas.forEach((c,i)=>{
-doc.text(`${i+1} - ${c}`,10,y)
-y+=4
-if(y>280){doc.addPage();y=20}
-})
-
 /* RODAPÉ */
 y+=5
 doc.setFontSize(10)
 doc.text(`Data da impressão: ${formatarDataBR(new Date())}`,10,y)
 y+=15
-
 doc.text("__________________________________________",10,y)
 y+=6
 doc.text("Responsável Técnico",10,y)
-
 adicionarRodape()
-
 doc.save(`Relatorio_${paciente.nome_completo}.pdf`)
 }
 /* ====================================================
