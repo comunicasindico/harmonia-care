@@ -29,12 +29,16 @@ if(!pacienteId||pacienteId==="todos"){alert("Selecione um paciente");return}
 const {data:paciente,error}=await db.from("pacientes").select("id,nome_completo,data_nascimento,has,dm,da,cardiopatia,acamado,dieta_especial,dieta_texto,outras_comorbidades,grau_risco,pressao_arterial").eq("id",pacienteId).single()
 if(error||!paciente){console.error("ERRO PACIENTE",error);alert("Erro ao carregar paciente");return}
 const {data:rotinasExec}=await db.from("rotinas_execucao").select("*,rotina_modelos(id,nome,ordem,turno)").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim)
+
 const {jsPDF}=window.jspdf
 const doc=new jsPDF("p","mm","a4")
 await carregarFonteRoboto(doc)
+
 let y=15
+
 const cabecalho="Lar Geriátrico Harmonia\nTel: (81) 3461-3109"
 const rodape="CNPJ 11197111000156 - Rua Doutor Manoel Benício Fontenelle, 38 - Piedade - Jaboatão dos Guararapes – PE"
+
 function adicionarRodape(){
 const totalPages=doc.getNumberOfPages()
 for(let i=1;i<=totalPages;i++){
@@ -44,20 +48,26 @@ doc.setTextColor(120)
 doc.text(`${rodape} | Página ${i} de ${totalPages}`,105,290,{align:"center"})
 doc.setTextColor(0)
 }}
+
 doc.setFontSize(12)
 doc.text(cabecalho,105,y,{align:"center"})
 y+=10
+
 doc.setFontSize(14)
 doc.setFont("Roboto","bold")
 doc.text("RELATÓRIO DO PACIENTE",105,y,{align:"center"})
 y+=10
+
 doc.setFillColor(240,240,240)
 doc.rect(10,y-5,190,60,"F")
+
 doc.setFontSize(10)
 doc.setFont("Roboto","bold")
 doc.text("DADOS CLÍNICOS DO PACIENTE",10,y)
 y+=6
+
 doc.setFont("Roboto","normal")
+
 const dadosClinicos=[
 ["Paciente",paciente.nome_completo||""],
 ["Idade",calcularIdade(paciente.data_nascimento)],
@@ -71,6 +81,7 @@ const dadosClinicos=[
 ["Risco",paciente.grau_risco||""],
 ["Outras",paciente.outras_comorbidades||""]
 ]
+
 dadosClinicos.forEach(d=>{
 let label=d[0]
 let valor=String(d[1]||"")
@@ -87,63 +98,72 @@ doc.text(valor,60,y)
 }
 y+=5
 })
+
 y+=5
 if(y>250){doc.addPage();y=15}
+
+/* ====================================================
+COLUNAS NUMERADAS
+==================================================== */
+
 const colunas=[
-{nome:"Banho",turno:"manha"},
-{nome:"Higiene (manhã)",turno:"manha"},
-{nome:"Troca de Fraldas (manhã)",turno:"manha"},
-{nome:"Oferta de Água",turno:"manha"},
-{nome:"Café",turno:"manha"},
-{nome:"Medicação",turno:"tarde"},
-{nome:"Almoço",turno:"tarde"},
-{nome:"Lanche",turno:"tarde"},
-{nome:"Higiene (tarde)",turno:"tarde"},
-{nome:"Jantar",turno:"noite"},
-{nome:"Higiene (noite)",turno:"noite"},
-{nome:"Troca de Fraldas (noite)",turno:"noite"}
+"Banho",
+"Higiene (manhã)",
+"Troca de Fraldas (manhã)",
+"Oferta de Água",
+"Café",
+"Medicação",
+"Almoço",
+"Lanche",
+"Higiene (tarde)",
+"Jantar",
+"Higiene (noite)",
+"Troca de Fraldas (noite)"
 ]
 
+/* MATRIZ */
 let matriz={}
 rotinasExec?.forEach(r=>{
 if(!matriz[r.data])matriz[r.data]={}
 const nome=r.rotina_modelos?.nome||""
-if(nome){matriz[r.data][nome]=r.status}
+if(nome)matriz[r.data][nome]=r.status
 })
+
+/* TÍTULO */
 doc.setFontSize(12)
 doc.setFont("Roboto","bold")
 doc.text("Rotinas por período",10,y)
 y+=6
-doc.setFontSize(6)
+
+doc.setFontSize(7)
 doc.setFont("Roboto","bold")
+
+/* HEADER NUMÉRICO */
 let x=10
-doc.text("Data",x,y,{align:"center"})
+doc.text("Data",x,y)
 x+=20
-colunas.forEach(c=>{
-if(c.turno==="manha")doc.setTextColor(41,128,185)
-if(c.turno==="tarde")doc.setTextColor(243,156,18)
-if(c.turno==="noite")doc.setTextColor(44,62,80)
-const linhas=c.nome.split("\n")
-if(linhas.length===2){
-doc.text(linhas[0],x,y,{align:"center"})
-doc.text(linhas[1],x,y+3,{align:"center"})
-}else{
-doc.text(c.nome,x,y,{align:"center"})
-}
-x+=15
+
+colunas.forEach((c,i)=>{
+doc.text(String(i+1),x,y,{align:"center"})
+x+=12
 })
-doc.setTextColor(0,0,0)
-y+=8
+
+y+=4
 doc.setDrawColor(180)
 doc.line(10,y,200,y)
 y+=4
+
 doc.setFont("Roboto","normal")
+
+/* LINHAS */
 Object.keys(matriz).sort().forEach(data=>{
 let x=10
 doc.text(formatarDataBR(data),x,y)
 x+=20
+
 colunas.forEach(c=>{
-let status=matriz[data][c.nome]||null
+let status=matriz[data][c]||null
+
 if(status==="executado"){
 doc.setTextColor(39,174,96)
 doc.text("OK",x,y,{align:"center"})
@@ -151,21 +171,48 @@ doc.text("OK",x,y,{align:"center"})
 doc.setTextColor(231,76,60)
 doc.text("X",x,y,{align:"center"})
 }
+
 x+=12
 })
+
 doc.setTextColor(0,0,0)
-doc.setDrawColor(230)
 doc.line(10,y+2,200,y+2)
 y+=6
+
 if(y>270){doc.addPage();y=20}
 })
-if(y>260){doc.addPage();y=20}
+
+/* ====================================================
+LEGENDA
+==================================================== */
+
+y+=8
+doc.setFont("Roboto","bold")
 doc.setFontSize(10)
-doc.text(`Data da impressão: ${formatarDataBR(new Date())}`,10,y);y+=15
+doc.text("Legenda:",10,y)
+y+=5
+
+doc.setFont("Roboto","normal")
+doc.setFontSize(8)
+
+colunas.forEach((c,i)=>{
+doc.text(`${i+1} - ${c}`,10,y)
+y+=4
+if(y>280){doc.addPage();y=20}
+})
+
+/* RODAPÉ */
+y+=5
+doc.setFontSize(10)
+doc.text(`Data da impressão: ${formatarDataBR(new Date())}`,10,y)
+y+=15
+
 doc.text("__________________________________________",10,y)
 y+=6
 doc.text("Responsável Técnico",10,y)
+
 adicionarRodape()
+
 doc.save(`Relatorio_${paciente.nome_completo}.pdf`)
 }
 /* ====================================================
