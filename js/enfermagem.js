@@ -228,7 +228,7 @@ const pacientes={}
 lista.forEach(r=>{if(!pacientes[r.paciente_id])pacientes[r.paciente_id]={nome:r.paciente,rotinas:[],has:r.has,dm:r.dm,demencia:r.demencia,cardiopatia:r.cardiopatia,acamado:r.acamado,pa:r.pa};pacientes[r.paciente_id].rotinas.push(r)})
 Object.keys(pacientes).forEach(pid=>{
 const p=pacientes[pid]
-const analise=gerarAnalisePaciente(p)
+let analise=gerarAnalisePaciente(p)
 p.rotinas.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
 let comorbidadesHTML=""
 if(p.has)comorbidadesHTML+="<span class='tag-comorb'>HAS</span>"
@@ -266,7 +266,6 @@ ${r.status==="executado"
 let percentual=total?Math.round((executadas/total)*100):0
 let botaoOK=percentual===100?`<button class="btn-todos">Rotinas OK</button>`:`<button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button>`
 
-const analise=gerarAnalisePaciente(p)
 html+=`<tr>
 <td class="nome-paciente">
 ${p.nome}
