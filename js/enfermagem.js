@@ -142,10 +142,16 @@ return !r.turno||r.turno===turno
 })
 rotinasTurno.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
 /* 🔹 EXECUÇÕES */
+const dataInicioRaw=document.getElementById("dataInicio")?.value
+const dataFimRaw=document.getElementById("dataFim")?.value
+
+const dataInicio=dataInicioRaw&&dataInicioRaw.includes("/")?dataInicioRaw.split("/").reverse().join("-"):dataInicioRaw
+const dataFim=dataFimRaw&&dataFimRaw.includes("/")?dataFimRaw.split("/").reverse().join("-"):dataFimRaw
 const {data:execucoes,error:e3}=await db
 .from("rotinas_execucao")
 .select("id,paciente_id,rotina_id,status,usuario_id,profissional_nome")
-.eq("data",dataHoje)
+.gte("data",dataInicio)
+.lte("data",dataFim)
 .eq("turno",turno)
 if(e3){console.error("Erro execucoes",e3);return}
 /* 🔹 USUÁRIOS */
@@ -160,7 +166,7 @@ mapaProfissionais[u.id]=u.nome_apelido
 /* 🔹 MAPA EXECUÇÕES */
 const mapaExecucoes={}
 execucoes?.forEach(e=>{
-mapaExecucoes[`${e.paciente_id}_${e.rotina_id}`]=e
+mapaExecucoes[`${e.paciente_id}_${e.rotina_id}_${e.data}`]=e
 })
 /* 🔹 MONTAR LISTA */
 let lista=[]
@@ -171,7 +177,7 @@ if(paciente!=="todos"&&paciente!=p.id)return
 
 rotinasTurno.forEach(r=>{
 
-const chave=`${p.id}_${r.id}`
+const chave=`${p.id}_${r.id}_${dataHoje}`
 const exec=mapaExecucoes[chave]
 
 lista.push({
