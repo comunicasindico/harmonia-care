@@ -75,128 +75,67 @@ if(typeof carregarClinico==="function")await carregarClinico()
 }
 
 /* ====================================================
-023 – CARREGAR ROTINAS
+023 – CARREGAR ROTINAS (BLINDADO)
 ==================================================== */
 async function carregarRotinas(){
 if(!db)return
 if(!EMPRESA_ID)return
-
 const paciente=document.getElementById("buscaPaciente")?.value||"todos"
-
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-
 const turno=TURNO_ATUAL
-
 let profissionalId=PROFISSIONAL_ID||localStorage.getItem("profissional_id")
 let pacientes=[]
-
 /* 🔹 PACIENTES DO PROFISSIONAL */
 if(profissionalId&&profissionalId!=="null"&&profissionalId!=="admin"){
-const {data,error}=await db
-.from("pacientes_profissionais")
-.select("paciente_id")
-.eq("usuario_id",profissionalId)
-.eq("turno",turno)
-.eq("ativo",true)
-
+const {data,error}=await db.from("pacientes_profissionais").select("paciente_id").eq("usuario_id",profissionalId).eq("turno",turno).eq("ativo",true)
 if(error){console.error("Erro pacientes profissional",error);return}
-
 if(data?.length){
 const ids=data.map(p=>p.paciente_id)
-
-const {data:lista}=await db
-.from("pacientes")
-.select("id,nome_completo,has,dm,da,cardiopatia,acamado,pressao_arterial")
-.in("id",ids)
-
+const {data:lista}=await db.from("pacientes").select("id,nome_completo,has,dm,da,cardiopatia,acamado,pressao_arterial").in("id",ids)
 pacientes=lista||[]
 }
 }
-
 /* 🔹 TODOS PACIENTES */
 if(!pacientes.length){
-const {data,error}=await db
-.from("pacientes")
-.select("id,nome_completo,has,dm,da,cardiopatia,acamado,pressao_arterial")
-.eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true)
-.order("nome_completo")
-
+const {data,error}=await db.from("pacientes").select("id,nome_completo,has,dm,da,cardiopatia,acamado,pressao_arterial").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo")
 if(error){console.error("Erro pacientes",error);return}
-
 pacientes=data||[]
 }
-/* 🔹 ROTINAS ORDENADAS CORRETAMENTE */
-const {data:rotinas,error:e2}=await db
-.from("rotina_modelos")
-.select("id,nome,turno,ordem")
-.eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true)
-.order("ordem",{ascending:true})
+/* 🔹 ROTINAS ORDENADAS */
+const {data:rotinas,error:e2}=await db.from("rotina_modelos").select("id,nome,turno,ordem").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("ordem",{ascending:true})
 if(e2){console.error("Erro rotinas",e2);return}
-const rotinasOrdenadas=rotinas||[]
-/* 🔹 FILTRAR POR TURNO */
-let rotinasTurno=rotinasOrdenadas.filter(r=>{
-return !r.turno||r.turno===turno
-})
+let rotinasTurno=(rotinas||[]).filter(r=>!r.turno||r.turno===turno)
 rotinasTurno.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
-/* 🔹 EXECUÇÕES */
-const dataInicioRaw=document.getElementById("dataInicio")?.value
-const dataFimRaw=document.getElementById("dataFim")?.value
-
-const dataInicio=dataInicioRaw&&dataInicioRaw.includes("/")?dataInicioRaw.split("/").reverse().join("-"):dataInicioRaw
-const dataFim=dataFimRaw&&dataFimRaw.includes("/")?dataFimRaw.split("/").reverse().join("-"):dataFimRaw
-const {data:execucoes,error:e3}=await db
-.from("rotinas_execucao")
-.select("id,paciente_id,rotina_id,status,usuario_id,profissional_nome,data")
-.gte("data",dataInicio)
-.lte("data",dataFim)
+/* 🔹 EXECUÇÕES (SOMENTE DO DIA + TURNO) */
+const {data:execucoes,error:e3}=await db.from("rotinas_execucao").select("id,paciente_id,rotina_id,status,usuario_id,profissional_nome,data,turno").eq("data",dataHoje).eq("turno",turno)
 if(e3){console.error("Erro execucoes",e3);return}
 /* 🔹 USUÁRIOS */
-const {data:usuarios}=await db
-.from("usuarios")
-.select("id,nome_apelido")
-.eq("ativo",true)
+const {data:usuarios}=await db.from("usuarios").select("id,nome_apelido").eq("ativo",true)
 const mapaProfissionais={}
-usuarios?.forEach(u=>{
-mapaProfissionais[u.id]=u.nome_apelido
-})
-/* 🔹 MAPA EXECUÇÕES */
+usuarios?.forEach(u=>{mapaProfissionais[u.id]=u.nome_apelido})
+/* 🔹 MAPA EXECUÇÕES (ÚNICO POR PACIENTE+ROTINA+DIA) */
 const mapaExecucoes={}
 execucoes?.forEach(e=>{
-mapaExecucoes[`${e.paciente_id}_${e.rotina_id}_${e.data}`]=e
+const chave=`${e.paciente_id}_${e.rotina_id}`
+if(!mapaExecucoes[chave])mapaExecucoes[chave]=e
 })
 /* 🔹 MONTAR LISTA */
 let lista=[]
-
 pacientes?.forEach(p=>{
-
 if(paciente!=="todos"&&paciente!=p.id)return
-
 rotinasTurno.forEach(r=>{
-
-let exec = execucoes
-?.filter(e =>
-String(e.paciente_id)===String(p.id) &&
-String(e.rotina_id)===String(r.id)
-)
-.sort((a,b)=>new Date(b.data)-new Date(a.data))[0]
-
+const chave=`${p.id}_${r.id}`
+const exec=mapaExecucoes[chave]
 lista.push({
-id:exec?.id||`${p.id}_${r.id}`,
+id:exec?.id||chave,
 paciente_id:p.id,
 rotina_id:r.id,
 paciente:p.nome_completo,
 rotina:r.nome,
 ordem:r.ordem||99,
 status:exec?.status||"pendente",
-profissional:
-(exec
-? (exec.profissional_nome && exec.profissional_nome.trim()!==""
-? exec.profissional_nome
-: mapaProfissionais[exec.usuario_id] || "—")
-: ""),
+profissional:exec?(exec.profissional_nome&&exec.profissional_nome.trim()!==""?exec.profissional_nome:(mapaProfissionais[exec.usuario_id]||"—")):"",
 has:p.has,
 dm:p.dm,
 demencia:p.da,
@@ -204,20 +143,15 @@ cardiopatia:p.cardiopatia,
 acamado:p.acamado,
 pa:p.pressao_arterial
 })
-
 })
-
 })
-
 /* 🔹 ORDENAÇÃO FINAL */
 lista.sort((a,b)=>{
 if(a.paciente<b.paciente)return-1
 if(a.paciente>b.paciente)return 1
 return (a.ordem||99)-(b.ordem||99)
 })
-
 ROTINAS_CACHE=lista
-
 calcularIndicadores(lista)
 renderizarRotinas(lista)
 }
