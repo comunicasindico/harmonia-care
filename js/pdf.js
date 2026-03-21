@@ -89,23 +89,45 @@ y+=4
 doc.line(10,y,200,y)
 y+=4
 doc.setFont("Roboto","normal")
-/* LINHAS */
-Object.keys(matriz).sort().forEach(data=>{
+/* LINHAS DASHBOARD */
+Object.keys(matriz).sort().forEach((data,index)=>{
 let x=10
+
+/* LINHA ALTERNADA (EFEITO TABELA) */
+if(index%2===0){
+doc.setFillColor(245,245,245)
+doc.rect(10,y-4,190,6,"F")
+}
+
 doc.setTextColor(0,0,0)
 doc.text(formatarDataBR(data),x,y)
 x+=22
+
 colunas.forEach(c=>{
 let status=matriz[data][normalizar(c)]
+
+const largura=10
+const altura=5
+
 if(status==="executado"){
-doc.setTextColor(39,174,96)
-doc.text("✔",x,y,{align:"center"})
+doc.setFillColor(46,204,113)
+doc.rect(x-5,y-3,largura,altura,"F")
+doc.setTextColor(255,255,255)
+doc.setFont("Roboto","bold")
+doc.text("OK",x,y,{align:"center"})
 }else{
-doc.setTextColor(231,76,60)
-doc.text("✖",x,y,{align:"center"})
+doc.setFillColor(231,76,60)
+doc.rect(x-5,y-3,largura,altura,"F")
+doc.setTextColor(255,255,255)
+doc.setFont("Roboto","bold")
+doc.text("X",x,y,{align:"center"})
 }
-x+=13
+
+doc.setTextColor(0,0,0)
+doc.setFont("Roboto","normal")
+x+=12
 })
+
 y+=6
 if(y>270){doc.addPage();y=20}
 })
