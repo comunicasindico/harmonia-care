@@ -40,28 +40,46 @@ const doc=new jsPDF("p","mm","a4")
 await carregarFonteRoboto(doc)
 let y=15
 
-/* CABEÇALHO */
+/* HEADER AZUL */
+doc.setFillColor(41,128,185)
+doc.rect(0,0,210,18,"F")
+doc.setTextColor(255,255,255)
 doc.setFontSize(12)
-doc.text(["Lar Geriátrico Harmonia","Tel: (81) 3461-3109"],105,y,{align:"center"})
-y+=10
-doc.setFontSize(14)
 doc.setFont("Roboto","bold")
-doc.text("RELATÓRIO DO PACIENTE",105,y,{align:"center"})
-y+=10
-/* DADOS */
+doc.text(["LAR GERIÁTRICO HARMONIA","Tel: (81) 3461-3109"],105,8,{align:"center"})
+doc.setFontSize(9)
 doc.setFont("Roboto","normal")
-doc.setFontSize(10)
-doc.text(`Paciente: ${paciente.nome_completo}`,10,y);y+=5
-doc.text(`Idade: ${calcularIdade(paciente.data_nascimento)}`,10,y);y+=5
-doc.text(`HAS: ${paciente.has?"SIM":"—"}`,10,y);y+=5
-doc.text(`Diabetes: ${paciente.dm?"SIM":"—"}`,10,y);y+=5
-doc.text(`Demência: ${paciente.da?"SIM":"—"}`,10,y);y+=5
-doc.text(`Cardiopatia: ${paciente.cardiopatia?"SIM":"—"}`,10,y);y+=5
-doc.text(`Acamado: ${paciente.acamado?"SIM":"—"}`,10,y);y+=5
-doc.text(`PA: ${paciente.pressao_arterial||""}`,10,y);y+=5
-doc.text(`Dieta Especial: ${paciente.dieta_especial?"SIM - "+(paciente.dieta_texto||""):"NÃO"}`,10,y);y+=5
-doc.text(`Grau de Risco: ${paciente.grau_risco||"—"}`,10,y);y+=5
-doc.text(`Outras Comorbidades: ${paciente.outras_comorbidades||"—"}`,10,y);y+=6
+doc.text("Relatório Clínico do Paciente",105,14,{align:"center"})
+doc.setTextColor(0,0,0)
+y=25
+/* BOX DADOS */
+doc.setDrawColor(200)
+doc.rect(10,y,190,40)
+
+doc.setFontSize(9)
+let dy=y+6
+
+doc.text(`Paciente: ${paciente.nome_completo}`,12,dy)
+doc.text(`Idade: ${calcularIdade(paciente.data_nascimento)}`,120,dy)
+
+dy+=5
+doc.text(`HAS: ${paciente.has?"SIM":"—"}`,12,dy)
+doc.text(`Diabetes: ${paciente.dm?"SIM":"—"}`,60,dy)
+doc.text(`Demência: ${paciente.da?"SIM":"—"}`,120,dy)
+
+dy+=5
+doc.text(`Cardiopatia: ${paciente.cardiopatia?"SIM":"—"}`,12,dy)
+doc.text(`Acamado: ${paciente.acamado?"SIM":"—"}`,80,dy)
+doc.text(`PA: ${paciente.pressao_arterial||""}`,140,dy)
+
+dy+=5
+doc.text(`Dieta: ${paciente.dieta_especial?"SIM - "+(paciente.dieta_texto||""):"NÃO"}`,12,dy)
+doc.text(`Risco: ${paciente.grau_risco||"—"}`,120,dy)
+
+dy+=5
+doc.text(`Comorbidades: ${paciente.outras_comorbidades||"—"}`,12,dy)
+
+y+=45
 /* COLUNAS */
 const colunas=["Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café","Medicação","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene (noite)","Troca de Fraldas (noite)"]
 function normalizar(txt){return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()}
@@ -76,64 +94,58 @@ matriz[r.data][normalizar(nome)]=r.status
 doc.setFont("Roboto","bold")
 doc.text("Rotinas por período",10,y)
 y+=6
-/* HEADER */
+/* HEADER TABELA */
+doc.setFillColor(52,152,219)
+doc.rect(10,y-4,190,6,"F")
+doc.setTextColor(255,255,255)
+doc.setFont("Roboto","bold")
 doc.setFontSize(8)
 let x=10
 doc.text("Data",x,y)
 x+=22
 colunas.forEach((c,i)=>{
 doc.text(String(i+1),x,y,{align:"center"})
-x+=13
+x+=12
 })
-y+=4
-doc.line(10,y,200,y)
-y+=4
-doc.setFont("Roboto","normal")
+doc.setTextColor(0,0,0)
+y+=6
 /* LINHAS DASHBOARD */
 Object.keys(matriz).sort().forEach((data,index)=>{
 let x=10
-
-/* LINHA ALTERNADA (EFEITO TABELA) */
 if(index%2===0){
-doc.setFillColor(245,245,245)
+doc.setFillColor(248,249,250)
 doc.rect(10,y-4,190,6,"F")
 }
-
 doc.setTextColor(0,0,0)
 doc.text(formatarDataBR(data),x,y)
 x+=22
-
 colunas.forEach(c=>{
 let status=matriz[data][normalizar(c)]
-
-const largura=10
-const altura=5
-
+const largura=9
+const altura=4.5
 if(status==="executado"){
-doc.setFillColor(46,204,113)
-doc.rect(x-5,y-3,largura,altura,"F")
+doc.setFillColor(39,174,96)
+doc.rect(x-4.5,y-3,largura,altura,"F")
 doc.setTextColor(255,255,255)
 doc.setFont("Roboto","bold")
 doc.text("OK",x,y,{align:"center"})
 }else{
-doc.setFillColor(231,76,60)
-doc.rect(x-5,y-3,largura,altura,"F")
+doc.setFillColor(192,57,43)
+doc.rect(x-4.5,y-3,largura,altura,"F")
 doc.setTextColor(255,255,255)
 doc.setFont("Roboto","bold")
 doc.text("X",x,y,{align:"center"})
 }
-
 doc.setTextColor(0,0,0)
 doc.setFont("Roboto","normal")
 x+=12
 })
-
 y+=6
 if(y>270){doc.addPage();y=20}
 })
 doc.setTextColor(0,0,0)
 /* ====================================================
-LEGENDA COMPACTA
+LEGENDA COMPACTA PROFISSIONAL
 ==================================================== */
 y+=5
 doc.setFont("Roboto","bold")
@@ -141,6 +153,7 @@ doc.setFontSize(9)
 doc.text("Legenda:",10,y)
 y+=5
 doc.setFont("Roboto","normal")
+doc.setFontSize(8)
 const legenda=[
 "1–Banho","2–Hig.(manhã)","3–Fraldas(manhã)","4–Água",
 "5–Café","6–Medicação","7–Almoço","8–Lanche",
@@ -154,7 +167,7 @@ cont++
 if(cont===4){y+=5;lx=10;cont=0}
 })
 /* ====================================================
-ANÁLISE FINAL
+ANÁLISE FINAL + BARRA VISUAL
 ==================================================== */
 y+=8
 doc.setFont("Roboto","bold")
@@ -169,8 +182,18 @@ if(st==="executado")executado++
 })
 })
 let perc=Math.round((executado/total)*100)
-doc.text(`Execução geral das rotinas: ${perc}%`,10,y);y+=5
-doc.text("Paciente estável, com necessidade de acompanhamento contínuo.",10,y);y+=5
+doc.text(`Execução geral das rotinas: ${perc}%`,10,y)
+y+=4
+const larguraBarra=180
+const progresso=(perc||0)/100
+doc.setFillColor(220,220,220)
+doc.rect(10,y,larguraBarra,5,"F")
+doc.setFillColor(46,204,113)
+doc.rect(10,y,larguraBarra*progresso,5,"F")
+doc.setFontSize(8)
+doc.text(`${perc}%`,95,y+4,{align:"center"})
+y+=10
+doc.text("Paciente estável, com necessidade de acompanhamento contínuo.",10,y)
 /* FINAL */
 y+=10
 doc.text("__________________________________________",10,y)
