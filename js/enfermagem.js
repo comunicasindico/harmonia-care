@@ -121,7 +121,6 @@ if(error){console.error("Erro pacientes",error);return}
 
 pacientes=data||[]
 }
-
 /* 🔹 ROTINAS ORDENADAS CORRETAMENTE */
 const {data:rotinas,error:e2}=await db
 .from("rotina_modelos")
@@ -129,14 +128,10 @@ const {data:rotinas,error:e2}=await db
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
 .order("ordem",{ascending:true})
-
 if(e2){console.error("Erro rotinas",e2);return}
-
 const rotinasOrdenadas=rotinas||[]
-
 /* 🔹 FILTRAR POR TURNO */
-let rotinasTurno=rotinasOrdenadas.filter(r=>r.turno===turno)
-
+let rotinasTurno=rotinasOrdenadas
 /* 🔹 EXECUÇÕES */
 const {data:execucoes,error:e3}=await db
 .from("rotinas_execucao")
@@ -144,7 +139,6 @@ const {data:execucoes,error:e3}=await db
 .eq("data",dataHoje)
 
 if(e3){console.error("Erro execucoes",e3);return}
-
 /* 🔹 USUÁRIOS */
 const {data:usuarios}=await db
 .from("usuarios")
@@ -154,13 +148,11 @@ const mapaProfissionais={}
 usuarios?.forEach(u=>{
 mapaProfissionais[u.id]=u.nome_apelido
 })
-
 /* 🔹 MAPA EXECUÇÕES */
 const mapaExecucoes={}
 execucoes?.forEach(e=>{
 mapaExecucoes[`${e.paciente_id}_${e.rotina_id}`]=e
 })
-
 /* 🔹 MONTAR LISTA */
 let lista=[]
 
