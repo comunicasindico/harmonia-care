@@ -67,7 +67,17 @@ ${p.pa_alterada?'border-left:6px solid #e74c3c':''}
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_cardio"><option value="true"${p.cardiopatia?" selected":""}>✔</option><option value="false"${!p.cardiopatia?" selected":""}></option></select>`:(p.cardiopatia?"✔":"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_acamado"><option value="true"${p.acamado?" selected":""}>✔</option><option value="false"${!p.acamado?" selected":""}></option></select>`:(p.acamado?"✔":"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<input class="clin_pa" value="${p.pressao_arterial||""}" placeholder="120/80">`:(p.pressao_arterial? (p.pa_alterada?`<span style="color:#e74c3c;font-weight:bold">${p.pressao_arterial}</span>`:p.pressao_arterial):"")}</td>
-<td>${MODO_EDICAO_CLINICO?`<input class="clin_dieta" value="${p.dieta_texto||""}">`:(p.dieta_texto||"-")}</td>
+<td>${MODO_EDICAO_CLINICO?`
+<select class="clin_dieta">
+<option value="">Selecione</option>
+<option value="Hipossódica"${p.dieta_texto==="Hipossódica"?" selected":""}>Hipossódica</option>
+<option value="Diabética"${p.dieta_texto==="Diabética"?" selected":""}>Diabética</option>
+<option value="Pastosa"${p.dieta_texto==="Pastosa"?" selected":""}>Pastosa</option>
+<option value="Líquida"${p.dieta_texto==="Líquida"?" selected":""}>Líquida</option>
+<option value="Vegetariana"${p.dieta_texto==="Vegetariana"?" selected":""}>Vegetariana</option>
+<option value="Normal"${p.dieta_texto==="Normal"?" selected":""}>Normal</option>
+</select>
+`:(p.dieta_texto||"-")}</td>
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_risco"><option value="1"${p.grau_risco==1?" selected":""}>1</option><option value="2"${p.grau_risco==2?" selected":""}>2</option><option value="3"${p.grau_risco==3?" selected":""}>3</option><option value="4"${p.grau_risco==4?" selected":""}>4</option><option value="5"${p.grau_risco==5?" selected":""}>5</option></select>`:(p.grau_risco?`<b style="color:${p.grau_risco>=4?'#e74c3c':'#2c3e50'}">${p.grau_risco}</b>`:"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<input class="clin_outros" value="${p.outras_comorbidades||""}">`:(p.outras_comorbidades||"Não tem")}</td>
 <td class="acoesClinico" style="${MODO_EDICAO_CLINICO?'':'display:none'}"><button class="btn-danger" onclick="excluirPaciente('${p.id}')">Excluir</button></td>
@@ -115,26 +125,28 @@ return idade
 ==================================================== */
 function editarClinicoGlobal(){MODO_EDICAO_CLINICO=true;carregarClinico()}
 /* ====================================================
-045 – SALVAR CLINICO GLOBAL
+045 – SALVAR CLINICO GLOBAL (CORRIGIDO E PADRONIZADO)
 ==================================================== */
 async function salvarClinicoGlobal(){
 if(!db)return
 const linhas=document.querySelectorAll("#quadroClinico tr[data-id]")
 for(const linha of linhas){
 const id=linha.dataset.id
+const dietaValor=(linha.querySelector(".clin_dieta")?.value||"").trim()
 const dados={
 has:linha.querySelector(".clin_has")?.value==="true",
 dm:linha.querySelector(".clin_dm")?.value==="true",
 da:linha.querySelector(".clin_da")?.value==="true",
 cardiopatia:linha.querySelector(".clin_cardio")?.value==="true",
 acamado:linha.querySelector(".clin_acamado")?.value==="true",
-pressao_arterial:linha.querySelector(".clin_pa")?.value||"",
-dieta_texto:linha.querySelector(".clin_dieta")?.value||"",
-dieta_especial:(linha.querySelector(".clin_dieta")?.value||"")!=="",
+pressao_arterial:(linha.querySelector(".clin_pa")?.value||"").trim(),
+dieta_texto:dietaValor||null,
+dieta_especial:dietaValor!==""?true:false,
 grau_risco:parseInt(linha.querySelector(".clin_risco")?.value||0),
-outras_comorbidades:linha.querySelector(".clin_outros")?.value||""
+outras_comorbidades:(linha.querySelector(".clin_outros")?.value||"").trim()
 }
-await db.from("pacientes").update(dados).eq("id",id)
+const {error}=await db.from("pacientes").update(dados).eq("id",id)
+if(error)console.error("Erro ao salvar paciente:",id,error)
 }
 MODO_EDICAO_CLINICO=false
 await carregarClinico()
