@@ -41,7 +41,7 @@ await carregarFonteRoboto(doc)
 let y=15
 /* LOGO */
 const imgLogo=new Image()
-imgLogo.src="img/logo-harmonia.png"
+imgLogo.src="logo-harmonia.png"
 await new Promise((res,rej)=>{imgLogo.onload=res;imgLogo.onerror=rej})
 doc.addImage(imgLogo,"PNG",10,5,25,10)
 /* HEADER AZUL */
