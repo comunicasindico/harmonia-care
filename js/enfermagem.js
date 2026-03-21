@@ -465,8 +465,20 @@ profissional_nome:nomeProfissional
 .eq("rotina_id",rotinaId)
 .eq("data",dataHoje)
 window[chaveLock]=false
-await carregarRotinas()
 
+const nomeUsuario=nomeProfissional
+ROTINAS_CACHE.forEach(item=>{
+if(
+String(item.paciente_id)===String(pacienteId) &&
+String(item.rotina_id)===String(rotinaId)
+){
+item.status="executado"
+item.profissional=nomeUsuario
+}
+})
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
+window[chaveLock]=false
 }
 /* ====================================================
 026 – CONCLUIR TODAS (POR PACIENTE)
