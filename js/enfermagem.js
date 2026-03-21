@@ -278,8 +278,23 @@ const p=pacientes[pid]
 const analiseTexto=gerarAnalisePaciente(p)
 
 /* 🔹 ORDEM */
-p.rotinas.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
-
+const ordemFixa=[
+"Banho",
+"Higiene (manhã)",
+"Troca de Fraldas (manhã)",
+"Oferta de Água",
+"Café",
+"Medicação",
+"Almoço",
+"Lanche",
+"Higiene (tarde)",
+"Jantar",
+"Higiene (noite)",
+"Troca de Fraldas (noite)"
+]
+p.rotinas.sort((a,b)=>{
+return ordemFixa.indexOf(a.rotina)-ordemFixa.indexOf(b.rotina)
+})
 /* 🔹 COMORBIDADES */
 let comorbidadesHTML=""
 if(p.has)comorbidadesHTML+="<span class='tag-comorb'>HAS</span>"
