@@ -772,17 +772,29 @@ const ordemFixa=[
 "Higiene (noite)",
 "Troca de Fraldas (noite)"
 ]
-const rotinasIds = Array.from(rotinasSet).sort((a,b)=>{
-return ordemFixa.indexOf(nomesRotinas[a]) - ordemFixa.indexOf(nomesRotinas[b])
-})/* 🔹 BUSCAR NOMES DAS ROTINAS */
+const rotinasIdsRaw = Array.from(rotinasSet)
 const {data:rotinas}=await db
 .from("rotina_modelos")
 .select("id,nome")
-.in("id", rotinasIds)
-/* 🔹 MAPA ID → NOME */
-const nomesRotinas = {}
-rotinas.forEach(r=>{
-nomesRotinas[r.id] = r.nome
+.in("id", rotinasIdsRaw)
+const nomesRotinas={}
+rotinas.forEach(r=>{nomesRotinas[r.id]=r.nome})
+const ordemFixa=[
+"Banho",
+"Higiene (manhã)",
+"Troca de Fraldas (manhã)",
+"Oferta de Água",
+"Café",
+"Medicação",
+"Almoço",
+"Lanche",
+"Higiene (tarde)",
+"Jantar",
+"Higiene (noite)",
+"Troca de Fraldas (noite)"
+]
+const rotinasIds = rotinasIdsRaw.sort((a,b)=>{
+return ordemFixa.indexOf(nomesRotinas[a])-ordemFixa.indexOf(nomesRotinas[b])
 })
 /* 🔹 GERAR DIAS DO PERÍODO */
 const dias=[]
