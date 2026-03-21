@@ -745,7 +745,6 @@ if(error){
 console.error("Erro ao buscar execuções", error)
 return
 }
-
 /* 🔹 AGRUPAR POR DATA */
 const mapa = {}
 
@@ -754,27 +753,37 @@ const data = e.data
 if(!mapa[data]) mapa[data] = []
 mapa[data].push(e)
 })
-
 /* 🔹 PEGAR ROTINAS EXISTENTES */
 const rotinasSet = new Set()
 execucoes.forEach(e=>{
 rotinasSet.add(e.rotina_id)
 })
-
-const rotinasIds = Array.from(rotinasSet)
-
-/* 🔹 BUSCAR NOMES DAS ROTINAS */
+const ordemFixa=[
+"Banho",
+"Higiene (manhã)",
+"Troca de Fraldas (manhã)",
+"Oferta de Água",
+"Café",
+"Medicação",
+"Almoço",
+"Lanche",
+"Higiene (tarde)",
+"Jantar",
+"Higiene (noite)",
+"Troca de Fraldas (noite)"
+]
+const rotinasIds = Array.from(rotinasSet).sort((a,b)=>{
+return ordemFixa.indexOf(nomesRotinas[a]) - ordemFixa.indexOf(nomesRotinas[b])
+})/* 🔹 BUSCAR NOMES DAS ROTINAS */
 const {data:rotinas}=await db
 .from("rotina_modelos")
 .select("id,nome")
 .in("id", rotinasIds)
-
 /* 🔹 MAPA ID → NOME */
 const nomesRotinas = {}
 rotinas.forEach(r=>{
 nomesRotinas[r.id] = r.nome
 })
-
 /* 🔹 GERAR DIAS DO PERÍODO */
 const dias=[]
 let d=new Date(dataInicio+"T00:00:00")
