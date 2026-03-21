@@ -39,14 +39,18 @@ const {jsPDF}=window.jspdf
 const doc=new jsPDF("p","mm","a4")
 await carregarFonteRoboto(doc)
 let y=15
-
+/* LOGO */
+const imgLogo=new Image()
+imgLogo.src="img/logo-harmonia.png"
+await new Promise((res,rej)=>{imgLogo.onload=res;imgLogo.onerror=rej})
+doc.addImage(imgLogo,"PNG",10,5,25,10)
 /* HEADER AZUL */
 doc.setFillColor(41,128,185)
 doc.rect(0,0,210,18,"F")
 doc.setTextColor(255,255,255)
 doc.setFontSize(12)
 doc.setFont("Roboto","bold")
-doc.text(["LAR GERIÁTRICO HARMONIA","Tel: (81) 3461-3109"],105,8,{align:"center"})
+doc.text(["LAR GERIÁTRICO HARMONIA - Tel: (81) 3461-3109"],105,8,{align:"center"})
 doc.setFontSize(9)
 doc.setFont("Roboto","normal")
 doc.text("Relatório Clínico do Paciente",105,14,{align:"center"})
@@ -199,6 +203,12 @@ y+=10
 doc.text("__________________________________________",10,y)
 y+=6
 doc.text("Responsável Técnico",10,y)
+/* QR CODE */
+const qrData=`Paciente:${paciente.nome_completo}\nPeriodo:${dataInicio} a ${dataFim}`
+const qrCanvas=document.createElement("canvas")
+await QRCode.toCanvas(qrCanvas,qrData,{width:80})
+const qrImg=qrCanvas.toDataURL("image/png")
+doc.addImage(qrImg,"PNG",170,y-10,25,25)
 doc.save(`Relatorio_${paciente.nome_completo}.pdf`)
 }
 /* ====================================================
