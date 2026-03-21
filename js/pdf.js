@@ -39,14 +39,13 @@ const {jsPDF}=window.jspdf
 const doc=new jsPDF("p","mm","a4")
 await carregarFonteRoboto(doc)
 let y=15
-/* LOGO */
+/* LOGO SEGURO */
+try{
 const imgLogo=new Image()
-imgLogo.src="logo-harmonia.png"
-await new Promise((res)=>{
-imgLogo.onload=res
-imgLogo.onerror=res
-})
+imgLogo.src=window.location.origin+"/harmonia-care/logo-harmonia.png"
+await new Promise((res)=>{imgLogo.onload=res;imgLogo.onerror=res})
 doc.addImage(imgLogo,"PNG",10,5,25,10)
+}catch(e){}
 /* HEADER AZUL */
 doc.setFillColor(41,128,185)
 doc.rect(0,0,210,18,"F")
@@ -248,5 +247,13 @@ head:[["Paciente","Rotina","Turno","Status"]],
 body:linhas,
 startY:30
 })
+/* NUMERAÇÃO DE PÁGINAS */
+const totalPages=doc.getNumberOfPages()
+for(let i=1;i<=totalPages;i++){
+doc.setPage(i)
+doc.setFontSize(8)
+doc.setTextColor(120)
+doc.text(`Relatório Clínico do Lar Harmonia | Página ${i}/${totalPages}`,200,290,{align:"right"})}
+doc.setTextColor(0)
 doc.save("relatorio_rotinas.pdf")
 }
