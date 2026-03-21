@@ -76,17 +76,20 @@ ${p.pa_alterada?'border-left:6px solid #e74c3c':''}
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_acamado"><option value="true"${p.acamado?" selected":""}>✔</option><option value="false"${!p.acamado?" selected":""}></option></select>`:(p.acamado?"✔":"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<input class="clin_pa" value="${p.pressao_arterial||""}" placeholder="120/80">`:(p.pressao_arterial? (p.pa_alterada?`<span style="color:#e74c3c;font-weight:bold">${p.pressao_arterial}</span>`:p.pressao_arterial):"")}</td>
 <td>${MODO_EDICAO_CLINICO?`
+const dietaAtual = p.dieta_texto && p.dieta_texto.trim()!=="" 
+? p.dieta_texto 
+: "";
 <select class="clin_dieta">
 <option value="">Selecione</option>
-<option value="Hipossódica"${normalizar(p.dieta_texto||p.dieta_especial)==="hipossodica"?" selected":""}>Hipossódica</option>
-<option value="Diabética"${normalizar(p.dieta_texto||p.dieta_especial)==="diabetica"?" selected":""}>Diabética</option>
-<option value="Pastosa"${normalizar(p.dieta_texto||p.dieta_especial)==="pastosa"?" selected":""}>Pastosa</option>
-<option value="Líquida"${normalizar(p.dieta_texto||p.dieta_especial)==="liquida"?" selected":""}>Líquida</option>
-<option value="Vegetariana"${normalizar(p.dieta_texto||p.dieta_especial)==="vegetariana"?" selected":""}>Vegetariana</option>
-<option value="Normal"${normalizar(p.dieta_texto||p.dieta_especial)==="normal"?" selected":""}>Normal</option>
+<option value="Hipossódica"${normalizar(p.dieta_texto)==="hipossodica"?" selected":""}>Hipossódica</option>
+<option value="Diabética"${normalizar(p.dieta_texto)==="diabetica"?" selected":""}>Diabética</option>
+<option value="Pastosa"${normalizar(p.dieta_texto)==="pastosa"?" selected":""}>Pastosa</option>
+<option value="Líquida"${normalizar(p.dieta_texto)==="liquida"?" selected":""}>Líquida</option>
+<option value="Vegetariana"${normalizar(p.dieta_texto)==="vegetariana"?" selected":""}>Vegetariana</option>
+<option value="Normal"${normalizar(p.dieta_texto)==="normal"?" selected":""}>Normal</option>
 </select>
 `:(()=>{
-let dieta=p.dieta_texto||p.dieta_especial||""
+let dieta=(p.dieta_texto && p.dieta_texto.trim()!=="") ? p.dieta_texto : ""
 if(!dieta)return "-"
 const d=normalizar(dieta)
 let cor="#f4f6f9",icone="🍽️"
@@ -97,7 +100,8 @@ else if(d.includes("past")){cor="#fff3cd";icone="🍲"}
 else if(d.includes("veget")){cor="#eafaf1";icone="🥗"}
 else if(d.includes("normal")){cor="#f4f6f9";icone="🍛"}
 return `<span style="padding:3px 8px;border-radius:6px;font-size:11px;background:${cor};font-weight:bold;display:inline-block">${icone} ${dieta}</span>`
-})()}</td>
+})()}
+</td>
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_risco"><option value="1"${p.grau_risco==1?" selected":""}>1</option><option value="2"${p.grau_risco==2?" selected":""}>2</option><option value="3"${p.grau_risco==3?" selected":""}>3</option><option value="4"${p.grau_risco==4?" selected":""}>4</option><option value="5"${p.grau_risco==5?" selected":""}>5</option></select>`:(p.grau_risco?`<b style="color:${p.grau_risco>=4?'#e74c3c':'#2c3e50'}">${p.grau_risco}</b>`:"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<input class="clin_outros" value="${p.outras_comorbidades||""}">`:(p.outras_comorbidades||"Não tem")}</td>
 <td class="acoesClinico" style="${MODO_EDICAO_CLINICO?'':'display:none'}"><button class="btn-danger" onclick="excluirPaciente('${p.id}')">Excluir</button></td>
