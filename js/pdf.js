@@ -1,10 +1,15 @@
 async function carregarFonteRoboto(doc){
-const response=await fetch("fonts/Roboto-Regular.ttf")
-const buffer=await response.arrayBuffer()
-const base64=btoa(new Uint8Array(buffer).reduce((data,byte)=>data+String.fromCharCode(byte),""))
-doc.addFileToVFS("Roboto-Regular.ttf",base64)
+const normal=await fetch("fonts/Roboto-Regular.ttf")
+const bold=await fetch("fonts/Roboto-Bold.ttf")
+const bufferNormal=await normal.arrayBuffer()
+const bufferBold=await bold.arrayBuffer()
+const base64Normal=btoa(new Uint8Array(bufferNormal).reduce((d,b)=>d+String.fromCharCode(b),""))
+const base64Bold=btoa(new Uint8Array(bufferBold).reduce((d,b)=>d+String.fromCharCode(b),""))
+doc.addFileToVFS("Roboto-Regular.ttf",base64Normal)
 doc.addFont("Roboto-Regular.ttf","Roboto","normal")
-doc.setFont("Roboto")
+doc.addFileToVFS("Roboto-Bold.ttf",base64Bold)
+doc.addFont("Roboto-Bold.ttf","Roboto","bold")
+doc.setFont("Roboto","normal")
 }
 function formatarDataBR(dataISO){
 if(!dataISO)return""
