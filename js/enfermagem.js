@@ -190,7 +190,7 @@ break
 }
 
 lista.push({
-id:exec?.id||chave,
+id:exec?.id||`${p.id}_${r.id}`,
 paciente_id:p.id,
 rotina_id:r.id,
 paciente:p.nome_completo,
