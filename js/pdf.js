@@ -14,8 +14,9 @@ const mes=String(d.getMonth()+1).padStart(2,"0")
 const ano=d.getFullYear()
 return`${dia}-${mes}-${ano}`
 }
+
 /* ====================================================
-080 – PDF PACIENTE (FINAL LIMPO E CORRETO)
+080 – PDF PACIENTE (PADRÃO EXATO DO PAINEL)
 ==================================================== */
 async function gerarPDFPaciente(){
 const imgDieta=new Image()
@@ -57,7 +58,7 @@ doc.text(`PA: ${paciente.pressao_arterial||""}`,10,y);y+=5
 
 y+=5
 
-/* COLUNAS */
+/* COLUNAS – ORDEM EXATA DO PAINEL */
 const colunas=[
 "Banho",
 "Higiene (manhã)",
@@ -73,19 +74,21 @@ const colunas=[
 "Troca de Fraldas (noite)"
 ]
 
+/* NORMALIZADOR (GARANTE MATCH PERFEITO) */
+function normalizar(txt){
+return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()
+}
 /* MATRIZ */
 let matriz={}
 rotinasExec?.forEach(r=>{
 if(!matriz[r.data])matriz[r.data]={}
 const nome=r.rotina_modelos?.nome||""
-if(nome)matriz[r.data][nome]=r.status
+matriz[r.data][normalizar(nome)]=r.status
 })
-
 /* TÍTULO */
 doc.setFont("Roboto","bold")
 doc.text("Rotinas por período",10,y)
 y+=6
-
 /* HEADER */
 let x=10
 doc.text("Data",x,y)
@@ -99,21 +102,19 @@ doc.line(10,y,200,y)
 y+=4
 
 doc.setFont("Roboto","normal")
-
 /* LINHAS */
 Object.keys(matriz).sort().forEach(data=>{
 let x=10
 doc.text(formatarDataBR(data),x,y)
 x+=20
 colunas.forEach(c=>{
-let status=matriz[data][c]
+let status=matriz[data][normalizar(c)]
 doc.text(status==="executado"?"OK":"X",x,y)
 x+=12
 })
 y+=6
 if(y>270){doc.addPage();y=20}
 })
-
 /* ====================================================
 LEGENDA (UMA VEZ SÓ)
 ==================================================== */
@@ -127,7 +128,6 @@ doc.text(`${i+1} – ${c}`,10,y)
 y+=4
 if(y>280){doc.addPage();y=20}
 })
-
 /* ====================================================
 ANÁLISE FINAL (UMA VEZ SÓ)
 ==================================================== */
@@ -149,7 +149,6 @@ let perc=Math.round((executado/total)*100)
 
 doc.text(`Execução geral das rotinas: ${perc}%`,10,y);y+=5
 doc.text("Paciente estável, com necessidade de acompanhamento contínuo.",10,y);y+=5
-
 /* FINAL */
 y+=10
 doc.text("__________________________________________",10,y)
