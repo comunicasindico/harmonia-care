@@ -97,7 +97,7 @@ const {data,error}=await db
 .from("pacientes_profissionais")
 .select("paciente_id")
 .eq("usuario_id",profissionalId)
-.eq("turno",turno, TURNO_ATUAL)
+.eq("turno",turno)
 .eq("ativo",true)
 
 if(error){console.error("Erro pacientes profissional",error);return}
@@ -137,13 +137,16 @@ const {data:rotinas,error:e2}=await db
 if(e2){console.error("Erro rotinas",e2);return}
 const rotinasOrdenadas=rotinas||[]
 /* 🔹 FILTRAR POR TURNO */
-let rotinasTurno=rotinasOrdenadas
+let rotinasTurno=rotinasOrdenadas.filter(r=>{
+return !r.turno||r.turno===turno
+})
+rotinasTurno.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
 /* 🔹 EXECUÇÕES */
 const {data:execucoes,error:e3}=await db
 .from("rotinas_execucao")
 .select("id,paciente_id,rotina_id,status,usuario_id,profissional_nome")
 .eq("data",dataHoje)
-
+.eq("turno",turno)
 if(e3){console.error("Erro execucoes",e3);return}
 /* 🔹 USUÁRIOS */
 const {data:usuarios}=await db
