@@ -36,20 +36,26 @@ barra.style.background="green"
 /* ====================================================
 021 – MUDAR TURNO
 ==================================================== */
-function mudarTurno(turno){
+async function mudarTurno(turno){
 console.log("Turno selecionado:",turno)
 TURNO_ATUAL=turno
-localStorage.setItem("turno_atual",turno)
-const btnManha=document.getElementById("btnManha"),btnTarde=document.getElementById("btnTarde"),btnNoite=document.getElementById("btnNoite")
+const btnManha=document.getElementById("btnManha")
+const btnTarde=document.getElementById("btnTarde")
+const btnNoite=document.getElementById("btnNoite")
 if(btnManha)btnManha.classList.remove("turno-ativo")
 if(btnTarde)btnTarde.classList.remove("turno-ativo")
 if(btnNoite)btnNoite.classList.remove("turno-ativo")
 if(turno==="manha"&&btnManha)btnManha.classList.add("turno-ativo")
 if(turno==="tarde"&&btnTarde)btnTarde.classList.add("turno-ativo")
 if(turno==="noite"&&btnNoite)btnNoite.classList.add("turno-ativo")
-if(typeof carregarRotinas==="function")carregarRotinas()
+/* 🔥 AQUI ESTÁ O SEGREDO */
+if(typeof carregarRotinas==="function"){
+await carregarRotinas()
 }
-
+if(typeof montarGradePeriodo==="function"){
+await montarGradePeriodo()
+}
+}
 /* ====================================================
 022 – CARREGAR PACIENTES BUSCA
 ==================================================== */
@@ -91,7 +97,7 @@ const {data,error}=await db
 .from("pacientes_profissionais")
 .select("paciente_id")
 .eq("usuario_id",profissionalId)
-.eq("turno",turno)
+.eq("turno",turno, TURNO_ATUAL)
 .eq("ativo",true)
 
 if(error){console.error("Erro pacientes profissional",error);return}
