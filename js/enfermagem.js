@@ -25,9 +25,9 @@ function atualizarBarraProgresso(percentual){
 const barra=document.getElementById("barraProgresso")
 if(!barra)return
 barra.style.width=percentual+"%"
-if(percentual<50){
+if(percentual<66){
 barra.style.background="red"
-}else if(percentual<80){
+}else if(percentual<91){
 barra.style.background="orange"
 }else{
 barra.style.background="green"
@@ -149,7 +149,7 @@ const dataInicio=dataInicioRaw&&dataInicioRaw.includes("/")?dataInicioRaw.split(
 const dataFim=dataFimRaw&&dataFimRaw.includes("/")?dataFimRaw.split("/").reverse().join("-"):dataFimRaw
 const {data:execucoes,error:e3}=await db
 .from("rotinas_execucao")
-.select("id,paciente_id,rotina_id,status,usuario_id,profissional_nome")
+.select("id,paciente_id,rotina_id,status,usuario_id,profissional_nome,data")
 .gte("data",dataInicio)
 .lte("data",dataFim)
 .eq("turno",turno)
@@ -177,8 +177,17 @@ if(paciente!=="todos"&&paciente!=p.id)return
 
 rotinasTurno.forEach(r=>{
 
-const chave=`${p.id}_${r.id}_${dataHoje}`
-const exec=mapaExecucoes[chave]
+let exec=null
+
+for(const e of execucoes||[]){
+if(
+String(e.paciente_id)===String(p.id) &&
+String(e.rotina_id)===String(r.id)
+){
+exec=e
+break
+}
+}
 
 lista.push({
 id:exec?.id||chave,
@@ -189,9 +198,9 @@ rotina:r.nome,
 ordem:r.ordem||99,
 status:exec?.status||"pendente",
 profissional:
-exec?.profissional_nome||
-mapaProfissionais[exec?.usuario_id]||
-"—",
+(exec?.profissional_nome && exec.profissional_nome.trim()!==""
+?exec.profissional_nome
+:mapaProfissionais[exec?.usuario_id]) || "—",
 has:p.has,
 dm:p.dm,
 demencia:p.da,
@@ -337,7 +346,9 @@ corProf=obterCorUsuario(nomeProf)
 const classeVisual=r.status==="executado"?"rotina-ok":"rotina-pendente"
 rotinasHTML+=`<div class="badge-rotina ${classeVisual}">
 ${r.rotina}
-${r.status==="executado"?`<span class="profissional">✔ ${nomeProf}</span>`:""}
+${r.status==="executado"
+?`<span class="profissional" style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`
+:""}
 </div>`
 })
 
