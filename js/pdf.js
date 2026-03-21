@@ -59,10 +59,11 @@ doc.text(`Demência: ${paciente.da?"SIM":"—"}`,10,y);y+=5
 doc.text(`Cardiopatia: ${paciente.cardiopatia?"SIM":"—"}`,10,y);y+=5
 doc.text(`Acamado: ${paciente.acamado?"SIM":"—"}`,10,y);y+=5
 doc.text(`PA: ${paciente.pressao_arterial||""}`,10,y);y+=5
-y+=5
-/* COLUNAS – ORDEM EXATA */
+doc.text(`Dieta Especial: ${paciente.dieta_especial?"SIM - "+(paciente.dieta_texto||""):"NÃO"}`,10,y);y+=5
+doc.text(`Grau de Risco: ${paciente.grau_risco||"—"}`,10,y);y+=5
+doc.text(`Outras Comorbidades: ${paciente.outras_comorbidades||"—"}`,10,y);y+=6
+/* COLUNAS */
 const colunas=["Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café","Medicação","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene (noite)","Troca de Fraldas (noite)"]
-/* NORMALIZADOR */
 function normalizar(txt){return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()}
 /* MATRIZ */
 let matriz={}
@@ -75,7 +76,7 @@ matriz[r.data][normalizar(nome)]=r.status
 doc.setFont("Roboto","bold")
 doc.text("Rotinas por período",10,y)
 y+=6
-/* HEADER COMPACTO NUMÉRICO */
+/* HEADER */
 doc.setFontSize(8)
 let x=10
 doc.text("Data",x,y)
@@ -85,11 +86,10 @@ doc.text(String(i+1),x,y,{align:"center"})
 x+=13
 })
 y+=4
-doc.setDrawColor(180)
 doc.line(10,y,200,y)
 y+=4
 doc.setFont("Roboto","normal")
-/* LINHAS COLORIDAS */
+/* LINHAS */
 Object.keys(matriz).sort().forEach(data=>{
 let x=10
 doc.setTextColor(0,0,0)
@@ -111,7 +111,7 @@ if(y>270){doc.addPage();y=20}
 })
 doc.setTextColor(0,0,0)
 /* ====================================================
-LEGENDA
+LEGENDA COMPACTA
 ==================================================== */
 y+=5
 doc.setFont("Roboto","bold")
@@ -119,15 +119,22 @@ doc.setFontSize(9)
 doc.text("Legenda:",10,y)
 y+=5
 doc.setFont("Roboto","normal")
-colunas.forEach((c,i)=>{
-doc.text(`${i+1} – ${c}`,10,y)
-y+=4
-if(y>280){doc.addPage();y=20}
+const legenda=[
+"1–Banho","2–Hig.(manhã)","3–Fraldas(manhã)","4–Água",
+"5–Café","6–Medicação","7–Almoço","8–Lanche",
+"9–Hig.(tarde)","10–Jantar","11–Hig.(noite)","12–Fraldas(noite)"
+]
+let lx=10,cont=0
+legenda.forEach(item=>{
+doc.text(item,lx,y)
+lx+=45
+cont++
+if(cont===4){y+=5;lx=10;cont=0}
 })
 /* ====================================================
 ANÁLISE FINAL
 ==================================================== */
-y+=6
+y+=8
 doc.setFont("Roboto","bold")
 doc.text("Análise do paciente",10,y)
 y+=6
