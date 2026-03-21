@@ -42,13 +42,12 @@ let y=15
 
 /* CABEÇALHO */
 doc.setFontSize(12)
-doc.text("Lar Geriátrico Harmonia\nTel: (81) 3461-3109",105,y,{align:"center"})
+doc.text(["Lar Geriátrico Harmonia","Tel: (81) 3461-3109"],105,y,{align:"center"})
 y+=10
 doc.setFontSize(14)
 doc.setFont("Roboto","bold")
 doc.text("RELATÓRIO DO PACIENTE",105,y,{align:"center"})
 y+=10
-
 /* DADOS */
 doc.setFont("Roboto","normal")
 doc.setFontSize(10)
@@ -60,29 +59,11 @@ doc.text(`Demência: ${paciente.da?"SIM":"—"}`,10,y);y+=5
 doc.text(`Cardiopatia: ${paciente.cardiopatia?"SIM":"—"}`,10,y);y+=5
 doc.text(`Acamado: ${paciente.acamado?"SIM":"—"}`,10,y);y+=5
 doc.text(`PA: ${paciente.pressao_arterial||""}`,10,y);y+=5
-
 y+=5
-
-/* COLUNAS – ORDEM EXATA DO PAINEL */
-const colunas=[
-"Banho",
-"Higiene (manhã)",
-"Troca de Fraldas (manhã)",
-"Oferta de Água",
-"Café",
-"Medicação",
-"Almoço",
-"Lanche",
-"Higiene (tarde)",
-"Jantar",
-"Higiene (noite)",
-"Troca de Fraldas (noite)"
-]
-
-/* NORMALIZADOR (GARANTE MATCH PERFEITO) */
-function normalizar(txt){
-return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()
-}
+/* COLUNAS – ORDEM EXATA */
+const colunas=["Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café","Medicação","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene (noite)","Troca de Fraldas (noite)"]
+/* NORMALIZADOR */
+function normalizar(txt){return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()}
 /* MATRIZ */
 let matriz={}
 rotinasExec?.forEach(r=>{
@@ -94,37 +75,47 @@ matriz[r.data][normalizar(nome)]=r.status
 doc.setFont("Roboto","bold")
 doc.text("Rotinas por período",10,y)
 y+=6
-/* HEADER */
+/* HEADER COMPACTO NUMÉRICO */
+doc.setFontSize(8)
 let x=10
 doc.text("Data",x,y)
-x+=20
+x+=22
 colunas.forEach((c,i)=>{
-doc.text(String(i+1),x,y)
-x+=12
+doc.text(String(i+1),x,y,{align:"center"})
+x+=13
 })
-y+=5
+y+=4
+doc.setDrawColor(180)
 doc.line(10,y,200,y)
 y+=4
-
 doc.setFont("Roboto","normal")
-/* LINHAS */
+/* LINHAS COLORIDAS */
 Object.keys(matriz).sort().forEach(data=>{
 let x=10
+doc.setTextColor(0,0,0)
 doc.text(formatarDataBR(data),x,y)
-x+=20
+x+=22
 colunas.forEach(c=>{
 let status=matriz[data][normalizar(c)]
-doc.text(status==="executado"?"OK":"X",x,y)
-x+=12
+if(status==="executado"){
+doc.setTextColor(39,174,96)
+doc.text("✔",x,y,{align:"center"})
+}else{
+doc.setTextColor(231,76,60)
+doc.text("✖",x,y,{align:"center"})
+}
+x+=13
 })
 y+=6
 if(y>270){doc.addPage();y=20}
 })
+doc.setTextColor(0,0,0)
 /* ====================================================
-LEGENDA (UMA VEZ SÓ)
+LEGENDA
 ==================================================== */
 y+=5
 doc.setFont("Roboto","bold")
+doc.setFontSize(9)
 doc.text("Legenda:",10,y)
 y+=5
 doc.setFont("Roboto","normal")
@@ -134,14 +125,13 @@ y+=4
 if(y>280){doc.addPage();y=20}
 })
 /* ====================================================
-ANÁLISE FINAL (UMA VEZ SÓ)
+ANÁLISE FINAL
 ==================================================== */
 y+=6
 doc.setFont("Roboto","bold")
 doc.text("Análise do paciente",10,y)
 y+=6
 doc.setFont("Roboto","normal")
-
 let total=0,executado=0
 Object.values(matriz).forEach(d=>{
 Object.values(d).forEach(st=>{
@@ -149,9 +139,7 @@ total++
 if(st==="executado")executado++
 })
 })
-
 let perc=Math.round((executado/total)*100)
-
 doc.text(`Execução geral das rotinas: ${perc}%`,10,y);y+=5
 doc.text("Paciente estável, com necessidade de acompanhamento contínuo.",10,y);y+=5
 /* FINAL */
@@ -159,7 +147,6 @@ y+=10
 doc.text("__________________________________________",10,y)
 y+=6
 doc.text("Responsável Técnico",10,y)
-
 doc.save(`Relatorio_${paciente.nome_completo}.pdf`)
 }
 /* ====================================================
