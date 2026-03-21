@@ -152,7 +152,7 @@ if(e3){console.error("Erro execucoes",e3);return}
 const {data:usuarios}=await db
 .from("usuarios")
 .select("id,nome_apelido")
-
+.eq("ativo",true)
 const mapaProfissionais={}
 usuarios?.forEach(u=>{
 mapaProfissionais[u.id]=u.nome_apelido
@@ -182,7 +182,10 @@ paciente:p.nome_completo,
 rotina:r.nome,
 ordem:r.ordem||99,
 status:exec?.status||"pendente",
-profissional:exec?.profissional_nome||(exec?.usuario_id?mapaProfissionais[exec.usuario_id]:""),
+profissional:
+exec?.profissional_nome||
+mapaProfissionais[exec?.usuario_id]||
+"—",
 has:p.has,
 dm:p.dm,
 demencia:p.da,
@@ -311,31 +314,25 @@ let total=p.rotinas.length
 let executadas=0
 
 p.rotinas.forEach(r=>{
-
 if(r.status==="executado")executadas++
 
 const classe=r.status==="executado"?"rotina-executada":"rotina-pendente"
-
 let nomeProf=""
 let corProf="#64748b"
 
 if(r.status==="executado"){
-
 if(r.profissional && r.profissional.trim()!==""){
 nomeProf=r.profissional
 }else{
 nomeProf=obterNomeUsuarioAtual()
 }
-
 corProf=obterCorUsuario(nomeProf)
 }
-
-rotinasHTML+=`<button class="btn-rotina ${classe}" ${r.status==="executado"?"":`onclick="executarRotina('${r.paciente_id}','${r.rotina_id}',this)"`}>
+const classeVisual=r.status==="executado"?"rotina-ok":"rotina-pendente"
+rotinasHTML+=`<div class="badge-rotina ${classeVisual}">
 ${r.rotina}
-${r.status==="executado"
-?`<br><span style="font-size:9px;font-weight:bold;color:${corProf}">✔ ${nomeProf}</span>`
-:""}
-</button>`
+${r.status==="executado"?`<span class="profissional">✔ ${nomeProf}</span>`:""}
+</div>`
 })
 
 let percentual=total?Math.round((executadas/total)*100):0
