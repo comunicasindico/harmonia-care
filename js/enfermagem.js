@@ -721,62 +721,33 @@ return v
 036 – GRADE REAL BASEADA NO BANCO (SIMPLES E CORRETA)
 ==================================================== */
 async function montarGradePeriodo(){
-
 if(!db)return
-
 const pacienteId=document.getElementById("buscaPaciente")?.value
 const dataInicio=document.getElementById("dataInicio")?.value
 const dataFim=document.getElementById("dataFim")?.value
-
-if(!pacienteId || pacienteId==="todos"){
+if(!pacienteId||pacienteId==="todos"){
 document.getElementById("gradePeriodo").innerHTML=""
 return
 }
-
-/* 🔹 BUSCA DIRETO DO BANCO */
 const {data:execucoes,error}=await db
 .from("rotinas_execucao")
 .select("*")
-.eq("paciente_id", pacienteId)
-.gte("data", dataInicio)
-.lte("data", dataFim)
-
-if(error){
-console.error("Erro ao buscar execuções", error)
-return
-}
-/* 🔹 AGRUPAR POR DATA */
-const mapa = {}
-
+.eq("paciente_id",pacienteId)
+.gte("data",dataInicio)
+.lte("data",dataFim)
+if(error){console.error("Erro ao buscar execuções",error);return}
+const mapa={}
 execucoes.forEach(e=>{
-const data = e.data
-if(!mapa[data]) mapa[data] = []
-mapa[data].push(e)
+if(!mapa[e.data])mapa[e.data]=[]
+mapa[e.data].push(e)
 })
-/* 🔹 PEGAR ROTINAS EXISTENTES */
-const rotinasSet = new Set()
-execucoes.forEach(e=>{
-rotinasSet.add(e.rotina_id)
-})
-const ordemFixa=[
-"Banho",
-"Higiene (manhã)",
-"Troca de Fraldas (manhã)",
-"Oferta de Água",
-"Café",
-"Medicação",
-"Almoço",
-"Lanche",
-"Higiene (tarde)",
-"Jantar",
-"Higiene (noite)",
-"Troca de Fraldas (noite)"
-]
-const rotinasIdsRaw = Array.from(rotinasSet)
+const rotinasSet=new Set()
+execucoes.forEach(e=>{rotinasSet.add(e.rotina_id)})
+const rotinasIdsRaw=Array.from(rotinasSet)
 const {data:rotinas}=await db
 .from("rotina_modelos")
 .select("id,nome")
-.in("id", rotinasIdsRaw)
+.in("id",rotinasIdsRaw)
 const nomesRotinas={}
 rotinas.forEach(r=>{nomesRotinas[r.id]=r.nome})
 const ordemFixa=[
@@ -793,40 +764,28 @@ const ordemFixa=[
 "Higiene (noite)",
 "Troca de Fraldas (noite)"
 ]
-const rotinasIds = rotinasIdsRaw.sort((a,b)=>{
+const rotinasIds=rotinasIdsRaw.sort((a,b)=>{
 return ordemFixa.indexOf(nomesRotinas[a])-ordemFixa.indexOf(nomesRotinas[b])
 })
-/* 🔹 GERAR DIAS DO PERÍODO */
 const dias=[]
 let d=new Date(dataInicio+"T00:00:00")
 const fim=new Date(dataFim+"T00:00:00")
-
 while(d<=fim){
 dias.push(d.toISOString().slice(0,10))
 d.setDate(d.getDate()+1)
 }
-
-/* 🔹 MONTAR HTML */
-let html=`<div style="margin-top:20px"><b>Rotinas por período</b>
-<table style="width:100%;border-collapse:collapse;font-size:12px">`
-
-/* CABEÇALHO */
+let html=`<div style="margin-top:20px"><b>Rotinas por período</b><table style="width:100%;border-collapse:collapse;font-size:12px">`
 html+=`<tr style="background:#f1f1f1"><th>Data</th>`
 rotinasIds.forEach(id=>{
 html+=`<th>${nomesRotinas[id]||id}</th>`
 })
 html+=`</tr>`
-
-/* LINHAS */
 dias.forEach(dia=>{
 html+=`<tr><td><b>${new Date(dia+"T00:00:00").toLocaleDateString("pt-BR")}</b></td>`
-
 rotinasIds.forEach(rid=>{
-const lista = (mapa[dia]||[]).filter(e=>String(e.rotina_id)===String(rid))
-
-const total = lista.length
-const executadas = lista.filter(e => e.status === "executado").length
-
+const lista=(mapa[dia]||[]).filter(e=>String(e.rotina_id)===String(rid))
+const total=lista.length
+const executadas=lista.filter(e=>e.status==="executado").length
 let celula=""
 if(total>0&&executadas===total){
 celula=`<span title="Completo (${executadas}/${total})" style="color:#2ecc71;font-weight:bold">✔</span>`
@@ -835,15 +794,11 @@ celula=`<span title="Parcial (${executadas}/${total})" style="color:#f39c12;font
 }else{
 celula=`<span title="Não executado (0/${total})" style="color:#e74c3c;font-weight:bold">✖</span>`
 }
-
 html+=`<td style="text-align:center">${celula}</td>`
 })
-
 html+=`</tr>`
 })
-
 html+=`</table></div>`
-
 document.getElementById("gradePeriodo").innerHTML=html
 }
 
