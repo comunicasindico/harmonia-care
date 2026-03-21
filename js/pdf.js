@@ -210,6 +210,15 @@ const qrCanvas=document.createElement("canvas")
 await QRCode.toCanvas(qrCanvas,qrData,{width:80})
 const qrImg=qrCanvas.toDataURL("image/png")
 doc.addImage(qrImg,"PNG",170,y-10,25,25)
+/* NUMERAÇÃO DE PÁGINAS */
+const totalPages=doc.getNumberOfPages()
+for(let i=1;i<=totalPages;i++){
+doc.setPage(i)
+doc.setFontSize(8)
+doc.setTextColor(120)
+doc.text(`Relatório Clínico - Lar Harmonia | Página ${i}/${totalPages}`,200,290,{align:"right"})}
+doc.setTextColor(0)
+
 doc.save(`Relatorio_${paciente.nome_completo}.pdf`)
 /* ASSINATURA DIGITAL */
 const usuario=obterUsuarioLogado?obterUsuarioLogado():{nome:"Sistema"}
