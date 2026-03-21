@@ -42,7 +42,10 @@ let y=15
 /* LOGO */
 const imgLogo=new Image()
 imgLogo.src="logo-harmonia.png"
-await new Promise((res,rej)=>{imgLogo.onload=res;imgLogo.onerror=rej})
+await new Promise((res)=>{
+imgLogo.onload=res
+imgLogo.onerror=res
+})
 doc.addImage(imgLogo,"PNG",10,5,25,10)
 /* HEADER AZUL */
 doc.setFillColor(41,128,185)
