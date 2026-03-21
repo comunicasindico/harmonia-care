@@ -152,7 +152,6 @@ const {data:execucoes,error:e3}=await db
 .select("id,paciente_id,rotina_id,status,usuario_id,profissional_nome,data")
 .gte("data",dataInicio)
 .lte("data",dataFim)
-.eq("turno",turno)
 if(e3){console.error("Erro execucoes",e3);return}
 /* 🔹 USUÁRIOS */
 const {data:usuarios}=await db
@@ -177,17 +176,12 @@ if(paciente!=="todos"&&paciente!=p.id)return
 
 rotinasTurno.forEach(r=>{
 
-let exec=null
-
-for(const e of execucoes||[]){
-if(
+let exec = execucoes
+?.filter(e =>
 String(e.paciente_id)===String(p.id) &&
 String(e.rotina_id)===String(r.id)
-){
-exec=e
-break
-}
-}
+)
+.sort((a,b)=>new Date(b.data)-new Date(a.data))[0]
 
 lista.push({
 id:exec?.id||`${p.id}_${r.id}`,
@@ -198,9 +192,11 @@ rotina:r.nome,
 ordem:r.ordem||99,
 status:exec?.status||"pendente",
 profissional:
-(exec?.profissional_nome && exec.profissional_nome.trim()!==""
-?exec.profissional_nome
-:mapaProfissionais[exec?.usuario_id]) || "—",
+(exec
+? (exec.profissional_nome && exec.profissional_nome.trim()!==""
+? exec.profissional_nome
+: mapaProfissionais[exec.usuario_id] || "—")
+: ""),
 has:p.has,
 dm:p.dm,
 demencia:p.da,
