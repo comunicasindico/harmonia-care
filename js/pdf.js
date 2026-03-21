@@ -202,7 +202,6 @@ doc.text("Paciente estável, com necessidade de acompanhamento contínuo.",10,y)
 y+=10
 doc.text("__________________________________________",10,y)
 y+=6
-doc.text("Responsável Técnico",10,y)
 /* QR CODE */
 const qrData=`Paciente:${paciente.nome_completo}\nPeriodo:${dataInicio} a ${dataFim}`
 const qrCanvas=document.createElement("canvas")
@@ -210,6 +209,20 @@ await QRCode.toCanvas(qrCanvas,qrData,{width:80})
 const qrImg=qrCanvas.toDataURL("image/png")
 doc.addImage(qrImg,"PNG",170,y-10,25,25)
 doc.save(`Relatorio_${paciente.nome_completo}.pdf`)
+/* ASSINATURA DIGITAL */
+const usuario=obterUsuarioLogado?obterUsuarioLogado():{nome:"Sistema"}
+doc.setFont("Roboto","bold")
+doc.text("Responsável Técnico:",10,y)
+y+=5
+doc.setFont("Roboto","normal")
+doc.text(usuario.nome||"—",10,y)
+y+=5
+doc.setDrawColor(0)
+doc.line(10,y,80,y)
+y+=4
+doc.setFontSize(8)
+doc.text("Assinatura digital",10,y)
+doc.text(`Gerado em: ${new Date().toLocaleString()}`,140,290)
 }
 /* ====================================================
 081 – PDF GERAL
