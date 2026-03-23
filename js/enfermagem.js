@@ -487,7 +487,7 @@ btn.innerHTML+=`<br><span style="font-size:10px;font-weight:bold;color:${corUsua
 })
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 for(const r of rotinas){
-if(!r.rotina_id)continue
+if(!r.paciente_id || !r.rotina_id) continue
 await db.from("rotinas_execucao").upsert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
