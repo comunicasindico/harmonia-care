@@ -555,79 +555,35 @@ profissional_nome:"admin"
 await carregarRotinas()
 }
 /* ====================================================
-030 – GERAR ROTINAS DO DIA (CORRIGIDO)
+030 – GERAR ROTINAS DO DIA (BLINDADO 409)
 ==================================================== */
 async function gerarRotinasDoDia(){
-
-if(!db) return
-if(!EMPRESA_ID)return   // 👈 AQUI
-// 🔒 trava contra loop
-if(window._gerandoRotinas) return
-window._gerandoRotinas = true
-
+if(!db)return
+if(!EMPRESA_ID)return
+if(window._gerandoRotinas)return
+window._gerandoRotinas=true
 try{
-
-const hoje = document.getElementById("dataInicio")?.value || new Date().toISOString().slice(0,10)
-
-// 🔥 pacientes
-const {data:pacientes,error:e1} = await db
-.from("pacientes")
-.select("id")
-.eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true)
-
-if(e1 || !pacientes?.length){
-console.error("Erro pacientes",e1)
-return
-}
-
-// 🔥 rotinas
-const {data:rotinas,error:e2} = await db
-.from("rotina_modelos")
-.select("id")
-
-if(e2 || !rotinas?.length){
-console.error("Erro rotinas",e2)
-return
-}
-
-// 🔥 gerar
+const hoje=document.getElementById("dataInicio")?.value||new Date().toISOString().slice(0,10)
+const {data:pacientes,error:e1}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
+if(e1||!pacientes?.length){console.error("Erro pacientes",e1);return}
+const {data:rotinas,error:e2}=await db.from("rotina_modelos").select("id")
+if(e2||!rotinas?.length){console.error("Erro rotinas",e2);return}
 for(const p of pacientes){
-
 for(const r of rotinas){
-
-const {data:existe} = await db
-.from("rotinas_execucao")
-.select("id")
-.eq("paciente_id",p.id) // ✅ CORRIGIDO
-.eq("rotina_id",r.id)
-.eq("data",hoje)
-.limit(1)
-
-if(!existe || !existe.length){
-
-await db.from("rotinas_execucao").insert({
-paciente_id: p.id, // ✅ CORRIGIDO
-rotina_id: r.id,
-data: hoje,
-status: "pendente"
-})
-
+await db.from("rotinas_execucao").upsert({
+paciente_id:p.id,
+rotina_id:r.id,
+data:hoje,
+status:"pendente"
+},{onConflict:"paciente_id,rotina_id,data"})
 }
-
 }
-
-}
-
-// 🚫 NÃO CHAMA carregarRotinas aqui (evita loop)
-
 }catch(err){
 console.error("Erro geral gerarRotinasDoDia",err)
 }finally{
-window._gerandoRotinas = false
+window._gerandoRotinas=false
 }
 }
-
 /* ====================================================
 031 – SELECIONAR PACIENTE
 ==================================================== */
