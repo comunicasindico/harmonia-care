@@ -371,8 +371,8 @@ return
 /* INSERE SE NÃO EXISTE */
 if(!existe){
 await db.from("rotinas_execucao").upsert({
-paciente_id:...,
-rotina_id:...,
+paciente_id:r.paciente_id,
+rotina_id:r.rotina_id,
 data:dataHoje,
 status:"pendente"
 },{onConflict:"paciente_id,rotina_id,data"})
