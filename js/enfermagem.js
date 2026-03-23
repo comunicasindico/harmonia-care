@@ -357,7 +357,6 @@ const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join(
 const usuario=obterUsuarioLogado()
 const usuarioId=usuario.id
 const nomeProfissional=usuario.nome
-/* VERIFICA EXISTE */
 const {data:existe}=await db
 .from("rotinas_execucao")
 .select("status")
@@ -371,12 +370,12 @@ return
 }
 /* INSERE SE NÃO EXISTE */
 if(!existe){
-await db.from("rotinas_execucao").insert({
-paciente_id:pacienteId,
-rotina_id:rotinaId,
+await db.from("rotinas_execucao").upsert({
+paciente_id:...,
+rotina_id:...,
 data:dataHoje,
 status:"pendente"
-})
+},{onConflict:"paciente_id,rotina_id,data"})
 }
 /* UI */
 if(botao){
@@ -415,24 +414,28 @@ calcularIndicadores(ROTINAS_CACHE)
 window[chaveLock]=false
 }
 /* ====================================================
-026 – CONCLUIR TODAS (POR PACIENTE)
+026 – CONCLUIR TODAS (BLINDADO)
 ==================================================== */
 async function concluirTodas(pacienteId){
 if(!db)return
+if(!pacienteId)return
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 let usuarioId=localStorage.getItem("usuario_id")
-if(!usuarioId||usuarioId==="null"){usuarioId=PROFISSIONAL_ID||null}
-const {data:rotinas}=await db.from("rotinas").select("id")
+if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
+const nomeUsuario=localStorage.getItem("usuario_nome")||"admin"
+const {data:rotinas}=await db.from("rotina_modelos").select("id")
 for(const r of rotinas||[]){
-const {data:existe}=await db.from("rotinas_execucao").select("id,status").eq("paciente_id",pacienteId).eq("rotina_id",r.id).eq("data",dataHoje).maybeSingle()
-if(!existe){
-await db.from("rotinas_execucao").insert({paciente_id:pacienteId,rotina_id:r.id,data:dataHoje,status:"executado",usuario_id:usuarioId,horario_executado:new Date(),profissional_nome:"admin"})
-}else if(existe.status!=="executado"){
-await db.from("rotinas_execucao")
-.update({status:"executado",usuario_id:usuarioId,horario_executado:new Date(),profissional_nome:"admin"})
-.eq("id",existe.id)
-}
+if(!r.id)continue
+await db.from("rotinas_execucao").upsert({
+paciente_id:pacienteId,
+rotina_id:r.id,
+data:dataHoje,
+status:"executado",
+usuario_id:usuarioId,
+horario_executado:new Date(),
+profissional_nome:nomeUsuario
+},{onConflict:"paciente_id,rotina_id,data"})
 }
 await carregarRotinas()
 }
@@ -449,15 +452,18 @@ if(a)a.innerHTML="⚠ "+atrasado
 }
 
 /* ====================================================
-028 – EXECUTAR TODAS ROTINAS
+028 – EXECUTAR TODAS ROTINAS (BLINDADO)
 ==================================================== */
 async function executarTodos(pacienteId){
 if(!db)return
+if(!pacienteId)return
 const dataRaw=document.getElementById("dataInicio")?.value
-const dataHoje=dataRaw && dataRaw.includes("/") ? dataRaw.split("/").reverse().join("-") : (dataRaw || new Date().toISOString().slice(0,10))
+const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 let nomeUsuario=localStorage.getItem("usuario_nome")||"admin"
+let usuarioId=localStorage.getItem("usuario_id")
+if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
 let corUsuario=obterCorUsuario(nomeUsuario)
-/* ATUALIZA VISUAL IMEDIATO */
+/* UI imediata */
 const linha=document.querySelectorAll(`[data-paciente="${pacienteId}"] .btn-rotina`)
 linha.forEach(btn=>{
 if(!btn.classList.contains("rotina-executada")){
@@ -467,49 +473,34 @@ if(!btn.innerHTML.includes("✔")){
 btn.innerHTML+=`<br><span style="font-size:10px;font-weight:bold;color:${corUsuario}">✔ ${nomeUsuario}</span>`}
 }
 })
-const rotinas=ROTINAS_CACHE.filter(r=>r.paciente_id===pacienteId)
+const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 for(const r of rotinas){
-let usuarioId=localStorage.getItem("usuario_id")
-if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
-const {data:existe}=await db
-.from("rotinas_execucao")
-.select("id,status")
-.eq("paciente_id",r.paciente_id)
-.eq("rotina_id",r.rotina_id)
-.eq("data",dataHoje)
-.maybeSingle()
-if(existe && existe.status==="executado")continue
-if(!existe){
-await db.from("rotinas_execucao").insert({
+if(!r.rotina_id)continue
+await db.from("rotinas_execucao").upsert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
-status:"pendente"
-})
-}
-await db.from("rotinas_execucao")
-.update({
 status:"executado",
-horario_executado:new Date(),
 usuario_id:usuarioId,
+horario_executado:new Date(),
 profissional_nome:nomeUsuario
-})
-.eq("paciente_id",r.paciente_id)
-.eq("rotina_id",r.rotina_id)
-.eq("data",dataHoje)
+},{onConflict:"paciente_id,rotina_id,data"})
 }
 await carregarRotinas()
 }
 /* ====================================================
-029 – EXECUTAR ROTINA PARA TODOS OS PACIENTES
+029 – EXECUTAR ROTINA PARA TODOS OS PACIENTES (BLINDADO)
 ==================================================== */
 async function executarRotinaTodos(rotinaId){
 if(!db)return
+if(!rotinaId)return
 const dataRaw=document.getElementById("dataInicio")?.value
-const dataHoje=dataRaw && dataRaw.includes("/") ? dataRaw.split("/").reverse().join("-") : (dataRaw || new Date().toISOString().slice(0,10))
-let nomeUsuario="admin"
+const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
+let nomeUsuario=localStorage.getItem("usuario_nome")||"admin"
+let usuarioId=localStorage.getItem("usuario_id")
+if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
 let corUsuario=obterCorUsuario(nomeUsuario)
-/* ATUALIZA VISUAL IMEDIATO */
+/* UI imediata */
 document.querySelectorAll(".btn-rotina").forEach(btn=>{
 if(btn.innerText.includes("✔"))return
 if(btn.innerText.includes(rotinaId)){
@@ -520,37 +511,18 @@ btn.innerHTML+=`<br><span style="font-size:10px;font-weight:bold;color:${corUsua
 }
 }
 })
-const rotinas=ROTINAS_CACHE.filter(r=>r.rotina_id===rotinaId)
+const rotinas=ROTINAS_CACHE.filter(r=>String(r.rotina_id)===String(rotinaId))
 for(const r of rotinas){
-let usuarioId=localStorage.getItem("usuario_id")
-if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
-const {data:existe}=await db
-.from("rotinas_execucao")
-.select("id,status")
-.eq("paciente_id",r.paciente_id)
-.eq("rotina_id",r.rotina_id)
-.eq("data",dataHoje)
-.maybeSingle()
-if(existe && existe.status==="executado")continue
-if(!existe){
-await db.from("rotinas_execucao").insert({
+if(!r.paciente_id||!r.rotina_id)continue
+await db.from("rotinas_execucao").upsert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
-status:"pendente"
-})
-}
-await db
-.from("rotinas_execucao")
-.update({
 status:"executado",
-horario_executado:new Date(),
 usuario_id:usuarioId,
-profissional_nome:"admin"
-})
-.eq("paciente_id",r.paciente_id)
-.eq("rotina_id",r.rotina_id)
-.eq("data",dataHoje)
+horario_executado:new Date(),
+profissional_nome:nomeUsuario
+},{onConflict:"paciente_id,rotina_id,data"})
 }
 await carregarRotinas()
 }
