@@ -616,8 +616,8 @@ return v
 async function montarGradePeriodo(){
 if(!db)return
 const pacienteId=document.getElementById("buscaPaciente")?.value
-const dataInicio=document.getElementById("dataInicio")?.value
-const dataFim=document.getElementById("dataFim")?.value
+const dataInicio=normalizarDataISO(document.getElementById("dataInicio")?.value)
+const dataFim=normalizarDataISO(document.getElementById("dataFim")?.value)
 if(!pacienteId||pacienteId==="todos"){
 document.getElementById("gradePeriodo").innerHTML=""
 return
