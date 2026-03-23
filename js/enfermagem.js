@@ -75,58 +75,78 @@ if(typeof carregarClinico==="function")await carregarClinico()
 }
 
 /* ====================================================
-023 – CARREGAR ROTINAS (BLINDADO)
+023 – CARREGAR ROTINAS (ULTRA PERFORMANCE)
 ==================================================== */
 async function carregarRotinas(){
 if(!db)return
 if(!EMPRESA_ID)return
-const paciente=document.getElementById("buscaPaciente")?.value||"todos"
+const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todos"
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL
 let profissionalId=PROFISSIONAL_ID||localStorage.getItem("profissional_id")
+
+/* 🔹 PACIENTES */
 let pacientes=[]
-/* 🔹 PACIENTES DO PROFISSIONAL */
 if(profissionalId&&profissionalId!=="null"&&profissionalId!=="admin"){
-const {data,error}=await db.from("pacientes_profissionais").select("paciente_id").eq("usuario_id",profissionalId).eq("turno",turno).eq("ativo",true)
-if(error){console.error("Erro pacientes profissional",error);return}
-if(data?.length){
-const ids=data.map(p=>p.paciente_id)
-const {data:lista}=await db.from("pacientes").select("id,nome_completo,has,dm,da,cardiopatia,acamado,pressao_arterial").in("id",ids)
-pacientes=lista||[]
+const {data:pp}=await db.from("pacientes_profissionais").select("paciente_id").eq("usuario_id",profissionalId).eq("turno",turno).eq("ativo",true)
+if(pp?.length){
+const ids=pp.map(p=>p.paciente_id)
+const {data:pacs}=await db.from("pacientes").select("id,nome_completo,has,dm,da,cardiopatia,acamado,pressao_arterial").in("id",ids)
+pacientes=pacs||[]
 }
 }
-/* 🔹 TODOS PACIENTES */
 if(!pacientes.length){
-const {data,error}=await db.from("pacientes").select("id,nome_completo,has,dm,da,cardiopatia,acamado,pressao_arterial").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo")
-if(error){console.error("Erro pacientes",error);return}
-pacientes=data||[]
+const {data:pacs}=await db.from("pacientes").select("id,nome_completo,has,dm,da,cardiopatia,acamado,pressao_arterial").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
+pacientes=pacs||[]
 }
-/* 🔹 ROTINAS ORDENADAS */
-const {data:rotinas,error:e2}=await db.from("rotina_modelos").select("id,nome,turno,ordem").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("ordem",{ascending:true})
-if(e2){console.error("Erro rotinas",e2);return}
-let rotinasTurno=(rotinas||[]).filter(r=>!r.turno||r.turno===turno)
-rotinasTurno.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
-/* 🔹 EXECUÇÕES (SOMENTE DO DIA + TURNO) */
-const {data:execucoes,error:e3}=await db.from("rotinas_execucao").select("id,paciente_id,rotina_id,status,usuario_id,profissional_nome,data,turno").eq("data",dataHoje).eq("turno",turno)
-if(e3){console.error("Erro execucoes",e3);return}
+
+/* 🔹 FILTRO DIRETO */
+if(pacienteSelecionado!=="todos"){
+pacientes=pacientes.filter(p=>String(p.id)===String(pacienteSelecionado))
+}
+
+/* 🔹 ROTINAS */
+const {data:rotinas}=await db.from("rotina_modelos").select("id,nome,turno,ordem").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
+
+const rotinasTurno=(rotinas||[])
+.filter(r=>!r.turno||r.turno===turno)
+.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
+
+/* 🔹 EXECUÇÕES (1 QUERY SÓ) */
+let query=db.from("rotinas_execucao")
+.select("paciente_id,rotina_id,status,usuario_id,profissional_nome")
+.eq("data",dataHoje)
+.eq("turno",turno)
+
+if(pacienteSelecionado!=="todos"){
+query=query.eq("paciente_id",pacienteSelecionado)
+}
+
+const {data:execucoes}=await query
+
+/* 🔹 MAPA RÁPIDO (O(1)) */
+const mapaExec=new Map()
+;(execucoes||[]).forEach(e=>{
+mapaExec.set(`${e.paciente_id}_${e.rotina_id}`,e)
+})
+
 /* 🔹 USUÁRIOS */
 const {data:usuarios}=await db.from("usuarios").select("id,nome_apelido").eq("ativo",true)
-const mapaProfissionais={}
-usuarios?.forEach(u=>{mapaProfissionais[u.id]=u.nome_apelido})
-/* 🔹 MAPA EXECUÇÕES (ÚNICO POR PACIENTE+ROTINA+DIA) */
-const mapaExecucoes={}
-execucoes?.forEach(e=>{
-const chave=`${e.paciente_id}_${e.rotina_id}`
-if(!mapaExecucoes[chave])mapaExecucoes[chave]=e
+const mapaUser=new Map()
+;(usuarios||[]).forEach(u=>{
+mapaUser.set(u.id,u.nome_apelido)
 })
-/* 🔹 MONTAR LISTA */
-let lista=[]
-pacientes?.forEach(p=>{
-if(paciente!=="todos"&&paciente!=p.id)return
-rotinasTurno.forEach(r=>{
+
+/* 🔹 MONTAGEM ULTRA RÁPIDA */
+const lista=[]
+
+for(const p of pacientes){
+for(const r of rotinasTurno){
+
 const chave=`${p.id}_${r.id}`
-const exec=mapaExecucoes[chave]
+const exec=mapaExec.get(chave)
+
 lista.push({
 id:exec?.id||chave,
 paciente_id:p.id,
@@ -135,7 +155,7 @@ paciente:p.nome_completo,
 rotina:r.nome,
 ordem:r.ordem||99,
 status:exec?.status||"pendente",
-profissional:exec?(exec.profissional_nome&&exec.profissional_nome.trim()!==""?exec.profissional_nome:(mapaProfissionais[exec.usuario_id]||"—")):"",
+profissional:exec?(exec.profissional_nome||mapaUser.get(exec.usuario_id)||"—"):"",
 has:p.has,
 dm:p.dm,
 demencia:p.da,
@@ -143,19 +163,21 @@ cardiopatia:p.cardiopatia,
 acamado:p.acamado,
 pa:p.pressao_arterial
 })
-})
-})
-/* 🔹 ORDENAÇÃO FINAL */
+
+}
+}
+
+/* 🔹 SORT FINAL */
 lista.sort((a,b)=>{
 if(a.paciente<b.paciente)return-1
 if(a.paciente>b.paciente)return 1
 return (a.ordem||99)-(b.ordem||99)
 })
+
 ROTINAS_CACHE=lista
 calcularIndicadores(lista)
 renderizarRotinas(lista)
 }
-
 /* ====================================================
 037 – ANALISE CLINICA PACIENTE
 ==================================================== */
@@ -335,28 +357,31 @@ html+=`<tr style="background:#f0fdf4;font-weight:bold">
 tbody.innerHTML=html
 }
 /* ====================================================
-025 – EXECUTAR ROTINA (LOCK DE EXECUÇÃO)
+025 – EXECUTAR ROTINA (100% CORRIGIDO)
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db)return
-if(botao&&botao.classList.contains("rotina-executada")){return}
+if(!pacienteId||!rotinaId)return
+if(botao&&botao.classList.contains("rotina-executada"))return
 
 const chaveLock=`lock_${pacienteId}_${rotinaId}`
-if(window[chaveLock]){return}
+if(window[chaveLock])return
 window[chaveLock]=true
-/* 🔴 PROTEÇÃO EMPRESA */
+
 if(!EMPRESA_ID){
 console.error("EMPRESA_ID NULL")
 window[chaveLock]=false
 return
 }
-/* DATA */
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-/* USUÁRIO */
+
 const usuario=obterUsuarioLogado()
-const usuarioId=usuario.id
-const nomeProfissional=usuario.nome
+const usuarioId=usuario?.id||null
+const nomeProfissional=usuario?.nome||"admin"
+
+/* 🔍 VERIFICA */
 const {data:existe}=await db
 .from("rotinas_execucao")
 .select("status")
@@ -364,20 +389,22 @@ const {data:existe}=await db
 .eq("rotina_id",rotinaId)
 .eq("data",dataHoje)
 .maybeSingle()
+
 if(existe&&existe.status==="executado"){
 window[chaveLock]=false
 return
 }
-/* INSERE SE NÃO EXISTE */
-if(!existe){
+/* 💾 UPSERT (SEM ERRO) */
 await db.from("rotinas_execucao").upsert({
-paciente_id:r.paciente_id,
-rotina_id:r.rotina_id,
+paciente_id:pacienteId,
+rotina_id:rotinaId,
 data:dataHoje,
-status:"pendente"
+status:"executado",
+usuario_id:usuarioId,
+horario_executado:new Date(),
+profissional_nome:nomeProfissional
 },{onConflict:"paciente_id,rotina_id,data"})
-}
-/* UI */
+/* 🎨 UI */
 if(botao){
 botao.classList.remove("rotina-pendente")
 botao.classList.add("rotina-executada")
@@ -386,31 +413,16 @@ if(!botao.innerHTML.includes("✔")){
 botao.innerHTML+=`<br><span style="font-size:9px;font-weight:bold;color:${cor}">✔ ${nomeProfissional}</span>`
 }
 }
-/* UPDATE FINAL */
-await db.from("rotinas_execucao")
-.update({
-status:"executado",
-horario_executado:new Date(),
-usuario_id:usuarioId,
-profissional_nome:nomeProfissional
-})
-.eq("paciente_id",pacienteId)
-.eq("rotina_id",rotinaId)
-.eq("data",dataHoje)
-window[chaveLock]=false
-
-const nomeUsuario=nomeProfissional
+/* 🔄 CACHE */
 ROTINAS_CACHE.forEach(item=>{
-if(
-String(item.paciente_id)===String(pacienteId) &&
-String(item.rotina_id)===String(rotinaId)
-){
+if(String(item.paciente_id)===String(pacienteId)&&String(item.rotina_id)===String(rotinaId)){
 item.status="executado"
-item.profissional=nomeUsuario
+item.profissional=nomeProfissional
 }
 })
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
+
 window[chaveLock]=false
 }
 /* ====================================================
