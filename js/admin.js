@@ -183,7 +183,7 @@ status:"executado",
 executado_por:usuarioId||null,
 horario_executado:new Date(),
 profissional_nome:nomeUsuario
-},{onConflict:"paciente_id,rotina_id,data,turno"})
+},{onConflict:"paciente_id,rotina_id,data,turno",ignoreDuplicates:false})
 r.status="executado"
 r.profissional=nomeUsuario
 atual++
