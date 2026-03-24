@@ -403,7 +403,7 @@ status:"executado",
 usuario_id:usuarioId,
 horario_executado:new Date(),
 profissional_nome:nomeProfissional
-},{onConflict:"paciente_id,rotina_id,data"})
+},{onConflict:["paciente_id","rotina_id","data","turno"]"})
 /* 🎨 UI */
 if(botao){
 botao.classList.remove("rotina-pendente")
@@ -447,7 +447,7 @@ status:"executado",
 usuario_id:usuarioId,
 horario_executado:new Date(),
 profissional_nome:nomeUsuario
-},{onConflict:"paciente_id,rotina_id,data"})
+},{onConflict:["paciente_id","rotina_id","data","turno"]})
 }
 await carregarRotinas()
 }
@@ -496,7 +496,7 @@ status:"executado",
 usuario_id:usuarioId,
 horario_executado:new Date(),
 profissional_nome:nomeUsuario
-},{onConflict:"paciente_id,rotina_id,data"})
+},{onConflict:["paciente_id","rotina_id","data","turno"]})
 }
 await carregarRotinas()
 }
@@ -534,7 +534,7 @@ status:"executado",
 usuario_id:usuarioId,
 horario_executado:new Date(),
 profissional_nome:nomeUsuario
-},{onConflict:"paciente_id,rotina_id,data"})
+},{onConflict:["paciente_id","rotina_id","data","turno"]})
 }
 await carregarRotinas()
 }
@@ -559,7 +559,7 @@ paciente_id:p.id,
 rotina_id:r.id,
 data:hoje,
 status:"pendente"
-},{onConflict:"paciente_id,rotina_id,data"})
+},{onConflict:["paciente_id","rotina_id","data","turno"]})
 }
 }
 }catch(err){
