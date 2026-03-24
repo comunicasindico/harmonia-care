@@ -317,7 +317,7 @@ rotina_id:rotinaId,
 data:dataHoje,
 turno:turno,
 status:"executado",
-usuario_id:usuarioId,
+executado_por:usuarioId,
 horario_executado:new Date(),
 profissional_nome:nomeProfissional
 },{onConflict:"paciente_id,rotina_id,data,turno"})
@@ -357,7 +357,7 @@ rotina_id:r.rotina_id,
 data:dataHoje,
 turno:turno,
 status:"executado",
-usuario_id:usuarioId,
+executado_por:usuarioId,
 horario_executado:new Date(),
 profissional_nome:nomeUsuario
 },{onConflict:"paciente_id,rotina_id,data,turno"})
@@ -394,7 +394,7 @@ rotina_id:r.rotina_id,
 data:dataHoje,
 turno:turno,
 status:"executado",
-usuario_id:usuarioId,
+executado_por:usuarioId,
 horario_executado:new Date(),
 profissional_nome:nomeUsuario
 },{onConflict:"paciente_id,rotina_id,data,turno"})
@@ -432,7 +432,7 @@ paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
 status:"executado",
-usuario_id:usuarioId,
+executado_por:usuarioId,
 horario_executado:new Date(),
 profissional_nome:nomeUsuario
 },{onConflict:["paciente_id","rotina_id","data","turno"]})
