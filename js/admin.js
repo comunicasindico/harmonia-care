@@ -180,7 +180,7 @@ rotina_id:r.rotina_id,
 data:dataHoje,
 turno:turno,
 status:"executado",
-usuario_id:usuarioId,
+executado_por:usuarioId||null,
 horario_executado:new Date(),
 profissional_nome:nomeUsuario
 },{onConflict:"paciente_id,rotina_id,data,turno"})
