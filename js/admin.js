@@ -312,7 +312,7 @@ status:"executado",
 usuario_id:usuarioId,
 horario_executado:new Date(),
 profissional_nome:nomeUsuario
-},{onConflict:"paciente_id,rotina_id,data"})
+},{onConflict:"paciente_id,rotina_id,data,turno"})
 r.status="executado"
 r.profissional=nomeUsuario
 atual++
