@@ -279,7 +279,7 @@ await db.from("rotina_modelos").insert({empresa_id:EMPRESA_ID,paciente_id:pacien
 alert("Rotina adicionada")
 }
 /* ====================================================
-068 – CONCLUIR PENDENTES (BASE VISÍVEL + ADMIN)
+068 – CONCLUIR PENDENTES (100% CORRIGIDO)
 ==================================================== */
 async function concluirPendentes(){
 atualizarBarraProgresso(0)
@@ -289,6 +289,9 @@ if(SALVANDO){alert("Aguarde finalizar...");return}
 SALVANDO=true
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
+let usuarioId=localStorage.getItem("usuario_id")
+let nomeUsuario=localStorage.getItem("usuario_nome")||"admin"
+if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
 let total=pendentes.length
 if(total===0){
@@ -299,43 +302,26 @@ return
 }
 let atual=0
 for(const r of pendentes){
-
-const {data:existe}=await db
-.from("rotinas_execucao")
-.select("id,status")
-.eq("paciente_id",r.paciente_id)
-.eq("rotina_id",r.rotina_id)
-.eq("data",dataHoje)
-.maybeSingle()
-
-if(!existe){
-await db.from("rotinas_execucao").insert({
+if(!r.paciente_id||!r.rotina_id)continue
+await db.from("rotinas_execucao").upsert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
+turno:TURNO_ATUAL,
 status:"executado",
+usuario_id:usuarioId,
 horario_executado:new Date(),
-usuario_id:localStorage.getItem("usuario_id")||null,
-profissional_nome:"administrador"
-})
-}else if(existe.status!=="executado"){
-await db.from("rotinas_execucao")
-.update({
-status:"executado",
-horario_executado:new Date(),
-usuario_id:localStorage.getItem("usuario_id")||null,
-profissional_nome:"administrador"
-})
-.eq("id",existe.id)
-}
-
+profissional_nome:nomeUsuario
+},{onConflict:"paciente_id,rotina_id,data"})
+r.status="executado"
+r.profissional=nomeUsuario
 atual++
 let progresso=Math.floor((atual/total)*100)
 atualizarBarraProgresso(progresso)
-
 }
 SALVANDO=false
-await carregarRotinas()
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
 atualizarBarraProgresso(100)
 setTimeout(()=>{atualizarBarraProgresso(0)},1500)
 alert("Pendências concluídas com sucesso")
