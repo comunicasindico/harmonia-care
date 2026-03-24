@@ -402,14 +402,15 @@ profissional_nome:nomeUsuario
 await carregarRotinas()
 }
 /* ====================================================
-029 – EXECUTAR ROTINA PARA TODOS OS PACIENTES (BLINDADO)
+029 – EXECUTAR ROTINA PARA TODOS OS PACIENTES (CORRIGIDO FINAL)
 ==================================================== */
 async function executarRotinaTodos(rotinaId){
 if(!db)return
 if(!rotinaId)return
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-let nomeUsuario=localStorage.getItem("usuario_nome")||"admin"
+const turno=TURNO_ATUAL
+let nomeUsuario=localStorage.getItem("usuario_nome")||"Administrador"
 let usuarioId=localStorage.getItem("usuario_id")
 if(!usuarioId||usuarioId==="null")usuarioId=PROFISSIONAL_ID||null
 let corUsuario=obterCorUsuario(nomeUsuario)
@@ -431,11 +432,12 @@ await db.from("rotinas_execucao").upsert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
+turno:turno,
 status:"executado",
 executado_por:usuarioId,
 horario_executado:new Date(),
 profissional_nome:nomeUsuario
-},{onConflict:["paciente_id","rotina_id","data","turno"]})
+},{onConflict:"paciente_id,rotina_id,data,turno"})
 }
 await carregarRotinas()
 }
