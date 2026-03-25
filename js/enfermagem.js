@@ -332,7 +332,7 @@ console.error("Erro executarRotina",e)
 window[chaveLock]=false
 }
 /* ====================================================
-026 – CONCLUIR TODAS (BLINDAGEM TOTAL REAL)
+026 – CONCLUIR TODAS (SEM ERRO, SEM DUPLICIDADE)
 ==================================================== */
 async function concluirTodas(pacienteId){
 if(!db||!pacienteId)return
@@ -342,9 +342,29 @@ const turno=TURNO_ATUAL||"manha"
 const user=obterUsuarioLogado()||{}
 const usuarioId=user.id||null
 const nomeUsuario="admin"
+
+/* 🔹 PEGAR TUDO DO BANCO DE UMA VEZ */
+const {data:executadas}=await db.from("rotinas_execucao")
+.select("paciente_id,rotina_id")
+.eq("data",dataHoje)
+.eq("turno",turno)
+
+const mapaExecutadas=new Set(
+(executadas||[]).map(e=>`${e.paciente_id}_${e.rotina_id}`)
+)
+
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
+
 for(const r of rotinas){
-try{
+
+const chave=`${r.paciente_id}_${r.rotina_id}`
+
+/* 🔴 SE JÁ EXISTE → IGNORA TOTAL */
+if(mapaExecutadas.has(chave)){
+continue
+}
+
+/* 🔥 INSERT LIMPO */
 const {error}=await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
@@ -355,16 +375,18 @@ executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 })
+
 if(error){
+console.error("Erro insert",error)
 continue
 }
+
+/* 🔄 CACHE */
 r.status="executado"
 r.profissional=nomeUsuario
-}catch(e){
-console.error("Erro concluirTodas",e)
-continue
+
 }
-}
+
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 }
