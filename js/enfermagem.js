@@ -436,9 +436,7 @@ r.status="executado"
 r.profissional=nomeUsuario
 
 }
-/* 🔥 REFORÇA RENDER */
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
+await carregarRotinas()
 
 window[chaveLock]=false
 }
