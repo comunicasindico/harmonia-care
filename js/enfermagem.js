@@ -231,12 +231,14 @@ if(r.status==="executado"){
 if(r.profissional && r.profissional.trim()!==""){
 nomeProf=r.profissional
 }else{
-nomeProf=obterNomeUsuarioAtual()
+nomeProf=obterUsuarioLogado().nome||"Administrador"
 }
 corProf=obterCorUsuario(nomeProf)
 }
+
 const classeVisual=r.status==="executado"?"rotina-ok":"rotina-pendente"
-rotinasHTML+=`<div class="badge-rotina ${classeVisual}">
+
+rotinasHTML+=`<div class="badge-rotina ${classeVisual}" ${r.status==="executado"?"":"onclick=\"executarRotina('"+r.paciente_id+"','"+r.rotina_id+"',this)\""}>
 ${r.rotina}
 ${r.status==="executado"
 ?`<span class="profissional" style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`
@@ -297,7 +299,7 @@ html+=`<tr style="background:#f0fdf4;font-weight:bold">
 tbody.innerHTML=html
 }
 /* ====================================================
-025 – EXECUTAR ROTINA (CORRIGIDO DEFINITIVO)
+025 – EXECUTAR ROTINA (100% CORRIGIDO)
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db||!pacienteId||!rotinaId)return
@@ -306,22 +308,21 @@ if(window[chaveLock])return
 window[chaveLock]=true
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-const turno=TURNO_ATUAL
+const turno=TURNO_ATUAL||"manha"
 const usuario=obterUsuarioLogado()
-const usuarioId=usuario.id
+const usuarioId=usuario.id||null
 const nomeProfissional=usuario.nome||"Administrador"
-/* UPSERT CORRIGIDO */
-await db.from("rotinas_execucao").upsert({
+const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:pacienteId,
 rotina_id:rotinaId,
 data:dataHoje,
 turno:turno,
 status:"executado",
 executado_por:usuarioId,
-horario_executado:new Date(),
+horario_executado:new Date().toISOString(),
 profissional_nome:nomeProfissional
 },{onConflict:"paciente_id,rotina_id,data,turno"})
-/* UI IMEDIATA */
+if(error){console.error("Erro executarRotina",error);window[chaveLock]=false;return}
 if(botao){
 botao.classList.remove("rotina-pendente")
 botao.classList.add("rotina-executada")
@@ -329,7 +330,6 @@ if(!botao.innerHTML.includes("✔")){
 botao.innerHTML+=`<br><span style="font-size:10px;font-weight:bold;color:${obterCorUsuario(nomeProfissional)}">✔ ${nomeProfissional}</span>`
 }
 }
-/* CACHE */
 ROTINAS_CACHE.forEach(r=>{
 if(String(r.paciente_id)===String(pacienteId)&&String(r.rotina_id)===String(rotinaId)){
 r.status="executado"
@@ -348,7 +348,9 @@ const dataHoje=new Date().toISOString().slice(0,10)
 const turno=TURNO_ATUAL
 const usuario=obterUsuarioLogado()
 const nomeUsuario=usuario.nome
-const usuarioId=usuario.id
+const usuario=obterUsuarioLogado()
+const usuarioId=usuario.id||null
+const nomeProfissional=usuario.nome||"Administrador"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 for(const r of rotinas){
 await db.from("rotinas_execucao").upsert({
@@ -358,7 +360,7 @@ data:dataHoje,
 turno:turno,
 status:"executado",
 executado_por:usuarioId,
-horario_executado:new Date(),
+horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 },{onConflict:"paciente_id,rotina_id,data,turno"})
 }
@@ -395,7 +397,7 @@ data:dataHoje,
 turno:turno,
 status:"executado",
 executado_por:usuarioId,
-horario_executado:new Date(),
+horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 },{onConflict:"paciente_id,rotina_id,data,turno"})
 }
@@ -435,7 +437,7 @@ data:dataHoje,
 turno:turno,
 status:"executado",
 executado_por:usuarioId,
-horario_executado:new Date(),
+horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 },{onConflict:"paciente_id,rotina_id,data,turno"})
 }
