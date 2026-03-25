@@ -9,7 +9,7 @@ if(typeof ROTINAS_CACHE==="undefined"){var ROTINAS_CACHE=[]}
 if(typeof ROTINAS_GERADAS==="undefined"){var ROTINAS_GERADAS=false}
 if(typeof MODO_EDICAO_CLINICO==="undefined"){var MODO_EDICAO_CLINICO=false}
 if(typeof PROFISSIONAL_ID==="undefined"){var PROFISSIONAL_ID=localStorage.getItem("usuario_id")||null}
-if(typeof USUARIO_HIERARQUIA==="undefined"){var USUARIO_HIERARQUIA=parseInt(localStorage.getItem("usuario_hierarquia")||5)}
+if(typeof USUARIO_HIERARQUIA==="undefined"){var USUARIO_HIERARQUIA=parseInt(localStorage.getItem("usuario_hierarquia")||1)}
 if(typeof SALVANDO==="undefined"){var SALVANDO=false}
 if(typeof MODO_EDICAO_ADMIN==="undefined"){var MODO_EDICAO_ADMIN=localStorage.getItem("modo_edicao_admin")==="true"}
 
@@ -20,7 +20,7 @@ function definirSessaoProfissional(user){
 if(!user)return
 localStorage.setItem("usuario_id",user.id)
 localStorage.setItem("usuario_nome",user.nome_apelido||user.nome_completo||"admin")
-localStorage.setItem("usuario_hierarquia",user.hierarquia||5)
+localStorage.setItem("usuario_hierarquia",user.hierarquia||1)
 localStorage.setItem("perfil",user.perfil||"cuidador")
 localStorage.setItem("empresa_id",user.empresa_id||EMPRESA_ID)
 PROFISSIONAL_ID=user.id
@@ -33,7 +33,7 @@ return{
 id:localStorage.getItem("usuario_id"),
 nome:localStorage.getItem("usuario_nome")||"admin",
 perfil:(localStorage.getItem("usuario_perfil")||"").toLowerCase(),
-hierarquia:parseInt(localStorage.getItem("usuario_hierarquia")||5),
+hierarquia:parseInt(localStorage.getItem("usuario_hierarquia")||1),
 empresa_id:localStorage.getItem("empresa_id")
 }
 }
