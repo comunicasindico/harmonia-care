@@ -160,7 +160,7 @@ document.getElementById("adminRotina").value=""
 if(typeof carregarRotinas==="function")await carregarRotinas()
 }
 /* ====================================================
-068 – CONCLUIR PENDENTES (FINAL 100% COMPATÍVEL COM BANCO)
+068 – CONCLUIR PENDENTES (SEM ERRO)
 ==================================================== */
 async function concluirPendentes(){
 
@@ -181,24 +181,28 @@ const turno=TURNO_ATUAL||"manha"
 
 const nomeUsuario="Administrador"
 
+const {data:executadas}=await db.from("rotinas_execucao")
+.select("paciente_id,rotina_id")
+.eq("data",dataHoje)
+.eq("turno",turno)
+
+const mapaExecutadas=new Set(
+(executadas||[]).map(e=>`${e.paciente_id}_${e.rotina_id}`)
+)
+
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
 
 let total=pendentes.length
-
-if(total===0){
-SALVANDO=false
-atualizarBarraProgresso(0)
-alert("Não há pendências")
-return
-}
-
 let atual=0
 
 for(const r of pendentes){
 
-try{
+const chave=`${r.paciente_id}_${r.rotina_id}`
 
-/* 🔥 SOMENTE INSERT */
+if(mapaExecutadas.has(chave)){
+continue
+}
+
 const {error}=await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
@@ -210,22 +214,15 @@ horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 })
 
-/* 🔴 SE JÁ EXISTE → IGNORA */
 if(error){
 continue
 }
 
-/* 🔄 CACHE */
 r.status="executado"
 r.profissional=nomeUsuario
 
 atual++
 atualizarBarraProgresso(Math.floor((atual/total)*100))
-
-}catch(e){
-console.error("Erro concluirPendentes",e)
-continue
-}
 
 }
 
@@ -237,7 +234,6 @@ atualizarBarraProgresso(100)
 setTimeout(()=>atualizarBarraProgresso(0),1200)
 
 alert("Pendências concluídas")
-
 }
 /* ====================================================
 069 – SALVAR USUARIO LINHA (ROBUSTO)
