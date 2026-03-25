@@ -167,9 +167,10 @@ if(!db||SALVANDO)return
 SALVANDO=true
 atualizarBarraProgresso(0)
 const dataHoje=new Date().toISOString().slice(0,10)
-const turno=TURNO_ATUAL
-let usuarioId=localStorage.getItem("usuario_id")||null
-let nomeUsuario=localStorage.getItem("usuario_nome")||"Administrador"
+const turno=TURNO_ATUAL||"manha"
+const user=obterUsuarioLogado()
+const usuarioId=user.id||null
+const nomeUsuario=user.nome||"Administrador"
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
 let total=pendentes.length
 let atual=0
@@ -181,7 +182,7 @@ data:dataHoje,
 turno:turno,
 status:"executado",
 executado_por:usuarioId||null,
-horario_executado:new Date(),
+horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 },{onConflict:"paciente_id,rotina_id,data,turno",ignoreDuplicates:false})
 r.status="executado"
