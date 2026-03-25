@@ -76,9 +76,6 @@ ${p.pa_alterada?'border-left:6px solid #e74c3c':''}
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_acamado"><option value="true"${p.acamado?" selected":""}>✔</option><option value="false"${!p.acamado?" selected":""}></option></select>`:(p.acamado?"✔":"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<input class="clin_pa" value="${p.pressao_arterial||""}" placeholder="120/80">`:(p.pressao_arterial? (p.pa_alterada?`<span style="color:#e74c3c;font-weight:bold">${p.pressao_arterial}</span>`:p.pressao_arterial):"")}</td>
 <td>${MODO_EDICAO_CLINICO?`
-const dietaAtual = p.dieta_texto && p.dieta_texto.trim()!=="" 
-? p.dieta_texto 
-: "";
 <select class="clin_dieta">
 <option value="">Selecione</option>
 <option value="Hipossódica"${normalizar(p.dieta_texto)==="hipossodica"?" selected":""}>Hipossódica</option>
