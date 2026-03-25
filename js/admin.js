@@ -200,6 +200,7 @@ atualizarBarraProgresso(Math.floor((atual/total)*100))
 }
 
 renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
 
 SALVANDO=false
 atualizarBarraProgresso(100)
