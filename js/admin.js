@@ -167,7 +167,9 @@ async function concluirPendentes(){
 if(!db||SALVANDO)return
 
 const user=obterUsuarioLogado()
-if(!user||user.hierarquia!==1){
+const hierarquia=Number(localStorage.getItem("usuario_hierarquia")||1)
+
+if(hierarquia!==1){
 alert("Apenas administradores podem executar esta ação")
 return
 }
