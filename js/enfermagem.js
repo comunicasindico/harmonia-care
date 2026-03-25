@@ -133,6 +133,7 @@ pa:p.pressao_arterial
 }
 ROTINAS_CACHE=lista
 renderizarRotinas(lista)
+calcularIndicadores(lista)
 }
 /* ====================================================
 037 – ANALISE CLINICA PACIENTE
@@ -361,6 +362,7 @@ r.profissional=nomeProfissional
 }
 })
 renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
 window[chaveLock]=false
 }
 /* ====================================================
@@ -419,6 +421,7 @@ r.status="executado"
 r.profissional=nomeUsuario
 }
 renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
 }
 /* ====================================================
 026A – DESFAZER ROTINA (ADMIN)
