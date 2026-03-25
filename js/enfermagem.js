@@ -442,7 +442,7 @@ profissional_nome:nomeUsuario
 await carregarRotinas()
 }
 /* ====================================================
-030 – GERAR ROTINAS DO DIA (BLINDADO 409)
+030 – GERAR ROTINAS DO DIA (BLINDADO DEFINITIVO)
 ==================================================== */
 async function gerarRotinasDoDia(){
 if(!db)return
@@ -451,20 +451,28 @@ if(window._gerandoRotinas)return
 window._gerandoRotinas=true
 try{
 const hoje=document.getElementById("dataInicio")?.value||new Date().toISOString().slice(0,10)
+const turno=TURNO_ATUAL||"manha"
 const {data:pacientes,error:e1}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
 if(e1||!pacientes?.length){console.error("Erro pacientes",e1);return}
-const {data:rotinas,error:e2}=await db.from("rotina_modelos").select("id")
+const {data:rotinas,error:e2}=await db.from("rotina_modelos").select("id").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
 if(e2||!rotinas?.length){console.error("Erro rotinas",e2);return}
+/* 🔥 MONTAR LOTE (PERFORMANCE) */
+let lote=[]
 for(const p of pacientes){
 for(const r of rotinas){
-await db.from("rotinas_execucao").upsert({
+lote.push({
 paciente_id:p.id,
 rotina_id:r.id,
 data:hoje,
+turno:turno,
 status:"pendente"
-},{onConflict:["paciente_id","rotina_id","data","turno"]})
+})
 }
 }
+/* 🔥 UPSERT EM LOTE */
+const {error}=await db.from("rotinas_execucao")
+.upsert(lote,{onConflict:"paciente_id,rotina_id,data,turno"})
+if(error){console.error("Erro upsert lote",error)}
 }catch(err){
 console.error("Erro geral gerarRotinasDoDia",err)
 }finally{
