@@ -25,20 +25,18 @@ localStorage.setItem("perfil",user.perfil||"cuidador")
 localStorage.setItem("empresa_id",user.empresa_id||EMPRESA_ID)
 PROFISSIONAL_ID=user.id
 }
-
 /* ====================================================
-002 – OBTER USUÁRIO LOGADO
+002 – OBTER USUÁRIO LOGADO (PADRÃO GLOBAL CORRETO)
 ==================================================== */
 function obterUsuarioLogado(){
 return{
 id:localStorage.getItem("usuario_id"),
 nome:localStorage.getItem("usuario_nome")||"admin",
-perfil:localStorage.getItem("perfil")||"cuidador",
+perfil:(localStorage.getItem("usuario_perfil")||"").toLowerCase(),
 hierarquia:parseInt(localStorage.getItem("usuario_hierarquia")||5),
 empresa_id:localStorage.getItem("empresa_id")
 }
 }
-
 /* ====================================================
 003 – CACHE DE USUÁRIOS (DINÂMICO)
 ==================================================== */
