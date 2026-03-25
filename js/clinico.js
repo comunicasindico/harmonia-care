@@ -73,7 +73,7 @@ console.warn("PACIENTE CRÍTICO:",p.nome_completo)
 const riscoTotal=risco1+risco2+risco3+risco4+risco5
 html+=`<tr style="background:#fff200;font-weight:bold;text-align:center"><td>Todos</td><td></td><td style="color:#e74c3c">${totalHas}</td><td style="color:#f39c12">${totalDm}</td><td style="color:#8e44ad">${totalDemencia}</td><td style="color:#c0392b">${totalCardio}</td><td style="color:#34495e">${totalAcamado}</td><td style="color:#e67e22">${totalPAAlterada}</td><td></td><td style="color:#2c3e50">${riscoTotal}</td><td></td></tr>`
 data.forEach(p=>{
-html+=`<tr data-id="${p.id}" style="${p.grau_risco>=4?'background:#ffe5e5':''}${p.pa_alterada?'border-left:6px solid #e74c3c':''}">
+html+=`<tr data-id="${p.id}" style="${p.grau_risco>=4?'background:#ffe5e5':''} ${p.pa_alterada?'border-left:6px solid #e74c3c':''}">
 <td>${p.nome_apelido||p.nome_completo||""}</td>
 <td>${calcularIdade(p.data_nascimento)}</td>
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_has"><option value="true"${p.has?" selected":""}>✔</option><option value="false"${!p.has?" selected":""}></option></select>`:(p.has?"✔":"")}</td>
@@ -113,7 +113,7 @@ if(elR5)elR5.innerHTML=`🔴 Alto ${risco5}`
 if(elR4)elR4.innerHTML=`🟠 Médio ${risco4}`
 if(elR3)elR3.innerHTML=`🟡 Moderado ${risco3}`
 if(elR12)elR12.innerHTML=`🟢 Baixo ${risco1+risco2}`
-}
+
 /* ====================================================
 043 – CALCULAR IDADE
 ==================================================== */
