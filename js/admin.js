@@ -187,7 +187,7 @@ rotina_id:r.rotina_id,
 data:dataHoje,
 turno:turno,
 status:"executado",
-executado_por:usuarioId,
+executado_por:null,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 },{onConflict:"paciente_id,rotina_id,data,turno"})
