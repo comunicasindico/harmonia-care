@@ -292,20 +292,49 @@ html+=`<tr style="background:#f0fdf4;font-weight:bold">
 tbody.innerHTML=html
 }
 /* ====================================================
-025 – EXECUTAR ROTINA (PADRÃO FINAL CORRETO)
+025 – EXECUTAR ROTINA (COMPATÍVEL COM BANCO BLINDADO)
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
+
 if(!db||!pacienteId||!rotinaId)return
+
 const chaveLock=`lock_${pacienteId}_${rotinaId}`
 if(window[chaveLock])return
 window[chaveLock]=true
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
+
 const user=obterUsuarioLogado()
 const nomeProfissional=user.nome||"admin"
 const usuarioId=user.id||null
-const {error}=await db.from("rotinas_execucao").upsert({
+
+/* 🔍 VERIFICAR SE JÁ EXISTE */
+const {data:existe,error}=await db.from("rotinas_execucao")
+.select("id,status")
+.eq("paciente_id",pacienteId)
+.eq("rotina_id",rotinaId)
+.eq("data",dataHoje)
+.eq("turno",turno)
+.maybeSingle()
+
+if(error){
+console.error("Erro consulta",error)
+window[chaveLock]=false
+return
+}
+
+/* 🔴 REGRA: NÃO SOBRESCREVER */
+if(existe && existe.status==="executado"){
+console.log("Já executado — não altera")
+window[chaveLock]=false
+return
+}
+
+/* 🔥 INSERT */
+if(!existe){
+await db.from("rotinas_execucao").insert({
 paciente_id:pacienteId,
 rotina_id:rotinaId,
 data:dataHoje,
@@ -314,16 +343,32 @@ status:"executado",
 executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeProfissional
-},{onConflict:"paciente_id,rotina_id,data,turno"})
-if(error){console.error("Erro executarRotina",error);window[chaveLock]=false;return}
+})
+}
+
+/* 🔥 UPDATE SOMENTE SE PENDENTE */
+else{
+await db.from("rotinas_execucao")
+.update({
+status:"executado",
+executado_por:usuarioId,
+horario_executado:new Date().toISOString(),
+profissional_nome:nomeProfissional
+})
+.eq("id",existe.id)
+}
+
+/* 🔄 ATUALIZA CACHE */
 ROTINAS_CACHE.forEach(r=>{
 if(String(r.paciente_id)===String(pacienteId)&&String(r.rotina_id)===String(rotinaId)){
 r.status="executado"
 r.profissional=nomeProfissional
 }
 })
+
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
+
 window[chaveLock]=false
 }
 /* ====================================================
