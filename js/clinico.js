@@ -89,7 +89,7 @@ html+=`<tr data-id="${p.id}" style="${p.grau_risco>=4?'background:#ffe5e5':''} $
 </tr>`
 })
 tabela.innerHTML=html
-}
+
 /* ===============================
 041 PAINEL NUTRICIONAL
 =============================== */
@@ -113,7 +113,7 @@ if(elR5)elR5.innerHTML=`🔴 Alto ${risco5}`
 if(elR4)elR4.innerHTML=`🟠 Médio ${risco4}`
 if(elR3)elR3.innerHTML=`🟡 Moderado ${risco3}`
 if(elR12)elR12.innerHTML=`🟢 Baixo ${risco1+risco2}`
-
+}
 /* ====================================================
 043 – CALCULAR IDADE
 ==================================================== */
