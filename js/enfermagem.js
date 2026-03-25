@@ -334,8 +334,8 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
 const user=obterUsuarioLogado()
-const usuarioId=user.id||null
-const nomeProfissional=user.nome||"Administrador"
+const usuarioId="admin"
+const nomeProfissional="admin"
 const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:pacienteId,
 rotina_id:rotinaId,
@@ -372,8 +372,8 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
 const user=obterUsuarioLogado()
-const usuarioId=user.id||null
-const nomeUsuario=user.nome||"Administrador"
+const usuarioId="admin"
+const nomeUsuario="admin"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 for(const r of rotinas){
 /* 🔒 NÃO ALTERA SE JÁ EXECUTADO */
@@ -433,7 +433,7 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
 const user=obterUsuarioLogado()
-const usuarioId=user.id||null
+const usuarioId=user.id|| "admin"
 const nomeUsuario=user.nome||"Administrador"
 const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:pacienteId,
@@ -483,7 +483,7 @@ window[chaveLock]=true
 const dataHoje=new Date().toISOString().slice(0,10)
 const turno=TURNO_ATUAL||"manha"
 const user=obterUsuarioLogado()
-const usuarioId=user.id||null
+const usuarioId=user.id|| "admin"
 const nomeUsuario=user.nome||"Administrador"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 for(const r of rotinas){
@@ -514,7 +514,7 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
 const user=obterUsuarioLogado()
-const usuarioId=user.id||null
+const usuarioId=user.id|| "admin"
 const nomeUsuario=user.nome||"Administrador"
 const corUsuario=obterCorUsuario(nomeUsuario)
 /* 🔄 ATUALIZA CACHE (UI SEGURA) */
