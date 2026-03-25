@@ -69,11 +69,11 @@ if(typeof carregarClinico==="function")await carregarClinico()
 023 – CARREGAR ROTINAS
 ==================================================== */
 async function carregarRotinas(){
+const turno=TURNO_ATUAL||"manha"
 if(!db||!EMPRESA_ID)return
 const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todos"
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-const turno=TURNO_ATUAL
 let profissionalId=PROFISSIONAL_ID||localStorage.getItem("profissional_id")
 let pacientes=[]
 if(profissionalId&&profissionalId!=="null"&&profissionalId!=="admin"){
@@ -96,23 +96,39 @@ const rotinasTurno=(rotinas||[]).filter(r=>!r.turno||r.turno===turno).sort((a,b)
 let query=db.from("rotinas_execucao").select("*").eq("data",dataHoje).eq("turno",turno)
 if(pacienteSelecionado!=="todos"){query=query.eq("paciente_id",pacienteSelecionado)}
 const {data:execucoes}=await query
+/* 🔥 MAPA EXECUÇÕES (CORRIGIDO FORTE) */
 const mapaExec=new Map()
-;(execucoes||[]).forEach(e=>{mapaExec.set(`${e.paciente_id}_${e.rotina_id}`,e)})
+;(execucoes||[]).forEach(e=>{
+const chave=`${String(e.paciente_id)}_${String(e.rotina_id)}`
+mapaExec.set(chave,e)
+})
+
 const lista=[]
 for(const p of pacientes){
 for(const r of rotinasTurno){
-const chave=`${p.id}_${r.id}`
+
+const chave=`${String(p.id)}_${String(r.id)}`
 const exec=mapaExec.get(chave)
+
+/* 🔥 DEBUG (remova depois) */
+// console.log("CHECK:",chave,exec)
+
 lista.push({
 paciente_id:p.id,
 rotina_id:r.id,
 paciente:p.nome_completo,
 rotina:r.nome,
 ordem:r.ordem||99,
-status:exec?.status||"pendente",
-profissional:exec?.profissional_nome||"",
-has:p.has,dm:p.dm,demencia:p.da,cardiopatia:p.cardiopatia,acamado:p.acamado,pa:p.pressao_arterial
+status:exec && exec.status==="executado"?"executado":"pendente",
+profissional:exec && exec.status==="executado"?(exec.profissional_nome||""):"",
+has:p.has,
+dm:p.dm,
+demencia:p.da,
+cardiopatia:p.cardiopatia,
+acamado:p.acamado,
+pa:p.pressao_arterial
 })
+
 }
 }
 ROTINAS_CACHE=lista
