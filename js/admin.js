@@ -181,7 +181,16 @@ for(const r of pendentes){
 /* 🔒 NÃO ALTERA SE JÁ EXECUTADO */
 if(r.status==="executado")continue
 
-await db.from("rotinas_execucao").upsert({
+const {data:existe}=await db.from("rotinas_execucao")
+.select("id,status")
+.eq("paciente_id",r.paciente_id)
+.eq("rotina_id",r.rotina_id)
+.eq("data",dataHoje)
+.eq("turno",turno)
+.maybeSingle()
+
+if(!existe){
+await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -190,7 +199,17 @@ status:"executado",
 executado_por:null,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
-},{onConflict:"paciente_id,rotina_id,data,turno"})
+})
+}else if(existe.status!=="executado"){
+await db.from("rotinas_execucao")
+.update({
+status:"executado",
+executado_por:null,
+horario_executado:new Date().toISOString(),
+profissional_nome:nomeUsuario
+})
+.eq("id",existe.id)
+}
 
 r.status="executado"
 r.profissional=nomeUsuario
