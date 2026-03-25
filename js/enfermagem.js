@@ -136,38 +136,6 @@ renderizarRotinas(lista)
 calcularIndicadores(lista)
 }
 /* ====================================================
-037 – ANALISE CLINICA PACIENTE
-==================================================== */
-function gerarAnalisePaciente(p){
-
-let total=p.rotinas.length
-let executadas=p.rotinas.filter(r=>r.status==="executado").length
-let percentual=total?Math.round((executadas/total)*100):0
-
-let classificacao="Estável"
-if(percentual<80)classificacao="Atenção"
-if(percentual<60)classificacao="Crítico"
-
-let comorb=[]
-if(p.has)comorb.push("HAS")
-if(p.dm)comorb.push("DM")
-if(p.demencia)comorb.push("DEM")
-if(p.cardiopatia)comorb.push("CARD")
-if(p.acamado)comorb.push("ACAM")
-
-let texto=`${classificacao} | Execução: ${percentual}%`
-
-if(comorb.length)texto+=` | ${comorb.join(", ")}`
-
-if(percentual<80)texto+=" | Atenção nas rotinas"
-if(p.acamado)texto+=" | Prevenir LPP"
-if(p.dm)texto+=" | Controle glicêmico"
-if(p.has||p.cardiopatia)texto+=" | Monitorar PA"
-
-return texto
-}
-
-/* ====================================================
 024 – RENDERIZAR ROTINAS
 ==================================================== */
 function renderizarRotinas(lista){
@@ -324,7 +292,7 @@ html+=`<tr style="background:#f0fdf4;font-weight:bold">
 tbody.innerHTML=html
 }
 /* ====================================================
-025 – EXECUTAR ROTINA (100% CORRIGIDO)
+025 – EXECUTAR ROTINA (PADRÃO FINAL CORRETO)
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db||!pacienteId||!rotinaId)return
@@ -334,27 +302,20 @@ window[chaveLock]=true
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
-const user=obterUsuarioLogado()||{}
-const usuarioId=user?.id || null
-const nomeProfissional=user?.nome_apelido || user?.nome || "admin"
+const user=obterUsuarioLogado()
+const nomeProfissional=user.nome||"admin"
+const usuarioId=user.id||null
 const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:pacienteId,
 rotina_id:rotinaId,
 data:dataHoje,
 turno:turno,
 status:"executado",
-executado_por:null,
+executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeProfissional
 },{onConflict:"paciente_id,rotina_id,data,turno"})
 if(error){console.error("Erro executarRotina",error);window[chaveLock]=false;return}
-if(botao){
-botao.classList.remove("rotina-pendente")
-botao.classList.add("rotina-executada")
-if(!botao.innerHTML.includes("✔")){
-botao.innerHTML+=`<br><span style="font-size:10px;font-weight:bold;color:${obterCorUsuario(nomeProfissional)}">✔ ${nomeProfissional}</span>`
-}
-}
 ROTINAS_CACHE.forEach(r=>{
 if(String(r.paciente_id)===String(pacienteId)&&String(r.rotina_id)===String(rotinaId)){
 r.status="executado"
@@ -761,3 +722,34 @@ e.preventDefault()
 e.returnValue="Aguarde concluir o salvamento"
 }
 })
+/* ====================================================
+037 – ANALISE CLINICA PACIENTE
+==================================================== */
+function gerarAnalisePaciente(p){
+
+let total=p.rotinas.length
+let executadas=p.rotinas.filter(r=>r.status==="executado").length
+let percentual=total?Math.round((executadas/total)*100):0
+
+let classificacao="Estável"
+if(percentual<80)classificacao="Atenção"
+if(percentual<60)classificacao="Crítico"
+
+let comorb=[]
+if(p.has)comorb.push("HAS")
+if(p.dm)comorb.push("DM")
+if(p.demencia)comorb.push("DEM")
+if(p.cardiopatia)comorb.push("CARD")
+if(p.acamado)comorb.push("ACAM")
+
+let texto=`${classificacao} | Execução: ${percentual}%`
+
+if(comorb.length)texto+=` | ${comorb.join(", ")}`
+
+if(percentual<80)texto+=" | Atenção nas rotinas"
+if(p.acamado)texto+=" | Prevenir LPP"
+if(p.dm)texto+=" | Controle glicêmico"
+if(p.has||p.cardiopatia)texto+=" | Monitorar PA"
+
+return texto
+}
