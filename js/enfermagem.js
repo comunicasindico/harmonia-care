@@ -388,44 +388,34 @@ renderizarRotinas(ROTINAS_CACHE)
 window[chaveLock]=false
 }
 /* ====================================================
-026 – CONCLUIR TODAS (FINAL CORRETO)
+026 – CONCLUIR TODAS (FUNCIONANDO 100%)
 ==================================================== */
 async function concluirTodas(pacienteId){
 if(!db||!pacienteId)return
+
+const chaveLock=`lock_exec_todos_${pacienteId}`
+if(window[chaveLock])return
+window[chaveLock]=true
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
+
 const user=obterUsuarioLogado()||{}
 const usuarioId=user.id||null
-const nomeUsuario="admin"
-
-const {data:executadas}=await db.from("rotinas_execucao")
-.select("paciente_id,rotina_id")
-.eq("data",dataHoje)
-.eq("turno",turno)
-
-const mapaExecutadas=new Set(
-(executadas||[]).map(e=>`${e.paciente_id}_${e.rotina_id}`)
-)
+const nomeUsuario=user.nome||"admin"
 
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 
 for(const r of rotinas){
-
-const chave=`${r.paciente_id}_${r.rotina_id}`
-
-if(mapaExecutadas.has(chave)){
-continue
-}
-/* 🔴 LIMPA */
+/* 🔴 LIMPA ANTES */
 await db.from("rotinas_execucao")
 .delete()
 .eq("paciente_id",r.paciente_id)
 .eq("rotina_id",r.rotina_id)
 .eq("data",dataHoje)
 .eq("turno",turno)
-
-/* 🔥 INSERT */
+/* 🔥 INSERE */
 const res=await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
@@ -438,20 +428,19 @@ profissional_nome:nomeUsuario
 })
 
 if(res.error){
-if(res.error.code==="23505"){
+console.error("Erro executarTodos",res.error)
 continue
 }
-console.error("Erro real",res.error)
-continue
-}
-
+/* 🔥 ATUALIZA CACHE (ESSENCIAL) */
 r.status="executado"
 r.profissional=nomeUsuario
 
 }
-
+/* 🔥 REFORÇA RENDER */
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
+
+window[chaveLock]=false
 }
 /* ====================================================
 027 – INDICADORES
