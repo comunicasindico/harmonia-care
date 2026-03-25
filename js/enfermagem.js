@@ -372,7 +372,7 @@ calcularIndicadores(ROTINAS_CACHE)
 window[chaveLock]=false
 }
 /* ====================================================
-026 – CONCLUIR TODAS (REGRA CORRETA FINAL)
+026 – CONCLUIR TODAS (FINAL CORRIGIDO DEFINITIVO)
 ==================================================== */
 async function concluirTodas(pacienteId){
 if(!db||!pacienteId)return
@@ -380,41 +380,28 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
 const user=obterUsuarioLogado()||{}
-const usuarioId=user.id || null
+const usuarioId=user.id||null
 const nomeUsuario="admin"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 for(const r of rotinas){
-/* 🔒 NÃO ALTERA SE JÁ EXECUTADO */
-if(r.status==="executado")continue
-
-/* 🔍 BUSCA REGISTRO EXISTENTE */
-const {data:existe}=await db.from("rotinas_execucao")
+const {data:existe,error}=await db.from("rotinas_execucao")
 .select("id,status")
 .eq("paciente_id",r.paciente_id)
 .eq("rotina_id",r.rotina_id)
 .eq("data",dataHoje)
 .eq("turno",turno)
 .maybeSingle()
-
-/* 🔥 INSERT (não existe ainda) */
-if(!existe){
-await db.from("rotinas_execucao").insert({
-paciente_id:r.paciente_id,
-rotina_id:r.rotina_id,
-data:dataHoje,
-turno:turno,
-status:"executado",
-executado_por:null,
-horario_executado:new Date().toISOString(),
-profissional_nome:nomeUsuario
-})
-/* 🔴 TRAVA ABSOLUTA — NÃO SOBRESCREVER */
-if(existe && existe.status==="executado"){
+if(error){
+console.error("Erro consulta",error)
+continue
+}
+/* 🔴 REGRA ABSOLUTA — BANCO MANDA */
+if(existe&&existe.status==="executado"){
 continue
 }
 /* 🔥 INSERT */
 if(!existe){
-await db.from("rotinas_execucao").insert({
+const {error:errInsert}=await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -424,10 +411,14 @@ executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 })
+if(errInsert){
+console.error("Erro insert",errInsert)
+continue
+}
 }
 /* 🔥 UPDATE SOMENTE SE PENDENTE */
 else{
-await db.from("rotinas_execucao")
+const {error:errUpdate}=await db.from("rotinas_execucao")
 .update({
 status:"executado",
 executado_por:usuarioId,
@@ -435,15 +426,17 @@ horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 })
 .eq("id",existe.id)
+if(errUpdate){
+console.error("Erro update",errUpdate)
+continue
 }
-
-/* 🔄 ATUALIZA CACHE LOCAL */
+}
+/* 🔄 ATUALIZA CACHE */
 r.status="executado"
 r.profissional=nomeUsuario
 }
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
-}
 }
 /* ====================================================
 026A – DESFAZER ROTINA (ADMIN)
