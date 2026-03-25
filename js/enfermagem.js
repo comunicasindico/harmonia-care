@@ -291,6 +291,9 @@ html+=`<tr style="background:#f0fdf4;font-weight:bold">
 
 tbody.innerHTML=html
 }
+/* ====================================================
+025 – EXECUTAR ROTINAS
+==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db||!pacienteId||!rotinaId)return
 const chaveLock=`lock_${pacienteId}_${rotinaId}`
@@ -303,7 +306,7 @@ const user=obterUsuarioLogado()
 const nomeProfissional=user.nome||"admin"
 const usuarioId=user.id||null
 try{
-const {error}=await db.from("rotinas_execucao").insert({
+const res=await db.from("rotinas_execucao").insert({
 paciente_id:pacienteId,
 rotina_id:rotinaId,
 data:dataHoje,
@@ -313,8 +316,14 @@ executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeProfissional
 })
-if(error){
-console.log("Ignorado (já executado)",error.message)
+
+if(res.error){
+/* 🔴 IGNORA DUPLICADO SEM POLUIR CONSOLE */
+if(res.error.code==="23505"){
+window[chaveLock]=false
+return
+}
+console.error("Erro real",res.error)
 window[chaveLock]=false
 return
 }
@@ -364,21 +373,26 @@ if(mapaExecutadas.has(chave)){
 continue
 }
 
-/* 🔥 INSERT LIMPO */
-const {error}=await db.from("rotinas_execucao").insert({
-paciente_id:r.paciente_id,
-rotina_id:r.rotina_id,
+const res=await db.from("rotinas_execucao").insert({
+paciente_id:pacienteId,
+rotina_id:rotinaId,
 data:dataHoje,
 turno:turno,
 status:"executado",
 executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
-profissional_nome:nomeUsuario
+profissional_nome:nomeProfissional
 })
 
-if(error){
-console.error("Erro insert",error)
-continue
+if(res.error){
+/* 🔴 IGNORA DUPLICADO SEM POLUIR CONSOLE */
+if(res.error.code==="23505"){
+window[chaveLock]=false
+return
+}
+console.error("Erro real",res.error)
+window[chaveLock]=false
+return
 }
 
 /* 🔄 CACHE */
