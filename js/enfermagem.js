@@ -291,50 +291,19 @@ html+=`<tr style="background:#f0fdf4;font-weight:bold">
 
 tbody.innerHTML=html
 }
-/* ====================================================
-025 – EXECUTAR ROTINA (COMPATÍVEL COM BANCO BLINDADO)
-==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
-
 if(!db||!pacienteId||!rotinaId)return
-
 const chaveLock=`lock_${pacienteId}_${rotinaId}`
 if(window[chaveLock])return
 window[chaveLock]=true
-
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
-
 const user=obterUsuarioLogado()
 const nomeProfissional=user.nome||"admin"
 const usuarioId=user.id||null
-
-/* 🔍 VERIFICAR SE JÁ EXISTE */
-const {data:existe,error}=await db.from("rotinas_execucao")
-.select("id,status")
-.eq("paciente_id",pacienteId)
-.eq("rotina_id",rotinaId)
-.eq("data",dataHoje)
-.eq("turno",turno)
-.maybeSingle()
-
-if(error){
-console.error("Erro consulta",error)
-window[chaveLock]=false
-return
-}
-
-/* 🔴 REGRA: NÃO SOBRESCREVER */
-if(existe && existe.status==="executado"){
-console.log("Já executado — não altera")
-window[chaveLock]=false
-return
-}
-
-/* 🔥 INSERT */
-if(!existe){
-await db.from("rotinas_execucao").insert({
+try{
+const {error}=await db.from("rotinas_execucao").insert({
 paciente_id:pacienteId,
 rotina_id:rotinaId,
 data:dataHoje,
@@ -344,35 +313,26 @@ executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeProfissional
 })
+if(error){
+console.log("Ignorado (já executado)",error.message)
+window[chaveLock]=false
+return
 }
-
-/* 🔥 UPDATE SOMENTE SE PENDENTE */
-else{
-await db.from("rotinas_execucao")
-.update({
-status:"executado",
-executado_por:usuarioId,
-horario_executado:new Date().toISOString(),
-profissional_nome:nomeProfissional
-})
-.eq("id",existe.id)
-}
-
-/* 🔄 ATUALIZA CACHE */
 ROTINAS_CACHE.forEach(r=>{
 if(String(r.paciente_id)===String(pacienteId)&&String(r.rotina_id)===String(rotinaId)){
 r.status="executado"
 r.profissional=nomeProfissional
 }
 })
-
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
-
+}catch(e){
+console.error("Erro executarRotina",e)
+}
 window[chaveLock]=false
 }
 /* ====================================================
-026 – CONCLUIR TODAS (FINAL CORRIGIDO DEFINITIVO)
+026 – CONCLUIR TODAS (BLINDAGEM TOTAL REAL)
 ==================================================== */
 async function concluirTodas(pacienteId){
 if(!db||!pacienteId)return
@@ -384,24 +344,8 @@ const usuarioId=user.id||null
 const nomeUsuario="admin"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 for(const r of rotinas){
-const {data:existe,error}=await db.from("rotinas_execucao")
-.select("id,status")
-.eq("paciente_id",r.paciente_id)
-.eq("rotina_id",r.rotina_id)
-.eq("data",dataHoje)
-.eq("turno",turno)
-.maybeSingle()
-if(error){
-console.error("Erro consulta",error)
-continue
-}
-/* 🔴 REGRA ABSOLUTA — BANCO MANDA */
-if(existe&&existe.status==="executado"){
-continue
-}
-/* 🔥 INSERT */
-if(!existe){
-const {error:errInsert}=await db.from("rotinas_execucao").insert({
+try{
+const {error}=await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -411,29 +355,15 @@ executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 })
-if(errInsert){
-console.error("Erro insert",errInsert)
+if(error){
 continue
 }
-}
-/* 🔥 UPDATE SOMENTE SE PENDENTE */
-else{
-const {error:errUpdate}=await db.from("rotinas_execucao")
-.update({
-status:"executado",
-executado_por:usuarioId,
-horario_executado:new Date().toISOString(),
-profissional_nome:nomeUsuario
-})
-.eq("id",existe.id)
-if(errUpdate){
-console.error("Erro update",errUpdate)
-continue
-}
-}
-/* 🔄 ATUALIZA CACHE */
 r.status="executado"
 r.profissional=nomeUsuario
+}catch(e){
+console.error("Erro concluirTodas",e)
+continue
+}
 }
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
