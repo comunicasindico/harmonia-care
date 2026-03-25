@@ -202,7 +202,15 @@ const chave=`${r.paciente_id}_${r.rotina_id}`
 if(mapaExecutadas.has(chave)){
 continue
 }
+/* 🔴 LIMPA */
+await db.from("rotinas_execucao")
+.delete()
+.eq("paciente_id",r.paciente_id)
+.eq("rotina_id",r.rotina_id)
+.eq("data",dataHoje)
+.eq("turno",turno)
 
+/* 🔥 INSERT */
 const res=await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
