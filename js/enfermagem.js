@@ -348,7 +348,7 @@ renderizarRotinas(ROTINAS_CACHE)
 window[chaveLock]=false
 }
 /* ====================================================
-026 – CONCLUIR TODAS (ANTI-TRIGGER)
+026 – CONCLUIR TODAS (REGRA CORRETA FINAL)
 ==================================================== */
 async function concluirTodas(pacienteId){
 if(!db||!pacienteId)return
@@ -360,9 +360,10 @@ const usuarioId=user.id||null
 const nomeUsuario=user.nome||"Administrador"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 for(const r of rotinas){
+/* 🔒 NÃO ALTERA SE JÁ EXECUTADO */
 if(r.status==="executado")continue
 
-/* 🔥 PRIMEIRO VERIFICA SE EXISTE */
+/* 🔍 BUSCA REGISTRO EXISTENTE */
 const {data:existe}=await db.from("rotinas_execucao")
 .select("id,status")
 .eq("paciente_id",r.paciente_id)
@@ -371,7 +372,7 @@ const {data:existe}=await db.from("rotinas_execucao")
 .eq("turno",turno)
 .maybeSingle()
 
-/* 🔥 SE NÃO EXISTE → INSERT */
+/* 🔥 INSERT (não existe ainda) */
 if(!existe){
 await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
@@ -384,7 +385,8 @@ horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 })
 }else{
-/* 🔥 SE EXISTE → UPDATE SEGURO */
+/* 🔥 UPDATE APENAS SE NÃO EXECUTADO */
+if(existe.status!=="executado"){
 await db.from("rotinas_execucao")
 .update({
 status:"executado",
@@ -394,9 +396,13 @@ profissional_nome:nomeUsuario
 })
 .eq("id",existe.id)
 }
-
 }
-await carregarRotinas()
+
+/* 🔄 ATUALIZA CACHE LOCAL */
+r.status="executado"
+r.profissional=nomeUsuario
+}
+renderizarRotinas(ROTINAS_CACHE)
 }
 /* ====================================================
 026A – DESFAZER ROTINA (ADMIN)
