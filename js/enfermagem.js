@@ -238,7 +238,15 @@ corProf=obterCorUsuario(nomeProf)
 
 const classeVisual=r.status==="executado"?"rotina-ok":"rotina-pendente"
 
-rotinasHTML+=`<div class="badge-rotina ${classeVisual}" ${r.status==="executado"?"":"onclick=\"executarRotina('"+r.paciente_id+"','"+r.rotina_id+"',this)\""}>
+let perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
+
+rotinasHTML+=`<div class="badge-rotina ${classeVisual} ${perfil==="administrador"&&r.status==="executado"?"admin":""}"
+${r.status==="executado"
+?(perfil==="administrador"
+?`onclick="desfazerRotina('${r.paciente_id}','${r.rotina_id}',this)"`
+:"")
+:`onclick="executarRotina('${r.paciente_id}','${r.rotina_id}',this)"`
+}>
 ${r.rotina}
 ${r.status==="executado"
 ?`<span class="profissional" style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`
@@ -365,6 +373,36 @@ profissional_nome:nomeUsuario
 },{onConflict:"paciente_id,rotina_id,data,turno"})
 }
 await carregarRotinas()
+}
+/* ====================================================
+026A – DESFAZER ROTINA (ADMIN)
+==================================================== */
+async function desfazerRotina(pacienteId,rotinaId,botao){
+if(!db)return
+if(!confirm("Deseja desfazer esta rotina?"))return
+const dataRaw=document.getElementById("dataInicio")?.value
+const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
+const turno=TURNO_ATUAL||"manha"
+const usuario=obterUsuarioLogado()
+const nomeUsuario=usuario.nome||"Administrador"
+const {error}=await db.from("rotinas_execucao").upsert({
+paciente_id:pacienteId,
+rotina_id:rotinaId,
+data:dataHoje,
+turno:turno,
+status:"pendente",
+executado_por:null,
+horario_executado:null,
+profissional_nome:nomeUsuario
+},{onConflict:"paciente_id,rotina_id,data,turno"})
+if(error){console.error("Erro desfazer",error);return}
+ROTINAS_CACHE.forEach(r=>{
+if(String(r.paciente_id)===String(pacienteId)&&String(r.rotina_id)===String(rotinaId)){
+r.status="pendente"
+r.profissional=""
+}
+})
+renderizarRotinas(ROTINAS_CACHE)
 }
 /* ====================================================
 027 – INDICADORES
