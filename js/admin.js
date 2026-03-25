@@ -160,7 +160,7 @@ document.getElementById("adminRotina").value=""
 if(typeof carregarRotinas==="function")await carregarRotinas()
 }
 /* ====================================================
-068 – CONCLUIR PENDENTES (SEM ERRO)
+068 – CONCLUIR PENDENTES (FINAL)
 ==================================================== */
 async function concluirPendentes(){
 
@@ -215,7 +215,6 @@ profissional_nome:nomeUsuario
 })
 
 if(res.error){
-/* 🔴 IGNORA DUPLICADO SEM POLUIR */
 if(res.error.code==="23505"){
 continue
 }
