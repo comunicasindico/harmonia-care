@@ -21,7 +21,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <script defer src="js/enfermagem.js"></script>
 <!-- ====================================================
-002 – ESTILOS GLOBAIS
+002 – ESTILOS GLOBAIS (CORRIGIDO E OTIMIZADO)
 ==================================================== -->
 <style>
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:url("img/harmoniafrente.png") center center/cover no-repeat fixed;height:100vh;display:flex;align-items:center;justify-content:center;}
@@ -75,12 +75,13 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 .logo-topo{height:38px;}
 .titulo-3d{font-size:28px;font-weight:900;letter-spacing:1px;color:#ffffff;text-shadow:0 1px 0 #ccc,0 2px 0 #bbb,0 3px 0 #aaa,0 4px 0 #999,0 5px 10px rgba(0,0,0,0.5);background:linear-gradient(45deg,#16a085,#2ecc71);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .analise-clinica{margin-top:6px;font-size:11px;color:#374151;background:#f9fafb;padding:6px;border-radius:6px;line-height:1.3;border-left:4px solid #22c55e;}
-.badge-rotina{display:inline-block;padding:6px 10px;border-radius:8px;margin:2px;font-size:12px;background:#f1f5f9;}
+.badge-rotina{display:inline-block;padding:6px 10px;border-radius:8px;margin:2px;font-size:12px;background:#f1f5f9;transition:all .2s;}
 .rotina-ok{background:#dcfce7;color:#166534;border:1px solid #22c55e;}
-.rotina-pendente{background:#fee2e2;color:#991b1b;border:1px solid #ef4444;}
+.rotina-pendente{background:#fee2e2;color:#991b1b;border:1px solid #ef4444;cursor:pointer;}
 .profissional{font-size:10px;margin-top:2px;display:block;font-weight:bold;}
-.badge-rotina.rotina-ok{cursor:not-allowed;opacity:0.8;filter:grayscale(20%);transition:all .2s;}
-.badge-rotina:hover{transform:scale(1.03);}  
+.badge-rotina.rotina-ok{cursor:not-allowed;opacity:0.8;filter:grayscale(20%);}
+.badge-rotina.rotina-ok.admin{cursor:pointer;pointer-events:auto;border:2px dashed #e67e22;background:#fff8e1;}
+.badge-rotina:hover{transform:scale(1.03);}
 
 
 </style>
