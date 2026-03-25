@@ -169,8 +169,8 @@ atualizarBarraProgresso(0)
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
-/* 🔥 REGRA FIXA */
-const usuarioId="admin"
+/* 🔥 REGRA ESPECIAL */
+const usuarioId="null"
 const nomeUsuario="Administrador"
 
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
