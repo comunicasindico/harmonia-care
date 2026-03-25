@@ -352,13 +352,15 @@ window[chaveLock]=false
 ==================================================== */
 async function concluirTodas(pacienteId){
 if(!db||!pacienteId)return
-const dataHoje=new Date().toISOString().slice(0,10)
+const dataRaw=document.getElementById("dataInicio")?.value
+const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
 const user=obterUsuarioLogado()
 const usuarioId=user.id||null
 const nomeUsuario=user.nome||"Administrador"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 for(const r of rotinas){
+if(r.status==="executado")continue
 const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
