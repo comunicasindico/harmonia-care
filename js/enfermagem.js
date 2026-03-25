@@ -444,6 +444,7 @@ r.profissional=nomeUsuario
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 }
+}
 /* ====================================================
 026A – DESFAZER ROTINA (ADMIN)
 ==================================================== */
