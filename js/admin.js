@@ -160,13 +160,12 @@ document.getElementById("adminRotina").value=""
 if(typeof carregarRotinas==="function")await carregarRotinas()
 }
 /* ====================================================
-068 – CONCLUIR PENDENTES (FINAL CORRIGIDO DEFINITIVO)
+068 – CONCLUIR PENDENTES (FINAL 100% COMPATÍVEL COM BANCO)
 ==================================================== */
 async function concluirPendentes(){
 
 if(!db||SALVANDO)return
 
-/* 🔒 SEGURANÇA POR HIERARQUIA */
 const user=obterUsuarioLogado()
 if(!user||user.hierarquia!==1){
 alert("Apenas administradores podem executar esta ação")
@@ -180,14 +179,12 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
 
-/* 🔥 REGRA FIXA */
 const nomeUsuario="Administrador"
 
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
 
 let total=pendentes.length
 
-/* 🔴 PROTEÇÃO */
 if(total===0){
 SALVANDO=false
 atualizarBarraProgresso(0)
@@ -199,22 +196,10 @@ let atual=0
 
 for(const r of pendentes){
 
-const {data:existe}=await db.from("rotinas_execucao")
-.select("id,status,profissional_nome")
-.eq("paciente_id",r.paciente_id)
-.eq("rotina_id",r.rotina_id)
-.eq("data",dataHoje)
-.eq("turno",turno)
-.maybeSingle()
+try{
 
-/* 🔴 REGRA CRÍTICA — NÃO SOBRESCREVER */
-if(existe && existe.status==="executado"){
-continue
-}
-
-/* 🔥 INSERT */
-if(!existe){
-await db.from("rotinas_execucao").insert({
+/* 🔥 SOMENTE INSERT */
+const {error}=await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -224,18 +209,10 @@ executado_por:null,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 })
-}
 
-/* 🔥 UPDATE APENAS SE PENDENTE */
-else{
-await db.from("rotinas_execucao")
-.update({
-status:"executado",
-executado_por:null,
-horario_executado:new Date().toISOString(),
-profissional_nome:nomeUsuario
-})
-.eq("id",existe.id)
+/* 🔴 SE JÁ EXISTE → IGNORA */
+if(error){
+continue
 }
 
 /* 🔄 CACHE */
@@ -245,9 +222,13 @@ r.profissional=nomeUsuario
 atual++
 atualizarBarraProgresso(Math.floor((atual/total)*100))
 
+}catch(e){
+console.error("Erro concluirPendentes",e)
+continue
 }
 
-/* 🔄 FINAL */
+}
+
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 
