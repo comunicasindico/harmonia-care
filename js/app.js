@@ -30,7 +30,7 @@ if(!user){alert("Usuário ou senha inválidos");return}
 /* ✅ SALVAR SESSÃO COMPLETA */
 localStorage.setItem("usuario_id",user.id)
 localStorage.setItem("usuario_nome",user.nome_apelido||user.nome_completo)
-localStorage.setItem("usuario_hierarquia",user.hierarquia||5)
+localStorage.setItem("usuario_hierarquia",user.hierarquia||1)
 localStorage.setItem("perfil",user.perfil||"cuidador")
 localStorage.setItem("usuario_perfil",(user.perfil||"cuidador").toLowerCase())
 /* 🔥 CORREÇÃO PRINCIPAL */
