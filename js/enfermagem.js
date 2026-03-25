@@ -334,7 +334,7 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
 const user=obterUsuarioLogado()
-const usuarioId="admin"
+const usuarioId=null
 const nomeProfissional="admin"
 const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:pacienteId,
@@ -342,7 +342,7 @@ rotina_id:rotinaId,
 data:dataHoje,
 turno:turno,
 status:"executado",
-executado_por:usuarioId,
+executado_por:null,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeProfissional
 },{onConflict:"paciente_id,rotina_id,data,turno"})
@@ -396,7 +396,7 @@ rotina_id:r.rotina_id,
 data:dataHoje,
 turno:turno,
 status:"executado",
-executado_por:usuarioId,
+executado_por:null,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 })
