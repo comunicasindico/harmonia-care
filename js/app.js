@@ -5,7 +5,7 @@ window.salvandoPendencias=false
 async function login(){
 if(!db){alert("Sistema carregando");return}
 
-const usuario=document.getElementById("usuario")?.value?.trim().toLowerCase()
+const loginInput=document.getElementById("usuario")?.value?.trim().toLowerCase()
 const senha=document.getElementById("senha")?.value?.trim()
 
 if(!usuario||!senha){alert("Informe usuário e senha");return}
@@ -19,9 +19,9 @@ if(error){console.error(error);alert("Erro no login");return}
 /* 🔍 LOCALIZA USUÁRIO */
 const user=data.find(u=>
 (
-(u.nome_apelido||"").toLowerCase()===usuario||
-(u.email||"").toLowerCase()===usuario||
-(u.nome_completo||"").toLowerCase()===usuario
+(u.nome_apelido||"").toLowerCase()===loginInput||
+(u.email||"").toLowerCase()===loginInput||
+(u.nome_completo||"").toLowerCase()===loginInput
 )
 && String(u.senha_hash)===senha
 )
@@ -32,7 +32,7 @@ localStorage.setItem("usuario_id",user.id)
 localStorage.setItem("usuario_nome",user.nome_apelido||user.nome_completo)
 localStorage.setItem("usuario_hierarquia",user.hierarquia||5)
 localStorage.setItem("perfil",user.perfil||"cuidador")
-localStorage.setItem("usuario_perfil",user.perfil||"cuidador").toLowerCase()
+localStorage.setItem("usuario_perfil",(user.perfil||"cuidador").toLowerCase())
 /* 🔥 CORREÇÃO PRINCIPAL */
 localStorage.setItem("empresa_id",user.empresa_id)
 /* 🔄 ATUALIZA VARIÁVEL GLOBAL */
