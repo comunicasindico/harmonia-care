@@ -181,7 +181,8 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
 
-const nomeUsuario="Administrador"
+executado_por:null,
+profissional_nome:"Administrador"
 
 const {data:executadas}=await db.from("rotinas_execucao")
 .select("paciente_id,rotina_id")
@@ -240,8 +241,7 @@ atualizarBarraProgresso(Math.floor((atual/total)*100))
 
 }
 
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
+await carregarRotinas()
 
 SALVANDO=false
 atualizarBarraProgresso(100)
