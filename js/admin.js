@@ -160,25 +160,44 @@ document.getElementById("adminRotina").value=""
 if(typeof carregarRotinas==="function")await carregarRotinas()
 }
 /* ====================================================
-068 – CONCLUIR PENDENTES (FINAL CORRETO)
+068 – CONCLUIR PENDENTES (FINAL CORRIGIDO DEFINITIVO)
 ==================================================== */
 async function concluirPendentes(){
+
 if(!db||SALVANDO)return
+
+/* 🔒 SEGURANÇA POR HIERARQUIA */
+const user=obterUsuarioLogado()
+if(!user||user.hierarquia!==1){
+alert("Apenas administradores podem executar esta ação")
+return
+}
+
 SALVANDO=true
 atualizarBarraProgresso(0)
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
-/* 🔥 REGRA ESPECIAL */
+
+/* 🔥 REGRA FIXA */
 const nomeUsuario="Administrador"
 
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
+
 let total=pendentes.length
+
+/* 🔴 PROTEÇÃO */
+if(total===0){
+SALVANDO=false
+atualizarBarraProgresso(0)
+alert("Não há pendências")
+return
+}
+
 let atual=0
 
 for(const r of pendentes){
-/* 🔒 NÃO ALTERA SE JÁ EXECUTADO */
-if(r.status==="executado")continue
 
 const {data:existe}=await db.from("rotinas_execucao")
 .select("id,status")
@@ -210,13 +229,16 @@ profissional_nome:nomeUsuario
 .eq("id",existe.id)
 }
 
+/* 🔄 ATUALIZA CACHE */
 r.status="executado"
 r.profissional=nomeUsuario
 
 atual++
 atualizarBarraProgresso(Math.floor((atual/total)*100))
+
 }
 
+/* 🔄 FINAL */
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 
@@ -225,6 +247,7 @@ atualizarBarraProgresso(100)
 setTimeout(()=>atualizarBarraProgresso(0),1200)
 
 alert("Pendências concluídas")
+
 }
 /* ====================================================
 069 – SALVAR USUARIO LINHA (ROBUSTO)
