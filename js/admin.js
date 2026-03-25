@@ -200,13 +200,19 @@ let atual=0
 for(const r of pendentes){
 
 const {data:existe}=await db.from("rotinas_execucao")
-.select("id,status")
+.select("id,status,profissional_nome")
 .eq("paciente_id",r.paciente_id)
 .eq("rotina_id",r.rotina_id)
 .eq("data",dataHoje)
 .eq("turno",turno)
 .maybeSingle()
 
+/* 🔴 REGRA CRÍTICA — NÃO SOBRESCREVER */
+if(existe && existe.status==="executado"){
+continue
+}
+
+/* 🔥 INSERT */
 if(!existe){
 await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
@@ -218,7 +224,10 @@ executado_por:null,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 })
-}else if(existe.status!=="executado"){
+}
+
+/* 🔥 UPDATE APENAS SE PENDENTE */
+else{
 await db.from("rotinas_execucao")
 .update({
 status:"executado",
@@ -229,7 +238,7 @@ profissional_nome:nomeUsuario
 .eq("id",existe.id)
 }
 
-/* 🔄 ATUALIZA CACHE */
+/* 🔄 CACHE */
 r.status="executado"
 r.profissional=nomeUsuario
 
