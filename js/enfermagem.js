@@ -339,43 +339,43 @@ console.error("Erro executarRotina",e)
 window[chaveLock]=false
 }
 /* ====================================================
-026A – DESFAZER ROTINA (ADMIN)
+026A – DESFAZER ROTINA (FINAL CORRETO)
 ==================================================== */
 async function desfazerRotina(pacienteId,rotinaId,botao){
 if(!db||!pacienteId||!rotinaId)return
 if(!confirm("Deseja desfazer esta rotina?"))return
+
 const chaveLock=`lock_desfazer_${pacienteId}_${rotinaId}`
 if(window[chaveLock])return
 window[chaveLock]=true
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
-const user=obterUsuarioLogado()
-const usuarioId=user.id|| "admin"
-const nomeUsuario=user.nome||"Administrador"
-const {error}=await db.from("rotinas_execucao").upsert({
-paciente_id:pacienteId,
-rotina_id:rotinaId,
-data:dataHoje,
-turno:turno,
-status:"pendente",
-executado_por:usuarioId,
-horario_executado:null,
-profissional_nome:nomeUsuario
-},{onConflict:"paciente_id,rotina_id,data,turno"})
+
+const {error}=await db.from("rotinas_execucao")
+.delete()
+.eq("paciente_id",pacienteId)
+.eq("rotina_id",rotinaId)
+.eq("data",dataHoje)
+.eq("turno",turno)
+
 if(error){
 console.error("Erro desfazerRotina",error)
 window[chaveLock]=false
 return
 }
-/* 🔄 ATUALIZA CACHE */
+
+/* 🔄 CACHE */
 ROTINAS_CACHE.forEach(r=>{
 if(String(r.paciente_id)===String(pacienteId)&&String(r.rotina_id)===String(rotinaId)){
 r.status="pendente"
 r.profissional=""
 }
 })
+
 renderizarRotinas(ROTINAS_CACHE)
+
 window[chaveLock]=false
 }
 /* ====================================================
@@ -449,21 +449,40 @@ if(a)a.innerHTML="⚠ "+atrasado
 }
 
 /* ====================================================
-028 – EXECUTAR TODOS (CORRIGIDO DEFINITIVO)
+028 – EXECUTAR TODOS (FINAL CORRETO)
 ==================================================== */
 async function executarTodos(pacienteId){
 if(!db||!pacienteId)return
 const chaveLock=`lock_exec_todos_${pacienteId}`
 if(window[chaveLock])return
 window[chaveLock]=true
+
 const dataHoje=new Date().toISOString().slice(0,10)
 const turno=TURNO_ATUAL||"manha"
+
 const user=obterUsuarioLogado()
-const usuarioId=user.id|| "admin"
+const usuarioId=user.id||null
 const nomeUsuario=user.nome||"Administrador"
+
+/* 🔹 BUSCAR JÁ EXISTENTES */
+const {data:executadas}=await db.from("rotinas_execucao")
+.select("paciente_id,rotina_id")
+.eq("data",dataHoje)
+.eq("turno",turno)
+
+const mapa=new Set((executadas||[]).map(e=>`${e.paciente_id}_${e.rotina_id}`))
+
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
+
 for(const r of rotinas){
-const {error}=await db.from("rotinas_execucao").upsert({
+
+const chave=`${r.paciente_id}_${r.rotina_id}`
+
+if(mapa.has(chave)){
+continue
+}
+
+const res=await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -472,40 +491,63 @@ status:"executado",
 executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
-},{onConflict:"paciente_id,rotina_id,data,turno"})
-if(error){console.error("Erro executarTodos",error)}
+})
+
+if(res.error){
+if(res.error.code==="23505"){
+continue
 }
-await carregarRotinas()
+console.error("Erro executarTodos",res.error)
+continue
+}
+
+/* 🔄 CACHE */
+r.status="executado"
+r.profissional=nomeUsuario
+
+}
+
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
+
 window[chaveLock]=false
 }
 /* ====================================================
-029 – EXECUTAR ROTINA PARA TODOS OS PACIENTES (CORRIGIDO DEFINITIVO)
+029 – EXECUTAR ROTINA PARA TODOS (FINAL CORRETO)
 ==================================================== */
 async function executarRotinaTodos(rotinaId){
 if(!db||!rotinaId)return
 const chaveLock=`lock_rotina_todos_${rotinaId}`
 if(window[chaveLock])return
 window[chaveLock]=true
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
+
 const user=obterUsuarioLogado()
-const usuarioId=user.id|| "admin"
+const usuarioId=user.id||null
 const nomeUsuario=user.nome||"Administrador"
-const corUsuario=obterCorUsuario(nomeUsuario)
-/* 🔄 ATUALIZA CACHE (UI SEGURA) */
-ROTINAS_CACHE.forEach(r=>{
-if(String(r.rotina_id)===String(rotinaId)){
-r.status="executado"
-r.profissional=nomeUsuario
-}
-})
-renderizarRotinas(ROTINAS_CACHE)
-/* 🔄 SALVA NO BANCO */
+
+/* 🔹 BUSCAR EXISTENTES */
+const {data:executadas}=await db.from("rotinas_execucao")
+.select("paciente_id,rotina_id")
+.eq("data",dataHoje)
+.eq("turno",turno)
+
+const mapa=new Set((executadas||[]).map(e=>`${e.paciente_id}_${e.rotina_id}`))
+
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.rotina_id)===String(rotinaId))
+
 for(const r of rotinas){
-if(!r.paciente_id||!r.rotina_id)continue
-const {error}=await db.from("rotinas_execucao").upsert({
+
+const chave=`${r.paciente_id}_${r.rotina_id}`
+
+if(mapa.has(chave)){
+continue
+}
+
+const res=await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -514,14 +556,29 @@ status:"executado",
 executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
-},{onConflict:"paciente_id,rotina_id,data,turno"})
-if(error){console.error("Erro executarRotinaTodos",error)}
+})
+
+if(res.error){
+if(res.error.code==="23505"){
+continue
 }
-await carregarRotinas()
+console.error("Erro executarRotinaTodos",res.error)
+continue
+}
+
+/* 🔄 CACHE */
+r.status="executado"
+r.profissional=nomeUsuario
+
+}
+
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
+
 window[chaveLock]=false
 }
 /* ====================================================
-030 – GERAR ROTINAS DO DIA (BLINDADO DEFINITIVO)
+030 – GERAR ROTINAS DO DIA (SEM UPDATE - FINAL)
 ==================================================== */
 async function gerarRotinasDoDia(){
 if(!db||!EMPRESA_ID)return
@@ -535,9 +592,23 @@ const {data:pacientes,error:e1}=await db.from("pacientes").select("id").eq("empr
 if(e1||!pacientes?.length){console.error("Erro pacientes",e1);return}
 const {data:rotinas,error:e2}=await db.from("rotina_modelos").select("id").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
 if(e2||!rotinas?.length){console.error("Erro rotinas",e2);return}
+/* 🔥 BUSCAR JÁ EXISTENTES */
+const {data:existentes}=await db.from("rotinas_execucao")
+.select("paciente_id,rotina_id")
+.eq("data",hoje)
+.eq("turno",turno)
+
+const mapa=new Set((existentes||[]).map(e=>`${e.paciente_id}_${e.rotina_id}`))
+
 let lote=[]
+
 for(const p of pacientes){
 for(const r of rotinas){
+
+const chave=`${p.id}_${r.id}`
+/* 🔴 SE JÁ EXISTE → IGNORA */
+if(mapa.has(chave))continue
+
 lote.push({
 paciente_id:p.id,
 rotina_id:r.id,
@@ -545,18 +616,20 @@ data:hoje,
 turno:turno,
 status:"pendente"
 })
+
 }
 }
-/* 🔥 DIVIDIR EM LOTES (EVITA ERRO GRANDE) */
-const TAM_LOTE=1000
+/* 🔥 INSERT EM LOTES */
+const TAM_LOTE=500
+
 for(let i=0;i<lote.length;i+=TAM_LOTE){
 const slice=lote.slice(i,i+TAM_LOTE)
-const {error}=await db.from("rotinas_execucao")
-.upsert(slice,{onConflict:"paciente_id,rotina_id,data,turno"})
+const {error}=await db.from("rotinas_execucao").insert(slice)
 if(error){
 console.error("Erro lote",i,error)
 }
 }
+
 }catch(err){
 console.error("Erro geral gerarRotinasDoDia",err)
 }finally{
