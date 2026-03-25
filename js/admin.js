@@ -160,40 +160,51 @@ document.getElementById("adminRotina").value=""
 if(typeof carregarRotinas==="function")await carregarRotinas()
 }
 /* ====================================================
-068 – CONCLUIR PENDENTES (CORRIGIDO DEFINITIVO)
+068 – CONCLUIR PENDENTES (FINAL CORRETO)
 ==================================================== */
 async function concluirPendentes(){
 if(!db||SALVANDO)return
 SALVANDO=true
 atualizarBarraProgresso(0)
-const dataHoje=new Date().toISOString().slice(0,10)
+const dataRaw=document.getElementById("dataInicio")?.value
+const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
-const user=obterUsuarioLogado()
-const usuarioId=user.id||null
-const nomeUsuario=user.nome||"Administrador"
+/* 🔥 REGRA FIXA */
+const usuarioId="admin"
+const nomeUsuario="Administrador"
+
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
 let total=pendentes.length
 let atual=0
+
 for(const r of pendentes){
+/* 🔒 NÃO ALTERA SE JÁ EXECUTADO */
+if(r.status==="executado")continue
+
 await db.from("rotinas_execucao").upsert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
 turno:turno,
 status:"executado",
-executado_por:usuarioId||null,
+executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
-},{onConflict:"paciente_id,rotina_id,data,turno",ignoreDuplicates:false})
+},{onConflict:"paciente_id,rotina_id,data,turno"})
+
 r.status="executado"
 r.profissional=nomeUsuario
+
 atual++
 atualizarBarraProgresso(Math.floor((atual/total)*100))
 }
+
 renderizarRotinas(ROTINAS_CACHE)
+
 SALVANDO=false
 atualizarBarraProgresso(100)
 setTimeout(()=>atualizarBarraProgresso(0),1200)
+
 alert("Pendências concluídas")
 }
 /* ====================================================
