@@ -408,9 +408,25 @@ executado_por:null,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 })
-}else{
-/* 🔥 UPDATE APENAS SE NÃO EXECUTADO */
-if(existe.status!=="executado"){
+/* 🔴 TRAVA ABSOLUTA — NÃO SOBRESCREVER */
+if(existe && existe.status==="executado"){
+continue
+}
+/* 🔥 INSERT */
+if(!existe){
+await db.from("rotinas_execucao").insert({
+paciente_id:r.paciente_id,
+rotina_id:r.rotina_id,
+data:dataHoje,
+turno:turno,
+status:"executado",
+executado_por:usuarioId,
+horario_executado:new Date().toISOString(),
+profissional_nome:nomeUsuario
+})
+}
+/* 🔥 UPDATE SOMENTE SE PENDENTE */
+else{
 await db.from("rotinas_execucao")
 .update({
 status:"executado",
@@ -419,7 +435,6 @@ horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 })
 .eq("id",existe.id)
-}
 }
 
 /* 🔄 ATUALIZA CACHE LOCAL */
