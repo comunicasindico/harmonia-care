@@ -291,6 +291,18 @@ document.head.appendChild(s)
 }
 })()
 </script>
+<script>
+/* ====================================================
+999 – CONTROLE BOTÃO CONCLUIR PENDENTES
+==================================================== */
+window.addEventListener("load",function(){
+const btnPendentes=document.getElementById("btnConcluirPendentes")
+const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+if(btnPendentes){
+btnPendentes.style.display=(hierarquia===1)?"inline-block":"none"
+}
+})
+</script>
 <div id="barraProgresso" style="display:none;position:fixed;top:0;left:0;width:100%;height:6px;background:#e5e7eb;z-index:9999">
 <div id="barraInterna" style="width:0%;height:100%;background:#22c55e;transition:width 0.3s"></div>
 </div>
