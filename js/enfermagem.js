@@ -335,8 +335,8 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
 const user=obterUsuarioLogado()||{}
-const usuarioId=user.id || null
-const nomeProfissional="admin"
+const usuarioId=user?.id || null
+const nomeProfissional=user?.nome_apelido || user?.nome || "admin"
 const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:pacienteId,
 rotina_id:rotinaId,
