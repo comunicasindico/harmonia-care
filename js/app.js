@@ -79,8 +79,9 @@ mudarTurno(TURNO_ATUAL)
 const perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
 const painelAtual=localStorage.getItem("painelAtual")||"painelEnfermagem"
 const btnAdmin=document.getElementById("btnConcluirPendentes")
+const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
 if(btnAdmin){
-if(perfil.includes("admin")&&painelAtual==="painelEnfermagem"){
+if(hierarquia===1 && painelAtual==="painelEnfermagem"){
 btnAdmin.style.display="inline-block"
 }else{
 btnAdmin.style.display="none"
