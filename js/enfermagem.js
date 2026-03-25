@@ -292,7 +292,7 @@ html+=`<tr style="background:#f0fdf4;font-weight:bold">
 tbody.innerHTML=html
 }
 /* ====================================================
-025 – EXECUTAR ROTINAS
+025 – EXECUTAR ROTINAS (FINAL)
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db||!pacienteId||!rotinaId)return
@@ -316,9 +316,7 @@ executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeProfissional
 })
-
 if(res.error){
-/* 🔴 IGNORA DUPLICADO SEM POLUIR CONSOLE */
 if(res.error.code==="23505"){
 window[chaveLock]=false
 return
@@ -339,70 +337,6 @@ calcularIndicadores(ROTINAS_CACHE)
 console.error("Erro executarRotina",e)
 }
 window[chaveLock]=false
-}
-/* ====================================================
-026 – CONCLUIR TODAS (SEM ERRO, SEM DUPLICIDADE)
-==================================================== */
-async function concluirTodas(pacienteId){
-if(!db||!pacienteId)return
-const dataRaw=document.getElementById("dataInicio")?.value
-const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-const turno=TURNO_ATUAL||"manha"
-const user=obterUsuarioLogado()||{}
-const usuarioId=user.id||null
-const nomeUsuario="admin"
-
-/* 🔹 PEGAR TUDO DO BANCO DE UMA VEZ */
-const {data:executadas}=await db.from("rotinas_execucao")
-.select("paciente_id,rotina_id")
-.eq("data",dataHoje)
-.eq("turno",turno)
-
-const mapaExecutadas=new Set(
-(executadas||[]).map(e=>`${e.paciente_id}_${e.rotina_id}`)
-)
-
-const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
-
-for(const r of rotinas){
-
-const chave=`${r.paciente_id}_${r.rotina_id}`
-
-/* 🔴 SE JÁ EXISTE → IGNORA TOTAL */
-if(mapaExecutadas.has(chave)){
-continue
-}
-
-const res=await db.from("rotinas_execucao").insert({
-paciente_id:pacienteId,
-rotina_id:rotinaId,
-data:dataHoje,
-turno:turno,
-status:"executado",
-executado_por:usuarioId,
-horario_executado:new Date().toISOString(),
-profissional_nome:nomeProfissional
-})
-
-if(res.error){
-/* 🔴 IGNORA DUPLICADO SEM POLUIR CONSOLE */
-if(res.error.code==="23505"){
-window[chaveLock]=false
-return
-}
-console.error("Erro real",res.error)
-window[chaveLock]=false
-return
-}
-
-/* 🔄 CACHE */
-r.status="executado"
-r.profissional=nomeUsuario
-
-}
-
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
 }
 /* ====================================================
 026A – DESFAZER ROTINA (ADMIN)
@@ -443,6 +377,64 @@ r.profissional=""
 })
 renderizarRotinas(ROTINAS_CACHE)
 window[chaveLock]=false
+}
+/* ====================================================
+026 – CONCLUIR TODAS (FINAL CORRETO)
+==================================================== */
+async function concluirTodas(pacienteId){
+if(!db||!pacienteId)return
+const dataRaw=document.getElementById("dataInicio")?.value
+const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
+const turno=TURNO_ATUAL||"manha"
+const user=obterUsuarioLogado()||{}
+const usuarioId=user.id||null
+const nomeUsuario="admin"
+
+const {data:executadas}=await db.from("rotinas_execucao")
+.select("paciente_id,rotina_id")
+.eq("data",dataHoje)
+.eq("turno",turno)
+
+const mapaExecutadas=new Set(
+(executadas||[]).map(e=>`${e.paciente_id}_${e.rotina_id}`)
+)
+
+const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
+
+for(const r of rotinas){
+
+const chave=`${r.paciente_id}_${r.rotina_id}`
+
+if(mapaExecutadas.has(chave)){
+continue
+}
+
+const res=await db.from("rotinas_execucao").insert({
+paciente_id:r.paciente_id,
+rotina_id:r.rotina_id,
+data:dataHoje,
+turno:turno,
+status:"executado",
+executado_por:usuarioId,
+horario_executado:new Date().toISOString(),
+profissional_nome:nomeUsuario
+})
+
+if(res.error){
+if(res.error.code==="23505"){
+continue
+}
+console.error("Erro real",res.error)
+continue
+}
+
+r.status="executado"
+r.profissional=nomeUsuario
+
+}
+
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
 }
 /* ====================================================
 027 – INDICADORES
