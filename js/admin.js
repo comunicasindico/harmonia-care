@@ -203,7 +203,7 @@ if(mapaExecutadas.has(chave)){
 continue
 }
 
-const {error}=await db.from("rotinas_execucao").insert({
+const res=await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -214,7 +214,12 @@ horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 })
 
-if(error){
+if(res.error){
+/* 🔴 IGNORA DUPLICADO SEM POLUIR */
+if(res.error.code==="23505"){
+continue
+}
+console.error("Erro real concluirPendentes",res.error)
 continue
 }
 
