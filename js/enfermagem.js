@@ -336,7 +336,7 @@ const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join(
 const turno=TURNO_ATUAL||"manha"
 const user=obterUsuarioLogado()||{}
 const usuarioId=user.id || null
-const nomeProfissional=user.nome_apelido || user.nome || "admin"
+const nomeProfissional="admin"
 const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:pacienteId,
 rotina_id:rotinaId,
@@ -375,7 +375,7 @@ const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join(
 const turno=TURNO_ATUAL||"manha"
 const user=obterUsuarioLogado()||{}
 const usuarioId=user.id || null
-const nomeUsuario=user.nome_apelido || user.nome || "admin"
+const nomeUsuario="admin"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 for(const r of rotinas){
 /* 🔒 NÃO ALTERA SE JÁ EXECUTADO */
