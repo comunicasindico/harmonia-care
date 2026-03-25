@@ -235,20 +235,46 @@ MODO_EDICAO_ADMIN=true
 carregarUsuarios()
 }
 /* ====================================================
-071 – SALVAR TODOS
+071 – SALVAR USUÁRIOS - TODOS (OTIMIZADO E BLINDADO)
 ==================================================== */
 async function salvarUsuarios(){
 if(!db)return
+if(window._salvandoUsuarios)return
+window._salvandoUsuarios=true
 const linhas=document.querySelectorAll("#tabelaUsuariosAdmin tr[data-id]")
+let promessas=[]
 for(const tr of linhas){
 const id=tr.getAttribute("data-id")
-const dados={nome_completo:tr.querySelector(".u_nome")?.value||"",nome_apelido:tr.querySelector(".u_apelido")?.value||"",email:tr.querySelector(".u_email")?.value||"",perfil:tr.querySelector(".u_perfil")?.value||"",hierarquia:parseInt(tr.querySelector(".u_hierarquia")?.value||5),ativo:true}
+if(!id)continue
+const dados={
+nome_completo:tr.querySelector(".u_nome")?.value||"",
+nome_apelido:tr.querySelector(".u_apelido")?.value||"",
+email:tr.querySelector(".u_email")?.value||"",
+perfil:tr.querySelector(".u_perfil")?.value||"",
+hierarquia:parseInt(tr.querySelector(".u_hierarquia")?.value||5),
+ativo:true
+}
 const novaSenha=tr.querySelector(".u_senha")?.value
 if(novaSenha)dados.senha_hash=novaSenha
-await db.from("usuarios").update(dados).eq("id",id)
+promessas.push(
+db.from("usuarios").update(dados).eq("id",id)
+)
+}
+const resultados=await Promise.all(promessas)
+let erro=false
+resultados.forEach(r=>{
+if(r.error){
+erro=true
+console.error("Erro salvar usuário:",r.error)
+}
+})
+window._salvandoUsuarios=false
+if(erro){
+alert("Alguns usuários não foram salvos. Ver console.")
+}else{
+alert("Todos usuários salvos com sucesso")
 }
 MODO_EDICAO_ADMIN=false
 localStorage.setItem("modo_edicao_admin","false")
-alert("Salvo com sucesso")
-carregarUsuarios()
+await carregarUsuarios()
 }
