@@ -334,9 +334,9 @@ window[chaveLock]=true
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
-const user=obterUsuarioLogado()
-const usuarioId=null
-const nomeProfissional="admin"
+const user=obterUsuarioLogado()||{}
+const usuarioId=user.id || null
+const nomeProfissional=user.nome_apelido || user.nome || "admin"
 const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:pacienteId,
 rotina_id:rotinaId,
@@ -373,9 +373,9 @@ if(!db||!pacienteId)return
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
-const user=obterUsuarioLogado()
-const usuarioId="admin"
-const nomeUsuario="admin"
+const user=obterUsuarioLogado()||{}
+const usuarioId=user.id || null
+const nomeUsuario=user.nome_apelido || user.nome || "admin"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 for(const r of rotinas){
 /* 🔒 NÃO ALTERA SE JÁ EXECUTADO */
