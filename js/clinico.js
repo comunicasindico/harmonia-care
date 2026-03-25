@@ -13,7 +13,7 @@ async function carregarClinico(){
 const selectPaciente=document.getElementById("buscaPaciente")
 const pacienteSelecionado=selectPaciente?selectPaciente.value:"todos"
 if(!db){console.error("Supabase ainda não carregou");return}
-if(!EMPRESA_ID){console.error("EMPRESA_ID null");return}  // 👈 AQUI
+if(!EMPRESA_ID){console.warn("EMPRESA_ID ainda não carregado")return} // 👈 AQUI
 const {data,error}=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo")
 if(error){console.error(error);return}
 const tabela=document.getElementById("quadroClinico")
