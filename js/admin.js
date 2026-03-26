@@ -160,7 +160,7 @@ document.getElementById("adminRotina").value=""
 if(typeof carregarRotinas==="function")await carregarRotinas()
 }
 /* ====================================================
-068 – CONCLUIR PENDENTES (DEFINITIVO FUNCIONANDO)
+068 – CONCLUIR PENDENTES (SEM SOBRESCREVER)
 ==================================================== */
 async function concluirPendentes(){
 
@@ -180,11 +180,25 @@ return
 SALVANDO=true
 atualizarBarraProgresso(0)
 
+try{
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
 
 const nomeUsuario="Administrador"
+
+/* 🔍 BUSCA EXECUÇÕES EXISTENTES */
+const {data:executadas}=await db.from("rotinas_execucao")
+.select("paciente_id,rotina_id,status")
+.eq("data",dataHoje)
+.eq("turno",turno)
+
+/* 🔥 MAPA DE CONTROLE */
+const mapa=new Map()
+;(executadas||[]).forEach(e=>{
+mapa.set(`${e.paciente_id}_${e.rotina_id}`,e.status)
+})
 
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
 
@@ -193,16 +207,15 @@ let atual=0
 
 for(const r of pendentes){
 
-/* 🔴 LIMPA QUALQUER REGISTRO ANTERIOR */
-await db.from("rotinas_execucao")
-.delete()
-.eq("paciente_id",r.paciente_id)
-.eq("rotina_id",r.rotina_id)
-.eq("data",dataHoje)
-.eq("turno",turno)
+const chave=`${r.paciente_id}_${r.rotina_id}`
 
-/* 🔥 INSERE COMO EXECUTADO */
-const res=await db.from("rotinas_execucao").insert({
+/* 🔒 REGRA PRINCIPAL — NÃO SOBRESCREVER */
+if(mapa.get(chave)==="executado"){
+continue
+}
+
+/* 🔥 UPSERT (SEM APAGAR HISTÓRICO) */
+const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -211,10 +224,10 @@ status:"executado",
 executado_por:null,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
-})
+},{onConflict:"paciente_id,rotina_id,data,turno"})
 
-if(res.error){
-console.error("Erro concluirPendentes",res.error)
+if(error){
+console.error("Erro concluirPendentes",error)
 continue
 }
 
@@ -230,9 +243,13 @@ atualizarBarraProgresso(Math.floor((atual/total)*100))
 /* 🔄 RECARREGA DO BANCO */
 await carregarRotinas()
 
+}catch(e){
+console.error("Erro geral concluirPendentes",e)
+}finally{
 SALVANDO=false
 atualizarBarraProgresso(100)
 setTimeout(()=>atualizarBarraProgresso(0),1200)
+}
 
 alert("Pendências concluídas")
 }
