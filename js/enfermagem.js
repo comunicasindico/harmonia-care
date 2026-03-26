@@ -388,7 +388,7 @@ renderizarRotinas(ROTINAS_CACHE)
 window[chaveLock]=false
 }
 /* ====================================================
-026 – CONCLUIR TODAS (SEM SOBRESCREVER EXECUÇÃO)
+026 – CONCLUIR TODAS (SEM TRAVAR + CONSISTENTE)
 ==================================================== */
 async function concluirTodas(pacienteId){
 
@@ -408,16 +408,18 @@ const user=obterUsuarioLogado()||{}
 const usuarioId=user.id||null
 const nomeUsuario=user.nome||"admin"
 
-/* 🔍 BUSCA EXECUÇÕES EXISTENTES */
+/* 🔥 BUSCA REAL DO BANCO */
 const {data:executadas}=await db.from("rotinas_execucao")
 .select("paciente_id,rotina_id,status")
 .eq("data",dataHoje)
 .eq("turno",turno)
 
-const mapa=new Map()
-;(executadas||[]).forEach(e=>{
-mapa.set(`${e.paciente_id}_${e.rotina_id}`,e.status)
-})
+/* 🔥 MAPA DINÂMICO */
+const mapa=new Set(
+(executadas||[])
+.filter(e=>e.status==="executado")
+.map(e=>`${e.paciente_id}_${e.rotina_id}`)
+)
 
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 
@@ -425,12 +427,12 @@ for(const r of rotinas){
 
 const chave=`${r.paciente_id}_${r.rotina_id}`
 
-/* 🔴 REGRA PRINCIPAL */
-if(mapa.get(chave)==="executado"){
+/* 🔒 NÃO PROCESSA SE JÁ EXECUTADO */
+if(mapa.has(chave)){
 continue
 }
 
-/* 🔥 UPSERT (SEM APAGAR HISTÓRICO) */
+/* 🔥 EXECUTA */
 const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
@@ -447,7 +449,10 @@ console.error("Erro concluirTodas",error)
 continue
 }
 
-/* 🔄 CACHE */
+/* 🔥 ATUALIZA MAPA EM TEMPO REAL */
+mapa.add(chave)
+
+/* 🔄 ATUALIZA CACHE */
 r.status="executado"
 r.profissional=nomeUsuario
 
