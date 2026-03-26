@@ -494,17 +494,8 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 const user=obterUsuarioLogado()
-
-const usuarioId=
-user.id||
-localStorage.getItem("usuario_id")||
-PROFISSIONAL_ID||
-null
-
-const nomeProfissional=
-user.nome||
-localStorage.getItem("usuario_nome")||
-"admin"
+const usuarioId=user.id||localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
+const nomeProfissional=user.nome||localStorage.getItem("usuario_nome")||"admin"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 for(const r of rotinas){
 if(r.status==="executado")continue
@@ -515,7 +506,7 @@ data:dataHoje,
 turno:turno,
 status:"executado",
 usuario_id:usuarioId,
-profissional_nome:nomeUsuario,
+profissional_nome:nomeProfissional,
 horario_executado:new Date().toISOString()
 },{
 onConflict:"paciente_id,rotina_id,data,turno"
@@ -525,7 +516,7 @@ console.error("Erro executarTodos:",error)
 continue
 }
 r.status="executado"
-r.profissional=nomeUsuario
+r.profissional=nomeProfissional
 }
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
@@ -535,7 +526,7 @@ console.error("Erro geral executarTodos",e)
 window[chaveLock]=false
 }
 /* ====================================================
-029 – EXECUTAR ROTINA PARA TODOS (FINAL CORRETO)
+029 – EXECUTAR ROTINA PARA TODOS (CORREÇÃO DEFINITIVA)
 ==================================================== */
 async function executarRotinaTodos(rotinaId){
 if(!db||!rotinaId)return
@@ -543,63 +534,36 @@ const chaveLock=`lock_rotina_todos_${rotinaId}`
 if(window[chaveLock])return
 window[chaveLock]=true
 try{
-
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
-
 const user=obterUsuarioLogado()
-
-const usuarioId=
-user.id||
-localStorage.getItem("usuario_id")||
-PROFISSIONAL_ID||
-null
-
-const nomeProfissional=
-user.nome||
-localStorage.getItem("usuario_nome")||
-"admin"
-
+const usuarioId=user.id||localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
+const nomeProfissional=user.nome||localStorage.getItem("usuario_nome")||"admin"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.rotina_id)===String(rotinaId))
-
 for(const r of rotinas){
-
-/* 🔒 NÃO SOBRESCREVE */
-if(r.status==="executado"){
-continue
-}
-
-/* 🔥 UPSERT SEGURO */
-const res=await db.from("rotinas_execucao").upsert({
+if(r.status==="executado")continue
+const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:Number(r.paciente_id),
 rotina_id:Number(r.rotina_id),
 data:dataHoje,
 turno:turno,
 status:"executado",
-executado_por:usuarioId,
-horario_executado:new Date().toISOString(),
-profissional_nome:nomeUsuario
+usuario_id:usuarioId,
+profissional_nome:nomeProfissional,
+horario_executado:new Date().toISOString()
 },{
 onConflict:"paciente_id,rotina_id,data,turno"
 })
-
-if(res.error){
-console.error("Erro executarRotinaTodos",res.error)
+if(error){
+console.error("Erro executarRotinaTodos",error)
 continue
 }
-
-/* 🔄 CACHE */
 r.status="executado"
-r.profissional=nomeUsuario
-
+r.profissional=nomeProfissional
 }
-
-/* 🔄 UI */
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
-
 }catch(e){
 console.error("Erro geral executarRotinaTodos",e)
 }finally{
