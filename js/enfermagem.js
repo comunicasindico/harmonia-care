@@ -136,55 +136,118 @@ if(typeof carregarRotinas==="function")await carregarRotinas()
 if(typeof carregarClinico==="function")await carregarClinico()
 }
 /* ====================================================
-023 – CARREGAR ROTINAS (BLINDADO)
+023 – CARREGAR ROTINAS (CORREÇÃO FINAL)
 ==================================================== */
 async function carregarRotinas(){
-await gerarRotinasDoDia()
-const turno=TURNO_ATUAL||"manha"
+
 if(!db||!EMPRESA_ID)return
+
+await gerarRotinasDoDia()
+
+const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
+
 const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todos"
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
+
 let profissionalId=PROFISSIONAL_ID||localStorage.getItem("profissional_id")
+
 let pacientes=[]
+
+/* 🔹 PACIENTES DO PROFISSIONAL */
 if(profissionalId&&profissionalId!=="null"&&profissionalId!=="admin"){
-const {data:pp}=await db.from("pacientes_profissionais").select("paciente_id").eq("usuario_id",profissionalId).eq("turno",turno).eq("ativo",true)
+const {data:pp}=await db
+.from("pacientes_profissionais")
+.select("paciente_id")
+.eq("usuario_id",profissionalId)
+.eq("turno",turno)
+.eq("ativo",true)
+
 if(pp?.length){
 const ids=pp.map(p=>p.paciente_id)
-const {data:pacs}=await db.from("pacientes").select("*").in("id",ids)
+
+const {data:pacs}=await db
+.from("pacientes")
+.select("*")
+.in("id",ids)
+
 pacientes=pacs||[]
 }
 }
+
+/* 🔹 TODOS OS PACIENTES */
 if(!pacientes.length){
-const {data:pacs}=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
+const {data:pacs}=await db
+.from("pacientes")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+
 pacientes=pacs||[]
 }
+
+/* 🔹 FILTRO PACIENTE */
 if(pacienteSelecionado!=="todos"){
 pacientes=pacientes.filter(p=>String(p.id)===String(pacienteSelecionado))
 }
-const {data:rotinas}=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
-const rotinasTurno=(rotinas||[]).filter(r=>!r.turno||r.turno===turno).sort((a,b)=>(a.ordem||99)-(b.ordem||99))
-let query=db.from("rotinas_execucao").select("*").eq("data",dataHoje).eq("turno",turno)
-if(pacienteSelecionado!=="todos"){query=query.eq("paciente_id",pacienteSelecionado)}
+
+/* 🔹 ROTINAS */
+const {data:rotinas}=await db
+.from("rotina_modelos")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+
+const rotinasTurno=(rotinas||[])
+.filter(r=>!r.turno||r.turno===turno)
+.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
+
+/* 🔹 EXECUÇÕES DO DIA */
+let query=db
+.from("rotinas_execucao")
+.select("*")
+.eq("data",dataHoje)
+.eq("turno",turno)
+
+if(pacienteSelecionado!=="todos"){
+query=query.eq("paciente_id",pacienteSelecionado)
+}
+
 const {data:execucoes}=await query
+
+/* 🔹 MAPA DE EXECUÇÃO (CORRIGIDO) */
 const mapaExec=new Map()
+
 ;(execucoes||[]).forEach(e=>{
-const chave=`${String(e.paciente_id)}_${String(e.rotina_id)}`
+const chave=`${String(e.paciente_id)}_${String(e.rotina_id)}_${e.data}_${e.turno}`
 mapaExec.set(chave,e)
 })
+
+/* 🔹 MONTAGEM FINAL */
 const lista=[]
+
 for(const p of pacientes){
+
 for(const r of rotinasTurno){
-const chave=`${String(p.id)}_${String(r.id)}`
+
+const chave=`${String(p.id)}_${String(r.id)}_${dataHoje}_${turno}`
+
 const exec=mapaExec.get(chave)
+
 lista.push({
 paciente_id:p.id,
 rotina_id:r.id,
 paciente:p.nome_completo,
 rotina:r.nome,
 ordem:r.ordem||99,
-status:exec && exec.status==="executado"?"executado":"pendente",
-profissional:exec && exec.status==="executado"?(exec.profissional_nome||""):"",
+
+/* 🔥 STATUS CORRETO */
+status:exec?exec.status:"pendente",
+
+/* 🔥 PROFISSIONAL CORRETO */
+profissional:exec&&exec.status==="executado"?(exec.profissional_nome||""):"",
+
 has:p.has,
 dm:p.dm,
 demencia:p.da,
@@ -192,11 +255,16 @@ cardiopatia:p.cardiopatia,
 acamado:p.acamado,
 pa:p.pressao_arterial
 })
+
 }
 }
+
+/* 🔹 ATUALIZA */
 ROTINAS_CACHE=lista
+
 renderizarRotinas(lista)
 calcularIndicadores(lista)
+
 }
 /* ====================================================
 024 – RENDERIZAR ROTINAS
