@@ -167,7 +167,10 @@ async function concluirPendentes(){
 if(!db||SALVANDO)return
 
 const user=obterUsuarioLogado()
-const isAdmin=Number(user?.hierarquia)===1
+
+const isAdmin=
+Number(user?.hierarquia)===1 ||
+String(user?.perfil||"").toLowerCase()==="admin"
 
 if(!isAdmin){
 alert("Apenas administradores podem executar esta ação")
