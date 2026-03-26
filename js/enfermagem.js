@@ -341,19 +341,21 @@ if(ja){
 window[chaveLock]=false
 return
 }
-/* 🔥 INSERT SEM DELETE */
-const res=await db.from("rotinas_execucao").insert({
-paciente_id:pacienteId,
-rotina_id:rotinaId,
+/* 🔥 UPSERT (SEM CONFLITO) */
+const res=await db.from("rotinas_execucao").upsert({
+paciente_id:Number(pacienteId),
+rotina_id:Number(rotinaId),
 data:dataHoje,
-turno:turno,
+turno:String(turno).toLowerCase(),
 status:"executado",
 executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeProfissional
+},{
+onConflict:"paciente_id,rotina_id,data,turno"
 })
 if(res.error){
-if(res.error.code==="23505"){
+console.error("Erro executarRotina",res.error)
 window[chaveLock]=false
 return
 }
