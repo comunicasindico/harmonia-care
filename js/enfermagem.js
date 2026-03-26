@@ -323,8 +323,17 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 const user=obterUsuarioLogado()
-const nomeProfissional=user.nome||localStorage.getItem("usuario_nome")||"admin"
-const usuarioId=user.id||localStorage.getItem("usuario_id")||null
+
+const usuarioId=
+user.id||
+localStorage.getItem("usuario_id")||
+PROFISSIONAL_ID||
+null
+
+const nomeProfissional=
+user.nome||
+localStorage.getItem("usuario_nome")||
+"admin"
 try{
 const {data,error}=await db.from("rotinas_execucao").upsert({
 paciente_id:Number(pacienteId),
@@ -485,8 +494,17 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 const user=obterUsuarioLogado()
-const usuarioId=user.id||localStorage.getItem("usuario_id")||null
-const nomeUsuario=user.nome||localStorage.getItem("usuario_nome")||"admin"
+
+const usuarioId=
+user.id||
+localStorage.getItem("usuario_id")||
+PROFISSIONAL_ID||
+null
+
+const nomeProfissional=
+user.nome||
+localStorage.getItem("usuario_nome")||
+"admin"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 for(const r of rotinas){
 if(r.status==="executado")continue
@@ -532,8 +550,17 @@ const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join(
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 
 const user=obterUsuarioLogado()
-const usuarioId=user.id||null
-const nomeUsuario=user.nome||"Administrador"
+
+const usuarioId=
+user.id||
+localStorage.getItem("usuario_id")||
+PROFISSIONAL_ID||
+null
+
+const nomeProfissional=
+user.nome||
+localStorage.getItem("usuario_nome")||
+"admin"
 
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.rotina_id)===String(rotinaId))
 
