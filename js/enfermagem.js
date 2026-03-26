@@ -1,4 +1,47 @@
 /* ====================================================
+015 – GERAR ROTINAS DO DIA
+==================================================== */
+async function gerarRotinasDoDia(){
+
+if(!db||!EMPRESA_ID)return
+
+const dataHoje=new Date().toISOString().slice(0,10)
+
+/* 🔹 PEGAR PACIENTES */
+const {data:pacientes}=await db
+.from("pacientes")
+.select("id")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+
+/* 🔹 PEGAR MODELOS */
+const {data:modelos}=await db
+.from("rotina_modelos")
+.select("id,turno")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+
+if(!pacientes||!modelos)return
+
+for(const p of pacientes){
+for(const m of modelos){
+
+await db.from("rotinas_execucao").upsert({
+paciente_id:p.id,
+rotina_id:m.id,
+data:dataHoje,
+turno:m.turno,
+status:"pendente",
+empresa_id:EMPRESA_ID
+},{
+onConflict:"paciente_id,rotina_id,data,turno"
+})
+
+}
+}
+
+}
+/* ====================================================
 020 – CORES POR USUÁRIO (OK)
 ==================================================== */
 function obterCorUsuario(nome){
@@ -96,6 +139,7 @@ if(typeof carregarClinico==="function")await carregarClinico()
 023 – CARREGAR ROTINAS (BLINDADO)
 ==================================================== */
 async function carregarRotinas(){
+await gerarRotinasDoDia()
 const turno=TURNO_ATUAL||"manha"
 if(!db||!EMPRESA_ID)return
 const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todos"
