@@ -360,7 +360,7 @@ r.status="executado"
 r.profissional=nomeProfissional
 }
 })
-await carregarRotinas() ROTINAS_CACHE = listaAtualizada
+await carregarRotinas()
   
 }catch(e){
 console.error("Erro geral executarRotina",e)
