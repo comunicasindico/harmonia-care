@@ -425,14 +425,13 @@ const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId)
 
 for(const r of rotinas){
 
-const chave=`${r.paciente_id}_${r.rotina_id}`
-
-/* 🔒 NÃO PROCESSA SE JÁ EXECUTADO */
-if(mapa.has(chave)){
+/* 🔴 REGRA CERTA: USA O CACHE */
+if(r.status==="executado"){
 continue
 }
 
-/* 🔥 EXECUTA */
+const chave=`${r.paciente_id}_${r.rotina_id}`
+
 const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
@@ -448,9 +447,6 @@ if(error){
 console.error("Erro concluirTodas",error)
 continue
 }
-
-/* 🔥 ATUALIZA MAPA EM TEMPO REAL */
-mapa.add(chave)
 
 /* 🔄 ATUALIZA CACHE */
 r.status="executado"
