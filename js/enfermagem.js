@@ -331,16 +331,18 @@ window[chaveLock]=false
 return
 }
 try{
+
 /* 🔒 NÃO SOBRESCREVE */
 const ja=ROTINAS_CACHE.find(r=>{
 return String(r.paciente_id)===String(pacienteId)&&
 String(r.rotina_id)===String(rotinaId)&&
 r.status==="executado"
 })
+
 if(ja){
-window[chaveLock]=false
 return
 }
+
 /* 🔥 UPSERT (SEM CONFLITO) */
 const res=await db.from("rotinas_execucao").upsert({
 paciente_id:Number(pacienteId),
@@ -354,29 +356,28 @@ profissional_nome:nomeProfissional
 },{
 onConflict:"paciente_id,rotina_id,data,turno"
 })
+
 if(res.error){
 console.error("Erro executarRotina",res.error)
-window[chaveLock]=false
 return
 }
-console.error("Erro real",res.error)
-window[chaveLock]=false
-return
-}
+
+/* 🔄 CACHE */
 ROTINAS_CACHE.forEach(r=>{
 if(String(r.paciente_id)===String(pacienteId)&&String(r.rotina_id)===String(rotinaId)){
 r.status="executado"
 r.profissional=nomeProfissional
 }
 })
+
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
+
 }catch(e){
-console.error("Erro executarRotina",e)
-}
+console.error("Erro executarRotina catch",e)
+}finally{
 window[chaveLock]=false
 }
-
 /* ====================================================
 026 – CONCLUIR TODAS (FINAL CORRETO)
 ==================================================== */
@@ -386,26 +387,28 @@ const chaveLock=`lock_exec_todos_${pacienteId}`
 if(window[chaveLock])return
 window[chaveLock]=true
 try{
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-const turno=TURNO_ATUAL||"manha"
+const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
+
 const user=obterUsuarioLogado()||{}
 const usuarioId=user.id||null
 const nomeUsuario=user.nome||"admin"
+
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
+
 for(const r of rotinas){
-/* 🔒 REGRA PRINCIPAL */
-const jaExiste=await registroJaExiste(r.paciente_id,r.rotina_id,dataHoje,turno)
-if(jaExiste){
-continue
-}
+
+/* 🔒 NÃO SOBRESCREVE */
 if(r.status==="executado"){
 continue
 }
 
-await db.from("rotinas_execucao").upsert({
-paciente_id:r.paciente_id,
-rotina_id:r.rotina_id,
+/* 🔥 UPSERT (SEM CONFLITO) */
+const res=await db.from("rotinas_execucao").upsert({
+paciente_id:Number(r.paciente_id),
+rotina_id:Number(r.rotina_id),
 data:dataHoje,
 turno:turno,
 status:"executado",
@@ -416,24 +419,25 @@ profissional_nome:nomeUsuario
 onConflict:"paciente_id,rotina_id,data,turno"
 })
 
-r.status="executado"
-r.profissional=nomeUsuario
 if(res.error){
-if(res.error.code==="23505")continue
 console.error("Erro concluirTodas",res.error)
 continue
 }
+
 /* 🔄 CACHE */
 r.status="executado"
 r.profissional=nomeUsuario
+
 }
+
+/* 🔄 UI */
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
+
 }catch(e){
 console.error("Erro geral concluirTodas",e)
 }finally{
 window[chaveLock]=false
-}
 }
 /* ====================================================
 026A – DESFAZER ROTINA (FINAL CORRETO)
@@ -496,21 +500,29 @@ const chaveLock=`lock_exec_todos_${pacienteId}`
 if(window[chaveLock])return
 window[chaveLock]=true
 try{
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-const turno=TURNO_ATUAL||"manha"
+
+const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
+
 const user=obterUsuarioLogado()
 const usuarioId=user.id||null
 const nomeUsuario=user.nome||"Administrador"
+
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
+
 for(const r of rotinas){
+
+/* 🔒 NÃO SOBRESCREVE */
 if(r.status==="executado"){
 continue
 }
 
-await db.from("rotinas_execucao").upsert({
-paciente_id:r.paciente_id,
-rotina_id:r.rotina_id,
+/* 🔥 UPSERT */
+const res=await db.from("rotinas_execucao").upsert({
+paciente_id:Number(r.paciente_id),
+rotina_id:Number(r.rotina_id),
 data:dataHoje,
 turno:turno,
 status:"executado",
@@ -521,23 +533,25 @@ profissional_nome:nomeUsuario
 onConflict:"paciente_id,rotina_id,data,turno"
 })
 
-r.status="executado"
-r.profissional=nomeUsuario
 if(res.error){
-if(res.error.code==="23505")continue
 console.error("Erro executarTodos",res.error)
 continue
 }
+
+/* 🔄 CACHE */
 r.status="executado"
 r.profissional=nomeUsuario
+
 }
+
+/* 🔄 UI */
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
+
 }catch(e){
 console.error("Erro geral executarTodos",e)
 }finally{
 window[chaveLock]=false
-}
 }
 /* ====================================================
 029 – EXECUTAR ROTINA PARA TODOS (FINAL CORRETO)
@@ -548,21 +562,29 @@ const chaveLock=`lock_rotina_todos_${rotinaId}`
 if(window[chaveLock])return
 window[chaveLock]=true
 try{
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-const turno=TURNO_ATUAL||"manha"
+
+const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
+
 const user=obterUsuarioLogado()
 const usuarioId=user.id||null
 const nomeUsuario=user.nome||"Administrador"
+
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.rotina_id)===String(rotinaId))
+
 for(const r of rotinas){
+
+/* 🔒 NÃO SOBRESCREVE */
 if(r.status==="executado"){
 continue
 }
 
-await db.from("rotinas_execucao").upsert({
-paciente_id:r.paciente_id,
-rotina_id:r.rotina_id,
+/* 🔥 UPSERT SEGURO */
+const res=await db.from("rotinas_execucao").upsert({
+paciente_id:Number(r.paciente_id),
+rotina_id:Number(r.rotina_id),
 data:dataHoje,
 turno:turno,
 status:"executado",
@@ -573,24 +595,25 @@ profissional_nome:nomeUsuario
 onConflict:"paciente_id,rotina_id,data,turno"
 })
 
-r.status="executado"
-r.profissional=nomeUsuario
-
 if(res.error){
-if(res.error.code==="23505")continue
 console.error("Erro executarRotinaTodos",res.error)
 continue
 }
+
+/* 🔄 CACHE */
 r.status="executado"
 r.profissional=nomeUsuario
+
 }
+
+/* 🔄 UI */
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
+
 }catch(e){
 console.error("Erro geral executarRotinaTodos",e)
 }finally{
 window[chaveLock]=false
-}
 }
 /* ====================================================
 030 – GERAR ROTINAS DO DIA (BLINDADO FINAL)
