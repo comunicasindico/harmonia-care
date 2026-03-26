@@ -172,14 +172,24 @@ SALVANDO=true
 window.salvandoPendencias=true
 mostrarProgresso()
 bloquearTela()
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
+
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
+
 const user=obterUsuarioLogado()
+
 const usuarioId=user.id||localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
 const nomeProfissional=user.nome||localStorage.getItem("usuario_nome")||"admin"
+
+/* 🔥 GARANTE EMPRESA */
+const empresaId=EMPRESA_ID||localStorage.getItem("empresa_id")
+
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
+
 const total=pendentes.length
+
 if(total===0){
 alert("Nenhuma pendência encontrada")
 esconderProgresso()
@@ -188,34 +198,49 @@ SALVANDO=false
 window.salvandoPendencias=false
 return
 }
+
 let processados=0
+
 for(const r of pendentes){
+
 try{
+
+/* 🔥 UPSERT ROBUSTO */
 const {error}=await db.from("rotinas_execucao").upsert({
-paciente_id:Number(r.paciente_id),
-rotina_id:Number(r.rotina_id),
+paciente_id:r.paciente_id, /* 🔥 NÃO FORÇAR Number */
+rotina_id:r.rotina_id,
 data:dataHoje,
 turno:turno,
 status:"executado",
 usuario_id:usuarioId,
 profissional_nome:nomeProfissional,
+empresa_id:empresaId,
 horario_executado:new Date().toISOString()
 },{
 onConflict:"paciente_id,rotina_id,data,turno"
 })
+
 if(error){
 console.error("Erro pendente:",error)
 continue
 }
+
+/* 🔹 ATUALIZA CACHE LOCAL (mantido) */
 r.status="executado"
 r.profissional=nomeProfissional
+
 }catch(e){
 console.error("Erro geral pendente:",e)
 }
+
+/* 🔹 PROGRESSO (mantido) */
 processados++
 let percentual=Math.round((processados/total)*100)
 atualizarProgresso(percentual)
+
 }
+
+/* 🔥 RECARREGA DO BANCO (CRÍTICO) */
 await carregarRotinas()
 
 setTimeout(()=>{
@@ -224,6 +249,7 @@ desbloquearTela()
 SALVANDO=false
 window.salvandoPendencias=false
 },300)
+
 }
 /* ====================================================
 069 – SALVAR USUARIO LINHA (ROBUSTO)
