@@ -150,7 +150,6 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 
 let pacientes=[]
-
 /* 🔹 PACIENTES */
 const {data:pacs}=await db
 .from("pacientes")
@@ -159,17 +158,14 @@ const {data:pacs}=await db
 .eq("ativo",true)
 
 pacientes=pacs||[]
-
 /* 🔹 ORDEM ALFABÉTICA */
 pacientes.sort((a,b)=>
 (a.nome_completo||"").localeCompare(b.nome_completo||"","pt-BR")
 )
-
 /* 🔹 FILTRO */
 if(pacienteSelecionado!=="todos"){
 pacientes=pacientes.filter(p=>String(p.id)===String(pacienteSelecionado))
 }
-
 /* 🔹 ROTINAS MODELO */
 const {data:rotinas}=await db
 .from("rotina_modelos")
@@ -180,14 +176,12 @@ const {data:rotinas}=await db
 const rotinasTurno=(rotinas||[])
 .filter(r=>!r.turno||r.turno===turno)
 .sort((a,b)=>(a.ordem||99)-(b.ordem||99))
-
 /* 🔹 EXECUÇÕES DO DIA */
 const {data:execucoes}=await db
 .from("rotinas_execucao")
 .select("*")
 .eq("data",dataHoje)
 .eq("turno",turno)
-
 /* 🔹 MAPA SIMPLES E FUNCIONAL */
 const mapaExec=new Map()
 
@@ -195,7 +189,6 @@ const mapaExec=new Map()
 const chave=`${String(e.paciente_id)}_${String(e.rotina_id)}`
 mapaExec.set(chave,e)
 })
-
 /* 🔹 LISTA FINAL */
 const lista=[]
 
@@ -228,6 +221,15 @@ pa:p.pressao_arterial
 }
 
 }
+
+/* 🔥 ORDENAÇÃO FINAL GARANTIDA */
+lista.sort((a,b)=>{
+const nomeA=(a.paciente||"").toLowerCase()
+const nomeB=(b.paciente||"").toLowerCase()
+if(nomeA<nomeB)return -1
+if(nomeA>nomeB)return 1
+return (a.ordem||99)-(b.ordem||99)
+})
 
 ROTINAS_CACHE=lista
 
@@ -331,7 +333,7 @@ ${r.status==="executado"
 ?(perfil==="administrador"
 ?`onclick="desfazerRotina('${r.paciente_id}','${r.rotina_id}',this)"`
 :"")
-:`onclick="executarRotina('${r.paciente_id}','${r.rotina_id}',this)"`
+:`onclick="executarRotina('${r.paciente_id}','${r.rotina_id}')"`
 }>
 ${r.rotina}
 ${r.status==="executado"
@@ -396,7 +398,7 @@ tbody.innerHTML=html
 024B – EXECUTAR ROTINA (FINAL)
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId){
-
+console.log("CLICOU ROTINA", pacienteId, rotinaId)
 if(!db)return
 
 const dataHoje=new Date().toISOString().slice(0,10)
@@ -1177,7 +1179,7 @@ let percentual=total?Math.round((executadas/total)*100):0
 
 let botaoOK=percentual===100
 ?`<button class="btn-todos">Rotinas OK</button>`
-:`<button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button>`
+:`<button class="btn-todos" onclick="window.executarTodos('${pid}')">Concluir Todas</button>`
 
 /* 🔹 HTML FINAL */
 html+=`<tr>
@@ -1696,3 +1698,10 @@ if(p.dm)texto+=" | Controle glicêmico"
 if(p.has||p.cardiopatia)texto+=" | Monitorar PA"
 return texto
 }
+/* ====================================================
+999 – EXPORTAR FUNÇÕES PARA HTML (OBRIGATÓRIO)
+==================================================== */
+window.executarRotina = executarRotina
+window.executarTodos = executarTodos
+window.executarRotinaTodos = executarRotinaTodos
+window.concluirPendentes = concluirPendentes
