@@ -182,8 +182,17 @@ const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join(
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 
 const user=obterUsuarioLogado()
-const usuarioId=user.id||localStorage.getItem("usuario_id")||null
-const nomeUsuario=user.nome||localStorage.getItem("usuario_nome")||"admin"
+
+const usuarioId=
+user.id||
+localStorage.getItem("usuario_id")||
+PROFISSIONAL_ID||
+null
+
+const nomeProfissional=
+user.nome||
+localStorage.getItem("usuario_nome")||
+"admin"
 
 /* 🔹 FILTRAR PENDENTES */
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
