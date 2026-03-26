@@ -311,6 +311,9 @@ html+=`<tr style="background:#f0fdf4;font-weight:bold">
 
 tbody.innerHTML=html
 }
+/* ====================================================
+024B – EXECUTAR ROTINA
+==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db||!pacienteId||!rotinaId)return
 
@@ -621,6 +624,7 @@ calcularIndicadores(ROTINAS_CACHE)
 console.error("Erro geral executarRotinaTodos",e)
 }finally{
 window[chaveLock]=false
+}
 }
 /* ====================================================
 030 – GERAR ROTINAS DO DIA (BLINDADO FINAL)
