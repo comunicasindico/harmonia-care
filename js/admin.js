@@ -216,8 +216,8 @@ processados++
 let percentual=Math.round((processados/total)*100)
 atualizarProgresso(percentual)
 }
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
+await carregarRotinas()
+
 setTimeout(()=>{
 esconderProgresso()
 desbloquearTela()
