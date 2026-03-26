@@ -312,63 +312,38 @@ html+=`<tr style="background:#f0fdf4;font-weight:bold">
 tbody.innerHTML=html
 }
 /* ====================================================
-024B – EXECUTAR ROTINA
+024B – EXECUTAR ROTINA (CORREÇÃO DEFINITIVA SUPABASE)
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db||!pacienteId||!rotinaId)return
-
 const chaveLock=`lock_${pacienteId}_${rotinaId}`
 if(window[chaveLock])return
 window[chaveLock]=true
-
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
-
 const user=obterUsuarioLogado()
-const nomeProfissional=user.nome||"admin"
-const usuarioId=user.id||null
-
-const jaExiste=await registroJaExiste(pacienteId,rotinaId,dataHoje,turno)
-if(jaExiste){
-window[chaveLock]=false
-return
-}
-
+const nomeProfissional=user.nome||localStorage.getItem("usuario_nome")||"admin"
+const usuarioId=user.id||localStorage.getItem("usuario_id")||null
 try{
-
-/* 🔒 NÃO SOBRESCREVE CACHE */
-const ja=ROTINAS_CACHE.find(r=>{
-return String(r.paciente_id)===String(pacienteId)&&
-String(r.rotina_id)===String(rotinaId)&&
-r.status==="executado"
-})
-
-if(ja){
-window[chaveLock]=false
-return
-}
-
-/* 🔥 UPSERT */
-const res=await db.from("rotinas_execucao").upsert({
+const {data,error}=await db.from("rotinas_execucao").upsert({
 paciente_id:Number(pacienteId),
 rotina_id:Number(rotinaId),
 data:dataHoje,
 turno:turno,
 status:"executado",
-executado_por:usuarioId,
-horario_executado:new Date().toISOString(),
-profissional_nome:nomeProfissional
+usuario_id:usuarioId,
+profissional_nome:nomeProfissional,
+horario_executado:new Date().toISOString()
 },{
 onConflict:"paciente_id,rotina_id,data,turno"
 })
-
-if(res.error){
-console.error("Erro executarRotina",res.error)
+if(error){
+console.error("ERRO REAL SUPABASE:",error)
+alert("Erro ao salvar no banco")
+window[chaveLock]=false
 return
 }
-
 /* 🔄 CACHE */
 ROTINAS_CACHE.forEach(r=>{
 if(String(r.paciente_id)===String(pacienteId)&&String(r.rotina_id)===String(rotinaId)){
@@ -376,15 +351,12 @@ r.status="executado"
 r.profissional=nomeProfissional
 }
 })
-
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
-
 }catch(e){
-console.error("Erro executarRotina catch",e)
-}finally{
-window[chaveLock]=false
+console.error("Erro geral executarRotina",e)
 }
+window[chaveLock]=false
 }
 /* ====================================================
 026 – CONCLUIR TODAS (FINAL CORRETO)
@@ -501,7 +473,7 @@ if(a)a.innerHTML="⚠ "+atrasado
 }
 
 /* ====================================================
-028 – EXECUTAR TODOS (FINAL CORRETO)
+028 – EXECUTAR TODOS (CORREÇÃO DEFINITIVA)
 ==================================================== */
 async function executarTodos(pacienteId){
 if(!db||!pacienteId)return
@@ -509,59 +481,40 @@ const chaveLock=`lock_exec_todos_${pacienteId}`
 if(window[chaveLock])return
 window[chaveLock]=true
 try{
-
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
-
 const user=obterUsuarioLogado()
-const usuarioId=user.id||null
-const nomeUsuario=user.nome||"Administrador"
-
+const usuarioId=user.id||localStorage.getItem("usuario_id")||null
+const nomeUsuario=user.nome||localStorage.getItem("usuario_nome")||"admin"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
-
 for(const r of rotinas){
-
-/* 🔒 NÃO SOBRESCREVE */
-if(r.status==="executado"){
-continue
-}
-
-/* 🔥 UPSERT */
-const res=await db.from("rotinas_execucao").upsert({
+if(r.status==="executado")continue
+const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:Number(r.paciente_id),
 rotina_id:Number(r.rotina_id),
 data:dataHoje,
 turno:turno,
 status:"executado",
-executado_por:usuarioId,
-horario_executado:new Date().toISOString(),
-profissional_nome:nomeUsuario
+usuario_id:usuarioId,
+profissional_nome:nomeUsuario,
+horario_executado:new Date().toISOString()
 },{
 onConflict:"paciente_id,rotina_id,data,turno"
 })
-
-if(res.error){
-console.error("Erro executarTodos",res.error)
+if(error){
+console.error("Erro executarTodos:",error)
 continue
 }
-
-/* 🔄 CACHE */
 r.status="executado"
 r.profissional=nomeUsuario
-
 }
-
-/* 🔄 UI */
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
-
 }catch(e){
 console.error("Erro geral executarTodos",e)
-}finally{
-window[chaveLock]=false
 }
+window[chaveLock]=false
 }
 /* ====================================================
 029 – EXECUTAR ROTINA PARA TODOS (FINAL CORRETO)
