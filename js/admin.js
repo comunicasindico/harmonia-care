@@ -160,14 +160,11 @@ document.getElementById("adminRotina").value=""
 if(typeof carregarRotinas==="function")await carregarRotinas()
 }
 /* ====================================================
-068 – CONCLUIR PENDENTES (FINAL)
+068 – CONCLUIR PENDENTES (DEFINITIVO FUNCIONANDO)
 ==================================================== */
 async function concluirPendentes(){
 
 if(!db||SALVANDO)return
-
-const user=obterUsuarioLogado()
-const hierarquia=Number(localStorage.getItem("usuario_hierarquia")||1)
 
 const user=obterUsuarioLogado()
 const isAdmin=Number(user?.hierarquia)===1
@@ -184,16 +181,7 @@ const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 const turno=TURNO_ATUAL||"manha"
 
-executado_por:null,
 const nomeUsuario="Administrador"
-const {data:executadas}=await db.from("rotinas_execucao")
-.select("paciente_id,rotina_id")
-.eq("data",dataHoje)
-.eq("turno",turno)
-
-const mapaExecutadas=new Set(
-(executadas||[]).map(e=>`${e.paciente_id}_${e.rotina_id}`)
-)
 
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
 
@@ -202,12 +190,7 @@ let atual=0
 
 for(const r of pendentes){
 
-const chave=`${r.paciente_id}_${r.rotina_id}`
-
-if(mapaExecutadas.has(chave)){
-continue
-}
-/* 🔴 LIMPA */
+/* 🔴 LIMPA QUALQUER REGISTRO ANTERIOR */
 await db.from("rotinas_execucao")
 .delete()
 .eq("paciente_id",r.paciente_id)
@@ -215,7 +198,7 @@ await db.from("rotinas_execucao")
 .eq("data",dataHoje)
 .eq("turno",turno)
 
-/* 🔥 INSERT */
+/* 🔥 INSERE COMO EXECUTADO */
 const res=await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
@@ -228,13 +211,11 @@ profissional_nome:nomeUsuario
 })
 
 if(res.error){
-if(res.error.code==="23505"){
-continue
-}
-console.error("Erro real concluirPendentes",res.error)
+console.error("Erro concluirPendentes",res.error)
 continue
 }
 
+/* 🔄 CACHE */
 r.status="executado"
 r.profissional=nomeUsuario
 
@@ -243,6 +224,7 @@ atualizarBarraProgresso(Math.floor((atual/total)*100))
 
 }
 
+/* 🔄 RECARREGA DO BANCO */
 await carregarRotinas()
 
 SALVANDO=false
