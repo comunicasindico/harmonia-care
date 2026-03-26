@@ -420,8 +420,7 @@ r.profissional=nomeUsuario
 }
 
 /* 🔄 UI */
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
+await carregarRotinas()
 
 }catch(e){
 console.error("Erro geral concluirTodas",e)
@@ -458,7 +457,7 @@ r.status="pendente"
 r.profissional=""
 }
 })
-await carregarRotinas() ROTINAS_CACHE = listaAtualizada
+await carregarRotinas()
 window[chaveLock]=false
 }
 /* ====================================================
@@ -517,7 +516,7 @@ continue
 r.status="executado"
 r.profissional=nomeProfissional
 }
-await carregarRotinas() ROTINAS_CACHE = listaAtualizada
+await carregarRotinas()
 }catch(e){
 console.error("Erro geral executarTodos",e)
 }
@@ -560,7 +559,7 @@ continue
 r.status="executado"
 r.profissional=nomeProfissional
 }
-await carregarRotinas() ROTINAS_CACHE = listaAtualizada
+await carregarRotinas()
 }catch(e){
 console.error("Erro geral executarRotinaTodos",e)
 }finally{
