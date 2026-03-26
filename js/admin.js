@@ -207,6 +207,10 @@ let atual=0
 
 for(const r of pendentes){
 
+const jaExiste=await registroJaExiste(r.paciente_id,r.rotina_id,dataHoje,turno)
+if(jaExiste){
+continue
+}
 const chave=`${r.paciente_id}_${r.rotina_id}`
 
 /* 🔒 REGRA PRINCIPAL — NÃO SOBRESCREVER */
