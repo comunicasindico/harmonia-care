@@ -160,45 +160,26 @@ document.getElementById("adminRotina").value=""
 if(typeof carregarRotinas==="function")await carregarRotinas()
 }
 /* ====================================================
-068 – CONCLUIR PENDENTES (BLINDADO DEFINITIVO)
+068 – CONCLUIR PENDENTES (CORREÇÃO DEFINITIVA)
 ==================================================== */
 async function concluirPendentes(){
-
 if(!db)return
 if(SALVANDO){
 alert("Aguarde finalizar...")
 return
 }
-
 SALVANDO=true
 window.salvandoPendencias=true
-
 mostrarProgresso()
 bloquearTela()
-
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
-
 const user=obterUsuarioLogado()
-
-const usuarioId=
-user.id||
-localStorage.getItem("usuario_id")||
-PROFISSIONAL_ID||
-null
-
-const nomeProfissional=
-user.nome||
-localStorage.getItem("usuario_nome")||
-"admin"
-
-/* 🔹 FILTRAR PENDENTES */
+const usuarioId=user.id||localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
+const nomeProfissional=user.nome||localStorage.getItem("usuario_nome")||"admin"
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
-
 const total=pendentes.length
-
 if(total===0){
 alert("Nenhuma pendência encontrada")
 esconderProgresso()
@@ -207,14 +188,9 @@ SALVANDO=false
 window.salvandoPendencias=false
 return
 }
-
 let processados=0
-
 for(const r of pendentes){
-
 try{
-
-/* 🔹 UPSERT SEGURO */
 const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:Number(r.paciente_id),
 rotina_id:Number(r.rotina_id),
@@ -222,43 +198,32 @@ data:dataHoje,
 turno:turno,
 status:"executado",
 usuario_id:usuarioId,
-profissional_nome:nomeUsuario,
+profissional_nome:nomeProfissional,
 horario_executado:new Date().toISOString()
 },{
 onConflict:"paciente_id,rotina_id,data,turno"
 })
-
 if(error){
 console.error("Erro pendente:",error)
 continue
 }
-
-/* 🔹 ATUALIZA CACHE */
 r.status="executado"
-r.profissional=nomeUsuario
-
+r.profissional=nomeProfissional
 }catch(e){
 console.error("Erro geral pendente:",e)
 }
-
-/* 🔹 PROGRESSO */
 processados++
 let percentual=Math.round((processados/total)*100)
 atualizarProgresso(percentual)
-
 }
-
-/* 🔄 FINALIZA */
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
-
 setTimeout(()=>{
 esconderProgresso()
 desbloquearTela()
 SALVANDO=false
 window.salvandoPendencias=false
 },300)
-
 }
 /* ====================================================
 069 – SALVAR USUARIO LINHA (ROBUSTO)
