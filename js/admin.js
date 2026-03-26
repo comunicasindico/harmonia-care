@@ -169,7 +169,10 @@ if(!db||SALVANDO)return
 const user=obterUsuarioLogado()
 const hierarquia=Number(localStorage.getItem("usuario_hierarquia")||1)
 
-if(hierarquia!==1){
+const user=obterUsuarioLogado()
+const isAdmin=Number(user?.hierarquia)===1
+
+if(!isAdmin){
 alert("Apenas administradores podem executar esta ação")
 return
 }
@@ -182,8 +185,7 @@ const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join(
 const turno=TURNO_ATUAL||"manha"
 
 executado_por:null,
-profissional_nome:"Administrador"
-
+const nomeUsuario="Administrador"
 const {data:executadas}=await db.from("rotinas_execucao")
 .select("paciente_id,rotina_id")
 .eq("data",dataHoje)
