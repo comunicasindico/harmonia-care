@@ -397,7 +397,11 @@ const jaExiste=await registroJaExiste(r.paciente_id,r.rotina_id,dataHoje,turno)
 if(jaExiste){
 continue
 }
-const res=await db.from("rotinas_execucao").insert({
+if(r.status==="executado"){
+continue
+}
+
+await db.from("rotinas_execucao").upsert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -406,7 +410,12 @@ status:"executado",
 executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
+},{
+onConflict:"paciente_id,rotina_id,data,turno"
 })
+
+r.status="executado"
+r.profissional=nomeUsuario
 if(res.error){
 if(res.error.code==="23505")continue
 console.error("Erro concluirTodas",res.error)
@@ -493,8 +502,11 @@ const usuarioId=user.id||null
 const nomeUsuario=user.nome||"Administrador"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 for(const r of rotinas){
-if(r.status==="executado")continue
-const res=await db.from("rotinas_execucao").insert({
+if(r.status==="executado"){
+continue
+}
+
+await db.from("rotinas_execucao").upsert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -503,7 +515,12 @@ status:"executado",
 executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
+},{
+onConflict:"paciente_id,rotina_id,data,turno"
 })
+
+r.status="executado"
+r.profissional=nomeUsuario
 if(res.error){
 if(res.error.code==="23505")continue
 console.error("Erro executarTodos",res.error)
@@ -537,8 +554,11 @@ const usuarioId=user.id||null
 const nomeUsuario=user.nome||"Administrador"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.rotina_id)===String(rotinaId))
 for(const r of rotinas){
-if(r.status==="executado")continue
-const res=await db.from("rotinas_execucao").insert({
+if(r.status==="executado"){
+continue
+}
+
+await db.from("rotinas_execucao").upsert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -547,7 +567,13 @@ status:"executado",
 executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
+},{
+onConflict:"paciente_id,rotina_id,data,turno"
 })
+
+r.status="executado"
+r.profissional=nomeUsuario
+
 if(res.error){
 if(res.error.code==="23505")continue
 console.error("Erro executarRotinaTodos",res.error)
