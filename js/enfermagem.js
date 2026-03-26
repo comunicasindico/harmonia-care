@@ -43,7 +43,20 @@ else if(percentual<70){barra.style.background="orange"}
 else{barra.style.background="green"}
 }
 /* ====================================================
-021 – MUDAR TURNO (OK + ESTABILIDADE)
+021 – VERIFICAR SE JÁ EXISTE (REGRA BANCO)
+==================================================== */
+async function registroJaExiste(pacienteId,rotinaId,data,turno){
+const {data:existe}=await db.from("rotinas_execucao")
+.select("id,status")
+.eq("paciente_id",pacienteId)
+.eq("rotina_id",rotinaId)
+.eq("data",data)
+.eq("turno",turno)
+.maybeSingle()
+return existe && existe.status==="executado"
+}
+/* ====================================================
+021B – MUDAR TURNO (OK + ESTABILIDADE)
 ==================================================== */
 async function mudarTurno(turno){
 TURNO_ATUAL=turno
@@ -312,6 +325,11 @@ const turno=TURNO_ATUAL||"manha"
 const user=obterUsuarioLogado()
 const nomeProfissional=user.nome||"admin"
 const usuarioId=user.id||null
+const jaExiste=await registroJaExiste(pacienteId,rotinaId,dataHoje,turno)
+if(jaExiste){
+window[chaveLock]=false
+return
+}
 try{
 /* 🔒 NÃO SOBRESCREVE */
 const ja=ROTINAS_CACHE.find(r=>{
@@ -375,7 +393,10 @@ const nomeUsuario=user.nome||"admin"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 for(const r of rotinas){
 /* 🔒 REGRA PRINCIPAL */
-if(r.status==="executado")continue
+const jaExiste=await registroJaExiste(r.paciente_id,r.rotina_id,dataHoje,turno)
+if(jaExiste){
+continue
+}
 const res=await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
