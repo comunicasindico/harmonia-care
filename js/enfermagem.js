@@ -378,6 +378,7 @@ console.error("Erro executarRotina catch",e)
 }finally{
 window[chaveLock]=false
 }
+}
 /* ====================================================
 026 – CONCLUIR TODAS (FINAL CORRETO)
 ==================================================== */
@@ -438,6 +439,7 @@ calcularIndicadores(ROTINAS_CACHE)
 console.error("Erro geral concluirTodas",e)
 }finally{
 window[chaveLock]=false
+}
 }
 /* ====================================================
 026A – DESFAZER ROTINA (FINAL CORRETO)
@@ -552,6 +554,7 @@ calcularIndicadores(ROTINAS_CACHE)
 console.error("Erro geral executarTodos",e)
 }finally{
 window[chaveLock]=false
+}
 }
 /* ====================================================
 029 – EXECUTAR ROTINA PARA TODOS (FINAL CORRETO)
