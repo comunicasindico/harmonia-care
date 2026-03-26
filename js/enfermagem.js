@@ -311,28 +311,31 @@ html+=`<tr style="background:#f0fdf4;font-weight:bold">
 
 tbody.innerHTML=html
 }
-/* ====================================================
-025 – EXECUTAR ROTINAS (CORRIGIDO DEFINITIVO)
-==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db||!pacienteId||!rotinaId)return
+
 const chaveLock=`lock_${pacienteId}_${rotinaId}`
 if(window[chaveLock])return
 window[chaveLock]=true
+
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-const turno=TURNO_ATUAL||"manha"
+
+const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
+
 const user=obterUsuarioLogado()
 const nomeProfissional=user.nome||"admin"
 const usuarioId=user.id||null
+
 const jaExiste=await registroJaExiste(pacienteId,rotinaId,dataHoje,turno)
 if(jaExiste){
 window[chaveLock]=false
 return
 }
+
 try{
 
-/* 🔒 NÃO SOBRESCREVE */
+/* 🔒 NÃO SOBRESCREVE CACHE */
 const ja=ROTINAS_CACHE.find(r=>{
 return String(r.paciente_id)===String(pacienteId)&&
 String(r.rotina_id)===String(rotinaId)&&
@@ -340,15 +343,16 @@ r.status==="executado"
 })
 
 if(ja){
+window[chaveLock]=false
 return
 }
 
-/* 🔥 UPSERT (SEM CONFLITO) */
+/* 🔥 UPSERT */
 const res=await db.from("rotinas_execucao").upsert({
 paciente_id:Number(pacienteId),
 rotina_id:Number(rotinaId),
 data:dataHoje,
-turno:String(turno).toLowerCase(),
+turno:turno,
 status:"executado",
 executado_por:usuarioId,
 horario_executado:new Date().toISOString(),
