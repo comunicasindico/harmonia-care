@@ -160,102 +160,96 @@ document.getElementById("adminRotina").value=""
 if(typeof carregarRotinas==="function")await carregarRotinas()
 }
 /* ====================================================
-068 – CONCLUIR PENDENTES (SEM SOBRESCREVER)
+068 – CONCLUIR PENDENTES (BLINDADO DEFINITIVO)
 ==================================================== */
 async function concluirPendentes(){
 
-if(!db||SALVANDO)return
-
-const user=obterUsuarioLogado()
-
-const isAdmin=
-Number(user?.hierarquia)===1 ||
-String(user?.perfil||"").toLowerCase()==="admin"
-
-if(!isAdmin){
-alert("Apenas administradores podem executar esta ação")
+if(!db)return
+if(SALVANDO){
+alert("Aguarde finalizar...")
 return
 }
 
 SALVANDO=true
-atualizarBarraProgresso(0)
+window.salvandoPendencias=true
 
-try{
+mostrarProgresso()
+bloquearTela()
 
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-const turno=TURNO_ATUAL||"manha"
 
-const nomeUsuario="Administrador"
+const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 
-/* 🔍 BUSCA EXECUÇÕES EXISTENTES */
-const {data:executadas}=await db.from("rotinas_execucao")
-.select("paciente_id,rotina_id,status")
-.eq("data",dataHoje)
-.eq("turno",turno)
+const user=obterUsuarioLogado()
+const usuarioId=user.id||localStorage.getItem("usuario_id")||null
+const nomeUsuario=user.nome||localStorage.getItem("usuario_nome")||"admin"
 
-/* 🔥 MAPA DE CONTROLE */
-const mapa=new Map()
-;(executadas||[]).forEach(e=>{
-mapa.set(`${e.paciente_id}_${e.rotina_id}`,e.status)
-})
-
+/* 🔹 FILTRAR PENDENTES */
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
 
-let total=pendentes.length
-let atual=0
+const total=pendentes.length
+
+if(total===0){
+alert("Nenhuma pendência encontrada")
+esconderProgresso()
+desbloquearTela()
+SALVANDO=false
+window.salvandoPendencias=false
+return
+}
+
+let processados=0
 
 for(const r of pendentes){
 
-const jaExiste=await registroJaExiste(r.paciente_id,r.rotina_id,dataHoje,turno)
-if(jaExiste){
-continue
-}
-const chave=`${r.paciente_id}_${r.rotina_id}`
+try{
 
-/* 🔒 REGRA PRINCIPAL — NÃO SOBRESCREVER */
-if(mapa.get(chave)==="executado"){
-continue
-}
-
-/* 🔥 UPSERT (SEM APAGAR HISTÓRICO) */
+/* 🔹 UPSERT SEGURO */
 const {error}=await db.from("rotinas_execucao").upsert({
-paciente_id:r.paciente_id,
-rotina_id:r.rotina_id,
+paciente_id:Number(r.paciente_id),
+rotina_id:Number(r.rotina_id),
 data:dataHoje,
 turno:turno,
 status:"executado",
-executado_por:null,
-horario_executado:new Date().toISOString(),
-profissional_nome:nomeUsuario
-},{onConflict:"paciente_id,rotina_id,data,turno"})
+usuario_id:usuarioId,
+profissional_nome:nomeUsuario,
+horario_executado:new Date().toISOString()
+},{
+onConflict:"paciente_id,rotina_id,data,turno"
+})
 
 if(error){
-console.error("Erro concluirPendentes",error)
+console.error("Erro pendente:",error)
 continue
 }
 
-/* 🔄 CACHE */
+/* 🔹 ATUALIZA CACHE */
 r.status="executado"
 r.profissional=nomeUsuario
 
-atual++
-atualizarBarraProgresso(Math.floor((atual/total)*100))
-
-}
-
-/* 🔄 RECARREGA DO BANCO */
-await carregarRotinas()
-
 }catch(e){
-console.error("Erro geral concluirPendentes",e)
-}finally{
-SALVANDO=false
-atualizarBarraProgresso(100)
-setTimeout(()=>atualizarBarraProgresso(0),1200)
+console.error("Erro geral pendente:",e)
 }
 
-alert("Pendências concluídas")
+/* 🔹 PROGRESSO */
+processados++
+let percentual=Math.round((processados/total)*100)
+atualizarProgresso(percentual)
+
+}
+
+/* 🔄 FINALIZA */
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
+
+setTimeout(()=>{
+esconderProgresso()
+desbloquearTela()
+SALVANDO=false
+window.salvandoPendencias=false
+},300)
+
 }
 /* ====================================================
 069 – SALVAR USUARIO LINHA (ROBUSTO)
