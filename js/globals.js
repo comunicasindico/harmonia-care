@@ -14,32 +14,37 @@ if(typeof SALVANDO==="undefined"){var SALVANDO=false}
 if(typeof MODO_EDICAO_ADMIN==="undefined"){var MODO_EDICAO_ADMIN=localStorage.getItem("modo_edicao_admin")==="true"}
 
 /* ====================================================
-001 – DEFINIR SESSÃO PROFISSIONAL (CORRIGIDO)
+001 – DEFINIR SESSÃO PROFISSIONAL (CORRIGIDO DEFINITIVO)
 ==================================================== */
 function definirSessaoProfissional(user){
 if(!user)return
 localStorage.setItem("usuario_id",user.id)
 localStorage.setItem("usuario_nome",user.nome_apelido||user.nome_completo||"admin")
 localStorage.setItem("usuario_hierarquia",user.hierarquia||1)
-localStorage.setItem("perfil",user.perfil||"cuidador")
+localStorage.setItem("usuario_perfil",(user.perfil||"admin").toLowerCase())
 localStorage.setItem("empresa_id",user.empresa_id||EMPRESA_ID)
 PROFISSIONAL_ID=user.id
 }
+
 /* ====================================================
-002 – OBTER USUÁRIO LOGADO (BLINDADO REAL)
+002 – OBTER USUÁRIO LOGADO (BLINDADO FINAL)
 ==================================================== */
 function obterUsuarioLogado(){
-
 const id=localStorage.getItem("usuario_id")
 const nome=localStorage.getItem("usuario_nome")||"admin"
-const perfil=(localStorage.getItem("usuario_perfil")||"admin").toLowerCase()
-
-/* 🔥 FORÇA HIERARQUIA PADRÃO SE NÃO EXISTIR */
+let perfil=(localStorage.getItem("usuario_perfil")||"admin").toLowerCase()
 let hierarquia=localStorage.getItem("usuario_hierarquia")
 
+/* 🔥 GARANTE CONSISTÊNCIA */
 if(!hierarquia){
 hierarquia="1"
 localStorage.setItem("usuario_hierarquia","1")
+}
+
+/* 🔥 FORÇA ADMIN SE NOME FOR ADMIN */
+if(nome.toLowerCase()==="admin"){
+perfil="admin"
+hierarquia="1"
 }
 
 return{
@@ -50,6 +55,7 @@ hierarquia:Number(hierarquia),
 empresa_id:localStorage.getItem("empresa_id")
 }
 }
+
 /* ====================================================
 003 – CACHE DE USUÁRIOS (DINÂMICO)
 ==================================================== */
@@ -95,15 +101,15 @@ if(!nome)return
 USUARIOS_CACHE[nome]={
 id:u.id,
 nome:u.nome_apelido||u.nome_completo,
-perfil:u.perfil,
-hierarquia:u.hierarquia,
+perfil:(u.perfil||"").toLowerCase(),
+hierarquia:Number(u.hierarquia)||5,
 cor:gerarCorPorNome(nome)
 }
 })
 }
 
 /* ====================================================
-007 – OBTER NOME USUÁRIO ATUAL (PADRÃO)
+007 – OBTER NOME USUÁRIO ATUAL
 ==================================================== */
 function obterNomeUsuarioAtual(){
 return localStorage.getItem("usuario_nome")||"admin"
