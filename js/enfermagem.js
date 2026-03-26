@@ -388,14 +388,17 @@ renderizarRotinas(ROTINAS_CACHE)
 window[chaveLock]=false
 }
 /* ====================================================
-026 – CONCLUIR TODAS (FUNCIONANDO 100%)
+026 – CONCLUIR TODAS (DEFINITIVO BLINDADO)
 ==================================================== */
 async function concluirTodas(pacienteId){
+
 if(!db||!pacienteId)return
 
 const chaveLock=`lock_exec_todos_${pacienteId}`
 if(window[chaveLock])return
 window[chaveLock]=true
+
+try{
 
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
@@ -408,15 +411,22 @@ const nomeUsuario=user.nome||"admin"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 
 for(const r of rotinas){
-/* 🔴 LIMPA ANTES */
-await db.from("rotinas_execucao")
+
+/* 🔴 REMOVE QUALQUER REGISTRO ANTERIOR */
+const {error:errDel}=await db.from("rotinas_execucao")
 .delete()
 .eq("paciente_id",r.paciente_id)
 .eq("rotina_id",r.rotina_id)
 .eq("data",dataHoje)
 .eq("turno",turno)
-/* 🔥 INSERE */
-const res=await db.from("rotinas_execucao").insert({
+
+if(errDel){
+console.error("Erro delete",errDel)
+continue
+}
+
+/* 🔥 INSERE NOVO */
+const {error:errIns}=await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -427,18 +437,25 @@ horario_executado:new Date().toISOString(),
 profissional_nome:nomeUsuario
 })
 
-if(res.error){
-console.error("Erro executarTodos",res.error)
+if(errIns){
+console.error("Erro insert",errIns)
 continue
 }
-/* 🔥 ATUALIZA CACHE (ESSENCIAL) */
+
+/* 🔄 ATUALIZA CACHE */
 r.status="executado"
 r.profissional=nomeUsuario
 
 }
+
+/* 🔄 RECARREGA DO BANCO (GARANTE UI CORRETA) */
 await carregarRotinas()
 
+}catch(e){
+console.error("Erro geral concluirTodas",e)
+}finally{
 window[chaveLock]=false
+}
 }
 /* ====================================================
 027 – INDICADORES
