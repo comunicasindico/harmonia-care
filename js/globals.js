@@ -26,14 +26,27 @@ localStorage.setItem("empresa_id",user.empresa_id||EMPRESA_ID)
 PROFISSIONAL_ID=user.id
 }
 /* ====================================================
-002 – OBTER USUÁRIO LOGADO (PADRÃO GLOBAL CORRETO)
+002 – OBTER USUÁRIO LOGADO (BLINDADO REAL)
 ==================================================== */
 function obterUsuarioLogado(){
+
+const id=localStorage.getItem("usuario_id")
+const nome=localStorage.getItem("usuario_nome")||"admin"
+const perfil=(localStorage.getItem("usuario_perfil")||"admin").toLowerCase()
+
+/* 🔥 FORÇA HIERARQUIA PADRÃO SE NÃO EXISTIR */
+let hierarquia=localStorage.getItem("usuario_hierarquia")
+
+if(!hierarquia){
+hierarquia="1"
+localStorage.setItem("usuario_hierarquia","1")
+}
+
 return{
-id:localStorage.getItem("usuario_id"),
-nome:localStorage.getItem("usuario_nome")||"admin",
-perfil:(localStorage.getItem("usuario_perfil")||"").toLowerCase(),
-hierarquia:parseInt(localStorage.getItem("usuario_hierarquia")||1),
+id,
+nome,
+perfil,
+hierarquia:Number(hierarquia),
 empresa_id:localStorage.getItem("empresa_id")
 }
 }
