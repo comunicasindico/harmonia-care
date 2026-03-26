@@ -360,8 +360,8 @@ r.status="executado"
 r.profissional=nomeProfissional
 }
 })
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
+await carregarRotinas() ROTINAS_CACHE = listaAtualizada
+  
 }catch(e){
 console.error("Erro geral executarRotina",e)
 }
@@ -458,8 +458,7 @@ r.status="pendente"
 r.profissional=""
 }
 })
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
+await carregarRotinas() ROTINAS_CACHE = listaAtualizada
 window[chaveLock]=false
 }
 /* ====================================================
@@ -518,8 +517,7 @@ continue
 r.status="executado"
 r.profissional=nomeProfissional
 }
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
+await carregarRotinas() ROTINAS_CACHE = listaAtualizada
 }catch(e){
 console.error("Erro geral executarTodos",e)
 }
@@ -562,8 +560,7 @@ continue
 r.status="executado"
 r.profissional=nomeProfissional
 }
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
+await carregarRotinas() ROTINAS_CACHE = listaAtualizada
 }catch(e){
 console.error("Erro geral executarRotinaTodos",e)
 }finally{
