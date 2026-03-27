@@ -333,3 +333,7 @@ MODO_EDICAO_ADMIN=false
 localStorage.setItem("modo_edicao_admin","false")
 await carregarUsuarios()
 }
+/* ====================================================
+999 – EXPORT GLOBAL ADMIN
+==================================================== */
+window.concluirPendentes = concluirPendentes
