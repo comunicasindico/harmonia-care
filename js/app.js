@@ -110,9 +110,22 @@ location.reload()
 /* ====================================================
 013 – SALVAR PACIENTE SELECIONADO
 ==================================================== */
-document.addEventListener("change",function(e){
+document.addEventListener("change",async function(e){
 if(e.target && e.target.id==="buscaPaciente"){
-localStorage.setItem("pacienteSelecionado",e.target.value)
+const pacienteId=e.target.value
+localStorage.setItem("pacienteSelecionado",pacienteId)
+/* 🔥 FORÇA ATUALIZAÇÃO CLÍNICA */
+if(typeof carregarDadosClinicosPaciente==="function"){
+await carregarDadosClinicosPaciente(pacienteId)
+}
+/* 🔥 GARANTE SINCRONIA COM ENFERMAGEM */
+if(typeof carregarRotinas==="function"){
+await carregarRotinas()
+}
+/* 🔥 GRADE */
+if(typeof montarGradePeriodo==="function" && pacienteId!=="todos"){
+await montarGradePeriodo()
+}
 }
 })
 /* ====================================================
