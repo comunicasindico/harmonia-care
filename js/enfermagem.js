@@ -448,56 +448,61 @@ if(el)el.innerHTML=""
 }
 }
 /* ====================================================
-035 – NORMALIZAR DATA PARA ISO
+035 – NORMALIZAR DATA PARA ISO (SEM UTC BUG)
 ==================================================== */
 function normalizarDataISO(v){
-if(!v)return new Date().toISOString().slice(0,10)
+if(!v)return""
 if(v.includes("/")){
-const [d,m,a]=v.split("/")
-return `${a}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`
+const[d,m,a]=v.split("/")
+return`${a}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`
 }
 return v
 }
 /* ====================================================
-036 – GRADE REAL BASEADA NO BANCO (SIMPLES E CORRETA)
+036 – GRADE REAL BASEADA NO BANCO (CORREÇÃO DEFINITIVA)
 ==================================================== */
 async function montarGradePeriodo(){
 if(!db)return
 const pacienteId=document.getElementById("buscaPaciente")?.value
 const dataInicio=normalizarDataISO(document.getElementById("dataInicio")?.value)
 const dataFim=normalizarDataISO(document.getElementById("dataFim")?.value)
+const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 if(!pacienteId||pacienteId==="todos"){
 document.getElementById("gradePeriodo").innerHTML=""
 return
 }
-const {data:execucoes,error}=await db.from("rotinas_execucao").select("*").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim)
+const {data:execucoes,error}=await db.from("rotinas_execucao").select("*").eq("paciente_id",pacienteId).eq("turno",turno).gte("data",dataInicio).lte("data",dataFim)
 if(error){console.error("Erro ao buscar execuções",error);return}
 const mapa={}
 execucoes.forEach(e=>{
 if(!mapa[e.data])mapa[e.data]=[]
 mapa[e.data].push(e)
 })
-const rotinasSet=new Set()
-execucoes.forEach(e=>{rotinasSet.add(e.rotina_id)})
-const rotinasIdsRaw=Array.from(rotinasSet)
-const {data:rotinas}=await db.from("rotina_modelos").select("id,nome").in("id",rotinasIdsRaw)
+const ordemFixa=["Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café","Medicação","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene (noite)","Troca de Fraldas (noite)"]
+const {data:rotinas}=await db.from("rotina_modelos").select("id,nome,ordem").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("ordem",{ascending:true})
+const rotinasIds=(rotinas||[]).map(r=>r.id)
 const nomesRotinas={}
 rotinas?.forEach(r=>{nomesRotinas[r.id]=r.nome})
-const ordemFixa=["Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café","Medicação","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene (noite)","Troca de Fraldas (noite)"]
-const rotinasIds=rotinasIdsRaw.sort((a,b)=>ordemFixa.indexOf(nomesRotinas[a])-ordemFixa.indexOf(nomesRotinas[b]))
 const dias=[]
-let d=new Date(dataInicio+"T00:00:00")
-const fim=new Date(dataFim+"T00:00:00")
-while(d<=fim){
-dias.push(d.toISOString().slice(0,10))
-d.setDate(d.getDate()+1)
+let[diaI,mesI,anoI]=dataInicio.split("-")
+let[diaF,mesF,anoF]=dataFim.split("-")
+let atual=new Date(parseInt(anoI),parseInt(mesI)-1,parseInt(diaI))
+const fim=new Date(parseInt(anoF),parseInt(mesF)-1,parseInt(diaF))
+while(atual<=fim){
+const y=atual.getFullYear()
+const m=String(atual.getMonth()+1).padStart(2,"0")
+const d=String(atual.getDate()).padStart(2,"0")
+dias.push(`${y}-${m}-${d}`)
+atual.setDate(atual.getDate()+1)
 }
 let html=`<div style="margin-top:20px"><b>Rotinas por período</b><table style="width:100%;border-collapse:collapse;font-size:12px">`
 html+=`<tr style="background:#f1f1f1"><th>Data</th>`
 rotinasIds.forEach(id=>{html+=`<th>${nomesRotinas[id]||id}</th>`})
 html+=`</tr>`
 dias.forEach(dia=>{
-html+=`<tr><td><b>${new Date(dia+"T00:00:00").toLocaleDateString("pt-BR")}</b></td>`
+const[dY,dM,dD]=dia.split("-")
+const dataBR=`${dD}/${dM}/${dY}`
+html+=`<tr><td><b>${dataBR}</b></td>`
 rotinasIds.forEach(rid=>{
 const lista=(mapa[dia]||[]).filter(e=>String(e.rotina_id)===String(rid))
 const total=lista.length
@@ -541,9 +546,9 @@ if(!barra)return
 barra.style.width=p+"%"
 
 /* 🔥 CORES DINÂMICAS */
-if(p<30){
+if(p<60){
 barra.style.background="red"
-}else if(p<70){
+}else if(p<40){
 barra.style.background="orange"
 }else{
 barra.style.background="green"
