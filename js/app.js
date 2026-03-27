@@ -27,16 +27,20 @@ const user=data.find(u=>
 )
 
 if(!user){alert("Usuário ou senha inválidos");return}
-/* ✅ SALVAR SESSÃO COMPLETA */
+/* ====================================================
+010 – LOGIN (CORRIGIDO DEFINITIVO)
+==================================================== */
+/* ✅ SALVAR SESSÃO */
 localStorage.setItem("usuario_id",user.id)
 localStorage.setItem("usuario_nome",user.nome_apelido||user.nome_completo)
 localStorage.setItem("usuario_hierarquia",user.hierarquia||1)
 localStorage.setItem("perfil",user.perfil||"cuidador")
 localStorage.setItem("usuario_perfil",(user.perfil||"cuidador").toLowerCase())
-/* 🔥 CORREÇÃO PRINCIPAL */
-localStorage.setItem("empresa_id",user.empresa_id)
-/* 🔄 ATUALIZA VARIÁVEL GLOBAL */
-EMPRESA_ID=user.empresa_id
+/* 🔥 EMPRESA FIXA (PADRÃO ÚNICO) */
+const EMPRESA_FIXA="d9f678e5-6c7a-485e-895c-cb4791db840e"
+
+localStorage.setItem("empresa_id",EMPRESA_FIXA)
+EMPRESA_ID=EMPRESA_FIXA
 /* UI */
 document.getElementById("login").style.display="none"
 document.getElementById("app").style.display="block"
