@@ -35,7 +35,13 @@ const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 if(!pacienteId||pacienteId==="todos"){alert("Selecione um paciente");return}
 const {data:paciente,error}=await db.from("pacientes").select("id,nome_completo,data_nascimento,has,dm,da,cardiopatia,acamado,dieta_especial,dieta_texto,outras_comorbidades,grau_risco,pressao_arterial").eq("id",pacienteId).single()
 if(error||!paciente){console.error("ERRO PACIENTE",error);return}
-const {data:rotinasExec}=await db.from("rotinas_execucao").select("*,rotina_modelos(nome)").eq("paciente_id",pacienteId).eq("turno",turno).gte("data",dataInicio).lte("data",dataFim)
+const {data:rotinasExec}=await db
+  .from("rotinas_execucao")
+  .select("*,rotina_modelos(nome)")
+  .eq("paciente_id",pacienteId)
+  .eq("turno",turno)
+  .gte("data",dataInicio)
+  .lte("data",dataFim)
 const {jsPDF}=window.jspdf
 const doc=new jsPDF("p","mm","a4")
 await carregarFonteRoboto(doc)
@@ -93,6 +99,21 @@ rotinasExec?.forEach(r=>{
 const chave=`${r.data}_${normalizar(r.rotina_modelos?.nome||"")}`
 mapaExec.set(chave,r.status)
 })
+/* ====================================================
+🔥 MATRIZ IGUAL AO PAINEL (CORREÇÃO FINAL)
+==================================================== */
+const {data:rotinasModelo}=await db
+.from("rotina_modelos")
+.select("id,nome,turno")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+.eq("turno",turnoAtual)
+const mapaExec=new Map()
+rotinasExec?.forEach(r=>{
+const nome=r.rotina_modelos?.nome||""
+const chave=`${r.data}_${normalizar(nome)}`
+mapaExec.set(chave,r.status)
+})
 let matriz={}
 dias.forEach(dia=>{
 matriz[dia]={}
@@ -102,7 +123,7 @@ const chave=`${dia}_${nomeNorm}`
 if(mapaExec.has(chave)){
 matriz[dia][nomeNorm]=mapaExec.get(chave)
 }else{
-/* 🔥 AQUI A CORREÇÃO CRÍTICA */
+/* 🔥 REGRA CORRETA */
 matriz[dia][nomeNorm]="pendente"
 }
 })
