@@ -333,19 +333,23 @@ const classeVisual=r.status==="executado"?"rotina-ok":"rotina-pendente"
 
 let perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
 
-rotinasHTML+=`<div class="badge-rotina ${classeVisual} ${perfil==="administrador"&&r.status==="executado"?"admin":""}"
-${r.status==="executado"
-?(perfil==="administrador"
-?`onclick="desfazerRotina('${r.paciente_id}','${r.rotina_id}',this)"`
-:"")
-:`onclick="window.executarRotina('${r.paciente_id}','${r.rotina_id}')"`
+let onclickAttr=""
+
+if(r.status==="executado"){
+if(perfil==="administrador"){
+onclickAttr=`onclick="desfazerRotina('${r.paciente_id}','${r.rotina_id}',this)"`
 }
->
+}else{
+onclickAttr=`onclick="window.executarRotina('${r.paciente_id}','${r.rotina_id}')"`
+}
+rotinasHTML+=`
+<div class="badge-rotina ${classeVisual} ${perfil==="administrador"&&r.status==="executado"?"admin":""}" ${onclickAttr}>
 ${r.rotina}
 ${r.status==="executado"
 ?`<span class="profissional" style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`
 :""}
-</div>`
+</div>
+`
 })
 
 let percentual=total?Math.round((executadas/total)*100):0
@@ -1183,19 +1187,24 @@ const classeVisual=r.status==="executado"?"rotina-ok":"rotina-pendente"
 
 let perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
 
-rotinasHTML+=`<div class="badge-rotina ${classeVisual} ${perfil==="administrador"&&r.status==="executado"?"admin":""}"
-${r.status==="executado"
-?(perfil==="administrador"
-?`onclick="desfazerRotina('${r.paciente_id}','${r.rotina_id}',this)"`
-:"")
-:`onclick="window.executarRotina('${r.paciente_id}','${r.rotina_id}')"`
+let onclickAttr=""
+
+if(r.status==="executado"){
+if(perfil==="administrador"){
+onclickAttr=`onclick="desfazerRotina('${r.paciente_id}','${r.rotina_id}',this)"`
 }
->
+}else{
+onclickAttr=`onclick="window.executarRotina('${r.paciente_id}','${r.rotina_id}')"`
+}
+rotinasHTML+=`
+<div class="badge-rotina ${classeVisual} ${perfil==="administrador"&&r.status==="executado"?"admin":""}" ${onclickAttr}>
 ${r.rotina}
 ${r.status==="executado"
 ?`<span class="profissional" style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`
 :""}
-</div>`
+</div>
+`
+  
 })
 
 let percentual=total?Math.round((executadas/total)*100):0
