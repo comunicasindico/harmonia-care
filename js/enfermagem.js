@@ -53,19 +53,12 @@ localStorage.setItem("usuario_hierarquia","1")
 return{id:id||null,nome:nome,hierarquia:Number(hierarquia),perfil:perfil}
 }
 /* ====================================================
-022 – CARREGAR PACIENTES BUSCA (CRIADO)
+022 – CARREGAR PACIENTES BUSCA (CORREÇÃO FINAL)
 ==================================================== */
 async function carregarPacientesBusca(){
 
-if(!db){
-console.warn("DB não carregado")
-return
-}
-
-if(!EMPRESA_ID){
-console.warn("EMPRESA_ID não definido")
-return
-}
+if(!db)return
+if(!EMPRESA_ID)return
 
 const select=document.getElementById("buscaPaciente")
 if(!select)return
@@ -75,6 +68,7 @@ try{
 const {data,error}=await db
 .from("pacientes")
 .select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
 .order("nome_completo",{ascending:true})
 
@@ -83,22 +77,15 @@ console.error("Erro ao carregar pacientes:",error)
 return
 }
 
-/* 🔥 LIMPA */
-select.innerHTML=""
+/* 🔥 STRING NORMAL (SEM FUNÇÃO) */
+let html = '<option value="todos">TODOS</option>'
 
-/* 🔹 PADRÃO */
-let html=`<option value="todos">TODOS</option>`
-
-/* 🔹 LISTA */
 (data||[]).forEach(p=>{
-html+=`<option value="${p.id}">${p.nome_completo}</option>`
+html += `<option value="${p.id}">${p.nome_completo}</option>`
 })
 
-select.innerHTML=html
-
-select.value="todos"
-
-console.log("Pacientes carregados:",data?.length)
+select.innerHTML = html
+select.value = "todos"
 
 }catch(e){
 console.error("Erro geral pacientes:",e)
