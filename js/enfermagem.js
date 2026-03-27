@@ -278,40 +278,31 @@ ${rotinasHTML}
 
 })
 
-/* ====================================================
-🔥 TODOS OS PACIENTES POR ROTINA (CORRIGIDO)
-==================================================== */
-const rotinasUnicas={}
+/* 🔥 BOTÕES POR ROTINA (EMBAIXO DE CADA PACIENTE) */
+let rotinasUnicas={}
 
-lista.forEach(r=>{
+p.rotinas.forEach(r=>{
 rotinasUnicas[r.rotina_id]=r.rotina
 })
-
-let rotinasTodosHTML=""
+let botoesHTML=""
 
 Object.keys(rotinasUnicas).forEach(rotinaId=>{
-rotinasTodosHTML+=`
-<button class="btn-rotina" onclick="executarRotinaTodos('${rotinaId}')">
+botoesHTML+=`
+<button class="btn-rotina" 
+onclick="executarRotinaTodos('${rotinaId}')">
 ${rotinasUnicas[rotinaId]}
-</button>
-`
+</button>`
 })
-
 html+=`
-<tr class="linha-geral">
+<tr>
 <td colspan="3">
-
-<div class="todos-rotinas-box">
-${rotinasTodosHTML}
+<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:6px">
+${botoesHTML}
 </div>
-
 </td>
-</tr>
-`
-
+</tr>`
 /* 🔥 RENDER FINAL */
 tbody.innerHTML=html
-
 /* ====================================================
 🔥 EVENTOS CLICK ROTINAS
 ==================================================== */
@@ -334,7 +325,6 @@ executarRotina(pacienteId,rotinaId)
 },100)
 
 }
-
 /* ====================================================
 024B – EXECUTAR ROTINA (FINAL)
 ==================================================== */
