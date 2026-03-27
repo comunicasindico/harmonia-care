@@ -176,32 +176,61 @@ doc.setFontSize(8)
 doc.text(`${perc}%`,95,y+4,{align:"center"})
 y+=10
 let analiseTexto=""
-if(perc>=90){
-analiseTexto="Paciente com excelente adesão às rotinas, indicando estabilidade clínica e manutenção adequada dos cuidados."
-}else if(perc>=70){
-analiseTexto="Paciente com boa adesão às rotinas, apresentando evolução satisfatória, com necessidade de monitoramento contínuo."
-}else if(perc>=40){
-analiseTexto="Paciente com adesão parcial às rotinas, sugerindo necessidade de reforço na assistência e acompanhamento mais rigoroso."
+let alertaTexto=""
+let riscoNivel="BAIXO"
+const diasOrdenados=Object.keys(matriz).sort()
+let execPorDia=[]
+diasOrdenados.forEach(d=>{
+let totalDia=0
+let execDia=0
+Object.values(matriz[d]).forEach(st=>{
+totalDia++
+if(st==="executado")execDia++
+})
+let percDia=totalDia?Math.round((execDia/totalDia)*100):0
+execPorDia.push(percDia)
+})
+let tendencia="estável"
+if(execPorDia.length>=2){
+const inicio=execPorDia[0]
+const fim=execPorDia[execPorDia.length-1]
+if(fim>inicio+10)tendencia="melhora"
+else if(fim<inicio-10)tendencia="piora"
+}
+if(perc>=80)riscoNivel="BAIXO"
+else if(perc>=50)riscoNivel="MODERADO"
+else riscoNivel="ALTO"
+if(riscoNivel==="BAIXO"){
+analiseTexto="Paciente com alta adesão às rotinas, indicando estabilidade clínica e adequado manejo assistencial."
+}else if(riscoNivel==="MODERADO"){
+analiseTexto="Paciente com adesão intermediária às rotinas, exigindo acompanhamento contínuo e ajustes no plano assistencial."
 }else{
-analiseTexto="Paciente com baixa execução das rotinas, indicando risco assistencial e necessidade de intervenção imediata."
+analiseTexto="Paciente com baixa execução das rotinas, indicando risco elevado e necessidade de intervenção imediata."
+}
+if(tendencia==="melhora"){
+analiseTexto+=" Observa-se evolução positiva ao longo do período analisado."
+}
+if(tendencia==="piora"){
+analiseTexto+=" Observa-se queda na execução das rotinas, indicando possível deterioração do cuidado."
+alertaTexto+="⚠️ Queda de adesão identificada. "
 }
 if(paciente.has){
-analiseTexto+=" Atenção ao controle da pressão arterial."
+analiseTexto+=" Controle rigoroso da pressão arterial é essencial."
 }
 if(paciente.dm){
-analiseTexto+=" Recomenda-se monitoramento glicêmico regular."
+analiseTexto+=" Monitoramento glicêmico frequente recomendado."
+alertaTexto+="⚠️ Risco metabólico. "
 }
 if(paciente.cardiopatia){
 analiseTexto+=" Manter vigilância cardiovascular contínua."
+alertaTexto+="⚠️ Risco cardíaco. "
 }
 if(paciente.da){
-analiseTexto+=" Necessita acompanhamento cognitivo e suporte neurológico."
+analiseTexto+=" Necessita suporte cognitivo contínuo."
 }
 if(paciente.acamado){
-analiseTexto+=" Paciente acamado, reforçar prevenção de lesões por pressão."
-}
-if(paciente.dieta_especial){
-analiseTexto+=" Seguir rigorosamente a dieta prescrita."
+analiseTexto+=" Alto risco para lesões por pressão, reforçar mudança de decúbito."
+alertaTexto+="⚠️ Risco de úlcera por pressão. "
 }
 if(paciente.pressao_arterial){
 const pa=paciente.pressao_arterial.split("/")
@@ -209,14 +238,32 @@ if(pa.length===2){
 const sist=parseInt(pa[0])
 const diast=parseInt(pa[1])
 if(sist>=140||diast>=90){
-analiseTexto+=" Pressão arterial acima do ideal, recomenda-se avaliação clínica."
+analiseTexto+=" Pressão arterial acima do recomendado."
+alertaTexto+="⚠️ Hipertensão não controlada. "
+riscoNivel="ALTO"
 }
 }
+}
+if(paciente.dieta_especial){
+analiseTexto+=" Dieta especial deve ser rigorosamente seguida."
+}
+if(riscoNivel==="ALTO"){
+alertaTexto+="🚨 Paciente requer atenção imediata."
 }
 doc.setFontSize(9)
+doc.setFont("Roboto","bold")
+doc.text(`Classificação de Risco: ${riscoNivel}`,10,y)
+y+=5
+if(alertaTexto){
+doc.setTextColor(192,57,43)
+doc.setFont("Roboto","bold")
+doc.text(alertaTexto,10,y,{maxWidth:180})
+y+=6
+doc.setTextColor(0,0,0)
+}
 doc.setFont("Roboto","normal")
 doc.text(analiseTexto,10,y,{maxWidth:180})
-y+=12
+y+=14
 doc.text("__________________________________________",10,y)
 y+=6
 const qrData=`Paciente:${paciente.nome_completo}\nPeriodo:${dataInicio} a ${dataFim}`
