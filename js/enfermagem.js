@@ -246,7 +246,27 @@ item.profissional=nomeProfissional||"Administrador"
 
 renderizarRotinas(ROTINAS_CACHE)
 }
+/* ====================================================
+027 – INDICADORES
+==================================================== */
+function calcularIndicadores(lista){
+if(!Array.isArray(lista))return
+let executado=0,pendente=0,atrasado=0
 
+lista.forEach(r=>{
+if(r.status==="executado")executado++
+else if(r.status==="pendente")pendente++
+else if(r.status==="atrasado")atrasado++
+})
+
+const e=document.getElementById("indicadorExecutado")
+const p=document.getElementById("indicadorPendente")
+const a=document.getElementById("indicadorAtrasado")
+
+if(e)e.innerHTML="✔ "+executado
+if(p)p.innerHTML="🔴 "+pendente
+if(a)a.innerHTML="⚠ "+atrasado
+}
 /* ====================================================
 028 – EXECUTAR TODOS (FINAL)
 ==================================================== */
@@ -563,4 +583,4 @@ return texto
 window.executarRotina=executarRotina
 window.executarTodos=executarTodos
 window.executarRotinaTodos=executarRotinaTodos
-
+window.mudarTurno = mudarTurno
