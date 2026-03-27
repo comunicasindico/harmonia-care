@@ -226,12 +226,19 @@ doc.rect(x-4.5,y-3,9,4.5,"F")
 doc.setTextColor(255,255,255)
 doc.setFont("Roboto","bold")
 doc.text("OK",x,y,{align:"center"})
-}else{
+
+}else if(status==="pendente"){
 doc.setFillColor(192,57,43)
 doc.rect(x-4.5,y-3,9,4.5,"F")
 doc.setTextColor(255,255,255)
 doc.setFont("Roboto","bold")
 doc.text("X",x,y,{align:"center"})
+
+}else{
+/* 🔥 NEUTRO (SEM REGISTRO) */
+doc.setTextColor(150)
+doc.setFont("Roboto","bold")
+doc.text("-",x,y,{align:"center"})
 }
 
 doc.setTextColor(0)
