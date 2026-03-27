@@ -53,6 +53,60 @@ localStorage.setItem("usuario_hierarquia","1")
 return{id:id||null,nome:nome,hierarquia:Number(hierarquia),perfil:perfil}
 }
 /* ====================================================
+022 – CARREGAR PACIENTES BUSCA (CRIADO)
+==================================================== */
+async function carregarPacientesBusca(){
+
+if(!db){
+console.warn("DB não carregado")
+return
+}
+
+if(!EMPRESA_ID){
+console.warn("EMPRESA_ID não definido")
+return
+}
+
+const select=document.getElementById("buscaPaciente")
+if(!select)return
+
+try{
+
+const {data,error}=await db
+.from("pacientes")
+.select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+.order("nome_completo",{ascending:true})
+
+if(error){
+console.error("Erro ao carregar pacientes:",error)
+return
+}
+
+/* 🔥 LIMPA */
+select.innerHTML=""
+
+/* 🔹 PADRÃO */
+let html=`<option value="todos">TODOS</option>`
+
+/* 🔹 LISTA */
+(data||[]).forEach(p=>{
+html+=`<option value="${p.id}">${p.nome_completo}</option>`
+})
+
+select.innerHTML=html
+
+select.value="todos"
+
+console.log("Pacientes carregados:",data?.length)
+
+}catch(e){
+console.error("Erro geral pacientes:",e)
+}
+
+}
+/* ====================================================
 020C – DATA PADRONIZADA (CRÍTICO)
 ==================================================== */
 window.obterDataSelecionada=function(){
