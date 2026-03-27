@@ -53,13 +53,15 @@ localStorage.setItem("usuario_hierarquia","1")
 return{id:id||null,nome:nome,hierarquia:Number(hierarquia),perfil:perfil}
 }
 /* ====================================================
-022 – CARREGAR PACIENTES BUSCA (CORREÇÃO FINAL)
+022 – CARREGAR PACIENTES BUSCA (CORRIGIDO DEFINITIVO)
 ==================================================== */
 async function carregarPacientesBusca(){
+
 if(!db)return
+
 const select=document.getElementById("buscaPaciente")
 if(!select)return
-}
+
 try{
 
 const {data,error}=await db
@@ -73,15 +75,17 @@ if(error){
 console.error("Erro ao carregar pacientes:",error)
 return
 }
-/* 🔥 STRING NORMAL (SEM FUNÇÃO) */
-let options = '<option value="todos">TODOS</option>';
 
-(data || []).forEach(p=>{
-options += `<option value="${p.id}">${p.nome_completo}</option>`;
-});
+let options='<option value="todos">TODOS</option>'
 
-select.innerHTML = options
-select.value = "todos"
+(data||[]).forEach(p=>{
+options+=`<option value="${p.id}">${p.nome_completo}</option>`
+})
+
+select.innerHTML=options
+select.value="todos"
+
+console.log("Pacientes carregados:",(data||[]).length)
 
 }catch(e){
 console.error("Erro geral pacientes:",e)
