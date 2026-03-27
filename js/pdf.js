@@ -160,7 +160,11 @@ matriz[dia]={}
 colunas.forEach(c=>{
 const nomeNorm=normalizar(c)
 const chave=`${dia}_${nomeNorm}`
-matriz[dia][nomeNorm]=mapaExec.get(chave)||"pendente"
+if(mapaExec.has(chave)){
+matriz[dia][nomeNorm]=mapaExec.get(chave)
+}else{
+matriz[dia][nomeNorm]="neutro"
+}
 })
 })
 /* ====================================================
