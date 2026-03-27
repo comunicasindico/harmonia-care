@@ -139,7 +139,7 @@ doc.setFont("Roboto","normal")
 x+=12
 })
 y+=6
-if(y>270){doc.addPage();y=20}
+if(y>250){doc.addPage();y=20}
 })
 y+=5
 doc.setFont("Roboto","bold")
@@ -278,10 +278,9 @@ doc.setFontSize(8)
 doc.setTextColor(120)
 doc.text(`Relatório Clínico - Lar Harmonia | Página ${i}/${totalPages}`,200,290,{align:"right"})
 }
+// 🔥 ANTES DO SAVE
 doc.setTextColor(0)
-doc.save(`Relatorio_${paciente.nome_completo}.pdf`)
-}
-/* ASSINATURA DIGITAL */
+// ASSINATURA
 const usuario=obterUsuarioLogado?obterUsuarioLogado():{nome:"Sistema"}
 doc.setFont("Roboto","bold")
 doc.text("Responsável Técnico:",10,y)
@@ -294,7 +293,10 @@ doc.line(10,y,80,y)
 y+=4
 doc.setFontSize(8)
 doc.text("Assinatura digital",10,y)
+// RODAPÉ FINAL
 doc.text(`Gerado em: ${new Date().toLocaleString()}`,140,290)
+// 🔥 AGORA SIM SALVA
+doc.save(`Relatorio_${paciente.nome_completo}.pdf`)
 }
 /* ====================================================
 081 – PDF GERAL
