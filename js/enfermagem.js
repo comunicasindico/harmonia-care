@@ -471,7 +471,7 @@ if(!pacienteId||pacienteId==="todos"){
 document.getElementById("gradePeriodo").innerHTML=""
 return
 }
-const turnoAtual=(TURNO_ATUAL||"manha").toLowerCase().trim()
+let turnoAtual=(TURNO_ATUAL||"manha").toLowerCase().trim()
 
 const {data:execucoes,error}=await db
 .from("rotinas_execucao")
@@ -488,7 +488,6 @@ if(!mapa[e.data])mapa[e.data]=[]
 mapa[e.data].push(e)
 })
 const ordemFixa=["Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café","Medicação","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene (noite)","Troca de Fraldas (noite)"]
-const turnoAtual=(TURNO_ATUAL||"manha").toLowerCase().trim()
 
 const {data:rotinas}=await db
 .from("rotina_modelos")
