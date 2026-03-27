@@ -66,6 +66,32 @@ return `${ano}-${mes.padStart(2,"0")}-${dia.padStart(2,"0")}`
 return dataRaw || new Date().toISOString().slice(0,10)
 }
 /* ====================================================
+021B – MUDAR TURNO (OBRIGATÓRIO)
+==================================================== */
+async function mudarTurno(turno){
+
+TURNO_ATUAL=turno
+localStorage.setItem("turno_atual",turno)
+
+/* 🔥 BOTÕES VISUAIS */
+const btnManha=document.getElementById("btnManha")
+const btnTarde=document.getElementById("btnTarde")
+const btnNoite=document.getElementById("btnNoite")
+
+if(btnManha)btnManha.classList.remove("turno-ativo")
+if(btnTarde)btnTarde.classList.remove("turno-ativo")
+if(btnNoite)btnNoite.classList.remove("turno-ativo")
+
+if(turno==="manha"&&btnManha)btnManha.classList.add("turno-ativo")
+if(turno==="tarde"&&btnTarde)btnTarde.classList.add("turno-ativo")
+if(turno==="noite"&&btnNoite)btnNoite.classList.add("turno-ativo")
+
+/* 🔥 RECARREGA DADOS */
+if(typeof carregarRotinas==="function")await carregarRotinas()
+if(typeof montarGradePeriodo==="function")await montarGradePeriodo()
+
+}
+/* ====================================================
 023 – CARREGAR ROTINAS (CORRIGIDO DEFINITIVO)
 ==================================================== */
 async function carregarRotinas(){
