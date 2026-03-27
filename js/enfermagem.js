@@ -565,24 +565,42 @@ document.getElementById("gradePeriodo").innerHTML=html
 037 – MOSTRAR PROGRESSO
 ==================================================== */
 function mostrarProgresso(){
+const container=document.getElementById("barraProgressoContainer")
 const barra=document.getElementById("barraProgresso")
-const interna=document.getElementById("barraInterna")
-if(barra)barra.style.display="block"
-if(interna)interna.style.width="0%"
+
+if(container)container.style.display="block"
+
+if(barra){
+barra.style.width="0%"
+barra.style.background="red"
+}
 }
 /* ====================================================
 038 – ATUALIZAR PROGRESSO
 ==================================================== */
 function atualizarProgresso(p){
-const interna=document.getElementById("barraInterna")
-if(interna)interna.style.width=p+"%"
+const barra=document.getElementById("barraProgresso")
+if(!barra)return
+
+barra.style.width=p+"%"
+
+/* 🔥 CORES DINÂMICAS */
+if(p<30){
+barra.style.background="red"
+}else if(p<70){
+barra.style.background="orange"
+}else{
+barra.style.background="green"
+}
 }
 /* ====================================================
 039 – ESCONDER PROGRESSO
 ==================================================== */
 function esconderProgresso(){
-const barra=document.getElementById("barraProgresso")
-if(barra)barra.style.display="none"
+setTimeout(()=>{
+const container=document.getElementById("barraProgressoContainer")
+if(container)container.style.display="none"
+},800)
 }
 /* ====================================================
 040 – BLOQUEAR TELA
