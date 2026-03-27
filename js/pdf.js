@@ -20,7 +20,7 @@ const ano=d.getFullYear()
 return`${dia}-${mes}-${ano}`
 }
 /* ====================================================
-080 – PDF PACIENTE (ALINHADO COM PAINEL FINAL)
+080 – PDF PACIENTE (FINAL CORRIGIDO DEFINITIVO)
 ==================================================== */
 async function gerarPDFPaciente(){
 if(!db)return
@@ -31,7 +31,6 @@ const turnoAtual=(TURNO_ATUAL||"manha").toLowerCase().trim()
 if(!pacienteId||pacienteId==="todos"){alert("Selecione um paciente");return}
 const {data:paciente}=await db.from("pacientes").select("*").eq("id",pacienteId).single()
 const {data:rotinasExec}=await db.from("rotinas_execucao").select("*,rotina_modelos(nome)").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim).eq("turno",turnoAtual)
-const {data:rotinasModelo}=await db.from("rotina_modelos").select("id,nome,ordem,turno").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("ordem",{ascending:true})
 const {jsPDF}=window.jspdf
 const doc=new jsPDF("p","mm","a4")
 await carregarFonteRoboto(doc)
@@ -47,7 +46,7 @@ doc.setFontSize(9)
 doc.text("Relatório Clínico do Paciente",105,14,{align:"center"})
 doc.setTextColor(0)
 y=25
-doc.rect(10,y,190,35)
+doc.rect(10,y,190,42)
 let dy=y+6
 doc.text(`Paciente: ${paciente.nome_completo}`,12,dy)
 doc.text(`Idade: ${calcularIdade(paciente.data_nascimento)}`,120,dy)
@@ -56,9 +55,14 @@ doc.text(`HAS: ${paciente.has?"SIM":"—"}`,12,dy)
 doc.text(`DM: ${paciente.dm?"SIM":"—"}`,60,dy)
 doc.text(`DA: ${paciente.da?"SIM":"—"}`,100,dy)
 doc.text(`PA: ${paciente.pressao_arterial||"—"}`,140,dy)
-y+=40
+dy+=5
+doc.text(`Dieta: ${paciente.dieta_especial?"SIM - "+(paciente.dieta_texto||""):"NÃO"}`,12,dy)
+doc.text(`Risco: ${paciente.grau_risco||"—"}`,120,dy)
+dy+=5
+doc.text(`Comorbidades: ${paciente.outras_comorbidades||"—"}`,12,dy)
+y+=47
 function normalizar(txt){
-return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()
+return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim()
 }
 let atual=new Date(dataInicio+"T00:00:00")
 const fim=new Date(dataFim+"T00:00:00")
@@ -70,8 +74,10 @@ atual.setDate(atual.getDate()+1)
 const colunas=["Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café","Medicação","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene (noite)","Troca de Fraldas (noite)"]
 const mapaExec=new Map()
 rotinasExec?.forEach(r=>{
-const chave=`${r.data}_${normalizar(r.rotina_modelos?.nome)}`
-mapaExec.set(chave,{status:r.status,prof:r.profissional_nome||""})
+const nomeBanco=normalizar(r.rotina_modelos?.nome||"")
+if(!nomeBanco)return
+const chave=`${r.data}_${nomeBanco}`
+mapaExec.set(chave,{status:(r.status||"pendente").toLowerCase(),prof:r.profissional_nome||""})
 })
 let matriz={}
 dias.forEach(dia=>{
@@ -95,10 +101,7 @@ doc.setFontSize(8)
 let x=10
 doc.text("Data",x,y)
 x+=22
-colunas.forEach((c,i)=>{
-doc.text(String(i+1),x,y,{align:"center"})
-x+=12
-})
+colunas.forEach((c,i)=>{doc.text(String(i+1),x,y,{align:"center"});x+=12})
 doc.setTextColor(0)
 y+=6
 dias.forEach((dia,index)=>{
@@ -141,12 +144,7 @@ doc.setFontSize(8)
 doc.text("1–Banho | 2–Hig.Manhã | 3–Fraldas Manhã | 4–Água | 5–Café | 6–Medicação | 7–Almoço | 8–Lanche | 9–Hig.Tarde | 10–Jantar | 11–Hig.Noite | 12–Fraldas Noite",10,y,{maxWidth:180})
 y+=8
 let total=0,exec=0
-Object.values(matriz).forEach(d=>{
-Object.values(d).forEach(st=>{
-total++
-if(st.status==="executado")exec++
-})
-})
+Object.values(matriz).forEach(d=>{Object.values(d).forEach(st=>{total++;if(st.status==="executado")exec++})})
 let perc=total?Math.round((exec/total)*100):0
 doc.setFont("Roboto","bold")
 doc.text(`Execução: ${perc}%`,10,y)
