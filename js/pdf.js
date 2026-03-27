@@ -99,21 +99,7 @@ rotinasExec?.forEach(r=>{
 const chave=`${r.data}_${normalizar(r.rotina_modelos?.nome||"")}`
 mapaExec.set(chave,r.status)
 })
-/* ====================================================
-🔥 MATRIZ IGUAL AO PAINEL (CORREÇÃO FINAL)
-==================================================== */
-const {data:rotinasModelo}=await db
-.from("rotina_modelos")
-.select("id,nome,turno")
-.eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true)
-.eq("turno",turnoAtual)
-const mapaExec=new Map()
-rotinasExec?.forEach(r=>{
-const nome=r.rotina_modelos?.nome||""
-const chave=`${r.data}_${normalizar(nome)}`
-mapaExec.set(chave,r.status)
-})
+
 let matriz={}
 dias.forEach(dia=>{
 matriz[dia]={}
