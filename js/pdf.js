@@ -30,7 +30,8 @@ const dataFim=normalizarDataISO(document.getElementById("dataFim")?.value)
 const turnoAtual=(TURNO_ATUAL||"manha").toLowerCase().trim()
 if(!pacienteId||pacienteId==="todos"){alert("Selecione um paciente");return}
 const {data:paciente}=await db.from("pacientes").select("*").eq("id",pacienteId).single()
-const {data:rotinasExec}=await db.from("rotinas_execucao").select("*,rotina_modelos(nome)").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim).eq("turno",turnoAtual)
+const {data:rotinasExec}=await db.from("rotinas_execucao").select("*,rotina_modelos(nome)").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim)
+
 const {jsPDF}=window.jspdf
 const doc=new jsPDF("p","mm","a4")
 await carregarFonteRoboto(doc)
@@ -77,8 +78,23 @@ rotinasExec?.forEach(r=>{
 const nomeBanco=normalizar(r.rotina_modelos?.nome||"")
 if(!nomeBanco)return
 const chave=`${r.data}_${nomeBanco}`
-mapaExec.set(chave,{status:(r.status||"pendente").toLowerCase(),prof:r.profissional_nome||""})
+
+if(!mapaExec.has(chave)){
+mapaExec.set(chave,{
+status:(r.status||"pendente").toLowerCase(),
+prof:r.profissional_nome||""
 })
+}else{
+/* 🔥 SE QUALQUER TURNO EXECUTOU → MARCA COMO OK */
+if((r.status||"").toLowerCase()==="executado"){
+mapaExec.set(chave,{
+status:"executado",
+prof:r.profissional_nome||""
+})
+}
+}
+})
+
 let matriz={}
 dias.forEach(dia=>{
 matriz[dia]={}
