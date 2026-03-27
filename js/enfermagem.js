@@ -531,11 +531,20 @@ dias.forEach(dia=>{
 matriz[dia]={}
 ordemFixa.forEach(nome=>{
 const nomeNorm=normalizar(nome)
-const chave=`${dia}_${nomeNorm}`
-if(mapaExec.has(chave)){
-matriz[dia][nomeNorm]=mapaExec.get(chave)
-}else{
+const registros = execucoes.filter(e=>{
+return e.data===dia && normalizar(e.rotina_modelos?.nome||"")===nomeNorm
+})
+
+if(registros.length===0){
 matriz[dia][nomeNorm]="neutro"
+}else{
+const temExecutado = registros.some(r=>r.status==="executado")
+
+if(temExecutado){
+matriz[dia][nomeNorm]="executado"
+}else{
+matriz[dia][nomeNorm]="pendente"
+}
 }
 })
 })
