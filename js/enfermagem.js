@@ -1,31 +1,4 @@
 /* ====================================================
-015 – GERAR ROTINAS DO DIA
-==================================================== */
-async function gerarRotinasDoDia(){
-if(!db||!EMPRESA_ID)return
-if(window._gerandoRotinas)return
-window._gerandoRotinas=true
-try{
-const dataRaw=document.getElementById("dataInicio")?.value
-const hoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-const turno=TURNO_ATUAL||"manha"
-const {data:pacientes}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
-const {data:rotinas}=await db.from("rotina_modelos").select("id").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
-const {data:existentes}=await db.from("rotinas_execucao").select("paciente_id,rotina_id").eq("data",hoje).eq("turno",turno)
-const mapa=new Set((existentes||[]).map(e=>`${e.paciente_id}_${e.rotina_id}`))
-let lote=[]
-for(const p of pacientes){
-for(const r of rotinas){
-const chave=`${p.id}_${r.id}`
-if(mapa.has(chave))continue
-lote.push({paciente_id:p.id,rotina_id:r.id,data:hoje,turno:turno,status:"pendente",empresa_id:EMPRESA_ID})
-}}
-if(lote.length){await db.from("rotinas_execucao").insert(lote)}
-}catch(e){console.error("Erro gerarRotinasDoDia",e)}
-finally{window._gerandoRotinas=false}
-}
-
-/* ====================================================
 020 – CORES POR USUÁRIO
 ==================================================== */
 function obterCorUsuario(nome){
@@ -531,7 +504,14 @@ for(const p of pacientes){
 for(const r of rotinas){
 const chave=`${p.id}_${r.id}`
 if(mapa.has(chave))continue
-lote.push({paciente_id:p.id,rotina_id:r.id,data:hoje,turno:turno,status:"pendente"})
+lote.push({
+paciente_id:p.id,
+rotina_id:r.id,
+data:hoje,
+turno:turno,
+status:"pendente",
+empresa_id:EMPRESA_ID
+})
 }}
 const TAM_LOTE=500
 for(let i=0;i<lote.length;i+=TAM_LOTE){
