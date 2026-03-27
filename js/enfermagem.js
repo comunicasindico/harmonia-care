@@ -337,7 +337,6 @@ rotinasHTML+=`
 <div class="badge-rotina ${classeVisual} ${perfil==="administrador"&&r.status==="executado"?"admin":""}"
 data-paciente="${r.paciente_id}"
 data-rotina="${r.rotina_id}"
-data-status="${r.status}"
 >
 ${r.rotina}
 ${r.status==="executado"
@@ -408,8 +407,7 @@ el.addEventListener("click",function(){
 
 const pacienteId=this.dataset.paciente
 const rotinaId=this.dataset.rotina
-const status=this.dataset.status
-
+const status=this.classList.contains("rotina-ok")?"executado":"pendente"
 const perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
 
 console.log("CLICK OK", pacienteId, rotinaId)
@@ -1207,7 +1205,6 @@ rotinasHTML+=`
 <div class="badge-rotina ${classeVisual} ${perfil==="administrador"&&r.status==="executado"?"admin":""}"
 data-paciente="${r.paciente_id}"
 data-rotina="${r.rotina_id}"
-data-status="${r.status}"
 >
 ${r.rotina}
 ${r.status==="executado"
@@ -1279,8 +1276,7 @@ el.addEventListener("click",function(){
 
 const pacienteId=this.dataset.paciente
 const rotinaId=this.dataset.rotina
-const status=this.dataset.status
-
+const status=this.classList.contains("rotina-ok")?"executado":"pendente"
 const perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
 
 console.log("CLICK OK", pacienteId, rotinaId)
