@@ -81,13 +81,31 @@ const colunas=["Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de
 function normalizar(txt){return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()}
 let matriz={}
 const turnoAtual=(TURNO_ATUAL||"manha").toLowerCase().trim()
+/* 🔥 MONTAR MATRIZ COMPLETA (IGUAL ENFERMAGEM) */
+const {data:rotinasModelo}=await db
+.from("rotina_modelos")
+.select("id,nome,turno")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+.eq("turno",turnoAtual)
+const mapaExec=new Map()
 rotinasExec?.forEach(r=>{
-if(!r.turno)return
-if(r.turno.toLowerCase().trim()!==turnoAtual)return
-
-if(!matriz[r.data])matriz[r.data]={}
-const nome=r.rotina_modelos?.nome||""
-matriz[r.data][normalizar(nome)]=r.status
+const chave=`${r.data}_${normalizar(r.rotina_modelos?.nome||"")}`
+mapaExec.set(chave,r.status)
+})
+let matriz={}
+dias.forEach(dia=>{
+matriz[dia]={}
+rotinasModelo.forEach(r=>{
+const nomeNorm=normalizar(r.nome)
+const chave=`${dia}_${nomeNorm}`
+if(mapaExec.has(chave)){
+matriz[dia][nomeNorm]=mapaExec.get(chave)
+}else{
+/* 🔥 AQUI A CORREÇÃO CRÍTICA */
+matriz[dia][nomeNorm]="pendente"
+}
+})
 })
 let[anoI,mesI,diaI]=dataInicio.split("-")
 let[anoF,mesF,diaF]=dataFim.split("-")
@@ -285,12 +303,22 @@ doc.text(`Relatório Clínico - Lar Harmonia | Página ${i}/${totalPages}`,200,2
 // 🔥 ANTES DO SAVE
 doc.setTextColor(0)
 // ASSINATURA
-const usuario=obterUsuarioLogado?obterUsuarioLogado():{nome:"Sistema"}
-doc.setFont("Roboto","bold")
+const usuarioId=localStorage.getItem("usuario_id")
+let nomeCompleto="Sistema"
+if(usuarioId){
+const {data:user}=await db
+.from("usuarios")
+.select("nome_completo")
+.eq("id",usuarioId)
+.single()
+if(user && user.nome_completo){
+nomeCompleto=user.nome_completo
+}
+}doc.setFont("Roboto","bold")
 doc.text("Responsável Técnico:",10,y)
 y+=5
 doc.setFont("Roboto","normal")
-doc.text(usuario.nome||"—",10,y)
+doc.text(nomeCompleto,10,y)
 y+=5
 doc.setDrawColor(0)
 doc.line(10,y,80,y)
@@ -298,7 +326,7 @@ y+=4
 doc.setFontSize(8)
 doc.text("Assinatura digital",10,y)
 // RODAPÉ FINAL
-doc.text(`Gerado em: ${new Date().toLocaleString()}`,140,290)
+doc.text(`Gerado em: ${new Date().toLocaleString()}`,10,290)
 // 🔥 AGORA SIM SALVA
 doc.save(`Relatorio_${paciente.nome_completo}.pdf`)
 }
