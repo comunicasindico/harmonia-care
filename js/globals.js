@@ -1,4 +1,10 @@
 /* ====================================================
+000 – EMPRESA FIXA (DEFINITIVO)
+==================================================== */
+if(typeof EMPRESA_ID==="undefined" || !EMPRESA_ID){
+var EMPRESA_ID="d9f678e5-6c7a-485e-895c-cb4791db840e"
+}
+/* ====================================================
 000 – VARIÁVEIS GLOBAIS DO SISTEMA
 ==================================================== */
 if(typeof TURNO_ATUAL==="undefined"){var TURNO_ATUAL=localStorage.getItem("turno_atual")||"manha"}
