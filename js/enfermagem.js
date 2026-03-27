@@ -185,7 +185,7 @@ nomeProf=r.profissional
 corProf=obterCorUsuario(nomeProf)
 }
 }
-rotinasHTML+=`<div class="badge-rotina ${r.status==="executado"?"rotina-ok":"rotina-neutra"}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">${r.rotina}${r.status==="executado"?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}</div>`
+rotinasHTML+=`<div class="badge-rotina ${r.status==="executado"?"rotina-ok":"rotina-pendente"}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">${r.rotina}${r.status==="executado"?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}</div>`
 })
 let percentual=total?Math.round((executadas/total)*100):0
 html+=`<tr class="linha-paciente"><td class="col-paciente">${p.nome}</td><td class="col-progresso"><div class="progresso-box"><span class="progresso-label">${percentual}% (${executadas}/${total})</span><div class="btn-area"><button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button></div></div></td><td class="col-rotinas"><div class="rotinas-box">${rotinasHTML}</div></td></tr>`
