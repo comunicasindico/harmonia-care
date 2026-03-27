@@ -240,6 +240,11 @@ calcularIndicadores(lista)
 /* ====================================================
 024 – RENDERIZAR ROTINAS
 ==================================================== */
+/* 024 DESATIVADO TEMPORARIAMENTE
+function renderizarRotinas(lista){
+...
+}
+*/
 function renderizarRotinas(lista){
 
 const tbody=document.getElementById("rotinas")
@@ -333,7 +338,7 @@ ${r.status==="executado"
 ?(perfil==="administrador"
 ?`onclick="desfazerRotina('${r.paciente_id}','${r.rotina_id}',this)"`
 :"")
-:`onclick="executarRotina('${r.paciente_id}','${r.rotina_id}')"`
+:`onclick="window.executarRotina('${r.paciente_id}','${r.rotina_id}')"`
 }>
 ${r.rotina}
 ${r.status==="executado"
@@ -346,7 +351,7 @@ let percentual=total?Math.round((executadas/total)*100):0
 
 let botaoOK=percentual===100
 ?`<button class="btn-todos">Rotinas OK</button>`
-:`<button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button>`
+:`<button class="btn-todos" onclick="window.executarTodos('${pid}')">Concluir Todas</button>`
 
 /* 🔹 HTML FINAL */
 html+=`<tr>
@@ -382,7 +387,7 @@ rotinasUnicas[r.rotina_id]=r.rotina
 let rotinasHTML=""
 
 Object.keys(rotinasUnicas).forEach(rotinaId=>{
-rotinasHTML+=`<button class="btn-rotina" onclick="executarRotinaTodos('${rotinaId}')">${rotinasUnicas[rotinaId]}</button>`
+rotinasHTML+=`<button class="btn-rotina" onclick="window.executarRotinaTodos('${rotinaId}')">${rotinasUnicas[rotinaId]}</button>`
 })
 
 html+=`<tr style="background:#f0fdf4;font-weight:bold">
@@ -428,6 +433,22 @@ console.error("Erro:",error)
 return
 }
 
+/* 🔥 ATUALIZA IMEDIATO (ANTES DO BANCO VOLTAR) */
+const item=ROTINAS_CACHE.find(r=>
+String(r.paciente_id)===String(pacienteId)&&
+String(r.rotina_id)===String(rotinaId)
+)
+
+if(item){
+item.status="executado"
+item.profissional=nomeProfissional
+}
+
+/* 🔄 ATUALIZA TELA IMEDIATA */
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
+
+/* 🔄 SINCRONIZA COM BANCO */
 await carregarRotinas()
 
 }
@@ -1166,7 +1187,7 @@ ${r.status==="executado"
 ?(perfil==="administrador"
 ?`onclick="desfazerRotina('${r.paciente_id}','${r.rotina_id}',this)"`
 :"")
-:`onclick="executarRotina('${r.paciente_id}','${r.rotina_id}',this)"`
+:`onclick="window.executarRotina('${r.paciente_id}','${r.rotina_id}',this)"`
 }>
 ${r.rotina}
 ${r.status==="executado"
@@ -1215,7 +1236,7 @@ rotinasUnicas[r.rotina_id]=r.rotina
 let rotinasHTML=""
 
 Object.keys(rotinasUnicas).forEach(rotinaId=>{
-rotinasHTML+=`<button class="btn-rotina" onclick="executarRotinaTodos('${rotinaId}')">${rotinasUnicas[rotinaId]}</button>`
+rotinasHTML+=`<button class="btn-rotina" onclick="window.executarRotinaTodos('${rotinaId}')">${rotinasUnicas[rotinaId]}</button>`
 })
 
 html+=`<tr style="background:#f0fdf4;font-weight:bold">
