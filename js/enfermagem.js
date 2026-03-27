@@ -46,14 +46,17 @@ const {data,error}=await db
 
 if(error){
 console.error("Erro ao carregar pacientes:",error)
-return
+return;
 }
 
-let options='<option value="todos">TODOS</option>'
+let options='<option value="todos">TODOS</option>';
 
-(data||[]).forEach(p=>{
-options+=`<option value="${p.id}">${p.nome_completo}</option>`
-})
+if(Array.isArray(data)){
+for(let i=0;i<data.length;i++){
+const p=data[i];
+options+=`<option value="${p.id}">${p.nome_completo}</option>`;
+}
+}
 
 select.innerHTML=options
 select.value="todos"
