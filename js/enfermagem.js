@@ -20,18 +20,13 @@ const chave=`${p.id}_${r.id}`
 if(mapa.has(chave))continue
 lote.push({paciente_id:p.id,rotina_id:r.id,data:hoje,turno:turno,status:"pendente",empresa_id:EMPRESA_ID})
 }}
-if(lote.length){
-await db.from("rotinas_execucao").insert(lote)
-}
-}catch(e){
-console.error("Erro gerarRotinasDoDia",e)
-}finally{
-window._gerandoRotinas=false
-}
+if(lote.length){await db.from("rotinas_execucao").insert(lote)}
+}catch(e){console.error("Erro gerarRotinasDoDia",e)}
+finally{window._gerandoRotinas=false}
 }
 
 /* ====================================================
-020 – CORES POR USUÁRIO (OK)
+020 – CORES POR USUÁRIO
 ==================================================== */
 function obterCorUsuario(nome){
 if(!nome)return"#64748b"
@@ -41,8 +36,9 @@ let cor="#"
 for(let i=0;i<3;i++){let value=(hash>>(i*8))&255;cor+=("00"+value.toString(16)).slice(-2)}
 return cor
 }
+
 /* ====================================================
-020A – USUARIO LOGADO (CORRIGIDO E BLINDADO)
+020A – USUARIO LOGADO (BLINDADO)
 ==================================================== */
 function obterUsuarioLogado(){
 let id=localStorage.getItem("usuario_id")
@@ -54,135 +50,48 @@ if(!hierarquia||hierarquia==="null"){
 hierarquia="1"
 localStorage.setItem("usuario_hierarquia","1")
 }
-return{
-id:id||null,
-nome:nome,
-hierarquia:Number(hierarquia),
-perfil:perfil
+return{id:id||null,nome:nome,hierarquia:Number(hierarquia),perfil:perfil}
 }
-}
+
 /* ====================================================
-020B – BARRA DE PROGRESSO (AJUSTE SUAVE)
-==================================================== */
-function atualizarBarraProgresso(percentual){
-const barra=document.getElementById("barraProgresso")
-if(!barra)return
-if(percentual<0)percentual=0
-if(percentual>100)percentual=100
-barra.style.width=percentual+"%"
-if(percentual<30){barra.style.background="red"}
-else if(percentual<70){barra.style.background="orange"}
-else{barra.style.background="green"}
-}
-/* ====================================================
-021 – VERIFICAR SE JÁ EXISTE (REGRA BANCO)
-==================================================== */
-async function registroJaExiste(pacienteId,rotinaId,data,turno){
-const {data:existe}=await db.from("rotinas_execucao")
-.select("id,status")
-.eq("paciente_id",pacienteId)
-.eq("rotina_id",rotinaId)
-.eq("data",data)
-.eq("turno",turno)
-.maybeSingle()
-return existe && existe.status==="executado"
-}
-/* ====================================================
-021B – MUDAR TURNO (OK + ESTABILIDADE)
-==================================================== */
-async function mudarTurno(turno){
-TURNO_ATUAL=turno
-localStorage.setItem("turno_atual",turno)
-const btnManha=document.getElementById("btnManha")
-const btnTarde=document.getElementById("btnTarde")
-const btnNoite=document.getElementById("btnNoite")
-if(btnManha)btnManha.classList.remove("turno-ativo")
-if(btnTarde)btnTarde.classList.remove("turno-ativo")
-if(btnNoite)btnNoite.classList.remove("turno-ativo")
-if(turno==="manha"&&btnManha)btnManha.classList.add("turno-ativo")
-if(turno==="tarde"&&btnTarde)btnTarde.classList.add("turno-ativo")
-if(turno==="noite"&&btnNoite)btnNoite.classList.add("turno-ativo")
-if(typeof carregarRotinas==="function")await carregarRotinas()
-if(typeof montarGradePeriodo==="function")await montarGradePeriodo()
-}
-/* ====================================================
-022 – CARREGAR PACIENTES BUSCA (BLINDADO)
-==================================================== */
-async function carregarPacientesBusca(){
-if(!db){console.warn("Supabase ainda não carregado");return}
-if(!EMPRESA_ID){console.error("EMPRESA_ID null");return}
-const select=document.getElementById("buscaPaciente")
-if(!select)return
-const {data,error}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo",{ascending:true})
-if(error){console.error("Erro pacientes",error);return}
-let html='<option value="todos">TODOS</option>'
-data?.forEach(p=>{html+=`<option value="${p.id}">${p.nome_completo}</option>`})
-select.innerHTML=html
-select.value="todos"
-/* 🔥 GARANTE SINCRONIA */
-await new Promise(r=>setTimeout(r,50))
-if(typeof carregarRotinas==="function")await carregarRotinas()
-if(typeof carregarClinico==="function")await carregarClinico()
-}
-/* ====================================================
-023 – CARREGAR ROTINAS (FINAL ESTÁVEL)
+023 – CARREGAR ROTINAS (CORRIGIDO DEFINITIVO)
 ==================================================== */
 async function carregarRotinas(){
-
 if(!db||!EMPRESA_ID)return
 
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
-
 const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todos"
 
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
 
 let pacientes=[]
-/* 🔹 PACIENTES */
-const {data:pacs}=await db
-.from("pacientes")
-.select("*")
-.eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true)
-
+const {data:pacs}=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
 pacientes=pacs||[]
-/* 🔹 ORDEM ALFABÉTICA */
-pacientes.sort((a,b)=>
-(a.nome_completo||"").localeCompare(b.nome_completo||"","pt-BR")
-)
-/* 🔹 FILTRO */
+
+pacientes.sort((a,b)=>(a.nome_completo||"").localeCompare(b.nome_completo||"","pt-BR"))
+
 if(pacienteSelecionado!=="todos"){
 pacientes=pacientes.filter(p=>String(p.id)===String(pacienteSelecionado))
 }
-/* 🔹 ROTINAS MODELO */
-const {data:rotinas}=await db
-.from("rotina_modelos")
-.select("*")
-.eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true)
+
+const {data:rotinas}=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
 
 const rotinasTurno=(rotinas||[])
 .filter(r=>!r.turno||r.turno===turno)
 .sort((a,b)=>(a.ordem||99)-(b.ordem||99))
-/* 🔹 EXECUÇÕES DO DIA */
-const {data:execucoes}=await db
-.from("rotinas_execucao")
-.select("*")
-.eq("data",dataHoje)
-.eq("turno",turno)
-/* 🔹 MAPA SIMPLES E FUNCIONAL */
-const mapaExec=new Map()
 
+const {data:execucoes}=await db.from("rotinas_execucao").select("*").eq("data",dataHoje).eq("turno",turno)
+
+const mapaExec=new Map()
 ;(execucoes||[]).forEach(e=>{
 const chave=`${String(e.paciente_id)}_${String(e.rotina_id)}`
 mapaExec.set(chave,e)
 })
-/* 🔹 LISTA FINAL */
+
 const lista=[]
 
 for(const p of pacientes){
-
 for(const r of rotinasTurno){
 
 const chave=`${String(p.id)}_${String(r.id)}`
@@ -197,7 +106,9 @@ ordem:r.ordem||99,
 
 status:exec && exec.status==="executado"?"executado":"pendente",
 
-profissional:exec && exec.status==="executado"?(exec.profissional_nome||""):"",
+profissional:exec && exec.status==="executado"
+? (exec.profissional_nome || exec.usuario_nome || exec.executado_por || exec.usuario_id || "Administrador")
+: "",
 
 has:p.has,
 dm:p.dm,
@@ -206,12 +117,8 @@ cardiopatia:p.cardiopatia,
 acamado:p.acamado,
 pa:p.pressao_arterial
 })
+}}
 
-}
-
-}
-
-/* 🔥 ORDENAÇÃO FINAL GARANTIDA */
 lista.sort((a,b)=>{
 const nomeA=(a.paciente||"").toLowerCase()
 const nomeB=(b.paciente||"").toLowerCase()
@@ -221,202 +128,80 @@ return (a.ordem||99)-(b.ordem||99)
 })
 
 ROTINAS_CACHE=lista
-
 renderizarRotinas(lista)
 calcularIndicadores(lista)
-
 }
 
 /* ====================================================
-024 – RENDERIZAR ROTINAS
+024 – RENDERIZAR ROTINAS (CORRIGIDO)
 ==================================================== */
 function renderizarRotinas(lista){
-
 const tbody=document.getElementById("rotinas")
 if(!tbody)return
 
 let html=""
-
-const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todos"
-
 const pacientes={}
 
-/* 🔹 AGRUPAR */
 lista.forEach(r=>{
 if(!pacientes[r.paciente_id]){
-pacientes[r.paciente_id]={
-nome:r.paciente,
-rotinas:[],
-has:r.has,
-dm:r.dm,
-demencia:r.demencia,
-cardiopatia:r.cardiopatia,
-acamado:r.acamado,
-pa:r.pa
-}
+pacientes[r.paciente_id]={nome:r.paciente,rotinas:[]}
 }
 pacientes[r.paciente_id].rotinas.push(r)
 })
 
-/* 🔹 LOOP */
 Object.keys(pacientes).forEach(pid=>{
-
 const p=pacientes[pid]
 
-const analiseTexto=gerarAnalisePaciente(p)
-
-/* 🔹 ORDEM */
-const ordemFixa=[
-"Banho",
-"Higiene (manhã)",
-"Troca de Fraldas (manhã)",
-"Oferta de Água",
-"Café",
-"Medicação",
-"Almoço",
-"Lanche",
-"Higiene (tarde)",
-"Jantar",
-"Higiene (noite)",
-"Troca de Fraldas (noite)"
-]
-p.rotinas.sort((a,b)=>{
-return ordemFixa.indexOf(a.rotina)-ordemFixa.indexOf(b.rotina)
-})
-/* 🔹 COMORBIDADES */
-let comorbidadesHTML=""
-if(p.has)comorbidadesHTML+="<span class='tag-comorb'>HAS</span>"
-if(p.dm)comorbidadesHTML+="<span class='tag-comorb'>DM</span>"
-if(p.demencia)comorbidadesHTML+="<span class='tag-comorb'>DEM</span>"
-if(p.cardiopatia)comorbidadesHTML+="<span class='tag-comorb'>CARD</span>"
-if(p.acamado)comorbidadesHTML+="<span class='tag-comorb'>ACAM</span>"
-if(p.pa)comorbidadesHTML+="<span class='tag-comorb'>PA</span>"
-
-/* 🔹 ROTINAS */
 let rotinasHTML=""
-let total=p.rotinas.length
-let executadas=0
-
 p.rotinas.forEach(r=>{
-if(r.status==="executado")executadas++
-
-const classe=r.status==="executado"?"rotina-executada":"rotina-pendente"
 let nomeProf=""
 let corProf="#64748b"
 
 if(r.status==="executado"){
-if(r.profissional && r.profissional.trim()!==""){
+if(r.profissional && String(r.profissional).trim()!==""){
 nomeProf=r.profissional
 corProf=obterCorUsuario(nomeProf)
-}else{
-nomeProf=""
-corProf="#64748b"
 }
 }
-
-const classeVisual=r.status==="executado"?"rotina-ok":"rotina-pendente"
-
-let perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
 
 rotinasHTML+=`
-<div class="badge-rotina ${classeVisual} ${perfil==="administrador"&&r.status==="executado"?"admin":""}"
+<div class="badge-rotina ${r.status==="executado"?"rotina-ok":"rotina-pendente"}"
 data-paciente="${r.paciente_id}"
-data-rotina="${r.rotina_id}"
->
+data-rotina="${r.rotina_id}">
 ${r.rotina}
-${r.status==="executado"
-?`<span class="profissional" style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`
-:""}
-</div>
-`
-  
+${r.status==="executado"?`<span style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`:""}
+</div>`
 })
 
-let percentual=total?Math.round((executadas/total)*100):0
-
-let botaoOK=percentual===100
-?`<button class="btn-todos">Rotinas OK</button>`
-:`<button class="btn-todos" onclick="window.executarTodos('${pid}')">Concluir Todas</button>`
-
-/* 🔹 HTML FINAL */
 html+=`<tr>
-<td class="nome-paciente">
-${p.nome}
-<div style="margin-top:4px">${comorbidadesHTML}</div>
-</td>
-
-<td>
-<div class="progresso-container">
-<span class="progresso-label">${percentual}% (${executadas}/${total})</span>
-${botaoOK}
-</div>
-</td>
-
-<td>
-<div class="rotinas-linha">${rotinasHTML}</div>
-<div class="analise-clinica">${analiseTexto}</div>
-</td>
+<td>${p.nome}</td>
+<td><div>${rotinasHTML}</div></td>
 </tr>`
-
 })
-
-/* 🔹 TODOS */
-if(lista.length>0&&pacienteSelecionado==="todos"){
-
-const rotinasUnicas={}
-
-lista.forEach(r=>{
-rotinasUnicas[r.rotina_id]=r.rotina
-})
-
-let rotinasHTML=""
-
-Object.keys(rotinasUnicas).forEach(rotinaId=>{
-rotinasHTML+=`<button class="btn-rotina" onclick="window.executarRotinaTodos('${rotinaId}')">${rotinasUnicas[rotinaId]}</button>`
-})
-
-html+=`<tr style="background:#f0fdf4;font-weight:bold">
-<td>Todos os Pacientes</td>
-<td>—</td>
-<td class="rotinas-linha">${rotinasHTML}</td>
-</tr>`
-}
 
 tbody.innerHTML=html
 
-/* ====================================================
-🔥 ATIVAR CLIQUES DAS ROTINAS (OBRIGATÓRIO)
-==================================================== */
 setTimeout(()=>{
 document.querySelectorAll(".badge-rotina").forEach(el=>{
 el.addEventListener("click",function(){
-
 const pacienteId=this.dataset.paciente
 const rotinaId=this.dataset.rotina
 const status=this.classList.contains("rotina-ok")?"executado":"pendente"
-const perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
-
-console.log("CLICK OK", pacienteId, rotinaId)
 
 if(status==="executado"){
-if(perfil==="administrador"){
 desfazerRotina(pacienteId,rotinaId,this)
-}
 }else{
 executarRotina(pacienteId,rotinaId)
 }
-
 })
 })
 },100)
 }
+
 /* ====================================================
-024B – EXECUTAR ROTINA (FINAL CORRIGIDO DEFINITIVO)
+024B – EXECUTAR ROTINA (FINAL)
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId){
-
-console.log("CLICOU ROTINA", pacienteId, rotinaId)
-
 if(!db)return
 
 const dataHoje=new Date().toISOString().slice(0,10)
@@ -425,205 +210,70 @@ const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 const user=obterUsuarioLogado()||{}
 
 const usuarioId=user.id||null
-const nomeProfissional=user.nome||"admin"
-const empresaId=EMPRESA_ID
+const nomeProfissional=
+user.nome||
+localStorage.getItem("usuario_nome")||
+"Administrador"
 
-const {error}=await db.from("rotinas_execucao").upsert({
+await db.from("rotinas_execucao").upsert({
 paciente_id:pacienteId,
 rotina_id:rotinaId,
 data:dataHoje,
 turno:turno,
 status:"executado",
 usuario_id:usuarioId,
-profissional_nome:nomeProfissional,
-empresa_id:empresaId
-},{
-onConflict:"paciente_id,rotina_id,data,turno"
-})
+profissional_nome:nomeProfissional||"Administrador",
+empresa_id:EMPRESA_ID
+},{onConflict:"paciente_id,rotina_id,data,turno"})
 
-if(error){
-console.error("ERRO REAL BANCO:",error)
-alert("Erro ao salvar no banco")
-return
-}
-
-/* 🔥 ATUALIZA CACHE (SEM RECARREGAR) */
-const item=ROTINAS_CACHE.find(r=>
-String(r.paciente_id)===String(pacienteId)&&
-String(r.rotina_id)===String(rotinaId)
-)
-
+const item=ROTINAS_CACHE.find(r=>String(r.paciente_id)===String(pacienteId)&&String(r.rotina_id)===String(rotinaId))
 if(item){
 item.status="executado"
-item.profissional=nomeProfissional
+item.profissional=nomeProfissional||"Administrador"
 }
 
-/* 🔥 ATUALIZA TELA SEM CONSULTAR BANCO */
 renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
-
-}
-/* ====================================================
-026 – CONCLUIR TODAS (FINAL CORRETO)
-==================================================== */
-async function concluirTodas(pacienteId){
-if(!db||!pacienteId)return
-const chaveLock=`lock_exec_todos_${pacienteId}`
-if(window[chaveLock])return
-window[chaveLock]=true
-try{
-
-const dataRaw=document.getElementById("dataInicio")?.value
-const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
-
-const user=obterUsuarioLogado()||{}
-const usuarioId=user.id||null
-const nomeUsuario=user.nome||"admin"
-
-const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
-
-for(const r of rotinas){
-
-/* 🔒 NÃO SOBRESCREVE */
-if(r.status==="executado"){
-continue
-}
-
-/* 🔥 UPSERT (SEM CONFLITO) */
-const res=await db.from("rotinas_execucao").upsert({
-paciente_id:Number(r.paciente_id),
-rotina_id:Number(r.rotina_id),
-data:dataHoje,
-turno:turno,
-status:"executado",
-executado_por:usuarioId,
-horario_executado:new Date().toISOString(),
-profissional_nome:nomeUsuario
-},{
-onConflict:"paciente_id,rotina_id,data,turno"
-})
-
-if(res.error){
-console.error("Erro concluirTodas",res.error)
-continue
-}
-
-/* 🔄 CACHE */
-r.status="executado"
-r.profissional=nomeUsuario
-
-}
-
-/* 🔄 UI */
-await carregarRotinas()
-
-}catch(e){
-console.error("Erro geral concluirTodas",e)
-}finally{
-window[chaveLock]=false
-}
-}
-/* ====================================================
-026A – DESFAZER ROTINA (FINAL CORRETO)
-==================================================== */
-async function desfazerRotina(pacienteId,rotinaId,botao){
-if(!db||!pacienteId||!rotinaId)return
-if(!confirm("Deseja desfazer esta rotina?"))return
-const chaveLock=`lock_desfazer_${pacienteId}_${rotinaId}`
-if(window[chaveLock])return
-window[chaveLock]=true
-const dataRaw=document.getElementById("dataInicio")?.value
-const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-const turno=TURNO_ATUAL||"manha"
-const {error}=await db.from("rotinas_execucao")
-.delete()
-.eq("paciente_id",pacienteId)
-.eq("rotina_id",rotinaId)
-.eq("data",dataHoje)
-.eq("turno",turno)
-if(error){
-console.error("Erro desfazerRotina",error)
-window[chaveLock]=false
-return
-}
-ROTINAS_CACHE.forEach(r=>{
-if(String(r.paciente_id)===String(pacienteId)&&String(r.rotina_id)===String(rotinaId)){
-r.status="pendente"
-r.profissional=""
-}
-})
-await carregarRotinas()
-window[chaveLock]=false
-}
-/* ====================================================
-027 – INDICADORES (CORRIGIDO)
-==================================================== */
-function calcularIndicadores(lista){
-if(!Array.isArray(lista))return
-let executado=0,pendente=0,atrasado=0
-lista.forEach(r=>{
-if(r.status==="executado")executado++
-else if(r.status==="pendente")pendente++
-else if(r.status==="atrasado")atrasado++
-})
-const e=document.getElementById("indicadorExecutado")
-const p=document.getElementById("indicadorPendente")
-const a=document.getElementById("indicadorAtrasado")
-if(e)e.innerHTML="✔ "+executado
-if(p)p.innerHTML="🔴 "+pendente
-if(a)a.innerHTML="⚠ "+atrasado
 }
 
 /* ====================================================
-028 – EXECUTAR TODOS (CORREÇÃO DEFINITIVA)
+028 – EXECUTAR TODOS (FINAL)
 ==================================================== */
 async function executarTodos(pacienteId){
-
 if(!db||!pacienteId)return
 
 const dataHoje=new Date().toISOString().slice(0,10)
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 
 const user=obterUsuarioLogado()
-
 const usuarioId=user.id||null
-const nomeProfissional=user.nome||"admin"
+const nomeProfissional=
+user.nome||
+localStorage.getItem("usuario_nome")||
+"Administrador"
 
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId))
 
 for(const r of rotinas){
-
 if(r.status==="executado")continue
 
-const {error}=await db.from("rotinas_execucao").upsert({
+await db.from("rotinas_execucao").upsert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
 turno:turno,
 status:"executado",
 usuario_id:usuarioId,
-profissional_nome:nomeProfissional,
+profissional_nome:nomeProfissional||"Administrador",
 empresa_id:EMPRESA_ID
-},{
-onConflict:"paciente_id,rotina_id,data,turno"
-})
+},{onConflict:"paciente_id,rotina_id,data,turno"})
 
-if(error){
-console.error("Erro executarTodos:",error)
-continue
-}
-
-/* 🔥 ATUALIZA CACHE */
 r.status="executado"
-r.profissional=nomeProfissional
+r.profissional=nomeProfissional||"Administrador"
 }
 
-/* 🔥 ATUALIZA TELA UMA VEZ SÓ */
 renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
-
 }
+
 /* ====================================================
 029 – EXECUTAR ROTINA PARA TODOS (CORREÇÃO DEFINITIVA)
 ==================================================== */
@@ -634,10 +284,14 @@ if(!db||!rotinaId)return
 const dataHoje=new Date().toISOString().slice(0,10)
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 
-const user=obterUsuarioLogado()
+const user=obterUsuarioLogado()||{}
 
+/* 🔥 NOME BLINDADO */
 const usuarioId=user.id||null
-const nomeProfissional=user.nome||"admin"
+const nomeProfissional=
+user.nome||
+localStorage.getItem("usuario_nome")||
+"Administrador"
 
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.rotina_id)===String(rotinaId))
 
@@ -652,7 +306,7 @@ data:dataHoje,
 turno:turno,
 status:"executado",
 usuario_id:usuarioId,
-profissional_nome:nomeProfissional,
+profissional_nome:nomeProfissional||"Administrador",
 empresa_id:EMPRESA_ID
 },{
 onConflict:"paciente_id,rotina_id,data,turno"
@@ -663,10 +317,13 @@ console.error("Erro executarRotinaTodos:",error)
 continue
 }
 
+/* 🔥 ATUALIZA CACHE CORRETAMENTE */
 r.status="executado"
-r.profissional=nomeProfissional
+r.profissional=nomeProfissional||"Administrador"
+
 }
 
+/* 🔥 RENDER FINAL */
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 
@@ -889,8 +546,9 @@ return texto
 }
 
 /* ====================================================
-999 – EXPORTAR FUNÇÕES PARA HTML (OBRIGATÓRIO)
+999 – EXPORT
 ==================================================== */
-window.executarRotina = executarRotina
-window.executarTodos = executarTodos
-window.executarRotinaTodos = executarRotinaTodos
+window.executarRotina=executarRotina
+window.executarTodos=executarTodos
+window.executarRotinaTodos=executarRotinaTodos
+
