@@ -56,13 +56,10 @@ return{id:id||null,nome:nome,hierarquia:Number(hierarquia),perfil:perfil}
 022 – CARREGAR PACIENTES BUSCA (CORREÇÃO FINAL)
 ==================================================== */
 async function carregarPacientesBusca(){
-
 if(!db)return
-if(!EMPRESA_ID)return
-
 const select=document.getElementById("buscaPaciente")
 if(!select)return
-
+}
 try{
 
 const {data,error}=await db
@@ -76,15 +73,14 @@ if(error){
 console.error("Erro ao carregar pacientes:",error)
 return
 }
-
 /* 🔥 STRING NORMAL (SEM FUNÇÃO) */
-let html = '<option value="todos">TODOS</option>'
+let options = '<option value="todos">TODOS</option>';
 
-(data||[]).forEach(p=>{
-html += `<option value="${p.id}">${p.nome_completo}</option>`
-})
+(data || []).forEach(p=>{
+options += `<option value="${p.id}">${p.nome_completo}</option>`;
+});
 
-select.innerHTML = html
+select.innerHTML = options
 select.value = "todos"
 
 }catch(e){
