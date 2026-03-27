@@ -90,16 +90,13 @@ if(typeof carregarRotinas==="function")await carregarRotinas()
 if(typeof montarGradePeriodo==="function")await montarGradePeriodo()
 }
 /* ====================================================
-023 – CARREGAR ROTINAS (CORRIGIDO DEFINITIVO)
+023 – CARREGAR ROTINAS (CORRIGIDO DEFINITIVO FINAL)
 ==================================================== */
 async function carregarRotinas(){
 if(!db||!EMPRESA_ID)return
-
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todos"
-
-const dataRaw=document.getElementById("dataInicio")?.value
-const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
+const dataHoje=obterDataSelecionada()
 let pacientes=[]
 const {data:pacs}=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
 pacientes=pacs||[]
@@ -108,24 +105,17 @@ if(pacienteSelecionado!=="todos"){
 pacientes=pacientes.filter(p=>String(p.id)===String(pacienteSelecionado))
 }
 const {data:rotinas}=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
-const rotinasTurno=(rotinas||[])
-.filter(r=>!r.turno||r.turno===turno)
-.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
-
-const {data:execucoes}=await db
-.from("rotinas_execucao")
-.select("*")
-.eq("data",dataHoje)
+const rotinasTurno=(rotinas||[]).filter(r=>!r.turno||r.turno===turno).sort((a,b)=>(a.ordem||99)-(b.ordem||99))
+const {data:execucoes}=await db.from("rotinas_execucao").select("*").eq("data",dataHoje).eq("turno",turno)
 const mapaExec=new Map()
 ;(execucoes||[]).forEach(e=>{
-const chave=`${String(e.paciente_id)}_${String(e.rotina_id)}`
+const chave=`${e.paciente_id}_${e.rotina_id}`
 mapaExec.set(chave,e)
 })
 const lista=[]
-
 for(const p of pacientes){
 for(const r of rotinasTurno){
-const chave=`${String(p.id)}_${String(r.id)}`
+const chave=`${p.id}_${r.id}`
 const exec=mapaExec.get(chave)
 lista.push({
 paciente_id:p.id,
@@ -133,34 +123,25 @@ rotina_id:r.id,
 paciente:p.nome_completo,
 rotina:r.nome,
 ordem:r.ordem||99,
-status:exec && exec.status==="executado"?"executado":"pendente",
-
-profissional:exec && exec.status==="executado"
-? (exec.profissional_nome || exec.usuario_nome || exec.executado_por || exec.usuario_id || "Administrador")
-: "",
-
-has:p.has,
-dm:p.dm,
-demencia:p.da,
-cardiopatia:p.cardiopatia,
-acamado:p.acamado,
-pa:p.pressao_arterial
+turno:r.turno||turno,
+status:exec&&exec.status==="executado"?"executado":"pendente",
+profissional:exec?exec.profissional_nome||"":"",
+has:p.has,dm:p.dm,demencia:p.da,cardiopatia:p.cardiopatia,acamado:p.acamado,pa:p.pressao_arterial
 })
 }}
 lista.sort((a,b)=>{
 const nomeA=(a.paciente||"").toLowerCase()
 const nomeB=(b.paciente||"").toLowerCase()
-if(nomeA<nomeB)return -1
+if(nomeA<nomeB)return-1
 if(nomeA>nomeB)return 1
-return (a.ordem||99)-(b.ordem||99)
+return(a.ordem||99)-(b.ordem||99)
 })
-
 ROTINAS_CACHE=lista
 renderizarRotinas(lista)
 calcularIndicadores(lista)
 }
 /* ====================================================
-024 – RENDERIZAR ROTINAS (LAYOUT PROFISSIONAL FINAL)
+024 – RENDERIZAR ROTINAS (CORRIGIDO FINAL)
 ==================================================== */
 function renderizarRotinas(lista){
 const tbody=document.getElementById("rotinas")
@@ -168,9 +149,7 @@ if(!tbody)return
 let html=""
 const pacientes={}
 lista.forEach(r=>{
-if(!pacientes[r.paciente_id]){
-pacientes[r.paciente_id]={nome:r.paciente,rotinas:[]}
-}
+if(!pacientes[r.paciente_id])pacientes[r.paciente_id]={nome:r.paciente,rotinas:[]}
 pacientes[r.paciente_id].rotinas.push(r)
 })
 Object.keys(pacientes).forEach(pid=>{
@@ -179,74 +158,48 @@ let rotinasHTML=""
 let total=p.rotinas.length
 let executadas=0
 p.rotinas.forEach(r=>{
-const status=(r.status||"neutro")
-if(status==="executado")executadas++
-let nomeProf=""
+if(r.status==="executado")executadas++
 let corProf="#64748b"
-if(status==="executado"){
-if(r.profissional&&String(r.profissional).trim()!==""){
-nomeProf=r.profissional
-corProf=obterCorUsuario(nomeProf)
-}
-}
-let classe="rotina-neutra"
-
+let nomeProf=r.profissional||""
+if(r.status==="executado"&&nomeProf)corProf=obterCorUsuario(nomeProf)
+let classe="rotina-pendente"
 if(r.status==="executado"){
-const turno=(r.turno||"").toLowerCase()
-
-if(turno==="manha")classe="rotina-ok-manha"
-else if(turno==="tarde")classe="rotina-ok-tarde"
-else if(turno==="noite")classe="rotina-ok-noite"
-
-}else if(r.status==="pendente"){
-classe="rotina-pendente"
+if(r.turno==="manha")classe="rotina-ok-manha"
+else if(r.turno==="tarde")classe="rotina-ok-tarde"
+else if(r.turno==="noite")classe="rotina-ok-noite"
 }
-
 rotinasHTML+=`<div class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">
-${r.rotina}
-${r.status==="executado"?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}
+${r.rotina}${r.status==="executado"?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}
 </div>`
 })
 let percentual=total?Math.round((executadas/total)*100):0
-html+=`<tr class="linha-paciente"><td class="col-paciente">${p.nome}</td><td class="col-progresso"><div class="progresso-box"><span class="progresso-label">${percentual}% (${executadas}/${total})</span><div class="btn-area"><button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button></div></div></td><td class="col-rotinas"><div class="rotinas-box">${rotinasHTML}</div></td></tr>`
+let concluido=executadas===total
+html+=`<tr><td>${p.nome}</td><td><b>${percentual}% (${executadas}/${total})</b><button onclick="executarTodos('${pid}')">${concluido?"✔ Concluído":"Concluir Todas"}</button></td><td>${rotinasHTML}</td></tr>`
 })
 tbody.innerHTML=html
-setTimeout(()=>{
 document.querySelectorAll(".badge-rotina").forEach(el=>{
-el.addEventListener("click",function(){
+el.onclick=function(){
 const pacienteId=this.dataset.paciente
 const rotinaId=this.dataset.rotina
-const isExecutado=
-this.classList.contains("rotina-ok-manha")||
-this.classList.contains("rotina-ok-tarde")||
-this.classList.contains("rotina-ok-noite")
-
-const status=isExecutado?"executado":"pendente"if(status==="executado"){
-desfazerRotina(pacienteId,rotinaId,this)
+const executado=this.classList.contains("rotina-ok-manha")||this.classList.contains("rotina-ok-tarde")||this.classList.contains("rotina-ok-noite")
+if(executado){
+desfazerRotina(pacienteId,rotinaId)
 }else{
 executarRotina(pacienteId,rotinaId)
 }
+}
 })
-})
-},100)
 }
 /* ====================================================
-024B – EXECUTAR ROTINA (FINAL)
+024B – EXECUTAR ROTINA (USUÁRIO FIXO)
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId){
 if(!db)return
-
 const dataHoje=obterDataSelecionada()
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
-
-const user=obterUsuarioLogado()||{}
-
+const user=obterUsuarioLogado()
 const usuarioId=user.id||null
-const nomeProfissional=
-user.nome||
-localStorage.getItem("usuario_nome")||
-"Administrador"
-
+const nome=user.nome||"Administrador"
 await db.from("rotinas_execucao").upsert({
 paciente_id:pacienteId,
 rotina_id:rotinaId,
@@ -254,17 +207,16 @@ data:dataHoje,
 turno:turno,
 status:"executado",
 usuario_id:usuarioId,
-profissional_nome:nomeProfissional||"Administrador",
+profissional_nome:nome,
 empresa_id:EMPRESA_ID
 },{onConflict:"paciente_id,rotina_id,data,turno"})
-
-const item=ROTINAS_CACHE.find(r=>String(r.paciente_id)===String(pacienteId)&&String(r.rotina_id)===String(rotinaId))
+const item=ROTINAS_CACHE.find(r=>r.paciente_id==pacienteId&&r.rotina_id==rotinaId)
 if(item){
 item.status="executado"
-item.profissional=nomeProfissional||"Administrador"
+item.profissional=nome
 }
-
 renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
 }
 /* ====================================================
 027 – INDICADORES
