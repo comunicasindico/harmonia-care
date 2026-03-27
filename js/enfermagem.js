@@ -187,16 +187,20 @@ corProf=obterCorUsuario(nomeProf)
 }
 rotinasHTML+=`<div class="badge-rotina ${r.status==="executado"?"rotina-ok":"rotina-pendente"}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">${r.rotina}${r.status==="executado"?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}</div>`
 })
-let percentual=total?Math.round((executadas/total)*100):0
-let rotinasUnicas={}
-p.rotinas.forEach(r=>{
+/* 🔥 TODOS OS PACIENTES (LINHA ÚNICA FINAL) */
+const rotinasUnicas={}
+lista.forEach(r=>{
 rotinasUnicas[r.rotina_id]=r.rotina
 })
 let botoesHTML=""
 Object.keys(rotinasUnicas).forEach(rotinaId=>{
 botoesHTML+=`<button class="btn-rotina" onclick="executarRotinaTodos('${rotinaId}')">${rotinasUnicas[rotinaId]}</button>`
 })
-html+=`<tr class="linha-paciente"><td class="col-paciente">${p.nome}</td><td class="col-progresso"><div class="progresso-box"><span class="progresso-label">${percentual}% (${executadas}/${total})</span><div class="btn-area"><button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button></div></div></td><td class="col-rotinas"><div class="rotinas-box">${rotinasHTML}</div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:6px">${botoesHTML}</div></td></tr>`
+html+=`<tr class="linha-todos"><td></td><td></td><td><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">${botoesHTML}</div></td></tr>`
+  
+let percentual=total?Math.round((executadas/total)*100):0
+
+html+=`<tr class="linha-paciente"><td class="col-paciente">${p.nome}</td><td class="col-progresso"><div class="progresso-box"><span class="progresso-label">${percentual}% (${executadas}/${total})</span><div class="btn-area"><button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button></div></div></td><td class="col-rotinas"><div class="rotinas-box">${rotinasHTML}</div></td></tr>`
 })
 tbody.innerHTML=html
 setTimeout(()=>{
