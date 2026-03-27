@@ -160,31 +160,42 @@ document.getElementById("adminRotina").value=""
 if(typeof carregarRotinas==="function")await carregarRotinas()
 }
 /* ====================================================
-068 – CONCLUIR PENDENTES (CORREÇÃO DEFINITIVA)
+068 – CONCLUIR PENDENTES (FINAL PROFISSIONAL)
 ==================================================== */
 async function concluirPendentes(){
+
 if(!db)return
+
 if(SALVANDO){
 alert("Aguarde finalizar...")
 return
 }
+
 SALVANDO=true
 window.salvandoPendencias=true
+
+/* 🔥 UI */
 mostrarProgresso()
 bloquearTela()
 
-const dataRaw=document.getElementById("dataInicio")?.value
+try{
+
+/* 🔥 DATA PADRONIZADA */
 const dataHoje=obterDataSelecionada()
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 
-const user=obterUsuarioLogado()
-
+/* 🔥 USUÁRIO BLINDADO */
+const user=obterUsuarioLogado()||{}
 const usuarioId=user.id||localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
-const nomeProfissional=user.nome||localStorage.getItem("usuario_nome")||"admin"
+const nomeProfissional=
+user.nome||
+localStorage.getItem("usuario_nome")||
+"Administrador"
 
-/* 🔥 GARANTE EMPRESA */
+/* 🔥 EMPRESA */
 const empresaId=EMPRESA_ID||localStorage.getItem("empresa_id")
 
+/* 🔥 FILTRA PENDENTES */
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
 
 const total=pendentes.length
@@ -200,19 +211,19 @@ return
 
 let processados=0
 
+/* 🔥 LOOP CONTROLADO */
 for(const r of pendentes){
 
 try{
 
-/* 🔥 UPSERT ROBUSTO */
 const {error}=await db.from("rotinas_execucao").upsert({
-paciente_id:r.paciente_id, /* 🔥 NÃO FORÇAR Number */
+paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
 turno:turno,
 status:"executado",
 usuario_id:usuarioId,
-profissional_nome:nomeProfissional,
+profissional_nome:nomeProfissional||"Administrador",
 empresa_id:empresaId,
 horario_executado:new Date().toISOString()
 },{
@@ -224,30 +235,38 @@ console.error("Erro pendente:",error)
 continue
 }
 
-/* 🔹 ATUALIZA CACHE LOCAL (mantido) */
+/* 🔥 ATUALIZA CACHE */
 r.status="executado"
-r.profissional=nomeProfissional
+r.profissional=nomeProfissional||"Administrador"
 
 }catch(e){
 console.error("Erro geral pendente:",e)
 }
 
-/* 🔹 PROGRESSO (mantido) */
+/* 🔥 PROGRESSO VISUAL */
 processados++
 let percentual=Math.round((processados/total)*100)
 atualizarProgresso(percentual)
 
 }
 
-/* 🔥 RECARREGA DO BANCO (CRÍTICO) */
+/* 🔥 GARANTE 100% VISUAL */
+atualizarProgresso(100)
+
+/* 🔥 RECARREGA DO BANCO (CRÍTICO PRA NÃO SUMIR NOME/COR) */
 await carregarRotinas()
 
+}catch(e){
+console.error("Erro concluirPendentes:",e)
+}
+
+/* 🔥 FINALIZAÇÃO LIMPA */
 setTimeout(()=>{
 esconderProgresso()
 desbloquearTela()
 SALVANDO=false
 window.salvandoPendencias=false
-},300)
+},500)
 
 }
 /* ====================================================
