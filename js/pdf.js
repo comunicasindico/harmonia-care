@@ -19,322 +19,432 @@ const mes=String(d.getMonth()+1).padStart(2,"0")
 const ano=d.getFullYear()
 return`${dia}-${mes}-${ano}`
 }
-
 /* ====================================================
-080 – PDF PACIENTE (CORREÇÃO DEFINITIVA)
+080 – PDF PACIENTE (COMPLETO PROFISSIONAL FINAL)
 ==================================================== */
 async function gerarPDFPaciente(){
-const imgDieta=new Image()
-imgDieta.src="img/icone-dieta.png"
-await new Promise((resolve,reject)=>{imgDieta.onload=resolve;imgDieta.onerror=reject})
+
 if(!db)return
+/* ====================================================
+INPUTS
+==================================================== */
 const pacienteId=document.getElementById("buscaPaciente")?.value
 const dataInicio=normalizarDataISO(document.getElementById("dataInicio")?.value)
 const dataFim=normalizarDataISO(document.getElementById("dataFim")?.value)
-const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
+const turnoAtual=(TURNO_ATUAL||"manha").toLowerCase().trim()
+
 if(!pacienteId||pacienteId==="todos"){alert("Selecione um paciente");return}
-const {data:paciente,error}=await db.from("pacientes").select("id,nome_completo,data_nascimento,has,dm,da,cardiopatia,acamado,dieta_especial,dieta_texto,outras_comorbidades,grau_risco,pressao_arterial").eq("id",pacienteId).single()
-if(error||!paciente){console.error("ERRO PACIENTE",error);return}
+/* ====================================================
+PACIENTE
+==================================================== */
+const {data:paciente,error}=await db
+.from("pacientes")
+.select("*")
+.eq("id",pacienteId)
+.single()
+
+if(error||!paciente){console.error(error);return}
+/* ====================================================
+EXECUÇÕES
+==================================================== */
 const {data:rotinasExec}=await db
-  .from("rotinas_execucao")
-  .select("*,rotina_modelos(nome)")
-  .eq("paciente_id",pacienteId)
-  .eq("turno",turno)
-  .gte("data",dataInicio)
-  .lte("data",dataFim)
+.from("rotinas_execucao")
+.select("*,rotina_modelos(nome)")
+.eq("paciente_id",pacienteId)
+.eq("turno",turnoAtual)
+.gte("data",dataInicio)
+.lte("data",dataFim)
+/* ====================================================
+ROTINAS MODELO
+==================================================== */
+const {data:rotinasModelo}=await db
+.from("rotina_modelos")
+.select("id,nome,ordem,turno")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+.order("ordem",{ascending:true})
+/* ====================================================
+PDF BASE
+==================================================== */
 const {jsPDF}=window.jspdf
 const doc=new jsPDF("p","mm","a4")
 await carregarFonteRoboto(doc)
+
 let y=15
-try{
-const imgLogo=new Image()
-imgLogo.src=window.location.origin+"/harmonia-care/logo-harmonia.png"
-await new Promise((res)=>{imgLogo.onload=res;imgLogo.onerror=res})
-doc.addImage(imgLogo,"PNG",10,5,25,10)
-}catch(e){}
+/* ====================================================
+HEADER
+==================================================== */
 doc.setFillColor(41,128,185)
 doc.rect(0,0,210,18,"F")
+
 doc.setTextColor(255,255,255)
-doc.setFontSize(12)
 doc.setFont("Roboto","bold")
-doc.text(["LAR GERIÁTRICO HARMONIA - Tel: (81) 3461-3109"],105,8,{align:"center"})
-doc.setFontSize(9)
+doc.setFontSize(12)
+doc.text("LAR GERIÁTRICO HARMONIA - Tel: (81) 3461-3109",105,8,{align:"center"})
+
 doc.setFont("Roboto","normal")
+doc.setFontSize(9)
 doc.text("Relatório Clínico do Paciente",105,14,{align:"center"})
+
 doc.setTextColor(0,0,0)
 y=25
-doc.setDrawColor(200)
+/* ====================================================
+BOX PACIENTE
+==================================================== */
 doc.rect(10,y,190,40)
-doc.setFontSize(9)
+
 let dy=y+6
+
 doc.text(`Paciente: ${paciente.nome_completo}`,12,dy)
 doc.text(`Idade: ${calcularIdade(paciente.data_nascimento)}`,120,dy)
+
 dy+=5
 doc.text(`HAS: ${paciente.has?"SIM":"—"}`,12,dy)
 doc.text(`Diabetes: ${paciente.dm?"SIM":"—"}`,60,dy)
 doc.text(`Demência: ${paciente.da?"SIM":"—"}`,120,dy)
+
 dy+=5
 doc.text(`Cardiopatia: ${paciente.cardiopatia?"SIM":"—"}`,12,dy)
 doc.text(`Acamado: ${paciente.acamado?"SIM":"—"}`,80,dy)
 doc.text(`PA: ${paciente.pressao_arterial||""}`,140,dy)
+
 dy+=5
 doc.text(`Dieta: ${paciente.dieta_especial?"SIM - "+(paciente.dieta_texto||""):"NÃO"}`,12,dy)
 doc.text(`Risco: ${paciente.grau_risco||"—"}`,120,dy)
+
 dy+=5
 doc.text(`Comorbidades: ${paciente.outras_comorbidades||"—"}`,12,dy)
-y+=45
-const colunas=["Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café","Medicação","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene (noite)","Troca de Fraldas (noite)"]
-function normalizar(txt){return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()}
-let matriz={}
-const turnoAtual=(TURNO_ATUAL||"manha").toLowerCase().trim()
-/* 🔥 MONTAR MATRIZ COMPLETA (IGUAL ENFERMAGEM) */
-const {data:rotinasModelo}=await db
-.from("rotina_modelos")
-.select("id,nome,turno")
-.eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true)
-.eq("turno",turnoAtual)
-const mapaExec=new Map()
-rotinasExec?.forEach(r=>{
-const chave=`${r.data}_${normalizar(r.rotina_modelos?.nome||"")}`
-mapaExec.set(chave,r.status)
-})
 
-let matriz={}
-dias.forEach(dia=>{
-matriz[dia]={}
-rotinasModelo.forEach(r=>{
-const nomeNorm=normalizar(r.nome)
-const chave=`${dia}_${nomeNorm}`
-if(mapaExec.has(chave)){
-matriz[dia][nomeNorm]=mapaExec.get(chave)
-}else{
-/* 🔥 REGRA CORRETA */
-matriz[dia][nomeNorm]="pendente"
+y+=45
+/* ====================================================
+UTIL
+==================================================== */
+function normalizar(txt){
+return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()
 }
-})
-})
-let[anoI,mesI,diaI]=dataInicio.split("-")
-let[anoF,mesF,diaF]=dataFim.split("-")
-let atual=new Date(parseInt(anoI),parseInt(mesI)-1,parseInt(diaI))
-const fim=new Date(parseInt(anoF),parseInt(mesF)-1,parseInt(diaF))
+/* ====================================================
+GERAR DIAS
+==================================================== */
+let atual=new Date(dataInicio+"T00:00:00")
+const fim=new Date(dataFim+"T00:00:00")
+
 const dias=[]
+
 while(atual<=fim){
-const yv=atual.getFullYear()
-const mv=String(atual.getMonth()+1).padStart(2,"0")
-const dv=String(atual.getDate()).padStart(2,"0")
-dias.push(`${yv}-${mv}-${dv}`)
+dias.push(atual.toISOString().slice(0,10))
 atual.setDate(atual.getDate()+1)
 }
+/* ====================================================
+MAPA EXECUÇÕES
+==================================================== */
+const mapaExec=new Map()
+
+rotinasExec?.forEach(r=>{
+const nome=normalizar(r.rotina_modelos?.nome||"")
+const chave=`${r.data}_${nome}`
+mapaExec.set(chave,r.status)
+})
+/* ====================================================
+COLUNAS FIXAS (12)
+==================================================== */
+const colunas=[
+"Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café",
+"Medicação","Almoço","Lanche","Higiene (tarde)",
+"Jantar","Higiene (noite)","Troca de Fraldas (noite)"
+]
+/* ====================================================
+MATRIZ COMPLETA
+==================================================== */
+let matriz={}
+
+dias.forEach(dia=>{
+matriz[dia]={}
+colunas.forEach(c=>{
+const nomeNorm=normalizar(c)
+const chave=`${dia}_${nomeNorm}`
+matriz[dia][nomeNorm]=mapaExec.get(chave)||"pendente"
+})
+})
+/* ====================================================
+TÍTULO
+==================================================== */
 doc.setFont("Roboto","bold")
 doc.text("Rotinas por período",10,y)
 y+=6
+/* HEADER */
 doc.setFillColor(52,152,219)
 doc.rect(10,y-4,190,6,"F")
+
 doc.setTextColor(255,255,255)
-doc.setFont("Roboto","bold")
 doc.setFontSize(8)
+
 let x=10
 doc.text("Data",x,y)
 x+=22
-colunas.forEach((c,i)=>{doc.text(String(i+1),x,y,{align:"center"});x+=12})
-doc.setTextColor(0,0,0)
+
+colunas.forEach((c,i)=>{
+doc.text(String(i+1),x,y,{align:"center"})
+x+=12
+})
+
+doc.setTextColor(0)
 y+=6
+/* ====================================================
+LINHAS
+==================================================== */
 dias.forEach((dia,index)=>{
+
 let x=10
-if(index%2===0){doc.setFillColor(248,249,250);doc.rect(10,y-4,190,6,"F")}
+
+if(index%2===0){
+doc.setFillColor(248,249,250)
+doc.rect(10,y-4,190,6,"F")
+}
+
 const[dY,dM,dD]=dia.split("-")
 doc.text(`${dD}/${dM}/${dY}`,x,y)
 x+=22
+
 colunas.forEach(c=>{
-let status=(matriz[dia]||{})[normalizar(c)]
-const largura=9
-const altura=4.5
+
+let status=matriz[dia][normalizar(c)]
+
 if(status==="executado"){
 doc.setFillColor(39,174,96)
-doc.rect(x-4.5,y-3,largura,altura,"F")
+doc.rect(x-4.5,y-3,9,4.5,"F")
 doc.setTextColor(255,255,255)
 doc.setFont("Roboto","bold")
 doc.text("OK",x,y,{align:"center"})
 }else{
 doc.setFillColor(192,57,43)
-doc.rect(x-4.5,y-3,largura,altura,"F")
+doc.rect(x-4.5,y-3,9,4.5,"F")
 doc.setTextColor(255,255,255)
 doc.setFont("Roboto","bold")
 doc.text("X",x,y,{align:"center"})
 }
-doc.setTextColor(0,0,0)
+
+doc.setTextColor(0)
 doc.setFont("Roboto","normal")
 x+=12
+
 })
+
 y+=6
+
 if(y>250){doc.addPage();y=20}
+
 })
+/* ====================================================
+LEGENDA
+==================================================== */
 y+=5
 doc.setFont("Roboto","bold")
-doc.setFontSize(9)
 doc.text("Legenda:",10,y)
 y+=5
+
 doc.setFont("Roboto","normal")
 doc.setFontSize(8)
-const legenda=["1–Banho","2–Hig.(manhã)","3–Fraldas(manhã)","4–Água","5–Café","6–Medicação","7–Almoço","8–Lanche","9–Hig.(tarde)","10–Jantar","11–Hig.(noite)","12–Fraldas(noite)"]
+
+const legenda=[
+"1–Banho","2–Hig.(manhã)","3–Fraldas(manhã)","4–Água",
+"5–Café","6–Medicação","7–Almoço","8–Lanche",
+"9–Hig.(tarde)","10–Jantar","11–Hig.(noite)","12–Fraldas(noite)"
+]
+
 let lx=10,cont=0
+
 legenda.forEach(item=>{
 doc.text(item,lx,y)
 lx+=45
 cont++
 if(cont===4){y+=5;lx=10;cont=0}
 })
+/* ====================================================
+ANÁLISE AVANÇADA (NÍVEL PROFISSIONAL)
+==================================================== */
 y+=8
 doc.setFont("Roboto","bold")
 doc.text("Análise do paciente",10,y)
 y+=6
-doc.setFont("Roboto","normal")
+
 let total=0,executado=0
-Object.values(matriz).forEach(d=>{Object.values(d).forEach(st=>{total++;if(st==="executado")executado++})})
+
+Object.values(matriz).forEach(d=>{
+Object.values(d).forEach(st=>{
+total++
+if(st==="executado")executado++
+})
+})
+
 let perc=total?Math.round((executado/total)*100):0
+
 doc.text(`Execução geral das rotinas: ${perc}%`,10,y)
 y+=4
-const larguraBarra=180
-const progresso=(perc||0)/100
+
 doc.setFillColor(220,220,220)
-doc.rect(10,y,larguraBarra,5,"F")
+doc.rect(10,y,180,5,"F")
+
 doc.setFillColor(46,204,113)
-doc.rect(10,y,larguraBarra*progresso,5,"F")
-doc.setFontSize(8)
-doc.text(`${perc}%`,95,y+4,{align:"center"})
+doc.rect(10,y,180*(perc/100),5,"F")
+
 y+=10
-let analiseTexto=""
-let alertaTexto=""
-let riscoNivel="BAIXO"
+
+/* ====================================================
+ANÁLISE CLÍNICA EVOLUÍDA
+==================================================== */
+let analise=""
+let alerta=""
+
+/* 🔹 CLASSIFICAÇÃO BASE */
+if(perc>=85){
+analise="Paciente com elevada adesão às rotinas, indicando estabilidade clínica e bom manejo assistencial."
+}else if(perc>=60){
+analise="Paciente com adesão parcial às rotinas, necessitando monitoramento contínuo."
+}else{
+analise="Paciente com baixa execução das rotinas, indicando risco assistencial elevado."
+alerta+="⚠️ Baixa adesão às rotinas. "
+}
+
+/* 🔹 TENDÊNCIA */
 const diasOrdenados=Object.keys(matriz).sort()
 let execPorDia=[]
+
 diasOrdenados.forEach(d=>{
-let totalDia=0
-let execDia=0
+let t=0,e=0
 Object.values(matriz[d]).forEach(st=>{
-totalDia++
-if(st==="executado")execDia++
+t++
+if(st==="executado")e++
 })
-let percDia=totalDia?Math.round((execDia/totalDia)*100):0
-execPorDia.push(percDia)
+execPorDia.push(t?Math.round((e/t)*100):0)
 })
-let tendencia="estável"
+
+let tendencia="estavel"
+
 if(execPorDia.length>=2){
 const inicio=execPorDia[0]
 const fim=execPorDia[execPorDia.length-1]
+
 if(fim>inicio+10)tendencia="melhora"
 else if(fim<inicio-10)tendencia="piora"
 }
-if(perc>=80)riscoNivel="BAIXO"
-else if(perc>=50)riscoNivel="MODERADO"
-else riscoNivel="ALTO"
-if(riscoNivel==="BAIXO"){
-analiseTexto="Paciente com alta adesão às rotinas, indicando estabilidade clínica e adequado manejo assistencial."
-}else if(riscoNivel==="MODERADO"){
-analiseTexto="Paciente com adesão intermediária às rotinas, exigindo acompanhamento contínuo e ajustes no plano assistencial."
-}else{
-analiseTexto="Paciente com baixa execução das rotinas, sugerindo aos cuidadores que executem suas tarefas diariamente e não deixem de marcar "Ok", pois ausência destes procedimentos poderá elevar o risco do paciente e necessidade de intervenção imediata."
-}
+
 if(tendencia==="melhora"){
-analiseTexto+=" Observa-se evolução positiva ao longo do período analisado."
+analise+=" Observa-se evolução positiva ao longo do período."
 }
+
 if(tendencia==="piora"){
-analiseTexto+=" Observa-se queda na execução das rotinas, indicando possível deterioração do cuidado."
-alertaTexto+="⚠️ Queda de adesão identificada. "
+analise+=" Observa-se queda na execução das rotinas."
+alerta+="⚠️ Queda na qualidade do cuidado. "
 }
+
+/* 🔹 COMORBIDADES */
 if(paciente.has){
-analiseTexto+=" Controle rigoroso da pressão arterial é essencial."
+analise+=" Controle rigoroso da pressão arterial é essencial."
 }
+
 if(paciente.dm){
-analiseTexto+=" Monitoramento glicêmico frequente recomendado."
-alertaTexto+="⚠️ Risco metabólico. "
+analise+=" Monitoramento glicêmico frequente recomendado."
+alerta+="⚠️ Risco metabólico. "
 }
+
 if(paciente.cardiopatia){
-analiseTexto+=" Manter vigilância cardiovascular contínua."
-alertaTexto+="⚠️ Risco cardíaco. "
+analise+=" Manter vigilância cardiovascular contínua."
+alerta+="⚠️ Risco cardíaco. "
 }
+
 if(paciente.da){
-analiseTexto+=" Necessita suporte cognitivo contínuo."
+analise+=" Necessário suporte cognitivo contínuo."
 }
+
 if(paciente.acamado){
-analiseTexto+=" Alto risco para lesões por pressão, reforçar mudança de decúbito."
-alertaTexto+="⚠️ Risco de úlcera por pressão. "
+analise+=" Alto risco de lesões por pressão, reforçar mudança de decúbito."
+alerta+="⚠️ Risco de lesão por pressão. "
 }
+
+/* 🔹 PRESSÃO ARTERIAL */
 if(paciente.pressao_arterial){
 const pa=paciente.pressao_arterial.split("/")
 if(pa.length===2){
 const sist=parseInt(pa[0])
 const diast=parseInt(pa[1])
+
 if(sist>=140||diast>=90){
-analiseTexto+=" Pressão arterial acima do recomendado."
-alertaTexto+="⚠️ Hipertensão não controlada. "
-riscoNivel="ALTO"
+analise+=" Pressão arterial acima do recomendado."
+alerta+="⚠️ Hipertensão não controlada. "
+}else if(sist<100||diast<60){
+analise+=" Pressão arterial abaixo do ideal."
+alerta+="⚠️ Possível hipotensão. "
 }
 }
 }
+
+/* 🔹 DIETA */
 if(paciente.dieta_especial){
-analiseTexto+=" Dieta especial deve ser rigorosamente seguida."
+analise+=" Dieta especial deve ser rigorosamente seguida."
 }
-if(riscoNivel==="ALTO"){
-alertaTexto+="🚨 Paciente requer atenção imediata."
+
+/* 🔹 GRAU DE RISCO */
+if(paciente.grau_risco>=4){
+alerta+="🚨 Paciente classificado como alto risco clínico. "
 }
-doc.setFontSize(9)
+
+/* 🔹 ALERTA FINAL */
+if(perc<50){
+alerta+="🚨 Necessária intervenção imediata da equipe. "
+}
+
+/* ====================================================
+RENDER FINAL
+==================================================== */
 doc.setFont("Roboto","bold")
-doc.text(`Classificação de Risco: ${riscoNivel}`,10,y)
+doc.text(`Classificação: ${perc>=80?"BAIXO":perc>=50?"MODERADO":"ALTO"}`,10,y)
 y+=5
-if(alertaTexto){
+
+if(alerta){
 doc.setTextColor(192,57,43)
 doc.setFont("Roboto","bold")
-doc.text(alertaTexto,10,y,{maxWidth:180})
+doc.text(alerta,10,y,{maxWidth:180})
 y+=6
 doc.setTextColor(0,0,0)
 }
+
 doc.setFont("Roboto","normal")
-doc.text(analiseTexto,10,y,{maxWidth:180})
-y+=14
-doc.text("__________________________________________",10,y)
-y+=6
-const qrData=`Paciente:${paciente.nome_completo}\nPeriodo:${dataInicio} a ${dataFim}`
-const qrCanvas=document.createElement("canvas")
-await QRCode.toCanvas(qrCanvas,qrData,{width:80})
-const qrImg=qrCanvas.toDataURL("image/png")
-doc.addImage(qrImg,"PNG",170,y-10,25,25)
+doc.text(analise,10,y,{maxWidth:180})
+/* ====================================================
+ASSINATURA
+==================================================== */
+y+=12
+
+let nomeCompleto="Sistema"
+const usuarioId=localStorage.getItem("usuario_id")
+
+if(usuarioId){
+const {data:user}=await db.from("usuarios").select("nome_completo").eq("id",usuarioId).single()
+if(user?.nome_completo)nomeCompleto=user.nome_completo
+}
+
+doc.text("Responsável Técnico:",10,y)
+y+=5
+doc.text(nomeCompleto,10,y)
+
+doc.line(10,y+3,80,y+3)
+/* ====================================================
+RODAPÉ
+==================================================== */
 const totalPages=doc.getNumberOfPages()
+
 for(let i=1;i<=totalPages;i++){
 doc.setPage(i)
 doc.setFontSize(8)
 doc.setTextColor(120)
-doc.text(`Relatório Clínico - Lar Harmonia | Página ${i}/${totalPages}`,200,290,{align:"right"})
+doc.text(`Página ${i}/${totalPages}`,200,290,{align:"right"})
 }
-// 🔥 ANTES DO SAVE
+
 doc.setTextColor(0)
-// ASSINATURA
-const usuarioId=localStorage.getItem("usuario_id")
-let nomeCompleto="Sistema"
-if(usuarioId){
-const {data:user}=await db
-.from("usuarios")
-.select("nome_completo")
-.eq("id",usuarioId)
-.single()
-if(user && user.nome_completo){
-nomeCompleto=user.nome_completo
-}
-}doc.setFont("Roboto","bold")
-doc.text("Responsável Técnico:",10,y)
-y+=5
-doc.setFont("Roboto","normal")
-doc.text(nomeCompleto,10,y)
-y+=5
-doc.setDrawColor(0)
-doc.line(10,y,80,y)
-y+=4
-doc.setFontSize(8)
-doc.text("Assinatura digital",10,y)
-// RODAPÉ FINAL
 doc.text(`Gerado em: ${new Date().toLocaleString()}`,10,290)
-// 🔥 AGORA SIM SALVA
+/* ====================================================
+SAVE
+==================================================== */
 doc.save(`Relatorio_${paciente.nome_completo}.pdf`)
 }
 /* ====================================================
