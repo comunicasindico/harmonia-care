@@ -178,7 +178,12 @@ let html=`<div class="box"><h3>Dados Clínicos do Paciente</h3><table class="tab
 <tr><td><b>Pressão Arterial</b></td><td>${data.pressao_arterial??"-"}</td></tr>
 <tr><td><b>Dieta Especial</b></td><td>${data.dieta_especial?"SIM":"NÃO"} ${data.dieta_texto??""}</td></tr>
 <tr><td><b>Grau de Risco</b></td><td>${data.grau_risco??"-"}</td></tr>
-<tr><td><b>Outras Comorbidades</b></td><td>${data.outras_comorbidades??"-"}</td></tr>
+<tr>
+<td><b>Outras Comorbidades</b></td>
+<td style="color:#c0392b;font-weight:bold">
+${data.outras_comorbidades&&data.outras_comorbidades.trim()!==""?data.outras_comorbidades:"Não informado"}
+</td>
+</tr>
 </table></div>`
 box.innerHTML=html
 }
