@@ -484,8 +484,9 @@ const rotinasIds=(rotinas||[]).map(r=>r.id)
 const nomesRotinas={}
 rotinas?.forEach(r=>{nomesRotinas[r.id]=r.nome})
 const dias=[]
-let[diaI,mesI,anoI]=dataInicio.split("-")
-let[diaF,mesF,anoF]=dataFim.split("-")
+let[anoI,mesI,diaI]=dataInicio.split("-")
+let[anoF,mesF,diaF]=dataFim.split("-")
+
 let atual=new Date(parseInt(anoI),parseInt(mesI)-1,parseInt(diaI))
 const fim=new Date(parseInt(anoF),parseInt(mesF)-1,parseInt(diaF))
 while(atual<=fim){
