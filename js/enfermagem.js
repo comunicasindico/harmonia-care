@@ -9,7 +9,6 @@ let cor="#"
 for(let i=0;i<3;i++){let value=(hash>>(i*8))&255;cor+=("00"+value.toString(16)).slice(-2)}
 return cor
 }
-
 /* ====================================================
 020A – USUARIO LOGADO (BLINDADO)
 ==================================================== */
@@ -29,66 +28,51 @@ return{id:id||null,nome:nome,hierarquia:Number(hierarquia),perfil:perfil}
 022 – CARREGAR PACIENTES BUSCA (CORRIGIDO DEFINITIVO)
 ==================================================== */
 async function carregarPacientesBusca(){
-
 if(!db)return
-
 const select=document.getElementById("buscaPaciente")
 if(!select)return
-
 try{
-
 const {data,error}=await db
 .from("pacientes")
 .select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
 .order("nome_completo",{ascending:true})
-
 if(error){
 console.error("Erro ao carregar pacientes:",error)
 return;
 }
-
 let options='<option value="todos">TODOS</option>';
-
 if(Array.isArray(data)){
 for(let i=0;i<data.length;i++){
 const p=data[i];
 options+=`<option value="${p.id}">${p.nome_completo}</option>`;
 }
 }
-
 select.innerHTML=options
 select.value="todos"
-
 console.log("Pacientes carregados:",(data||[]).length)
-
 }catch(e){
 console.error("Erro geral pacientes:",e)
 }
-
 }
 /* ====================================================
 020C – DATA PADRONIZADA (CRÍTICO)
 ==================================================== */
 window.obterDataSelecionada=function(){
 const dataRaw=document.getElementById("dataInicio")?.value
-
 if(dataRaw && dataRaw.includes("/")){
 const [dia,mes,ano]=dataRaw.split("/")
 return `${ano}-${mes.padStart(2,"0")}-${dia.padStart(2,"0")}`
 }
-
 return dataRaw || new Date().toISOString().slice(0,10)
 }
 /* ====================================================
 021B – MUDAR TURNO (OBRIGATÓRIO)
 ==================================================== */
 async function mudarTurno(turno){
-
 TURNO_ATUAL=turno
 localStorage.setItem("turno_atual",turno)
-
 /* 🔥 BOTÕES VISUAIS */
 const btnManha=document.getElementById("btnManha")
 const btnTarde=document.getElementById("btnTarde")
@@ -101,11 +85,9 @@ if(btnNoite)btnNoite.classList.remove("turno-ativo")
 if(turno==="manha"&&btnManha)btnManha.classList.add("turno-ativo")
 if(turno==="tarde"&&btnTarde)btnTarde.classList.add("turno-ativo")
 if(turno==="noite"&&btnNoite)btnNoite.classList.add("turno-ativo")
-
 /* 🔥 RECARREGA DADOS */
 if(typeof carregarRotinas==="function")await carregarRotinas()
 if(typeof montarGradePeriodo==="function")await montarGradePeriodo()
-
 }
 /* ====================================================
 023 – CARREGAR ROTINAS (CORRIGIDO DEFINITIVO)
@@ -118,46 +100,36 @@ const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todo
 
 const dataRaw=document.getElementById("dataInicio")?.value
 const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-
 let pacientes=[]
 const {data:pacs}=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
 pacientes=pacs||[]
-
 pacientes.sort((a,b)=>(a.nome_completo||"").localeCompare(b.nome_completo||"","pt-BR"))
-
 if(pacienteSelecionado!=="todos"){
 pacientes=pacientes.filter(p=>String(p.id)===String(pacienteSelecionado))
 }
-
 const {data:rotinas}=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
-
 const rotinasTurno=(rotinas||[])
 .filter(r=>!r.turno||r.turno===turno)
 .sort((a,b)=>(a.ordem||99)-(b.ordem||99))
 
 const {data:execucoes}=await db.from("rotinas_execucao").select("*").eq("data",dataHoje).eq("turno",turno)
-
 const mapaExec=new Map()
 ;(execucoes||[]).forEach(e=>{
 const chave=`${String(e.paciente_id)}_${String(e.rotina_id)}`
 mapaExec.set(chave,e)
 })
-
 const lista=[]
 
 for(const p of pacientes){
 for(const r of rotinasTurno){
-
 const chave=`${String(p.id)}_${String(r.id)}`
 const exec=mapaExec.get(chave)
-
 lista.push({
 paciente_id:p.id,
 rotina_id:r.id,
 paciente:p.nome_completo,
 rotina:r.nome,
 ordem:r.ordem||99,
-
 status:exec && exec.status==="executado"?"executado":"pendente",
 
 profissional:exec && exec.status==="executado"
@@ -172,7 +144,6 @@ acamado:p.acamado,
 pa:p.pressao_arterial
 })
 }}
-
 lista.sort((a,b)=>{
 const nomeA=(a.paciente||"").toLowerCase()
 const nomeB=(b.paciente||"").toLowerCase()
@@ -185,145 +156,63 @@ ROTINAS_CACHE=lista
 renderizarRotinas(lista)
 calcularIndicadores(lista)
 }
-
 /* ====================================================
 024 – RENDERIZAR ROTINAS (LAYOUT PROFISSIONAL FINAL)
 ==================================================== */
 function renderizarRotinas(lista){
-
 const tbody=document.getElementById("rotinas")
 if(!tbody)return
-
 let html=""
 const pacientes={}
-
-/* 🔹 AGRUPAR */
 lista.forEach(r=>{
 if(!pacientes[r.paciente_id]){
-pacientes[r.paciente_id]={
-nome:r.paciente,
-rotinas:[]
-}
+pacientes[r.paciente_id]={nome:r.paciente,rotinas:[]}
 }
 pacientes[r.paciente_id].rotinas.push(r)
 })
-
-/* 🔹 LOOP PACIENTES */
 Object.keys(pacientes).forEach(pid=>{
-
 const p=pacientes[pid]
-
 let rotinasHTML=""
 let total=p.rotinas.length
 let executadas=0
-
 p.rotinas.forEach(r=>{
-
 if(r.status==="executado")executadas++
-
 let nomeProf=""
 let corProf="#64748b"
-
 if(r.status==="executado"){
-if(r.profissional && String(r.profissional).trim()!==""){
+if(r.profissional&&String(r.profissional).trim()!==""){
 nomeProf=r.profissional
 corProf=obterCorUsuario(nomeProf)
 }
 }
-
-rotinasHTML+=`
-<div class="badge-rotina ${r.status==="executado"?"rotina-ok":"rotina-pendente"}"
-data-paciente="${r.paciente_id}"
-data-rotina="${r.rotina_id}">
-${r.rotina}
-${r.status==="executado"
-?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`
-:""}
-</div>
-`
+rotinasHTML+=`<div class="badge-rotina ${r.status==="executado"?"rotina-ok":"rotina-pendente"}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">${r.rotina}${r.status==="executado"?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}</div>`
 })
-
 let percentual=total?Math.round((executadas/total)*100):0
-
-/* 🔹 LINHA PACIENTE */
-html+=`
-<tr class="linha-paciente">
-
-<td class="col-paciente">
-${p.nome}
-</td>
-
-<td class="col-progresso">
-
-<div class="progresso-box">
-<span class="progresso-label">${percentual}% (${executadas}/${total})</span>
-
-<div class="btn-area">
-<button class="btn-todos" onclick="executarTodos('${pid}')">
-Concluir Todas
-</button>
-</div>
-</div>
-
-</td>
-
-<td class="col-rotinas">
-<div class="rotinas-box">
-${rotinasHTML}
-</div>
-</td>
-
-</tr>
-`
-
-})
-
-/* 🔥 BOTÕES POR ROTINA (EMBAIXO DE CADA PACIENTE) */
 let rotinasUnicas={}
-
 p.rotinas.forEach(r=>{
 rotinasUnicas[r.rotina_id]=r.rotina
 })
 let botoesHTML=""
-
 Object.keys(rotinasUnicas).forEach(rotinaId=>{
-botoesHTML+=`
-<button class="btn-rotina" 
-onclick="executarRotinaTodos('${rotinaId}')">
-${rotinasUnicas[rotinaId]}
-</button>`
+botoesHTML+=`<button class="btn-rotina" onclick="executarRotinaTodos('${rotinaId}')">${rotinasUnicas[rotinaId]}</button>`
 })
-html+=`
-<tr>
-<td colspan="3">
-<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:6px">
-${botoesHTML}
-</div>
-</td>
-</tr>`
-/* 🔥 RENDER FINAL */
+html+=`<tr class="linha-paciente"><td class="col-paciente">${p.nome}</td><td class="col-progresso"><div class="progresso-box"><span class="progresso-label">${percentual}% (${executadas}/${total})</span><div class="btn-area"><button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button></div></div></td><td class="col-rotinas"><div class="rotinas-box">${rotinasHTML}</div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:6px">${botoesHTML}</div></td></tr>`
+})
 tbody.innerHTML=html
-/* ====================================================
-🔥 EVENTOS CLICK ROTINAS
-==================================================== */
 setTimeout(()=>{
 document.querySelectorAll(".badge-rotina").forEach(el=>{
 el.addEventListener("click",function(){
-
 const pacienteId=this.dataset.paciente
 const rotinaId=this.dataset.rotina
 const status=this.classList.contains("rotina-ok")?"executado":"pendente"
-
 if(status==="executado"){
 desfazerRotina(pacienteId,rotinaId,this)
 }else{
 executarRotina(pacienteId,rotinaId)
 }
-
 })
 })
 },100)
-
 }
 /* ====================================================
 024B – EXECUTAR ROTINA (FINAL)
