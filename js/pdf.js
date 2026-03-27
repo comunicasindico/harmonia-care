@@ -80,7 +80,11 @@ y+=45
 const colunas=["Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café","Medicação","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene (noite)","Troca de Fraldas (noite)"]
 function normalizar(txt){return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()}
 let matriz={}
+const turnoAtual=(TURNO_ATUAL||"manha").toLowerCase().trim()
 rotinasExec?.forEach(r=>{
+if(!r.turno)return
+if(r.turno.toLowerCase().trim()!==turnoAtual)return
+
 if(!matriz[r.data])matriz[r.data]={}
 const nome=r.rotina_modelos?.nome||""
 matriz[r.data][normalizar(nome)]=r.status
