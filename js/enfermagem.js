@@ -1704,4 +1704,3 @@ return texto
 window.executarRotina = executarRotina
 window.executarTodos = executarTodos
 window.executarRotinaTodos = executarRotinaTodos
-window.concluirPendentes = concluirPendentes
