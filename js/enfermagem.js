@@ -430,18 +430,24 @@ executarRotina(pacienteId,rotinaId)
 024B – EXECUTAR ROTINA (FINAL)
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId){
-console.log("CLICOU ROTINA", pacienteId, rotinaId)
+
+console.log("EXECUTAR ROTINA", pacienteId, rotinaId)
+
 if(!db)return
 
 const dataHoje=new Date().toISOString().slice(0,10)
-const turno=(TURNO_ATUAL||"manha")
+const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 
-const user=obterUsuarioLogado()
+const user=obterUsuarioLogado()||{}
 
-const usuarioId=user.id||localStorage.getItem("usuario_id")
-const nomeProfissional=user.nome||"admin"
+const usuarioId=user.id||localStorage.getItem("usuario_id")||null
+const nomeProfissional=user.nome||localStorage.getItem("usuario_nome")||"admin"
 
-const {error}=await db.from("rotinas_execucao").upsert({
+const empresaId=EMPRESA_ID||localStorage.getItem("empresa_id")
+
+try{
+
+const {error}=await db.from("rotinas_execucao").insert({
 paciente_id:pacienteId,
 rotina_id:rotinaId,
 data:dataHoje,
@@ -449,35 +455,23 @@ turno:turno,
 status:"executado",
 usuario_id:usuarioId,
 profissional_nome:nomeProfissional,
-empresa_id:EMPRESA_ID,
+empresa_id:empresaId,
 horario_executado:new Date().toISOString()
-},{
-onConflict:"paciente_id,rotina_id,data,turno"
 })
 
 if(error){
-console.error("Erro:",error)
+console.error("ERRO AO SALVAR:",error)
+alert("Erro ao salvar rotina")
 return
 }
 
-/* 🔥 ATUALIZA IMEDIATO (ANTES DO BANCO VOLTAR) */
-const item=ROTINAS_CACHE.find(r=>
-String(r.paciente_id)===String(pacienteId)&&
-String(r.rotina_id)===String(rotinaId)
-)
+console.log("SALVOU OK")
 
-if(item){
-item.status="executado"
-item.profissional=nomeProfissional
-}
-
-/* 🔄 ATUALIZA TELA IMEDIATA */
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
-
-/* 🔄 SINCRONIZA COM BANCO */
 await carregarRotinas()
 
+}catch(e){
+console.error("ERRO GERAL:",e)
+}
 }
 /* ====================================================
 026 – CONCLUIR TODAS (FINAL CORRETO)
