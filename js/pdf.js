@@ -23,7 +23,6 @@ return`${dia}-${mes}-${ano}`
 080 – PDF PACIENTE (COMPLETO PROFISSIONAL FINAL)
 ==================================================== */
 async function gerarPDFPaciente(){
-
 if(!db)return
 /* ====================================================
 INPUTS
@@ -51,7 +50,6 @@ const {data:rotinasExec}=await db
 .from("rotinas_execucao")
 .select("*,rotina_modelos(nome)")
 .eq("paciente_id",pacienteId)
-.eq("turno",turnoAtual)
 .gte("data",dataInicio)
 .lte("data",dataFim)
 /* ====================================================
