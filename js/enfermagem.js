@@ -333,17 +333,12 @@ const classeVisual=r.status==="executado"?"rotina-ok":"rotina-pendente"
 
 let perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
 
-let onclickAttr=""
-
-if(r.status==="executado"){
-if(perfil==="administrador"){
-onclickAttr=`onclick="desfazerRotina('${r.paciente_id}','${r.rotina_id}',this)"`
-}
-}else{
-onclickAttr=`onclick="window.executarRotina('${r.paciente_id}','${r.rotina_id}')"`
-}
 rotinasHTML+=`
-<div class="badge-rotina ${classeVisual} ${perfil==="administrador"&&r.status==="executado"?"admin":""}" ${onclickAttr}>
+<div class="badge-rotina ${classeVisual} ${perfil==="administrador"&&r.status==="executado"?"admin":""}"
+data-paciente="${r.paciente_id}"
+data-rotina="${r.rotina_id}"
+data-status="${r.status}"
+>
 ${r.rotina}
 ${r.status==="executado"
 ?`<span class="profissional" style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`
@@ -403,6 +398,33 @@ html+=`<tr style="background:#f0fdf4;font-weight:bold">
 }
 
 tbody.innerHTML=html
+
+/* ====================================================
+🔥 ATIVAR CLIQUES DAS ROTINAS (OBRIGATÓRIO)
+==================================================== */
+setTimeout(()=>{
+document.querySelectorAll(".badge-rotina").forEach(el=>{
+el.addEventListener("click",function(){
+
+const pacienteId=this.dataset.paciente
+const rotinaId=this.dataset.rotina
+const status=this.dataset.status
+
+const perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
+
+console.log("CLICK OK", pacienteId, rotinaId)
+
+if(status==="executado"){
+if(perfil==="administrador"){
+desfazerRotina(pacienteId,rotinaId,this)
+}
+}else{
+executarRotina(pacienteId,rotinaId)
+}
+
+})
+})
+},100)
 }
 /* ====================================================
 024B – EXECUTAR ROTINA (FINAL)
@@ -1187,17 +1209,12 @@ const classeVisual=r.status==="executado"?"rotina-ok":"rotina-pendente"
 
 let perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
 
-let onclickAttr=""
-
-if(r.status==="executado"){
-if(perfil==="administrador"){
-onclickAttr=`onclick="desfazerRotina('${r.paciente_id}','${r.rotina_id}',this)"`
-}
-}else{
-onclickAttr=`onclick="window.executarRotina('${r.paciente_id}','${r.rotina_id}')"`
-}
 rotinasHTML+=`
-<div class="badge-rotina ${classeVisual} ${perfil==="administrador"&&r.status==="executado"?"admin":""}" ${onclickAttr}>
+<div class="badge-rotina ${classeVisual} ${perfil==="administrador"&&r.status==="executado"?"admin":""}"
+data-paciente="${r.paciente_id}"
+data-rotina="${r.rotina_id}"
+data-status="${r.status}"
+>
 ${r.rotina}
 ${r.status==="executado"
 ?`<span class="profissional" style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`
@@ -1258,6 +1275,33 @@ html+=`<tr style="background:#f0fdf4;font-weight:bold">
 }
 
 tbody.innerHTML=html
+
+/* ====================================================
+🔥 ATIVAR CLIQUES DAS ROTINAS (OBRIGATÓRIO)
+==================================================== */
+setTimeout(()=>{
+document.querySelectorAll(".badge-rotina").forEach(el=>{
+el.addEventListener("click",function(){
+
+const pacienteId=this.dataset.paciente
+const rotinaId=this.dataset.rotina
+const status=this.dataset.status
+
+const perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase()
+
+console.log("CLICK OK", pacienteId, rotinaId)
+
+if(status==="executado"){
+if(perfil==="administrador"){
+desfazerRotina(pacienteId,rotinaId,this)
+}
+}else{
+executarRotina(pacienteId,rotinaId)
+}
+
+})
+})
+},100)
 }
 /* ====================================================
 024B – EXECUTAR ROTINA (CORREÇÃO DEFINITIVA SUPABASE)
