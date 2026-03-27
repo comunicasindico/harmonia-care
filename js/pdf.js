@@ -248,7 +248,7 @@ analiseTexto="Paciente com alta adesão às rotinas, indicando estabilidade clí
 }else if(riscoNivel==="MODERADO"){
 analiseTexto="Paciente com adesão intermediária às rotinas, exigindo acompanhamento contínuo e ajustes no plano assistencial."
 }else{
-analiseTexto="Paciente com baixa execução das rotinas, indicando risco elevado e necessidade de intervenção imediata."
+analiseTexto="Paciente com baixa execução das rotinas, sugerindo aos cuidadores que executem suas tarefas diariamente e não deixem de marcar "Ok", pois ausência destes procedimentos poderá elevar o risco do paciente e necessidade de intervenção imediata."
 }
 if(tendencia==="melhora"){
 analiseTexto+=" Observa-se evolução positiva ao longo do período analisado."
