@@ -339,7 +339,8 @@ ${r.status==="executado"
 ?`onclick="desfazerRotina('${r.paciente_id}','${r.rotina_id}',this)"`
 :"")
 :`onclick="window.executarRotina('${r.paciente_id}','${r.rotina_id}')"`
-}>
+}
+>
 ${r.rotina}
 ${r.status==="executado"
 ?`<span class="profissional" style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`
@@ -1187,8 +1188,9 @@ ${r.status==="executado"
 ?(perfil==="administrador"
 ?`onclick="desfazerRotina('${r.paciente_id}','${r.rotina_id}',this)"`
 :"")
-:`onclick="window.executarRotina('${r.paciente_id}','${r.rotina_id}',this)"`
-}>
+:`onclick="window.executarRotina('${r.paciente_id}','${r.rotina_id}')"`
+}
+>
 ${r.rotina}
 ${r.status==="executado"
 ?`<span class="profissional" style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`
