@@ -176,29 +176,28 @@ let rotinasHTML=""
 let total=p.rotinas.length
 let executadas=0
 p.rotinas.forEach(r=>{
-if(r.status==="executado")executadas++
+const status=(r.status||"neutro")
+if(status==="executado")executadas++
 let nomeProf=""
 let corProf="#64748b"
-if(r.status==="executado"){
+if(status==="executado"){
 if(r.profissional&&String(r.profissional).trim()!==""){
 nomeProf=r.profissional
 corProf=obterCorUsuario(nomeProf)
 }
 }
-rotinasHTML+=`<div class="badge-rotina ${r.status==="executado"?"rotina-ok":"rotina-pendente"}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">${r.rotina}${r.status==="executado"?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}</div>`
+rotinasHTML+=`<div class="badge-rotina ${
+status==="executado"
+?"rotina-ok"
+:(r.status==="pendente"?"rotina-pendente":"rotina-neutra")
+}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">
+${r.rotina}
+${r.status==="executado"?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}
+</div>`
 })
 let percentual=total?Math.round((executadas/total)*100):0
 html+=`<tr class="linha-paciente"><td class="col-paciente">${p.nome}</td><td class="col-progresso"><div class="progresso-box"><span class="progresso-label">${percentual}% (${executadas}/${total})</span><div class="btn-area"><button class="btn-todos" onclick="executarTodos('${pid}')">Concluir Todas</button></div></div></td><td class="col-rotinas"><div class="rotinas-box">${rotinasHTML}</div></td></tr>`
 })
-const rotinasUnicas={}
-lista.forEach(r=>{
-rotinasUnicas[r.rotina_id]=r.rotina
-})
-let botoesHTML=""
-Object.keys(rotinasUnicas).forEach(rotinaId=>{
-botoesHTML+=`<button class="btn-rotina" onclick="executarRotinaTodos('${rotinaId}')">${rotinasUnicas[rotinaId]}</button>`
-})
-html+=`<tr class="linha-todos"><td></td><td></td><td><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">${botoesHTML}</div></td></tr>`
 tbody.innerHTML=html
 setTimeout(()=>{
 document.querySelectorAll(".badge-rotina").forEach(el=>{
@@ -459,53 +458,57 @@ return`${a}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`
 return v
 }
 /* ====================================================
-036 – GRADE REAL BASEADA NO BANCO (CORREÇÃO DEFINITIVA)
+036 – GRADE REAL BASEADA NO BANCO (CORREÇÃO DEFINITIVA FINAL)
 ==================================================== */
 async function montarGradePeriodo(){
 if(!db)return
 const pacienteId=document.getElementById("buscaPaciente")?.value
 const dataInicio=normalizarDataISO(document.getElementById("dataInicio")?.value)
 const dataFim=normalizarDataISO(document.getElementById("dataFim")?.value)
-const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 if(!pacienteId||pacienteId==="todos"){
 document.getElementById("gradePeriodo").innerHTML=""
 return
 }
-let turnoAtual=(TURNO_ATUAL||"manha").toLowerCase().trim()
-
+/* 🔥 BUSCA TODAS EXECUÇÕES (SEM FILTRO DE TURNO) */
 const {data:execucoes,error}=await db
 .from("rotinas_execucao")
-.select("*")
+.select("*,rotina_modelos(nome)")
 .eq("paciente_id",pacienteId)
-.eq("turno",turnoAtual)
 .gte("data",dataInicio)
 .lte("data",dataFim)
 
-if(error){console.error("Erro ao buscar execuções",error);return}
-const mapa={}
-execucoes.forEach(e=>{
-if(!mapa[e.data])mapa[e.data]=[]
-mapa[e.data].push(e)
-})
-const ordemFixa=["Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café","Medicação","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene (noite)","Troca de Fraldas (noite)"]
+if(error){console.error("Erro execuções",error);return}
+/* 🔥 NORMALIZADOR PADRÃO */
+function normalizar(txt){
+return (txt||"")
+.toLowerCase()
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.trim()
+}
+/* 🔥 ORDEM FIXA (PADRÃO SISTEMA INTEIRO) */
+const ordemFixa=[
+"Banho",
+"Higiene (manhã)",
+"Troca de Fraldas (manhã)",
+"Oferta de Água",
+"Café",
+"Medicação",
+"Almoço",
+"Lanche",
+"Higiene (tarde)",
+"Jantar",
+"Higiene (noite)",
+"Troca de Fraldas (noite)"
+]
 
-const {data:rotinas}=await db
-.from("rotina_modelos")
-.select("id,nome,ordem,turno")
-.eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true)
-.eq("turno",turnoAtual)
-.order("ordem",{ascending:true})
-
-const rotinasIds=(rotinas||[]).map(r=>r.id)
-const nomesRotinas={}
-rotinas?.forEach(r=>{nomesRotinas[r.id]=r.nome})
+/* 🔥 GERAR DIAS */
 const dias=[]
-let[anoI,mesI,diaI]=dataInicio.split("-")
-let[anoF,mesF,diaF]=dataFim.split("-")
+let [anoI,mesI,diaI]=dataInicio.split("-")
+let [anoF,mesF,diaF]=dataFim.split("-")
+let atual=new Date(anoI,mesI-1,diaI)
+const fim=new Date(anoF,mesF-1,diaF)
 
-let atual=new Date(parseInt(anoI),parseInt(mesI)-1,parseInt(diaI))
-const fim=new Date(parseInt(anoF),parseInt(mesF)-1,parseInt(diaF))
 while(atual<=fim){
 const y=atual.getFullYear()
 const m=String(atual.getMonth()+1).padStart(2,"0")
@@ -513,33 +516,76 @@ const d=String(atual.getDate()).padStart(2,"0")
 dias.push(`${y}-${m}-${d}`)
 atual.setDate(atual.getDate()+1)
 }
-let html=`<div style="margin-top:20px"><b>Rotinas por período</b><table style="width:100%;border-collapse:collapse;font-size:12px">`
-html+=`<tr style="background:#f1f1f1"><th>Data</th>`
-rotinasIds.forEach(id=>{html+=`<th>${nomesRotinas[id]||id}</th>`})
-html+=`</tr>`
+
+/* 🔥 MAPA EXECUÇÕES (PADRÃO PDF) */
+const mapaExec=new Map()
+execucoes?.forEach(r=>{
+const nome=normalizar(r.rotina_modelos?.nome||"")
+const chave=`${r.data}_${nome}`
+mapaExec.set(chave,r.status)
+})
+
+/* 🔥 MONTAR MATRIZ COMPLETA */
+let matriz={}
 dias.forEach(dia=>{
+matriz[dia]={}
+ordemFixa.forEach(nome=>{
+const nomeNorm=normalizar(nome)
+const chave=`${dia}_${nomeNorm}`
+if(mapaExec.has(chave)){
+matriz[dia][nomeNorm]=mapaExec.get(chave)
+}else{
+matriz[dia][nomeNorm]="neutro"
+}
+})
+})
+
+/* 🔥 RENDER */
+let html=`<div style="margin-top:20px"><b>Rotinas por período</b><table style="width:100%;border-collapse:collapse;font-size:12px">`
+
+html+=`<tr style="background:#3498db;color:#fff"><th>Data</th>`
+ordemFixa.forEach((_,i)=>{
+html+=`<th style="text-align:center">${i+1}</th>`
+})
+html+=`</tr>`
+
+dias.forEach((dia,index)=>{
 const[dY,dM,dD]=dia.split("-")
 const dataBR=`${dD}/${dM}/${dY}`
-html+=`<tr><td><b>${dataBR}</b></td>`
-rotinasIds.forEach(rid=>{
-const lista=(mapa[dia]||[]).filter(e=>String(e.rotina_id)===String(rid))
-const total=lista.length
-const executadas=lista.filter(e=>e.status==="executado").length
+
+html+=`<tr ${index%2===0?'style="background:#f9fafb"':''}>`
+html+=`<td><b>${dataBR}</b></td>`
+
+ordemFixa.forEach(nome=>{
+const status=matriz[dia][normalizar(nome)]
+
 let celula=""
-if(total===0){
-celula=`<span style="color:#bdc3c7;font-weight:bold">—</span>`
-}else if(executadas===total){
-celula=`<span style="color:#2ecc71;font-weight:bold">✔</span>`
-}else if(executadas>0){
-celula=`<span style="color:#f39c12;font-weight:bold">⚠️</span>`
-}else{
+if(status==="executado"){
+celula=`<span style="color:#27ae60;font-weight:bold">✔</span>`
+}else if(status==="pendente"){
 celula=`<span style="color:#e74c3c;font-weight:bold">✖</span>`
+}else{
+celula=`<span style="color:#bdc3c7;font-weight:bold">—</span>`
 }
+
 html+=`<td style="text-align:center">${celula}</td>`
 })
+
 html+=`</tr>`
 })
-html+=`</table></div>`
+
+html+=`</table>`
+
+/* 🔥 LEGENDA */
+html+=`<div style="margin-top:10px;font-size:11px">
+<b>Legenda:</b><br>
+1–Banho | 2–Hig.(manhã) | 3–Fraldas(manhã) | 4–Água<br>
+5–Café | 6–Medicação | 7–Almoço | 8–Lanche<br>
+9–Hig.(tarde) | 10–Jantar | 11–Hig.(noite) | 12–Fraldas(noite)
+</div>`
+
+html+=`</div>`
+
 document.getElementById("gradePeriodo").innerHTML=html
 }
 /* ====================================================
