@@ -174,8 +174,7 @@ mostrarProgresso()
 bloquearTela()
 
 const dataRaw=document.getElementById("dataInicio")?.value
-const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
-
+const dataHoje=obterDataSelecionada()
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 
 const user=obterUsuarioLogado()
