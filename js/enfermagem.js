@@ -55,7 +55,7 @@ return{id:id||null,nome:nome,hierarquia:Number(hierarquia),perfil:perfil}
 /* ====================================================
 020C – DATA PADRONIZADA (CRÍTICO)
 ==================================================== */
-function obterDataSelecionada(){
+window.obterDataSelecionada=function(){
 const dataRaw=document.getElementById("dataInicio")?.value
 
 if(dataRaw && dataRaw.includes("/")){
