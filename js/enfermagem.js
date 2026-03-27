@@ -171,27 +171,40 @@ calcularIndicadores(lista)
 }
 
 /* ====================================================
-024 – RENDERIZAR ROTINAS (CORRIGIDO)
+024 – RENDERIZAR ROTINAS (LAYOUT PROFISSIONAL FINAL)
 ==================================================== */
 function renderizarRotinas(lista){
+
 const tbody=document.getElementById("rotinas")
 if(!tbody)return
 
 let html=""
 const pacientes={}
 
+/* 🔹 AGRUPAR */
 lista.forEach(r=>{
 if(!pacientes[r.paciente_id]){
-pacientes[r.paciente_id]={nome:r.paciente,rotinas:[]}
+pacientes[r.paciente_id]={
+nome:r.paciente,
+rotinas:[]
+}
 }
 pacientes[r.paciente_id].rotinas.push(r)
 })
 
+/* 🔹 LOOP PACIENTES */
 Object.keys(pacientes).forEach(pid=>{
+
 const p=pacientes[pid]
 
 let rotinasHTML=""
+let total=p.rotinas.length
+let executadas=0
+
 p.rotinas.forEach(r=>{
+
+if(r.status==="executado")executadas++
+
 let nomeProf=""
 let corProf="#64748b"
 
@@ -207,25 +220,51 @@ rotinasHTML+=`
 data-paciente="${r.paciente_id}"
 data-rotina="${r.rotina_id}">
 ${r.rotina}
-${r.status==="executado"?`<span style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`:""}
-</div>`
+${r.status==="executado"
+?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`
+:""}
+</div>
+`
 })
 
-html+=`<tr>
-<td>${p.nome}</td>
-<td>
-<div class="rotinas-linha">${rotinasHTML}</div>
+let percentual=total?Math.round((executadas/total)*100):0
 
-<div style="margin-top:6px">
+/* 🔹 LINHA PACIENTE */
+html+=`
+<tr class="linha-paciente">
+
+<td class="col-paciente">
+${p.nome}
+</td>
+
+<td class="col-progresso">
+
+<div class="progresso-box">
+<span class="progresso-label">${percentual}% (${executadas}/${total})</span>
+
+<div class="btn-area">
 <button class="btn-todos" onclick="executarTodos('${pid}')">
 Concluir Todas
 </button>
 </div>
+</div>
 
 </td>
-</tr>`
+
+<td class="col-rotinas">
+<div class="rotinas-box">
+${rotinasHTML}
+</div>
+</td>
+
+</tr>
+`
+
 })
-/* 🔥 TODOS OS PACIENTES POR ROTINA */
+
+/* ====================================================
+🔥 TODOS OS PACIENTES POR ROTINA (CORRIGIDO)
+==================================================== */
 const rotinasUnicas={}
 
 lista.forEach(r=>{
@@ -238,20 +277,32 @@ Object.keys(rotinasUnicas).forEach(rotinaId=>{
 rotinasTodosHTML+=`
 <button class="btn-rotina" onclick="executarRotinaTodos('${rotinaId}')">
 ${rotinasUnicas[rotinaId]}
-</button>`
+</button>
+`
 })
 
 html+=`
-<tr style="background:#f0fdf4;font-weight:bold">
-<td>Todos os Pacientes</td>
-<td>—</td>
-<td>${rotinasTodosHTML}</td>
-</tr>`
+<tr class="linha-geral">
+<td colspan="3">
+
+<div class="todos-rotinas-box">
+${rotinasTodosHTML}
+</div>
+
+</td>
+</tr>
+`
+
+/* 🔥 RENDER FINAL */
 tbody.innerHTML=html
 
+/* ====================================================
+🔥 EVENTOS CLICK ROTINAS
+==================================================== */
 setTimeout(()=>{
 document.querySelectorAll(".badge-rotina").forEach(el=>{
 el.addEventListener("click",function(){
+
 const pacienteId=this.dataset.paciente
 const rotinaId=this.dataset.rotina
 const status=this.classList.contains("rotina-ok")?"executado":"pendente"
@@ -261,9 +312,11 @@ desfazerRotina(pacienteId,rotinaId,this)
 }else{
 executarRotina(pacienteId,rotinaId)
 }
+
 })
 })
 },100)
+
 }
 
 /* ====================================================
