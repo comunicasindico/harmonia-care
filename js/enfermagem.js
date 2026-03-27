@@ -216,8 +216,12 @@ document.querySelectorAll(".badge-rotina").forEach(el=>{
 el.addEventListener("click",function(){
 const pacienteId=this.dataset.paciente
 const rotinaId=this.dataset.rotina
-const status=this.classList.contains("rotina-ok")?"executado":"pendente"
-if(status==="executado"){
+const isExecutado=
+this.classList.contains("rotina-ok-manha")||
+this.classList.contains("rotina-ok-tarde")||
+this.classList.contains("rotina-ok-noite")
+
+const status=isExecutado?"executado":"pendente"if(status==="executado"){
 desfazerRotina(pacienteId,rotinaId,this)
 }else{
 executarRotina(pacienteId,rotinaId)
