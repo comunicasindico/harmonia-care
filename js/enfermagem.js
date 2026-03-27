@@ -112,7 +112,10 @@ const rotinasTurno=(rotinas||[])
 .filter(r=>!r.turno||r.turno===turno)
 .sort((a,b)=>(a.ordem||99)-(b.ordem||99))
 
-const {data:execucoes}=await db.from("rotinas_execucao").select("*").eq("data",dataHoje).eq("turno",turno)
+const {data:execucoes}=await db
+.from("rotinas_execucao")
+.select("*")
+.eq("data",dataHoje)
 const mapaExec=new Map()
 ;(execucoes||[]).forEach(e=>{
 const chave=`${String(e.paciente_id)}_${String(e.rotina_id)}`
