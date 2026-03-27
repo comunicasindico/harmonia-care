@@ -75,7 +75,6 @@ try{
 const {data,error}=await db
 .from("pacientes")
 .select("id,nome_completo")
-.eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
 .order("nome_completo",{ascending:true})
 
