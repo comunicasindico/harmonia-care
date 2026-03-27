@@ -425,11 +425,11 @@ executarRotina(pacienteId,rotinaId)
 },100)
 }
 /* ====================================================
-024B – EXECUTAR ROTINA (FINAL)
+024B – EXECUTAR ROTINA (FINAL CORRIGIDO DEFINITIVO)
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId){
 
-console.log("EXECUTAR ROTINA", pacienteId, rotinaId)
+console.log("CLICOU ROTINA", pacienteId, rotinaId)
 
 if(!db)return
 
@@ -440,12 +440,11 @@ const user=obterUsuarioLogado()||{}
 
 const usuarioId=user.id||localStorage.getItem("usuario_id")||null
 const nomeProfissional=user.nome||localStorage.getItem("usuario_nome")||"admin"
-
 const empresaId=EMPRESA_ID||localStorage.getItem("empresa_id")
 
 try{
 
-const {error}=await db.from("rotinas_execucao").insert({
+const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:pacienteId,
 rotina_id:rotinaId,
 data:dataHoje,
@@ -455,21 +454,33 @@ usuario_id:usuarioId,
 profissional_nome:nomeProfissional,
 empresa_id:empresaId,
 horario_executado:new Date().toISOString()
+},{
+onConflict:"paciente_id,rotina_id,data,turno"
 })
 
 if(error){
-console.error("ERRO AO SALVAR:",error)
-alert("Erro ao salvar rotina")
+console.error("ERRO UPSERT:",error)
 return
 }
 
-console.log("SALVOU OK")
+/* 🔥 ATUALIZA IMEDIATO NA TELA */
+const item=ROTINAS_CACHE.find(r=>
+String(r.paciente_id)===String(pacienteId)&&
+String(r.rotina_id)===String(rotinaId)
+)
 
-await carregarRotinas()
+if(item){
+item.status="executado"
+item.profissional=nomeProfissional
+}
+
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
 
 }catch(e){
 console.error("ERRO GERAL:",e)
 }
+
 }
 /* ====================================================
 026 – CONCLUIR TODAS (FINAL CORRETO)
@@ -1294,60 +1305,62 @@ executarRotina(pacienteId,rotinaId)
 },100)
 }
 /* ====================================================
-024B – EXECUTAR ROTINA (CORREÇÃO DEFINITIVA SUPABASE)
+024B – EXECUTAR ROTINA (FINAL CORRIGIDO DEFINITIVO)
 ==================================================== */
-async function executarRotina(pacienteId,rotinaId,botao){
-if(!db||!pacienteId||!rotinaId)return
-const chaveLock=`lock_${pacienteId}_${rotinaId}`
-if(window[chaveLock])return
-window[chaveLock]=true
-const dataRaw=document.getElementById("dataInicio")?.value
-const dataHoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
+async function executarRotina(pacienteId,rotinaId){
+
+console.log("CLICOU ROTINA", pacienteId, rotinaId)
+
+if(!db)return
+
+const dataHoje=new Date().toISOString().slice(0,10)
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
-const user=obterUsuarioLogado()
 
-const usuarioId=
-user.id||
-localStorage.getItem("usuario_id")||
-PROFISSIONAL_ID||
-null
+const user=obterUsuarioLogado()||{}
 
-const nomeProfissional=
-user.nome||
-localStorage.getItem("usuario_nome")||
-"admin"
+const usuarioId=user.id||localStorage.getItem("usuario_id")||null
+const nomeProfissional=user.nome||localStorage.getItem("usuario_nome")||"admin"
+const empresaId=EMPRESA_ID||localStorage.getItem("empresa_id")
+
 try{
-const {data,error}=await db.from("rotinas_execucao").upsert({
-paciente_id:Number(pacienteId),
-rotina_id:Number(rotinaId),
+
+const {error}=await db.from("rotinas_execucao").upsert({
+paciente_id:pacienteId,
+rotina_id:rotinaId,
 data:dataHoje,
 turno:turno,
 status:"executado",
 usuario_id:usuarioId,
 profissional_nome:nomeProfissional,
+empresa_id:empresaId,
 horario_executado:new Date().toISOString()
 },{
 onConflict:"paciente_id,rotina_id,data,turno"
 })
+
 if(error){
-console.error("ERRO REAL SUPABASE:",error)
-alert("Erro ao salvar no banco")
-window[chaveLock]=false
+console.error("ERRO UPSERT:",error)
 return
 }
-/* 🔄 CACHE */
-ROTINAS_CACHE.forEach(r=>{
-if(String(r.paciente_id)===String(pacienteId)&&String(r.rotina_id)===String(rotinaId)){
-r.status="executado"
-r.profissional=nomeProfissional
+
+/* 🔥 ATUALIZA IMEDIATO NA TELA */
+const item=ROTINAS_CACHE.find(r=>
+String(r.paciente_id)===String(pacienteId)&&
+String(r.rotina_id)===String(rotinaId)
+)
+
+if(item){
+item.status="executado"
+item.profissional=nomeProfissional
 }
-})
-await carregarRotinas()
-  
+
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
+
 }catch(e){
-console.error("Erro geral executarRotina",e)
+console.error("ERRO GERAL:",e)
 }
-window[chaveLock]=false
+
 }
 /* ====================================================
 026 – CONCLUIR TODAS (FINAL CORRETO)
