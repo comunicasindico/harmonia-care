@@ -111,8 +111,10 @@ th,td{padding:6px;border-bottom:1px solid #ddd;font-size:13px;text-align:left;}
 ==================================================== -->
 <div id="app">
 <!-- 🔴 BARRA DE PROGRESSO -->
-<div id="barraProgressoContainer" style="width:100%;height:8px;background:#eee;position:sticky;top:0;z-index:999;">
-<div id="barraProgresso" style="width:0%;height:100%;background:red;transition:width 0.3s, background 0.3s;"></div>
+<div id="barraProgressoContainer"
+style="width:100%;height:10px;background:#eee;position:fixed;top:0;left:0;z-index:9999;display:none;">
+<div id="barraProgresso"
+style="width:0%;height:100%;background:red;transition:width 0.3s, background 0.3s;"></div>
 </div>
 
 <h1 class="topo-sistema">
