@@ -52,7 +52,19 @@ localStorage.setItem("usuario_hierarquia","1")
 }
 return{id:id||null,nome:nome,hierarquia:Number(hierarquia),perfil:perfil}
 }
+/* ====================================================
+020C – DATA PADRONIZADA (CRÍTICO)
+==================================================== */
+function obterDataSelecionada(){
+const dataRaw=document.getElementById("dataInicio")?.value
 
+if(dataRaw && dataRaw.includes("/")){
+const [dia,mes,ano]=dataRaw.split("/")
+return `${ano}-${mes.padStart(2,"0")}-${dia.padStart(2,"0")}`
+}
+
+return dataRaw || new Date().toISOString().slice(0,10)
+}
 /* ====================================================
 023 – CARREGAR ROTINAS (CORRIGIDO DEFINITIVO)
 ==================================================== */
@@ -204,7 +216,7 @@ executarRotina(pacienteId,rotinaId)
 async function executarRotina(pacienteId,rotinaId){
 if(!db)return
 
-const dataHoje=new Date().toISOString().slice(0,10)
+const dataHoje=obterDataSelecionada()
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 
 const user=obterUsuarioLogado()||{}
@@ -241,7 +253,7 @@ renderizarRotinas(ROTINAS_CACHE)
 async function executarTodos(pacienteId){
 if(!db||!pacienteId)return
 
-const dataHoje=new Date().toISOString().slice(0,10)
+const dataHoje=obterDataSelecionada()
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 
 const user=obterUsuarioLogado()
@@ -281,7 +293,7 @@ async function executarRotinaTodos(rotinaId){
 
 if(!db||!rotinaId)return
 
-const dataHoje=new Date().toISOString().slice(0,10)
+const dataHoje=obterDataSelecionada()
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 
 const user=obterUsuarioLogado()||{}
