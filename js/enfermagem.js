@@ -471,7 +471,16 @@ if(!pacienteId||pacienteId==="todos"){
 document.getElementById("gradePeriodo").innerHTML=""
 return
 }
-const {data:execucoes,error}=await db.from("rotinas_execucao").select("*").eq("paciente_id",pacienteId).eq("turno",turno).gte("data",dataInicio).lte("data",dataFim)
+const turnoAtual=(TURNO_ATUAL||"manha").toLowerCase().trim()
+
+const {data:execucoes,error}=await db
+.from("rotinas_execucao")
+.select("*")
+.eq("paciente_id",pacienteId)
+.eq("turno",turnoAtual)
+.gte("data",dataInicio)
+.lte("data",dataFim)
+
 if(error){console.error("Erro ao buscar execuções",error);return}
 const mapa={}
 execucoes.forEach(e=>{
@@ -479,7 +488,16 @@ if(!mapa[e.data])mapa[e.data]=[]
 mapa[e.data].push(e)
 })
 const ordemFixa=["Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café","Medicação","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene (noite)","Troca de Fraldas (noite)"]
-const {data:rotinas}=await db.from("rotina_modelos").select("id,nome,ordem").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("ordem",{ascending:true})
+const turnoAtual=(TURNO_ATUAL||"manha").toLowerCase().trim()
+
+const {data:rotinas}=await db
+.from("rotina_modelos")
+.select("id,nome,ordem,turno")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+.eq("turno",turnoAtual)
+.order("ordem",{ascending:true})
+
 const rotinasIds=(rotinas||[]).map(r=>r.id)
 const nomesRotinas={}
 rotinas?.forEach(r=>{nomesRotinas[r.id]=r.nome})
