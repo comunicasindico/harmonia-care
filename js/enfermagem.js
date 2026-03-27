@@ -213,10 +213,40 @@ ${r.status==="executado"?`<span style="color:${corProf};font-weight:bold">✔ ${
 
 html+=`<tr>
 <td>${p.nome}</td>
-<td><div>${rotinasHTML}</div></td>
+<td>
+<div class="rotinas-linha">${rotinasHTML}</div>
+
+<div style="margin-top:6px">
+<button class="btn-todos" onclick="executarTodos('${pid}')">
+Concluir Todas
+</button>
+</div>
+
+</td>
 </tr>`
 })
+/* 🔥 TODOS OS PACIENTES POR ROTINA */
+const rotinasUnicas={}
 
+lista.forEach(r=>{
+rotinasUnicas[r.rotina_id]=r.rotina
+})
+
+let rotinasTodosHTML=""
+
+Object.keys(rotinasUnicas).forEach(rotinaId=>{
+rotinasTodosHTML+=`
+<button class="btn-rotina" onclick="executarRotinaTodos('${rotinaId}')">
+${rotinasUnicas[rotinaId]}
+</button>`
+})
+
+html+=`
+<tr style="background:#f0fdf4;font-weight:bold">
+<td>Todos os Pacientes</td>
+<td>—</td>
+<td>${rotinasTodosHTML}</td>
+</tr>`
 tbody.innerHTML=html
 
 setTimeout(()=>{
@@ -604,9 +634,13 @@ return texto
 }
 
 /* ====================================================
-999 – EXPORT
+999 – EXPORT (CORRIGIDO DEFINITIVO)
 ==================================================== */
-window.executarRotina=executarRotina
-window.executarTodos=executarTodos
-window.executarRotinaTodos=executarRotinaTodos
+window.executarRotina = executarRotina
+window.executarTodos = executarTodos
+window.executarRotinaTodos = executarRotinaTodos
+
+/* 🔥 EXPORT SE EXISTIR */
+if(typeof mudarTurno==="function"){
 window.mudarTurno = mudarTurno
+}
