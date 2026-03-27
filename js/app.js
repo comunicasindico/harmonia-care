@@ -85,7 +85,9 @@ inputBusca.addEventListener("input",()=>carregarUsuarios())
 if(painelSalvo==="painelAdmin"){
 await carregarUsuarios()
 }
+if(typeof mudarTurno==="function"){
 mudarTurno(TURNO_ATUAL)
+}
 const painelAtual=localStorage.getItem("painelAtual")||"painelEnfermagem"
 const btnAdmin=document.getElementById("btnConcluirPendentes")
 const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
