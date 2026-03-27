@@ -186,11 +186,20 @@ nomeProf=r.profissional
 corProf=obterCorUsuario(nomeProf)
 }
 }
-rotinasHTML+=`<div class="badge-rotina ${
-status==="executado"
-?"rotina-ok"
-:(r.status==="pendente"?"rotina-pendente":"rotina-neutra")
-}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">
+let classe="rotina-neutra"
+
+if(r.status==="executado"){
+const turno=(r.turno||"").toLowerCase()
+
+if(turno==="manha")classe="rotina-ok-manha"
+else if(turno==="tarde")classe="rotina-ok-tarde"
+else if(turno==="noite")classe="rotina-ok-noite"
+
+}else if(r.status==="pendente"){
+classe="rotina-pendente"
+}
+
+rotinasHTML+=`<div class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">
 ${r.rotina}
 ${r.status==="executado"?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}
 </div>`
