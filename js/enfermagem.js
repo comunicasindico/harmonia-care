@@ -509,12 +509,14 @@ const lista=(mapa[dia]||[]).filter(e=>String(e.rotina_id)===String(rid))
 const total=lista.length
 const executadas=lista.filter(e=>e.status==="executado").length
 let celula=""
-if(total>0&&executadas===total){
-celula=`<span title="Completo (${executadas}/${total})" style="color:#2ecc71;font-weight:bold">✔</span>`
+if(total===0){
+celula=`<span style="color:#bdc3c7;font-weight:bold">—</span>`
+}else if(executadas===total){
+celula=`<span style="color:#2ecc71;font-weight:bold">✔</span>`
 }else if(executadas>0){
-celula=`<span title="Parcial (${executadas}/${total})" style="color:#f39c12;font-weight:bold">⚠️</span>`
+celula=`<span style="color:#f39c12;font-weight:bold">⚠️</span>`
 }else{
-celula=`<span title="Não executado (0/${total})" style="color:#e74c3c;font-weight:bold">✖</span>`
+celula=`<span style="color:#e74c3c;font-weight:bold">✖</span>`
 }
 html+=`<td style="text-align:center">${celula}</td>`
 })
