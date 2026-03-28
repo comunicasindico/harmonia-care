@@ -317,7 +317,23 @@ const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 const user=obterUsuarioLogado()
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
-await db.from("rotinas_execucao").upsert({
+/* 🔒 VERIFICA SE JÁ EXISTE */
+const {data:jaExiste}=await db
+.from("rotinas_execucao")
+.select("id")
+.eq("paciente_id",pacienteId)
+.eq("rotina_id",rotinaId)
+.eq("data",dataHoje)
+.eq("turno",turno)
+.maybeSingle()
+
+/* 🚫 NÃO SOBRESCREVE */
+if(jaExiste){
+return
+}
+
+/* ✅ INSERE NOVO */
+await db.from("rotinas_execucao").insert({
 paciente_id:pacienteId,
 rotina_id:rotinaId,
 data:dataHoje,
@@ -325,8 +341,10 @@ turno:turno,
 status:"executado",
 usuario_id:usuarioId,
 profissional_nome:nome,
-empresa_id:EMPRESA_ID
-},{onConflict:"paciente_id,rotina_id,data,turno"})
+empresa_id:EMPRESA_ID,
+horario_executado:new Date().toISOString()
+})
+
 const item=ROTINAS_CACHE.find(r=>r.paciente_id==pacienteId&&r.rotina_id==rotinaId)
 if(item){
 item.status="executado"
