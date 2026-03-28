@@ -14,7 +14,33 @@ const selectPaciente=document.getElementById("buscaPaciente")
 const pacienteSelecionado=selectPaciente?selectPaciente.value:"todos"
 if(!db){console.error("Supabase ainda não carregou");return}
 if(!EMPRESA_ID){console.warn("EMPRESA_ID ainda não carregado");return}
-const {data,error}=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo")
+
+/* 🔥 FILTRO POR USUÁRIO (CLÍNICO) */
+let usuarioId=localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
+let query = db.from("pacientes")
+if(usuarioId && usuarioId!=="admin"){
+const {data:rel}=await db
+.from("pacientes_profissionais")
+.select("paciente_id")
+.eq("usuario_id",usuarioId)
+.eq("ativo",true)
+const ids=rel?.map(r=>r.paciente_id)||[]
+if(ids.length){
+query = query.in("id",ids)
+}else{
+console.warn("Usuário sem pacientes vinculados")
+const tabela=document.getElementById("quadroClinico")
+if(tabela)tabela.innerHTML=""
+return
+}
+}
+
+const {data,error}=await query
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+.order("nome_completo")
+  
 if(error){console.error(error);return}
 const tabela=document.getElementById("quadroClinico")
 if(!tabela)return
