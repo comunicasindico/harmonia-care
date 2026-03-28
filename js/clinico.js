@@ -29,7 +29,6 @@ const selectPaciente=document.getElementById("buscaPaciente")
 const pacienteSelecionado=selectPaciente?selectPaciente.value:"todos"
 if(!db){console.error("Supabase ainda não carregou");return}
 if(!EMPRESA_ID){console.warn("EMPRESA_ID ainda não carregado");return}
-
 /* 🔥 FILTRO POR USUÁRIO (CLÍNICO) */
 let usuarioId=localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
 let query = db.from("pacientes").select("*")
@@ -58,7 +57,6 @@ if(error){console.error(error);return}
 const tabela=document.getElementById("quadroClinico")
 if(!tabela)return
 if(!data||data.length===0){tabela.innerHTML="";return}
-
 /* 🔥 PADRÃO DIETAS */
 const DIETAS={
 normal:{nome:"Normal",icone:"🍽️",cor:"#f4f6f9"},
@@ -68,7 +66,6 @@ pastosa:{nome:"Pastosa",icone:"🥣",cor:"#fff3cd"},
 liquida:{nome:"Líquida",icone:"🧃",cor:"#e8f4fd"},
 vegetariana:{nome:"Vegetariana",icone:"🥗",cor:"#eafaf1"}
 }
-
 /* 🔥 IDENTIFICAR DIETA */
 function getDietaKey(txt){
 let t=(txt||"").toLowerCase()
@@ -244,18 +241,18 @@ liquida:"Líquida",
 vegetariana:"Vegetariana"
 }
 const dietaKey=get(".clin_dieta")
+/* 🔥 CAPTURA FORA DO OBJETO */
+const paValor=get(".clin_pa")
+const paClass=get(".clin_pa_class")
+
 const dados={
 has:bool(get(".clin_has")),
 dm:bool(get(".clin_dm")),
 da:bool(get(".clin_da")),
 cardiopatia:bool(get(".clin_cardio")),
 acamado:bool(get(".clin_acamado")),
-
-const paValor=get(".clin_pa")
-const paClass=get(".clin_pa_class")
 pressao_arterial:paValor||null,
 pa_classificacao:paClass||null,
-
 dieta_especial:dietaKey?true:false,
 dieta_texto:DIETAS[dietaKey]||null,
 grau_risco:parseInt(get(".clin_risco")||0),
