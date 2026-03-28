@@ -35,7 +35,7 @@ try{
 const {data,error}=await db
 
 /* 🔥 FILTRO POR PROFISSIONAL */
-let usuarioId=localStorage.getItem("usuario_id")
+let query = db.from("pacientes")
 
 if(usuarioId && usuarioId!=="admin"){
 const {data:rel}=await db
@@ -47,16 +47,20 @@ const {data:rel}=await db
 const ids=rel?.map(r=>r.paciente_id)||[]
 
 if(ids.length){
-query = query.in("id", ids)
+query = query.in("id",ids)
 }else{
-return [] /* nenhum paciente */
+console.warn("Sem pacientes vinculados")
+tabela.innerHTML=""
+return
 }
 }
 
+const {data,error}=await query
 .select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
 .order("nome_completo",{ascending:true})
+
 if(error){
 console.error("Erro ao carregar pacientes:",error)
 return;
