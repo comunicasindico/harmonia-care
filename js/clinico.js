@@ -74,7 +74,6 @@ if(t.includes(DIETAS[k].nome.toLowerCase().replace("é","e")))return k
 }
 return ""
 }
-
 /* 🔥 FORMATAR DIETA */
 function formatarDieta(p){
 let key=getDietaKey(p.dieta_texto)
@@ -86,7 +85,7 @@ return '<span style="padding:3px 8px;border-radius:6px;font-size:11px;background
 let html=""
 let totalPacientes=0,totalHas=0,totalDm=0,totalDemencia=0,totalCardio=0,totalAcamado=0,totalPAAlterada=0
 let risco1=0,risco2=0,risco3=0,risco4=0,risco5=0
-
+let dietaNormal=0,dietaHipossodica=0,dietaDiabetica=0,dietaPastosa=0,dietaLiquida=0,dietaVegetariana=0
 data.forEach(p=>{
 let destaqueCritico=""
 if(p.grau_risco>=4 && p.pa_alterada){
@@ -98,6 +97,15 @@ p.da=p.da===true||p.da==="true"||p.da==1
 p.cardiopatia=p.cardiopatia===true||p.cardiopatia==="true"||p.cardiopatia==1
 p.acamado=p.acamado===true||p.acamado==="true"||p.acamado==1
 p.grau_risco=parseInt(p.grau_risco)||0
+/* 🔥 CONTADOR DE DIETAS */
+let dietaKey=getDietaKey(p.dieta_texto)
+if(!dietaKey)dietaNormal++
+if(dietaKey==="normal")dietaNormal++
+if(dietaKey==="hipossodica")dietaHipossodica++
+if(dietaKey==="diabetica")dietaDiabetica++
+if(dietaKey==="pastosa")dietaPastosa++
+if(dietaKey==="liquida")dietaLiquida++
+if(dietaKey==="vegetariana")dietaVegetariana++
 let paS=0,paD=0
 if(p.pressao_arterial){
 let pa=p.pressao_arterial.replace(/\s/g,"").split("/")
@@ -188,7 +196,12 @@ ${MODO_EDICAO_CLINICO?`
 <td class="acoesClinico" style="${MODO_EDICAO_CLINICO?'':'display:none'}"><button class="btn-danger" onclick="excluirPaciente('${p.id}')">Excluir</button></td>
 </tr>`
 })
-
+document.getElementById("dietaNormal").innerText="🍽️ "+dietaNormal
+document.getElementById("dietaHipossodica").innerText="🧂 "+dietaHipossodica
+document.getElementById("dietaDiabetica").innerText="🩸 "+dietaDiabetica
+document.getElementById("dietaPastosa").innerText="🥣 "+dietaPastosa
+document.getElementById("dietaLiquida").innerText="🧃 "+dietaLiquida
+document.getElementById("dietaVegetariana").innerText="🥗 "+dietaVegetariana
 tabela.innerHTML=html
 
 setTimeout(()=>{
