@@ -258,19 +258,36 @@ const dietaKey=get(".clin_dieta")
 const paValor=get(".clin_pa")
 const paClass=get(".clin_pa_class")
 
-const dados={
-has:bool(get(".clin_has")),
-dm:bool(get(".clin_dm")),
-da:bool(get(".clin_da")),
-cardiopatia:bool(get(".clin_cardio")),
-acamado:bool(get(".clin_acamado")),
-pressao_arterial:paValor||null,
-pa_classificacao:paClass||null,
-dieta_especial:dietaKey?true:false,
-dieta_texto:DIETAS[dietaKey]||null,
-grau_risco:parseInt(get(".clin_risco")||0),
-outras_comorbidades:get(".clin_outros")||null
+const campo=el.className
+let dados={}
+
+if(campo.includes("clin_has"))dados.has=bool(el.value)
+if(campo.includes("clin_dm"))dados.dm=bool(el.value)
+if(campo.includes("clin_da"))dados.da=bool(el.value)
+if(campo.includes("clin_cardio"))dados.cardiopatia=bool(el.value)
+if(campo.includes("clin_acamado"))dados.acamado=bool(el.value)
+
+if(campo.includes("clin_pa"))dados.pressao_arterial=el.value||null
+if(campo.includes("clin_pa_class"))dados.pa_classificacao=el.value||null
+
+if(campo.includes("clin_dieta")){
+const mapa={
+normal:"Normal",
+hipossodica:"Hipossódica",
+diabetica:"Diabética",
+pastosa:"Pastosa",
+liquida:"Líquida",
+vegetariana:"Vegetariana"
 }
+dados.dieta_especial=el.value?true:false
+dados.dieta_texto=mapa[el.value]||null
+}
+
+if(campo.includes("clin_risco"))dados.grau_risco=parseInt(el.value||0)
+if(campo.includes("clin_outros"))dados.outras_comorbidades=el.value||null
+
+if(Object.keys(dados).length===0)return
+
 await db.from("pacientes").update(dados).eq("id",id)
 linha.style.transition="all 0.3s"
 linha.style.background="#d4edda"
