@@ -378,8 +378,8 @@ console.log("Vinculado com sucesso")
 /* ====================================================
 073 – VÍNCULO PACIENTE ⇄ PROFISSIONAL (GLOBAL)
 ==================================================== */
-let PACIENTE_SELECIONADO=null
-let PROFISSIONAL_SELECIONADO=null
+var PACIENTE_SELECIONADO=null
+var PROFISSIONAL_SELECIONADO=null
 
 function selecionarPaciente(id){
 PACIENTE_SELECIONADO=id
@@ -396,6 +396,7 @@ tentarVincular()
 async function tentarVincular(){
 if(!PACIENTE_SELECIONADO||!PROFISSIONAL_SELECIONADO)return
 
+try{
 const {error}=await db.from("pacientes_profissionais").upsert({
 paciente_id:PACIENTE_SELECIONADO,
 usuario_id:PROFISSIONAL_SELECIONADO,
@@ -410,6 +411,10 @@ console.error("Erro vínculo:",error)
 alert("Erro ao vincular")
 }else{
 alert("Paciente vinculado ao profissional")
+}
+
+}catch(e){
+console.error("Erro geral:",e)
 }
 
 PACIENTE_SELECIONADO=null
