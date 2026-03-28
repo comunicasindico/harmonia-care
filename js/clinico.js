@@ -89,12 +89,21 @@ const riscoTotal=risco1+risco2+risco3+risco4+risco5
 html+=`<tr style="background:#fff200;font-weight:bold;text-align:center"><td>Todos</td><td></td><td style="color:#e74c3c">${totalHas}</td><td style="color:#f39c12">${totalDm}</td><td style="color:#8e44ad">${totalDemencia}</td><td style="color:#c0392b">${totalCardio}</td><td style="color:#34495e">${totalAcamado}</td><td style="color:#e67e22">${totalPAAlterada}</td><td></td><td style="color:#2c3e50">${riscoTotal}</td><td></td></tr>`
 
 data.forEach(p=>{
+
+let destaqueCritico=""
+if(p.grau_risco>=4 && p.pa_alterada){
+destaqueCritico="animation:pulse 1s infinite alternate;"
+}
+
 let corLinha="#fff"
 if(p.grau_risco>=4)corLinha="#ffe5e5"
 else if(p.grau_risco===3)corLinha="#fff8e1"
+
 let borda=""
 if(p.pa_alterada)borda="border-left:6px solid #e74c3c"
+
 let dietaKey=getDietaKey(p.dieta_texto)
+
 let dietaHTML=""
 if(MODO_EDICAO_CLINICO){
 dietaHTML=`<select class="clin_dieta">
