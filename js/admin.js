@@ -454,10 +454,11 @@ if(painel)painel.style.display="block"
 const elNome=document.getElementById("tituloVinculo")
 elNome.innerText="Vincular pacientes ao usuário"
 window.USUARIO_VINCULO_ATUAL=usuarioId
-const usuario=listaUsuariosCache?.find(u=>u.id===usuarioId)
-const nome=usuario?.nome_apelido||usuario?.nome_completo||""
+let nome=""
+const {data:user}=await db.from("usuarios").select("nome_apelido,nome_completo").eq("id",usuarioId).single()
+nome=user?.nome_apelido||user?.nome_completo||""
 const elProf=document.getElementById("profissionalSelecionado")
-if(elProf)elProf.innerText=nome
+if(elProf)elProf.innerText=nome||"Usuário"
 /* 🔥 CARREGAR PACIENTES */
 const {data:pacientes}=await db
 .from("pacientes")
@@ -479,7 +480,7 @@ html+=`
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
 <input type="checkbox"
 ${ativo?"checked":""}
-onchange="toggleVinculo('${p.id}')">
+onchange="toggleVinculo('${p.id}',this)">
 <span>${p.nome_completo}</span>
 </div>
 `
@@ -489,9 +490,10 @@ document.getElementById("listaPacientesVinculo").innerHTML=html
 /* ====================================================
 075 vínculo
 ==================================================== */
-async function toggleVinculo(pacienteId){
+async function toggleVinculo(pacienteId,el){
 const usuarioId=window.USUARIO_VINCULO_ATUAL
 if(!usuarioId)return
+
 const {data:existe}=await db
 .from("pacientes_profissionais")
 .select("*")
@@ -500,7 +502,6 @@ const {data:existe}=await db
 .eq("ativo",true)
 
 if(existe && existe.length){
-/* 🔴 REMOVER */
 await db
 .from("pacientes_profissionais")
 .update({ativo:false})
@@ -508,8 +509,6 @@ await db
 .eq("paciente_id",pacienteId)
 
 }else{
-
-/* 🟢 ADICIONAR */
 await db
 .from("pacientes_profissionais")
 .upsert({
@@ -520,11 +519,10 @@ ativo:true
 },{
 onConflict:"usuario_id,paciente_id,turno"
 })
-
 }
-/* 🔄 RECARREGA UI */
-await verPacientesDoProfissional(usuarioId)
-await carregarUsuarios()
+
+/* 🔥 ATUALIZA CONTADOR */
+carregarUsuarios()
 }
 /* ====================================================
 076 – RESUMO HOSPITAL
