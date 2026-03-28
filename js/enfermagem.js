@@ -198,7 +198,7 @@ renderizarRotinas(lista)
 calcularIndicadores(lista)
 }
 /* ====================================================
-024 – RENDERIZAR ROTINAS (CORRIGIDO FINAL)
+024 – RENDERIZAR ROTINAS (CORRIGIDO FINAL DEFINITIVO)
 ==================================================== */
 function renderizarRotinas(lista){
 const tbody=document.getElementById("rotinas")
@@ -215,25 +215,63 @@ let rotinasHTML=""
 let total=p.rotinas.length
 let executadas=0
 p.rotinas.forEach(r=>{
-if(r.status==="executado")executadas++
-let corProf="#64748b"
+const status=(r.status||"pendente")
+let classe=status==="executado"?"ok":"pendente"
+if(status==="executado")executadas++
 let nomeProf=r.profissional||""
-if(r.status==="executado"&&nomeProf)corProf=obterCorUsuario(nomeProf)
-let classe="rotina-pendente"
-if(r.status==="executado"){
-if(r.turno==="manha")classe="rotina-ok-manha"
-else if(r.turno==="tarde")classe="rotina-ok-tarde"
-else if(r.turno==="noite")classe="rotina-ok-noite"
+let corProf="#64748b"
+if(status==="executado"&&nomeProf)corProf=obterCorUsuario(nomeProf)
+/* 🔥 CHIP DA ROTINA */
+rotinasHTML+=`
+<span class="rotina-chip ${classe}">
+${r.rotina}
+${status==="executado"?"✔ "+nomeProf:""}
+</span>
+`
+/* 🔥 BOTÃO TODOS (CORRIGIDO) */
+rotinasHTML+=`
+<button onclick="executarRotinaTodos('${r.rotina_id}')"
+style="margin-left:4px;background:#27ae60;color:#fff;border:none;border-radius:5px;padding:2px 6px;font-size:10px;cursor:pointer">
+✔ Todos
+</button>
+`
+/* 🔥 BADGE VISUAL */
+let classeBadge="rotina-pendente"
+if(status==="executado"){
+if(r.turno==="manha")classeBadge="rotina-ok-manha"
+else if(r.turno==="tarde")classeBadge="rotina-ok-tarde"
+else if(r.turno==="noite")classeBadge="rotina-ok-noite"
 }
-rotinasHTML+=`<div class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">
-${r.rotina}${r.status==="executado"?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}
-</div>`
+
+rotinasHTML+=`
+<div class="badge-rotina ${classeBadge}"
+data-paciente="${r.paciente_id}"
+data-rotina="${r.rotina_id}">
+${r.rotina}
+${status==="executado"?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}
+</div>
+`
 })
+
 let percentual=total?Math.round((executadas/total)*100):0
 let concluido=executadas===total
-html+=`<tr><td>${p.nome}</td><td><b>${percentual}% (${executadas}/${total})</b><button onclick="executarTodos('${pid}')">${concluido?"✔ Concluído":"Concluir Todas"}</button></td><td>${rotinasHTML}</td></tr>`
+
+html+=`
+<tr>
+<td>${p.nome}</td>
+<td>
+<b>${percentual}% (${executadas}/${total})</b>
+<button onclick="executarTodos('${pid}')">
+${concluido?"✔ Concluído":"Concluir Todas"}
+</button>
+</td>
+<td>${rotinasHTML}</td>
+</tr>
+`
 })
+
 tbody.innerHTML=html
+
 document.querySelectorAll(".badge-rotina").forEach(el=>{
 el.onclick=function(){
 const pacienteId=this.dataset.paciente
