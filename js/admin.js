@@ -1,20 +1,33 @@
 /* ====================================================
-060 – INSERIR USUÁRIO (CORRIGIDO FINAL)
+060 – INSERIR USUÁRIO (CORRIGIDO PERFIL BANCO)
 ==================================================== */
 async function inserirUsuario(){
 if(!db)return
 let perfilUI=document.getElementById("u_perfil")?.value||""
-let perfilMap={"Administrador(a)":"administrador","Médico(a)":"medico","Enfermeiro(a)":"enfermeiro","Cuidador(a)":"cuidador","Fisioterapeuta":"fisioterapeuta","Estagiário(a)":"estagiario"}
-let perfil=perfilMap[perfilUI]||"cuidador"
-const novo={empresa_id:EMPRESA_ID,nome:document.getElementById("u_nome")?.value||"",nome_completo:document.getElementById("u_nome")?.value||"",nome_apelido:document.getElementById("u_apelido")?.value||"",email:document.getElementById("u_email")?.value||"",perfil:perfil,hierarquia:parseInt(document.getElementById("u_hierarquia")?.value||5),senha_hash:document.getElementById("u_senha")?.value||"",ativo:true}
+const mapaPerfil={
+"Administrador(a)":"administrador",
+"Médico(a)":"medico",
+"Enfermeiro(a)":"enfermeiro",
+"Cuidador(a)":"cuidador",
+"Fisioterapeuta":"fisioterapeuta",
+"Estagiário(a)":"estagiario"
+}
+let perfil=mapaPerfil[perfilUI]||"cuidador"
+const novo={
+empresa_id:EMPRESA_ID,
+nome:document.getElementById("u_nome")?.value||"",
+nome_completo:document.getElementById("u_nome")?.value||"",
+nome_apelido:document.getElementById("u_apelido")?.value||"",
+email:document.getElementById("u_email")?.value||"",
+perfil:perfil,
+hierarquia:parseInt(document.getElementById("u_hierarquia")?.value||5),
+senha_hash:document.getElementById("u_senha")?.value||"",
+ativo:true
+}
 if(!novo.nome||!novo.email){alert("Preencha nome e email");return}
 const {error}=await db.from("usuarios").insert([novo])
 if(error){console.error(error);alert("Erro ao inserir: "+error.message);return}
 alert("Usuário inserido com sucesso")
-document.getElementById("u_nome").value=""
-document.getElementById("u_apelido").value=""
-document.getElementById("u_email").value=""
-document.getElementById("u_senha").value=""
 carregarUsuarios()
 }
 /* ====================================================
@@ -101,7 +114,16 @@ montarResumoUsuarios(lista,mapaQtd)
 ==================================================== */
 async function salvarUsuario(id,btn){
 const tr=btn.closest("tr")
-const dados={nome_completo:tr.querySelector(".u_nome")?.value||"",nome_apelido:tr.querySelector(".u_apelido")?.value||"",email:tr.querySelector(".u_email")?.value||"",perfil:tr.querySelector(".u_perfil")?.value||"",hierarquia:parseInt(tr.querySelector(".u_hierarquia")?.value||5),ativo:true}
+const dados={nome_completo:tr.querySelector(".u_nome")?.value||"",nome_apelido:tr.querySelector(".u_apelido")?.value||"",email:tr.querySelector(".u_email")?.value||"",let perfilUI=tr.querySelector(".u_perfil")?.value||""
+const mapaPerfil={
+"Administrador":"administrador",
+"Médico":"medico",
+"Enfermeiro":"enfermeiro",
+"Cuidador":"cuidador",
+"Fisioterapeuta":"fisioterapeuta",
+"Estagiário":"estagiario"
+}
+perfil:mapaPerfil[perfilUI]||perfilUI,hierarquia:parseInt(tr.querySelector(".u_hierarquia")?.value||5),ativo:true}
 const novaSenha=tr.querySelector(".u_senha")?.value
 if(novaSenha)dados.senha_hash=novaSenha
 const {error}=await db.from("usuarios").update(dados).eq("id",id)
