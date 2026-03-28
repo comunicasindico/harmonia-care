@@ -17,7 +17,7 @@ if(!EMPRESA_ID){console.warn("EMPRESA_ID ainda não carregado");return}
 
 /* 🔥 FILTRO POR USUÁRIO (CLÍNICO) */
 let usuarioId=localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
-let query = db.from("pacientes")
+let query = db.from("pacientes").select("*")
 if(usuarioId && usuarioId!=="admin"){
 const {data:rel}=await db
 .from("pacientes_profissionais")
@@ -34,13 +34,11 @@ if(tabela)tabela.innerHTML=""
 return
 }
 }
-
 const {data,error}=await query
-.select("*")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
 .order("nome_completo")
-  
+
 if(error){console.error(error);return}
 const tabela=document.getElementById("quadroClinico")
 if(!tabela)return
