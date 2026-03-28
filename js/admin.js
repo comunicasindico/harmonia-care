@@ -454,6 +454,10 @@ if(painel)painel.style.display="block"
 const elNome=document.getElementById("tituloVinculo")
 elNome.innerText="Vincular pacientes ao usuário"
 window.USUARIO_VINCULO_ATUAL=usuarioId
+const usuario=listaUsuariosCache?.find(u=>u.id===usuarioId)
+const nome=usuario?.nome_apelido||usuario?.nome_completo||""
+const elProf=document.getElementById("profissionalSelecionado")
+if(elProf)elProf.innerText=nome
 /* 🔥 CARREGAR PACIENTES */
 const {data:pacientes}=await db
 .from("pacientes")
