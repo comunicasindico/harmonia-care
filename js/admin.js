@@ -100,7 +100,9 @@ async function carregarPacientesDrag(){
 if(!db)return
 const {data}=await db.from("pacientes").select("id,nome_completo").order("nome_completo")
 let html=""
-data?.forEach(p=>{html+=`<div class="drag-item" id="pac_${p.id}">${p.nome_completo}</div>`})
+data?.forEach(p=>{
+html+=`<div class="drag-item" onclick="selecionarPaciente('${p.id}')">${p.nome_completo}</div>`
+})
 const el=document.getElementById("listaPacientesDrag")
 if(el)el.innerHTML=html
 }
@@ -113,8 +115,34 @@ const el=document.getElementById("listaProfissionaisDrag")
 if(!el)return
 const {data}=await db.from("usuarios").select("id,nome_apelido").eq("ativo",true)
 let html=""
-data?.forEach(p=>{html+=`<div class="drag-item" id="prof_${p.id}">${p.nome_apelido||p.id}</div>`})
+data?.forEach(p=>{
+html+=`<div class="drag-item" onclick="selecionarProfissional('${p.id}')">${p.nome_apelido||p.id}</div>`
+})
 el.innerHTML=html
+
+let PACIENTE_SELECIONADO=null
+let PROFISSIONAL_SELECIONADO=null
+
+function selecionarPaciente(id){
+PACIENTE_SELECIONADO=id
+console.log("Paciente selecionado:",id)
+tentarVincular()
+}
+
+function selecionarProfissional(id){
+PROFISSIONAL_SELECIONADO=id
+console.log("Profissional selecionado:",id)
+tentarVincular()
+}
+
+function tentarVincular(){
+if(PACIENTE_SELECIONADO && PROFISSIONAL_SELECIONADO){
+vincularPacienteProfissional(PACIENTE_SELECIONADO,PROFISSIONAL_SELECIONADO)
+PACIENTE_SELECIONADO=null
+PROFISSIONAL_SELECIONADO=null
+alert("Vinculado com sucesso!")
+}
+}
 }
 /* ====================================================
 066 – SALVAR USUARIO EDITADO (INLINE BLUR CORRIGIDO)
@@ -351,6 +379,27 @@ MODO_EDICAO_ADMIN=false
 localStorage.setItem("modo_edicao_admin","false")
 await carregarUsuarios()
 }
+/* ====================================================
+072 – VINCULAR PACIENTE AO PROFISSIONAL
+==================================================== */
+async function vincularPacienteProfissional(pacienteId,usuarioId){
+if(!db||!pacienteId||!usuarioId)return
+const {error}=await db.from("pacientes_profissionais").upsert({
+paciente_id:pacienteId,
+usuario_id:usuarioId,
+turno:"manha",
+ativo:true
+},{
+onConflict:"paciente_id,usuario_id,turno"
+})
+if(error){
+console.error("Erro vincular:",error)
+alert("Erro ao vincular")
+}else{
+console.log("Vinculado com sucesso")
+}
+}
+
 /* ====================================================
 999 – EXPORT GLOBAL ADMIN
 ==================================================== */
