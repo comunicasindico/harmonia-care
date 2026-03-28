@@ -318,7 +318,23 @@ for(const r of pendentes){
 
 try{
 
-const {error}=await db.from("rotinas_execucao").upsert({
+/* 🔒 VERIFICA SE JÁ EXISTE */
+const {data:jaExiste}=await db
+.from("rotinas_execucao")
+.select("id")
+.eq("paciente_id",r.paciente_id)
+.eq("rotina_id",r.rotina_id)
+.eq("data",dataHoje)
+.eq("turno",turno)
+.maybeSingle()
+
+/* 🚫 NÃO SOBRESCREVE */
+if(jaExiste){
+continue
+}
+
+/* ✅ INSERE NOVO */
+const {error}=await db.from("rotinas_execucao").insert({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -328,8 +344,6 @@ usuario_id:usuarioId,
 profissional_nome:nomeProfissional||"Administrador",
 empresa_id:empresaId,
 horario_executado:new Date().toISOString()
-},{
-onConflict:"paciente_id,rotina_id,data,turno"
 })
 
 if(error){
