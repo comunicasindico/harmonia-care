@@ -119,30 +119,6 @@ data?.forEach(p=>{
 html+=`<div class="drag-item" onclick="selecionarProfissional('${p.id}')">${p.nome_apelido||p.id}</div>`
 })
 el.innerHTML=html
-
-let PACIENTE_SELECIONADO=null
-let PROFISSIONAL_SELECIONADO=null
-
-function selecionarPaciente(id){
-PACIENTE_SELECIONADO=id
-console.log("Paciente selecionado:",id)
-tentarVincular()
-}
-
-function selecionarProfissional(id){
-PROFISSIONAL_SELECIONADO=id
-console.log("Profissional selecionado:",id)
-tentarVincular()
-}
-
-function tentarVincular(){
-if(PACIENTE_SELECIONADO && PROFISSIONAL_SELECIONADO){
-vincularPacienteProfissional(PACIENTE_SELECIONADO,PROFISSIONAL_SELECIONADO)
-PACIENTE_SELECIONADO=null
-PROFISSIONAL_SELECIONADO=null
-alert("Vinculado com sucesso!")
-}
-}
 }
 /* ====================================================
 066 – SALVAR USUARIO EDITADO (INLINE BLUR CORRIGIDO)
@@ -399,7 +375,46 @@ alert("Erro ao vincular")
 console.log("Vinculado com sucesso")
 }
 }
+/* ====================================================
+073 – VÍNCULO PACIENTE ⇄ PROFISSIONAL (GLOBAL)
+==================================================== */
+let PACIENTE_SELECIONADO=null
+let PROFISSIONAL_SELECIONADO=null
 
+function selecionarPaciente(id){
+PACIENTE_SELECIONADO=id
+console.log("Paciente:",id)
+tentarVincular()
+}
+
+function selecionarProfissional(id){
+PROFISSIONAL_SELECIONADO=id
+console.log("Profissional:",id)
+tentarVincular()
+}
+
+async function tentarVincular(){
+if(!PACIENTE_SELECIONADO||!PROFISSIONAL_SELECIONADO)return
+
+const {error}=await db.from("pacientes_profissionais").upsert({
+paciente_id:PACIENTE_SELECIONADO,
+usuario_id:PROFISSIONAL_SELECIONADO,
+turno:"manha",
+ativo:true
+},{
+onConflict:"paciente_id,usuario_id,turno"
+})
+
+if(error){
+console.error("Erro vínculo:",error)
+alert("Erro ao vincular")
+}else{
+alert("Paciente vinculado ao profissional")
+}
+
+PACIENTE_SELECIONADO=null
+PROFISSIONAL_SELECIONADO=null
+}
 /* ====================================================
 999 – EXPORT GLOBAL ADMIN
 ==================================================== */
