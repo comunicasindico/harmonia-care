@@ -25,72 +25,6 @@ localStorage.setItem("usuario_hierarquia","1")
 return{id:id||null,nome:nome,hierarquia:Number(hierarquia),perfil:perfil}
 }
 /* ====================================================
-022 – CARREGAR PACIENTES BUSCA (DEFINITIVO COM FILTRO)
-==================================================== */
-async function carregarPacientesBusca(){
-if(!db)return
-const select=document.getElementById("buscaPaciente")
-if(!select)return
-
-try{
-
-/* 🔥 USUÁRIO LOGADO */
-let usuarioId=localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
-
-/* 🔥 BASE QUERY */
-let query=db.from("pacientes")
-
-/* 🔥 FILTRO POR PROFISSIONAL */
-if(usuarioId && usuarioId!=="admin"){
-const {data:rel}=await db
-.from("pacientes_profissionais")
-.select("paciente_id")
-.eq("usuario_id",usuarioId)
-.eq("ativo",true)
-
-const ids=rel?.map(r=>r.paciente_id)||[]
-
-if(ids.length){
-query=query.in("id",ids)
-}else{
-console.warn("Sem pacientes vinculados")
-select.innerHTML='<option value="todos">SEM PACIENTES</option>'
-return
-}
-}
-
-/* 🔥 CONSULTA FINAL */
-const {data:pacientes,error}=await query
-.select("id,nome_completo")
-.eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true)
-.order("nome_completo",{ascending:true})
-
-if(error){
-console.error("Erro ao carregar pacientes:",error)
-return
-}
-
-/* 🔥 MONTAR SELECT */
-let options='<option value="todos">TODOS</option>'
-
-if(Array.isArray(pacientes)){
-for(let i=0;i<pacientes.length;i++){
-const p=pacientes[i]
-options+=`<option value="${p.id}">${p.nome_completo}</option>`
-}
-}
-
-select.innerHTML=options
-select.value="todos"
-
-console.log("Pacientes carregados:",(pacientes||[]).length)
-
-}catch(e){
-console.error("Erro geral pacientes:",e)
-}
-}
-/* ====================================================
 020C – DATA PADRONIZADA (CRÍTICO)
 ==================================================== */
 window.obterDataSelecionada=function(){
@@ -122,6 +56,55 @@ if(turno==="noite"&&btnNoite)btnNoite.classList.add("turno-ativo")
 /* 🔥 RECARREGA DADOS */
 if(typeof carregarRotinas==="function")await carregarRotinas()
 if(typeof montarGradePeriodo==="function")await montarGradePeriodo()
+}
+/* ====================================================
+022 – CARREGAR PACIENTES BUSCA (CORRIGIDO SUPABASE V2)
+==================================================== */
+async function carregarPacientesBusca(){
+if(!db)return
+const select=document.getElementById("buscaPaciente")
+if(!select)return
+try{
+let usuarioId=localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
+let pacientes=[]
+if(usuarioId && usuarioId!=="admin"){
+const {data:rel}=await db
+.from("pacientes_profissionais")
+.select("paciente_id")
+.eq("usuario_id",usuarioId)
+.eq("ativo",true)
+const ids=rel?.map(r=>r.paciente_id)||[]
+if(ids.length){
+const {data}=await db
+.from("pacientes")
+.select("id,nome_completo")
+.in("id",ids)
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+.order("nome_completo",{ascending:true})
+pacientes=data||[]
+}else{
+select.innerHTML='<option value="todos">SEM PACIENTES</option>'
+return
+}
+}else{
+const {data}=await db
+.from("pacientes")
+.select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+.order("nome_completo",{ascending:true})
+pacientes=data||[]
+}
+let options='<option value="todos">TODOS</option>'
+pacientes.forEach(p=>{
+options+=`<option value="${p.id}">${p.nome_completo}</option>`
+})
+select.innerHTML=options
+select.value="todos"
+}catch(e){
+console.error("Erro geral pacientes:",e)
+}
 }
 /* ====================================================
 023 – CARREGAR ROTINAS (CORRIGIDO DEFINITIVO FINAL)
