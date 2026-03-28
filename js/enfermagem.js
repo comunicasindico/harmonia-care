@@ -33,7 +33,26 @@ const select=document.getElementById("buscaPaciente")
 if(!select)return
 try{
 const {data,error}=await db
-.from("pacientes")
+
+/* 🔥 FILTRO POR PROFISSIONAL */
+let usuarioId=localStorage.getItem("usuario_id")
+
+if(usuarioId && usuarioId!=="admin"){
+const {data:rel}=await db
+.from("pacientes_profissionais")
+.select("paciente_id")
+.eq("usuario_id",usuarioId)
+.eq("ativo",true)
+
+const ids=rel?.map(r=>r.paciente_id)||[]
+
+if(ids.length){
+query=query.in("id",ids)
+}else{
+return [] /* nenhum paciente */
+}
+}
+
 .select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
