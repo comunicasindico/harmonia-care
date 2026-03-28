@@ -47,7 +47,7 @@ const {data:rel}=await db
 const ids=rel?.map(r=>r.paciente_id)||[]
 
 if(ids.length){
-query=query.in("id",ids)
+query = query.in("id", ids)
 }else{
 return [] /* nenhum paciente */
 }
