@@ -44,8 +44,18 @@ else if(u.perfil==="cuidador")cor="#fff8e1"
 else if(u.perfil==="fisioterapeuta")cor="#f3e5f5"
 else if(u.perfil==="estagiario")cor="#ede7f6"
 if(!MODO_EDICAO_ADMIN){
-html+=`<tr data-id="${u.id}" style="background:${cor}"><td>${u.nome_completo||""}</td><td>${u.nome_apelido||""}</td><td>${u.email||""}</td><td>${u.perfil||""}</td><td>${u.hierarquia||""}</td><td></td></tr>`
-}else{
+html+=`<tr data-id="${u.id}" style="background:${cor}">
+<td>${u.nome_completo||""}</td>
+<td>${u.nome_apelido||""}</td>
+<td>${u.email||""}</td>
+<td>${u.perfil||""}</td>
+<td>${u.hierarquia||""}</td>
+<td>
+<button onclick="verPacientesDoProfissional('${u.id}')" class="btn-primary">Pacientes</button>
+</td>
+</tr>`
+}
+else{
 html+=`<tr data-id="${u.id}" style="background:${cor}">
 <td><input class="u_nome" value="${u.nome_completo||""}"></td>
 <td><input class="u_apelido" value="${u.nome_apelido||""}"></td>
@@ -419,6 +429,34 @@ console.error("Erro geral:",e)
 
 PACIENTE_SELECIONADO=null
 PROFISSIONAL_SELECIONADO=null
+}
+/* ====================================================
+074 – VER PACIENTES DO PROFISSIONAL
+==================================================== */
+async function verPacientesDoProfissional(usuarioId){
+if(!db||!usuarioId)return
+
+const {data:rel}=await db
+.from("pacientes_profissionais")
+.select("paciente_id")
+.eq("usuario_id",usuarioId)
+.eq("ativo",true)
+
+const ids=rel?.map(r=>r.paciente_id)||[]
+
+if(!ids.length){
+alert("Este profissional não possui pacientes vinculados")
+return
+}
+
+const {data:pacientes}=await db
+.from("pacientes")
+.select("nome_completo")
+.in("id",ids)
+
+let lista=pacientes?.map(p=>p.nome_completo).join("\n")||""
+
+alert("Pacientes do profissional:\n\n"+lista)
 }
 /* ====================================================
 999 – EXPORT GLOBAL ADMIN
