@@ -110,11 +110,12 @@ tabela.innerHTML=html
 montarResumoUsuarios(lista,mapaQtd)
 }
 /* ====================================================
-062 – SALVAR USUÁRIO
+062 – SALVAR USUÁRIO (CORRIGIDO FINAL LIMPO)
 ==================================================== */
 async function salvarUsuario(id,btn){
 const tr=btn.closest("tr")
-const dados={nome_completo:tr.querySelector(".u_nome")?.value||"",nome_apelido:tr.querySelector(".u_apelido")?.value||"",email:tr.querySelector(".u_email")?.value||"",let perfilUI=tr.querySelector(".u_perfil")?.value||""
+/* 🔹 PERFIL */
+let perfilUI=tr.querySelector(".u_perfil")?.value||""
 const mapaPerfil={
 "Administrador":"administrador",
 "Médico":"medico",
@@ -123,13 +124,36 @@ const mapaPerfil={
 "Fisioterapeuta":"fisioterapeuta",
 "Estagiário":"estagiario"
 }
-perfil:mapaPerfil[perfilUI]||perfilUI,hierarquia:parseInt(tr.querySelector(".u_hierarquia")?.value||5),ativo:true}
+let perfilFinal=mapaPerfil[perfilUI]||"cuidador"
+/* 🔹 DADOS */
+const dados={
+nome_completo:tr.querySelector(".u_nome")?.value||"",
+nome_apelido:tr.querySelector(".u_apelido")?.value||"",
+email:tr.querySelector(".u_email")?.value||"",
+perfil:perfilFinal,
+hierarquia:parseInt(
+tr.querySelector(".u_hierarquia")?.value||5
+),
+ativo:true
+}
+/* 🔹 SENHA */
 const novaSenha=tr.querySelector(".u_senha")?.value
 if(novaSenha)dados.senha_hash=novaSenha
-const {error}=await db.from("usuarios").update(dados).eq("id",id)
-if(error){alert("Erro ao salvar");console.error(error);return}
+/* 🔹 UPDATE */
+const {error}=await db
+.from("usuarios")
+.update(dados)
+.eq("id",id)
+/* 🔹 RESULTADO */
+if(error){
+alert("Erro ao salvar")
+console.error(error)
+return
+}
 btn.innerText="✔"
-setTimeout(()=>btn.innerText="Salvar",1200)
+setTimeout(()=>{
+btn.innerText="Salvar"
+},1200)
 }
 /* ====================================================
 063 – EXCLUIR USUÁRIO
