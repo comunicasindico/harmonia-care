@@ -35,8 +35,19 @@ const lista=data.filter(u=>!busca||(u.nome_completo||"").toLowerCase().includes(
 const tabela=document.getElementById("tabelaUsuariosAdmin")
 if(!tabela)return
 let html=""
+/* 🔥 CONTAGEM DE PACIENTES POR USUÁRIO */
+const {data:vinculos}=await db
+.from("pacientes_profissionais")
+.select("usuario_id")
+.eq("ativo",true)
+
+const mapaQtd={}
+vinculos?.forEach(v=>{
+mapaQtd[v.usuario_id]=(mapaQtd[v.usuario_id]||0)+1
+})
 lista.forEach(u=>{
 let cor="#fff"
+let qtd=mapaQtd[u.id]||0
 if(u.perfil==="administrador")cor="#e3f2fd"
 else if(u.perfil==="medico")cor="#fdecea"
 else if(u.perfil==="enfermeiro")cor="#e8f5e9"
@@ -51,7 +62,9 @@ html+=`<tr data-id="${u.id}" style="background:${cor}">
 <td>${u.perfil||""}</td>
 <td>${u.hierarquia||""}</td>
 <td>
-<button onclick="verPacientesDoProfissional('${u.id}')" class="btn-primary">Pacientes</button>
+<button onclick="verPacientesDoProfissional('${u.id}')" class="btn-primary">
+Pacientes (${qtd})
+</button>
 </td>
 </tr>`
 }
@@ -81,6 +94,7 @@ html+=`<tr data-id="${u.id}" style="background:${cor}">
 }
 })
 tabela.innerHTML=html
+montarResumoUsuarios(lista,mapaQtd)
 }
 /* ====================================================
 062 – SALVAR USUÁRIO
@@ -434,14 +448,11 @@ PROFISSIONAL_SELECIONADO=null
 074 – VER PACIENTES DO PROFISSIONAL
 ==================================================== */
 async function verPacientesDoProfissional(usuarioId){
-
 if(!db||!usuarioId)return
-
-document.getElementById("painelVinculo").style.display="block"
-
+const painel=document.getElementById("painelVinculo")
+if(painel)painel.style.display="block"
 const elNome=document.getElementById("tituloVinculo")
 elNome.innerText="Vincular pacientes ao usuário"
-
 window.USUARIO_VINCULO_ATUAL=usuarioId
 /* 🔥 CARREGAR PACIENTES */
 const {data:pacientes}=await db
@@ -456,15 +467,10 @@ const {data:rel}=await db
 .select("paciente_id")
 .eq("usuario_id",usuarioId)
 .eq("ativo",true)
-
 const vinculados=rel?.map(r=>r.paciente_id)||[]
-
 let html=""
-
 pacientes?.forEach(p=>{
-
 const ativo=vinculados.includes(p.id)
-
 html+=`
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
 <input type="checkbox"
@@ -474,17 +480,14 @@ onchange="toggleVinculo('${p.id}')">
 </div>
 `
 })
-
 document.getElementById("listaPacientesVinculo").innerHTML=html
 }
 /* ====================================================
 075 vínculo
 ==================================================== */
 async function toggleVinculo(pacienteId){
-
 const usuarioId=window.USUARIO_VINCULO_ATUAL
 if(!usuarioId)return
-
 const {data:existe}=await db
 .from("pacientes_profissionais")
 .select("*")
@@ -493,7 +496,6 @@ const {data:existe}=await db
 .eq("ativo",true)
 
 if(existe && existe.length){
-
 /* 🔴 REMOVER */
 await db
 .from("pacientes_profissionais")
@@ -506,7 +508,7 @@ await db
 /* 🟢 ADICIONAR */
 await db
 .from("pacientes_profissionais")
-upsert({
+.upsert({
 usuario_id:usuarioId,
 paciente_id:pacienteId,
 turno:"manha",
@@ -516,7 +518,25 @@ onConflict:"usuario_id,paciente_id,turno"
 })
 
 }
-
+/* 🔄 RECARREGA UI */
+await verPacientesDoProfissional(usuarioId)
+await carregarUsuarios()
+}
+/* ====================================================
+076 – RESUMO HOSPITAL
+==================================================== */
+function montarResumoUsuarios(lista,mapaQtd){
+let total=lista.length
+let totalPacientes=Object.values(mapaQtd).reduce((a,b)=>a+b,0)
+let html=`
+<div style="display:flex;gap:10px;margin-bottom:10px">
+<div style="background:#3498db;color:#fff;padding:10px;border-radius:8px">👥 Profissionais<br><b>${total}</b></div>
+<div style="background:#2ecc71;color:#fff;padding:10px;border-radius:8px">🧓 Pacientes<br><b>${totalPacientes}</b></div>
+</div>
+`
+const el=document.getElementById("painelResumo")
+if(!el)return
+el.innerHTML=html
 }
 /* ====================================================
 999 – EXPORT GLOBAL ADMIN
