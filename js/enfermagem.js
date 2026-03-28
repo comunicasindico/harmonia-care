@@ -25,18 +25,22 @@ localStorage.setItem("usuario_hierarquia","1")
 return{id:id||null,nome:nome,hierarquia:Number(hierarquia),perfil:perfil}
 }
 /* ====================================================
-022 – CARREGAR PACIENTES BUSCA (CORRIGIDO DEFINITIVO)
+022 – CARREGAR PACIENTES BUSCA (DEFINITIVO COM FILTRO)
 ==================================================== */
 async function carregarPacientesBusca(){
 if(!db)return
 const select=document.getElementById("buscaPaciente")
 if(!select)return
+
 try{
-const {data,error}=await db
+
+/* 🔥 USUÁRIO LOGADO */
+let usuarioId=localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
+
+/* 🔥 BASE QUERY */
+let query=db.from("pacientes")
 
 /* 🔥 FILTRO POR PROFISSIONAL */
-let query = db.from("pacientes")
-
 if(usuarioId && usuarioId!=="admin"){
 const {data:rel}=await db
 .from("pacientes_profissionais")
@@ -47,15 +51,16 @@ const {data:rel}=await db
 const ids=rel?.map(r=>r.paciente_id)||[]
 
 if(ids.length){
-query = query.in("id",ids)
+query=query.in("id",ids)
 }else{
 console.warn("Sem pacientes vinculados")
-tabela.innerHTML=""
+select.innerHTML='<option value="todos">SEM PACIENTES</option>'
 return
 }
 }
 
-const {data,error}=await query
+/* 🔥 CONSULTA FINAL */
+const {data:pacientes,error}=await query
 .select("id,nome_completo")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
@@ -63,18 +68,24 @@ const {data,error}=await query
 
 if(error){
 console.error("Erro ao carregar pacientes:",error)
-return;
+return
 }
-let options='<option value="todos">TODOS</option>';
-if(Array.isArray(data)){
-for(let i=0;i<data.length;i++){
-const p=data[i];
-options+=`<option value="${p.id}">${p.nome_completo}</option>`;
+
+/* 🔥 MONTAR SELECT */
+let options='<option value="todos">TODOS</option>'
+
+if(Array.isArray(pacientes)){
+for(let i=0;i<pacientes.length;i++){
+const p=pacientes[i]
+options+=`<option value="${p.id}">${p.nome_completo}</option>`
 }
 }
+
 select.innerHTML=options
 select.value="todos"
-console.log("Pacientes carregados:",(data||[]).length)
+
+console.log("Pacientes carregados:",(pacientes||[]).length)
+
 }catch(e){
 console.error("Erro geral pacientes:",e)
 }
