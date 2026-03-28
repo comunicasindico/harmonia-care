@@ -204,6 +204,31 @@ function renderizarRotinas(lista){
 const tbody=document.getElementById("rotinas")
 if(!tbody)return
 let html=""
+/* 🔥 CABEÇALHO DE ROTINAS (UM BOTÃO POR ROTINA) */
+let rotinasUnicas={}
+lista.forEach(r=>{
+if(!rotinasUnicas[r.rotina_id]){
+rotinasUnicas[r.rotina_id]=r.rotina
+}
+})
+
+let headerHTML=`
+<tr>
+<td colspan="3" style="background:#f8f9fa;padding:6px">
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+`
+
+Object.keys(rotinasUnicas).forEach(rotinaId=>{
+headerHTML+=`
+<button onclick="executarRotinaTodos('${rotinaId}')"
+style="background:#2ecc71;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer">
+✔ ${rotinasUnicas[rotinaId]}
+</button>
+`
+})
+
+headerHTML+=`</div></td></tr>`
+  
 const pacientes={}
 lista.forEach(r=>{
 if(!pacientes[r.paciente_id])pacientes[r.paciente_id]={nome:r.paciente,rotinas:[]}
@@ -287,8 +312,7 @@ ${concluido?"✔ Concluído":"✔ Concluir Todas"}
 </tr>
 `
 })
-
-tbody.innerHTML=html
+tbody.innerHTML=headerHTML+html
 /* 🔥 CLICK NAS ROTINAS */
 document.querySelectorAll(".badge-rotina").forEach(el=>{
 el.onclick=function(){
