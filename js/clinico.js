@@ -382,18 +382,44 @@ const id=linha.dataset.id
 if(!id)continue
 const dietaKey=(getVal(linha,".clin_dieta")||"").toLowerCase().trim()
 const dietaObj=DIETAS[dietaKey]||null
-const dados={
-has:bool(getVal(linha,".clin_has")),
-dm:bool(getVal(linha,".clin_dm")),
-da:bool(getVal(linha,".clin_da")),
-cardiopatia:bool(getVal(linha,".clin_cardio")),
-acamado:bool(getVal(linha,".clin_acamado")),
-pressao_arterial:(getVal(linha,".clin_pa")||"").trim()||null,
-dieta_especial:dietaObj?true:false,
-dieta_texto:dietaObj?dietaObj.nome:null,
-grau_risco:parseInt(getVal(linha,".clin_risco")||0),
-outras_comorbidades:(getVal(linha,".clin_outros")||"").trim()||null
+let dados={}
+
+/* 🔒 PATCH SELETIVO (NÃO APAGA DADOS) */
+
+const vHas=getVal(linha,".clin_has")
+if(vHas!=="")dados.has=bool(vHas)
+
+const vDm=getVal(linha,".clin_dm")
+if(vDm!=="")dados.dm=bool(vDm)
+
+const vDa=getVal(linha,".clin_da")
+if(vDa!=="")dados.da=bool(vDa)
+
+const vCardio=getVal(linha,".clin_cardio")
+if(vCardio!=="")dados.cardiopatia=bool(vCardio)
+
+const vAcamado=getVal(linha,".clin_acamado")
+if(vAcamado!=="")dados.acamado=bool(vAcamado)
+
+/* 🔥 PA */
+const pa=(getVal(linha,".clin_pa")||"").trim()
+if(pa!=="")dados.pressao_arterial=pa
+
+/* 🔥 DIETA */
+if(dietaKey!==""){
+dados.dieta_especial=true
+dados.dieta_texto=dietaObj?dietaObj.nome:null
 }
+
+/* 🔥 RISCO */
+const risco=getVal(linha,".clin_risco")
+if(risco!=="")dados.grau_risco=parseInt(risco)
+
+/* 🔥 OUTRAS */
+const outras=(getVal(linha,".clin_outros")||"").trim()
+if(outras!=="")dados.outras_comorbidades=outras
+/* 🔒 NÃO SALVAR SE NÃO HOUVE ALTERAÇÃO */
+if(Object.keys(dados).length===0)continue
 try{
 const {error}=await db.from("pacientes").update(dados).eq("id",id)
 if(error)console.error("Erro ao salvar paciente:",id,error)
