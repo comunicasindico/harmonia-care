@@ -107,23 +107,58 @@ console.error("Erro geral pacientes:",e)
 }
 }
 /* ====================================================
-023 – CARREGAR ROTINAS (CORRIGIDO DEFINITIVO FINAL)
+023 – CARREGAR ROTINAS (CORRIGIDO COM VÍNCULO USUÁRIO)
 ==================================================== */
 async function carregarRotinas(){
 if(!db||!EMPRESA_ID)return
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 const pacienteSelecionado=document.getElementById("buscaPaciente")?.value||"todos"
 const dataHoje=obterDataSelecionada()
+let usuarioId=localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
 let pacientes=[]
-const {data:pacs}=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
+if(usuarioId && usuarioId!=="admin"){
+const {data:rel}=await db
+.from("pacientes_profissionais")
+.select("paciente_id")
+.eq("usuario_id",usuarioId)
+.eq("ativo",true)
+const ids=rel?.map(r=>r.paciente_id)||[]
+if(ids.length){
+const {data:pacs}=await db
+.from("pacientes")
+.select("*")
+.in("id",ids)
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
 pacientes=pacs||[]
+}else{
+pacientes=[]
+}
+}else{
+const {data:pacs}=await db
+.from("pacientes")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+pacientes=pacs||[]
+}
 pacientes.sort((a,b)=>(a.nome_completo||"").localeCompare(b.nome_completo||"","pt-BR"))
 if(pacienteSelecionado!=="todos"){
 pacientes=pacientes.filter(p=>String(p.id)===String(pacienteSelecionado))
 }
-const {data:rotinas}=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
-const rotinasTurno=(rotinas||[]).filter(r=>!r.turno||r.turno===turno).sort((a,b)=>(a.ordem||99)-(b.ordem||99))
-const {data:execucoes}=await db.from("rotinas_execucao").select("*").eq("data",dataHoje).eq("turno",turno)
+const {data:rotinas}=await db
+.from("rotina_modelos")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+const rotinasTurno=(rotinas||[])
+.filter(r=>!r.turno||r.turno===turno)
+.sort((a,b)=>(a.ordem||99)-(b.ordem||99))
+const {data:execucoes}=await db
+.from("rotinas_execucao")
+.select("*")
+.eq("data",dataHoje)
+.eq("turno",turno)
 const mapaExec=new Map()
 ;(execucoes||[]).forEach(e=>{
 const chave=`${e.paciente_id}_${e.rotina_id}`
@@ -143,7 +178,12 @@ ordem:r.ordem||99,
 turno:r.turno||turno,
 status:exec&&exec.status==="executado"?"executado":"pendente",
 profissional:exec?exec.profissional_nome||"":"",
-has:p.has,dm:p.dm,demencia:p.da,cardiopatia:p.cardiopatia,acamado:p.acamado,pa:p.pressao_arterial
+has:p.has,
+dm:p.dm,
+demencia:p.da,
+cardiopatia:p.cardiopatia,
+acamado:p.acamado,
+pa:p.pressao_arterial
 })
 }}
 lista.sort((a,b)=>{
