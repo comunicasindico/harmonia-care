@@ -162,9 +162,8 @@ linha.style.background="#d4edda"
 setTimeout(()=>{linha.style.background=""},800)
 })
 })
-
 /* ====================================================
-041 – PAINEL NUTRICIONAL (PADRÃO NOVO)
+040A – PAINEL NUTRICIONAL (PADRÃO NOVO)
 ==================================================== */
 let totalDietas=0,hipossodica=0,diabetica=0,pastosa=0,vegetariana=0,liquida=0
 
@@ -189,16 +188,19 @@ if(elVeg)elVeg.innerText=`🥗 ${vegetariana}`
 if(elLiq)elLiq.innerText=`🧃 ${liquida}`
 const elRisco=document.getElementById("painelRiscoResumo")
 if(elRisco){
+try{
 elRisco.innerHTML=`
 <span style="background:#2ecc71;color:#fff;padding:4px 10px;border-radius:6px">Baixo ${risco1+risco2}</span>
 <span style="background:#f1c40f;color:#fff;padding:4px 10px;border-radius:6px">Moderado ${risco3}</span>
 <span style="background:#e67e22;color:#fff;padding:4px 10px;border-radius:6px">Médio ${risco4}</span>
 <span style="background:#e74c3c;color:#fff;padding:4px 10px;border-radius:6px">Alto ${risco5}</span>
 `
+}catch(e){
+console.error("Erro painel risco",e)
 }
 }
 /* ===============================
-042 INDICADORES VISUAIS
+040B INDICADORES VISUAIS
 =============================== */
 const elR5=document.getElementById("indicadorRISCO5")
 const elR4=document.getElementById("indicadorRISCO4")
@@ -210,7 +212,7 @@ if(elR3)elR3.innerHTML=`🟡 Moderado ${risco3}`
 if(elR12)elR12.innerHTML=`🟢 Baixo ${risco1+risco2}`
 }
 /* ====================================================
-043 – CALCULAR IDADE
+041 – CALCULAR IDADE
 ==================================================== */
 function calcularIdade(data){
 if(!data)return""
@@ -222,11 +224,11 @@ if(m<0||(m===0&&hoje.getDate()<nascimento.getDate()))idade--
 return idade
 }
 /* ====================================================
-044 – EDITAR CLINICO GLOBAL
+042 – EDITAR CLINICO GLOBAL
 ==================================================== */
 function editarClinicoGlobal(){MODO_EDICAO_CLINICO=true;carregarClinico()}
 /* ====================================================
-045 – SALVAR CLÍNICO GLOBAL (COM DIETA PADRONIZADA)
+043 – SALVAR CLÍNICO GLOBAL (COM DIETA PADRONIZADA)
 ==================================================== */
 async function salvarClinicoGlobal(){
 if(!db)return
@@ -277,7 +279,7 @@ await carregarClinico()
 alert("Dados salvos com sucesso!")
 }
 /* ====================================================
-046 – CARREGAR DADOS CLÍNICOS DO PACIENTE
+044 – CARREGAR DADOS CLÍNICOS DO PACIENTE
 ==================================================== */
 async function carregarDadosClinicosPaciente(pacienteId){
 const box=document.getElementById("dadosClinicosPaciente")
