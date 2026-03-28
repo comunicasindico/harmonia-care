@@ -99,13 +99,12 @@ p.acamado=p.acamado===true||p.acamado==="true"||p.acamado==1
 p.grau_risco=parseInt(p.grau_risco)||0
 /* 🔥 CONTADOR DE DIETAS */
 let dietaKey=getDietaKey(p.dieta_texto)
-if(!dietaKey)dietaNormal++
-if(dietaKey==="normal")dietaNormal++
-if(dietaKey==="hipossodica")dietaHipossodica++
-if(dietaKey==="diabetica")dietaDiabetica++
-if(dietaKey==="pastosa")dietaPastosa++
-if(dietaKey==="liquida")dietaLiquida++
-if(dietaKey==="vegetariana")dietaVegetariana++
+if(!dietaKey || dietaKey==="normal")dietaNormal++
+else if(dietaKey==="hipossodica")dietaHipossodica++
+else if(dietaKey==="diabetica")dietaDiabetica++
+else if(dietaKey==="pastosa")dietaPastosa++
+else if(dietaKey==="liquida")dietaLiquida++
+else if(dietaKey==="vegetariana")dietaVegetariana++
 let paS=0,paD=0
 if(p.pressao_arterial){
 let pa=p.pressao_arterial.replace(/\s/g,"").split("/")
@@ -203,11 +202,26 @@ document.getElementById("dietaPastosa").innerText="🥣 "+dietaPastosa
 document.getElementById("dietaLiquida").innerText="🧃 "+dietaLiquida
 document.getElementById("dietaVegetariana").innerText="🥗 "+dietaVegetariana
 tabela.innerHTML=html
-
+/* 🔒 CONTROLE VISUAL + FOCO */
 setTimeout(()=>{
+/* 🔴 EXCLUIR */
+if(!pode("excluir_paciente")){
+document.querySelectorAll(".btn-danger").forEach(b=>{
+b.style.display="none"
+})
+}
+/* 🔴 BLOQUEIO */
+if(!pode("editar_clinico")){
+document.querySelectorAll("#quadroClinico select,#quadroClinico input").forEach(el=>{
+el.disabled=true
+})
+}
+/* 🔵 FOCO (SOMENTE SE PODE EDITAR) */
 const primeiroCampo=document.querySelector("#quadroClinico select,#quadroClinico input")
-if(primeiroCampo)primeiroCampo.focus()
-},300)
+if(primeiroCampo && MODO_EDICAO_CLINICO && pode("editar_clinico")){
+primeiroCampo.focus()
+}
+},200)
 
 if(window.TV_NAV_ATIVO)return
 window.TV_NAV_ATIVO=true
@@ -364,6 +378,11 @@ function editarClinicoGlobal(){MODO_EDICAO_CLINICO=true;carregarClinico()}
 ==================================================== */
 async function salvarClinicoGlobal(){
 if(!db)return
+  /* 🔒 CONTROLE DE PERMISSÃO */
+if(!pode("salvar_clinico")){
+alert("Sem permissão para salvar alterações clínicas")
+return
+}
 const linhas=document.querySelectorAll("#quadroClinico tr[data-id]")
 const DIETAS={
 normal:{nome:"Normal",icone:"🍽️"},
@@ -466,6 +485,29 @@ ${data.outras_comorbidades&&data.outras_comorbidades.trim()!==""?data.outras_com
 </table></div>`
 box.innerHTML=html
 }
-
+/* ====================================================
+045 – EXCLUIR PACIENTE (COM CONTROLE)
+==================================================== */
+async function excluirPaciente(id){
+if(!id)return
+/* 🔒 CONTROLE */
+if(!pode("excluir_paciente")){
+alert("Apenas administrador pode excluir")
+return
+}
+const confirmar=confirm("Deseja realmente excluir este paciente?")
+if(!confirmar)return
+try{
+const {error}=await db.from("pacientes").update({ativo:false}).eq("id",id)
+if(error){
+console.error("Erro ao excluir:",error)
+alert("Erro ao excluir paciente")
+return
+}
+await carregarClinico()
+}catch(e){
+console.error("Erro inesperado:",e)
+}
+}
 
 
