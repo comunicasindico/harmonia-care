@@ -1,4 +1,32 @@
 /* ====================================================
+090 – BACKUP COMPLETO DO SISTEMA (JSON)
+==================================================== */
+async function backupCompleto(){
+if(!db){alert("Sem conexão com banco");return}
+try{
+const tabelas=["pacientes","usuarios","pacientes_profissionais","rotinas_execucao","rotina_modelos"]
+let backup={}
+for(let t of tabelas){
+const {data,error}=await db.from(t).select("*")
+if(error){console.error("Erro tabela",t,error);backup[t]=[];continue}
+backup[t]=data||[]
+}
+const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"})
+const url=URL.createObjectURL(blob)
+const a=document.createElement("a")
+a.href=url
+a.download="backup_harmonia_"+new Date().toISOString().slice(0,10)+".json"
+document.body.appendChild(a)
+a.click()
+a.remove()
+URL.revokeObjectURL(url)
+alert("Backup realizado com sucesso")
+}catch(e){
+console.error("Erro backup",e)
+alert("Erro ao gerar backup")
+}
+}
+/* ====================================================
 060 – INSERIR USUÁRIO (CORRIGIDO PERFIL BANCO)
 ==================================================== */
 async function inserirUsuario(){
