@@ -136,6 +136,40 @@ html+=`<tr data-id="${p.id}" style="background:${corLinha};${borda}${destaqueCri
 })
 
 tabela.innerHTML=html
+
+setTimeout(()=>{
+const primeiroCampo=document.querySelector("#quadroClinico select,#quadroClinico input")
+if(primeiroCampo)primeiroCampo.focus()
+},300)
+
+if(window.TV_NAV_ATIVO)return
+window.TV_NAV_ATIVO=true
+document.addEventListener("keydown",function(e){
+const ativos=[...document.querySelectorAll("#quadroClinico select,#quadroClinico input")]
+const atual=document.activeElement
+let i=ativos.indexOf(atual)
+/* 🔹 NAVEGAÇÃO */
+if(e.key==="ArrowDown"||e.key==="ArrowRight"){
+if(i<ativos.length-1){
+ativos[i+1].focus()
+e.preventDefault()
+}
+}
+if(e.key==="ArrowUp"||e.key==="ArrowLeft"){
+if(i>0){
+ativos[i-1].focus()
+e.preventDefault()
+}
+}
+/* 🔹 ABRIR SELECT */
+if(e.key==="Enter"){
+if(atual && atual.tagName==="SELECT"){
+atual.click()
+e.preventDefault()
+}
+}
+})
+  
 document.querySelectorAll("#quadroClinico select,#quadroClinico input").forEach(el=>{
 el.addEventListener("change",async()=>{
 const linha=el.closest("tr")
