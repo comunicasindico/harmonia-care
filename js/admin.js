@@ -434,29 +434,89 @@ PROFISSIONAL_SELECIONADO=null
 074 – VER PACIENTES DO PROFISSIONAL
 ==================================================== */
 async function verPacientesDoProfissional(usuarioId){
+
 if(!db||!usuarioId)return
 
+document.getElementById("painelVinculo").style.display="block"
+
+const elNome=document.getElementById("tituloVinculo")
+elNome.innerText="Vincular pacientes ao usuário"
+
+window.USUARIO_VINCULO_ATUAL=usuarioId
+/* 🔥 CARREGAR PACIENTES */
+const {data:pacientes}=await db
+.from("pacientes")
+.select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+.order("nome_completo")
+/* 🔥 CARREGAR VÍNCULOS EXISTENTES */
 const {data:rel}=await db
 .from("pacientes_profissionais")
 .select("paciente_id")
 .eq("usuario_id",usuarioId)
 .eq("ativo",true)
 
-const ids=rel?.map(r=>r.paciente_id)||[]
+const vinculados=rel?.map(r=>r.paciente_id)||[]
 
-if(!ids.length){
-alert("Este profissional não possui pacientes vinculados")
-return
+let html=""
+
+pacientes?.forEach(p=>{
+
+const ativo=vinculados.includes(p.id)
+
+html+=`
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+<input type="checkbox"
+${ativo?"checked":""}
+onchange="toggleVinculo('${p.id}')">
+<span>${p.nome_completo}</span>
+</div>
+`
+})
+
+document.getElementById("listaPacientesVinculo").innerHTML=html
+}
+/* ====================================================
+075 vínculo
+==================================================== */
+async function toggleVinculo(pacienteId){
+
+const usuarioId=window.USUARIO_VINCULO_ATUAL
+if(!usuarioId)return
+
+const {data:existe}=await db
+.from("pacientes_profissionais")
+.select("*")
+.eq("usuario_id",usuarioId)
+.eq("paciente_id",pacienteId)
+.eq("ativo",true)
+
+if(existe && existe.length){
+
+/* 🔴 REMOVER */
+await db
+.from("pacientes_profissionais")
+.update({ativo:false})
+.eq("usuario_id",usuarioId)
+.eq("paciente_id",pacienteId)
+
+}else{
+
+/* 🟢 ADICIONAR */
+await db
+.from("pacientes_profissionais")
+upsert({
+usuario_id:usuarioId,
+paciente_id:pacienteId,
+turno:"manha",
+ativo:true
+},{
+onConflict:"usuario_id,paciente_id,turno"
+})
+
 }
 
-const {data:pacientes}=await db
-.from("pacientes")
-.select("nome_completo")
-.in("id",ids)
-
-let lista=pacientes?.map(p=>p.nome_completo).join("\n")||""
-
-alert("Pacientes do profissional:\n\n"+lista)
 }
 /* ====================================================
 999 – EXPORT GLOBAL ADMIN
