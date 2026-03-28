@@ -52,6 +52,10 @@ let totalPacientes=0,totalHas=0,totalDm=0,totalDemencia=0,totalCardio=0,totalAca
 let risco1=0,risco2=0,risco3=0,risco4=0,risco5=0
 
 data.forEach(p=>{
+let destaqueCritico=""
+if(p.grau_risco>=4 && p.pa_alterada){
+destaqueCritico="animation:pulse 1s infinite alternate;"
+}
 p.has=p.has===true||p.has==="true"||p.has==1
 p.dm=p.dm===true||p.dm==="true"||p.dm==1
 p.da=p.da===true||p.da==="true"||p.da==1
@@ -85,6 +89,11 @@ const riscoTotal=risco1+risco2+risco3+risco4+risco5
 html+=`<tr style="background:#fff200;font-weight:bold;text-align:center"><td>Todos</td><td></td><td style="color:#e74c3c">${totalHas}</td><td style="color:#f39c12">${totalDm}</td><td style="color:#8e44ad">${totalDemencia}</td><td style="color:#c0392b">${totalCardio}</td><td style="color:#34495e">${totalAcamado}</td><td style="color:#e67e22">${totalPAAlterada}</td><td></td><td style="color:#2c3e50">${riscoTotal}</td><td></td></tr>`
 
 data.forEach(p=>{
+let corLinha="#fff"
+if(p.grau_risco>=4)corLinha="#ffe5e5"
+else if(p.grau_risco===3)corLinha="#fff8e1"
+let borda=""
+if(p.pa_alterada)borda="border-left:6px solid #e74c3c"
 let dietaKey=getDietaKey(p.dieta_texto)
 let dietaHTML=""
 if(MODO_EDICAO_CLINICO){
@@ -101,7 +110,7 @@ dietaHTML=`<select class="clin_dieta">
 dietaHTML=formatarDieta(p)
 }
 
-html+=`<tr data-id="${p.id}" style="${p.grau_risco>=4?'background:#ffe5e5':''} ${p.pa_alterada?'border-left:6px solid #e74c3c':''}">
+html+=`<tr data-id="${p.id}" style="background:${corLinha};${borda}${destaqueCritico}">
 <td>${p.nome_apelido||p.nome_completo||""}</td>
 <td>${calcularIdade(p.data_nascimento)}</td>
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_has"><option value="true"${p.has?" selected":""}>✔</option><option value="false"${!p.has?" selected":""}></option></select>`:(p.has?"✔":"")}</td>
@@ -118,6 +127,41 @@ html+=`<tr data-id="${p.id}" style="${p.grau_risco>=4?'background:#ffe5e5':''} $
 })
 
 tabela.innerHTML=html
+document.querySelectorAll("#quadroClinico select,#quadroClinico input").forEach(el=>{
+el.addEventListener("change",async()=>{
+const linha=el.closest("tr")
+if(!linha)return
+const id=linha.dataset.id
+if(!id)return
+const bool=v=>v==="true"||v==="1"||v==="sim"
+const get=(c)=>linha.querySelector(c)?.value||""
+const DIETAS={
+normal:"Normal",
+hipossodica:"Hipossódica",
+diabetica:"Diabética",
+pastosa:"Pastosa",
+liquida:"Líquida",
+vegetariana:"Vegetariana"
+}
+const dietaKey=get(".clin_dieta")
+const dados={
+has:bool(get(".clin_has")),
+dm:bool(get(".clin_dm")),
+da:bool(get(".clin_da")),
+cardiopatia:bool(get(".clin_cardio")),
+acamado:bool(get(".clin_acamado")),
+pressao_arterial:get(".clin_pa")||null,
+dieta_especial:dietaKey?true:false,
+dieta_texto:DIETAS[dietaKey]||null,
+grau_risco:parseInt(get(".clin_risco")||0),
+outras_comorbidades:get(".clin_outros")||null
+}
+await db.from("pacientes").update(dados).eq("id",id)
+linha.style.transition="all 0.3s"
+linha.style.background="#d4edda"
+setTimeout(()=>{linha.style.background=""},800)
+})
+})
 
 /* ====================================================
 041 – PAINEL NUTRICIONAL (PADRÃO NOVO)
@@ -143,6 +187,15 @@ if(elDia)elDia.innerText=`🩸 ${diabetica}`
 if(elPas)elPas.innerText=`🥣 ${pastosa}`
 if(elVeg)elVeg.innerText=`🥗 ${vegetariana}`
 if(elLiq)elLiq.innerText=`🧃 ${liquida}`
+const elRisco=document.getElementById("painelRiscoResumo")
+if(elRisco){
+elRisco.innerHTML=`
+<span style="background:#2ecc71;color:#fff;padding:4px 10px;border-radius:6px">Baixo ${risco1+risco2}</span>
+<span style="background:#f1c40f;color:#fff;padding:4px 10px;border-radius:6px">Moderado ${risco3}</span>
+<span style="background:#e67e22;color:#fff;padding:4px 10px;border-radius:6px">Médio ${risco4}</span>
+<span style="background:#e74c3c;color:#fff;padding:4px 10px;border-radius:6px">Alto ${risco5}</span>
+`
+}
 }
 /* ===============================
 042 INDICADORES VISUAIS
