@@ -198,83 +198,66 @@ renderizarRotinas(lista)
 calcularIndicadores(lista)
 }
 /* ====================================================
-024 – RENDERIZAR ROTINAS (PADRÃO HOSPITAL PROFISSIONAL)
+024 – RENDERIZAR ROTINAS (LAYOUT HOSPITAL LIMPO)
 ==================================================== */
 function renderizarRotinas(lista){
 const tbody=document.getElementById("rotinas")
 if(!tbody)return
 let html=""
-/* 🔥 CABEÇALHO DE ROTINAS (UM BOTÃO POR ROTINA) */
-let rotinasUnicas={}
-lista.forEach(r=>{
-if(!rotinasUnicas[r.rotina_id]){
-rotinasUnicas[r.rotina_id]=r.rotina
-}
-})
-
-let headerHTML=`
-<tr>
-<td colspan="3" style="background:#f8f9fa;padding:6px">
-<div style="display:flex;flex-wrap:wrap;gap:6px">
-`
-
-Object.keys(rotinasUnicas).forEach(rotinaId=>{
-headerHTML+=`
-<button onclick="executarRotinaTodos('${rotinaId}')"
-style="background:#2ecc71;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer">
-✔ ${rotinasUnicas[rotinaId]}
-</button>
-`
-})
-
-headerHTML+=`</div></td></tr>`
-  
 const pacientes={}
 lista.forEach(r=>{
 if(!pacientes[r.paciente_id])pacientes[r.paciente_id]={nome:r.paciente,rotinas:[]}
 pacientes[r.paciente_id].rotinas.push(r)
 })
-Object.keys(pacientes).forEach(pid=>{
-const p=pacientes[pid]
-let total=p.rotinas.length
-let executadas=0
-/* 🔥 AGRUPAR ROTINAS POR NOME */
-const mapaRotinas={}
-p.rotinas.forEach(r=>{
-if(!mapaRotinas[r.rotina_id]){
-mapaRotinas[r.rotina_id]={
-nome:r.rotina,
-turno:r.turno,
-itens:[]
+
+/* 🔥 ROTINAS ÚNICAS (CABEÇALHO) */
+let rotinasUnicas={}
+lista.forEach(r=>{
+if(!rotinasUnicas[r.rotina_id]){
+rotinasUnicas[r.rotina_id]={nome:r.rotina,turno:r.turno}
 }
-}
-mapaRotinas[r.rotina_id].itens.push(r)
-if(r.status==="executado")executadas++
 })
 
-let rotinasHTML=""
-/* 🔥 LOOP POR ROTINA (AGRUPADO) */
-Object.keys(mapaRotinas).forEach(rotinaId=>{
-const grupo=mapaRotinas[rotinaId]
-/* 🔥 CABEÇALHO DA ROTINA COM BOTÃO ÚNICO */
-rotinasHTML+=`
-<div style="margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">
+/* 🔥 HEADER PROFISSIONAL */
+let headerHTML=`
+<tr>
+<td colspan="3" style="background:#f4f6f9;padding:6px 10px">
 <div style="display:flex;justify-content:space-between;align-items:center">
-<b>${grupo.nome}</b>
-<button onclick="executarRotinaTodos('${rotinaId}')"
-style="background:#27ae60;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer">
-✔ Todos
-</button>
-</div>
+<div style="font-weight:bold;color:#2c3e50">Ações por Rotina</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
 `
-/* 🔥 ITENS (BADGES) */
-grupo.itens.forEach(r=>{
+
+Object.keys(rotinasUnicas).forEach(rotinaId=>{
+const r=rotinasUnicas[rotinaId]
+let cor="#2ecc71"
+if(r.turno==="tarde")cor="#f39c12"
+if(r.turno==="noite")cor="#34495e"
+headerHTML+=`
+<button onclick="executarRotinaTodos('${rotinaId}')"
+style="background:${cor};color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer">
+✔ ${r.nome}
+</button>
+`
+})
+
+headerHTML+=`</div></div></td></tr>`
+
+/* 🔥 LINHAS DOS PACIENTES */
+Object.keys(pacientes).forEach(pid=>{
+const p=pacientes[pid]
+let rotinasHTML=""
+let total=p.rotinas.length
+let executadas=0
+
+p.rotinas.forEach(r=>{
+const status=(r.status||"pendente")
+if(status==="executado")executadas++
 let nomeProf=r.profissional||""
 let corProf="#64748b"
-if(r.status==="executado"&&nomeProf)corProf=obterCorUsuario(nomeProf)
+if(status==="executado"&&nomeProf)corProf=obterCorUsuario(nomeProf)
 
 let classe="rotina-pendente"
-if(r.status==="executado"){
+if(status==="executado"){
 if(r.turno==="manha")classe="rotina-ok-manha"
 else if(r.turno==="tarde")classe="rotina-ok-tarde"
 else if(r.turno==="noite")classe="rotina-ok-noite"
@@ -284,36 +267,33 @@ rotinasHTML+=`
 <div class="badge-rotina ${classe}"
 data-paciente="${r.paciente_id}"
 data-rotina="${r.rotina_id}"
-style="margin-top:3px">
+style="margin-bottom:3px">
 ${r.rotina}
-${r.status==="executado"?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}
+${status==="executado"?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}
 </div>
 `
 })
 
-rotinasHTML+=`</div>`
-})
 let percentual=total?Math.round((executadas/total)*100):0
 let concluido=executadas===total
-/* 🔥 CABEÇALHO DO PACIENTE (BOTÃO GLOBAL FIXO) */
+
 html+=`
 <tr>
 <td>${p.nome}</td>
 <td>
-<div style="display:flex;flex-direction:column;gap:4px">
-<b>${percentual}% (${executadas}/${total})</b>
+<b>${percentual}% (${executadas}/${total})</b><br>
 <button onclick="executarTodos('${pid}')"
-style="background:${concluido?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer">
-${concluido?"✔ Concluído":"✔ Concluir Todas"}
+style="margin-top:4px;background:${concluido?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:3px 6px;font-size:11px;cursor:pointer">
+${concluido?"✔ Concluído":"Concluir Todas"}
 </button>
-</div>
 </td>
 <td>${rotinasHTML}</td>
 </tr>
 `
 })
+
 tbody.innerHTML=headerHTML+html
-/* 🔥 CLICK NAS ROTINAS */
+
 document.querySelectorAll(".badge-rotina").forEach(el=>{
 el.onclick=function(){
 const pacienteId=this.dataset.paciente
