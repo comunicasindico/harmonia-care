@@ -7,6 +7,21 @@ return (txt||"")
 .trim()
 }
 /* ====================================================
+039 – CLASSIFICAÇÃO PRESSÃO ARTERIAL
+==================================================== */
+function classificarPA(pa){
+if(!pa)return""
+let v=pa.replace(/\s/g,"").split("/")
+if(v.length!==2)return""
+let s=parseInt(v[0])||0
+let d=parseInt(v[1])||0
+if(s<120&&d<80)return"normal"
+if(s>=120&&s<=139||d>=80&&d<=89)return"limitrofe"
+if(s>=140&&s<=159||d>=90&&d<=99)return"leve"
+if(s>=160||d>=100)return"grave"
+return""
+}
+/* ====================================================
 040 – CARREGAR CLINICO (PADRÃO DEFINITIVO COM DIETA)
 ==================================================== */
 async function carregarClinico(){
@@ -151,7 +166,25 @@ html+=`<tr data-id="${p.id}" style="background:${corLinha};${borda}${destaqueCri
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_da"><option value="true"${p.da?" selected":""}>✔</option><option value="false"${!p.da?" selected":""}></option></select>`:(p.da?"✔":"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_cardio"><option value="true"${p.cardiopatia?" selected":""}>✔</option><option value="false"${!p.cardiopatia?" selected":""}></option></select>`:(p.cardiopatia?"✔":"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_acamado"><option value="true"${p.acamado?" selected":""}>✔</option><option value="false"${!p.acamado?" selected":""}></option></select>`:(p.acamado?"✔":"")}</td>
-<td>${MODO_EDICAO_CLINICO?`<input class="clin_pa" value="${p.pressao_arterial||""}" placeholder="120/80">`:(p.pressao_arterial?(p.pa_alterada?`<span style="color:#e74c3c;font-weight:bold">${p.pressao_arterial}</span>`:p.pressao_arterial):"")}</td>
+<td>
+${MODO_EDICAO_CLINICO?`
+<div style="display:flex;flex-direction:column;gap:3px">
+<input class="clin_pa" value="${p.pressao_arterial||""}" placeholder="120/80" style="width:70px">
+<select class="clin_pa_class">
+<option value="">-</option>
+<option value="normal"${classificarPA(p.pressao_arterial)==="normal"?" selected":""}>🟢 Normal</option>
+<option value="limitrofe"${classificarPA(p.pressao_arterial)==="limitrofe"?" selected":""}>🟡 Limítrofe</option>
+<option value="leve"${classificarPA(p.pressao_arterial)==="leve"?" selected":""}>🟠 Leve</option>
+<option value="grave"${classificarPA(p.pressao_arterial)==="grave"?" selected":""}>🔴 Grave</option>
+</select>
+</div>
+`
+:
+(p.pressao_arterial?
+`<span style="color:${p.pa_alterada?'#e74c3c':'#27ae60'};font-weight:bold">${p.pressao_arterial}</span>`
+:"")
+}
+</td>
 <td>${dietaHTML}</td>
 <td>${MODO_EDICAO_CLINICO?`<select class="clin_risco"><option value="1"${p.grau_risco==1?" selected":""}>1</option><option value="2"${p.grau_risco==2?" selected":""}>2</option><option value="3"${p.grau_risco==3?" selected":""}>3</option><option value="4"${p.grau_risco==4?" selected":""}>4</option><option value="5"${p.grau_risco==5?" selected":""}>5</option></select>`:(p.grau_risco?`<b style="color:${p.grau_risco>=4?'#e74c3c':'#2c3e50'}">${p.grau_risco}</b>`:"")}</td>
 <td>${MODO_EDICAO_CLINICO?`<input class="clin_outros" value="${p.outras_comorbidades||""}">`:(p.outras_comorbidades||"Não tem")}</td>
@@ -217,7 +250,12 @@ dm:bool(get(".clin_dm")),
 da:bool(get(".clin_da")),
 cardiopatia:bool(get(".clin_cardio")),
 acamado:bool(get(".clin_acamado")),
-pressao_arterial:get(".clin_pa")||null,
+
+const paValor=get(".clin_pa")
+const paClass=get(".clin_pa_class")
+pressao_arterial:paValor||null,
+pa_classificacao:paClass||null,
+
 dieta_especial:dietaKey?true:false,
 dieta_texto:DIETAS[dietaKey]||null,
 grau_risco:parseInt(get(".clin_risco")||0),
