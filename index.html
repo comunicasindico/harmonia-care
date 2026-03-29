@@ -95,7 +95,22 @@ select:focus, input:focus{outline:3px solid #00c853;background:#e8f5e9;}
 #listaPacientesVinculo div{margin-bottom:4px}
 #listaPacientesVinculo input{transform:scale(0.9)}
 #painelVinculo h3,#painelVinculo h4{margin:4px 0;font-size:14px}
-    
+/* ====================================================
+BOTÃO ENTRAR – 3D PREMIUM TV
+==================================================== */
+.btn-entrar{width:100%;padding:16px;font-size:18px;font-weight:bold;border:none;border-radius:12px;cursor:pointer;
+/* 🔥 3D */
+background:linear-gradient(145deg,#3da0e3,#2c82c9);
+box-shadow:0 6px 0 #1f5f94,0 10px 20px rgba(0,0,0,0.25);color:#fff;transition:all 0.15s ease-in-out;
+/* 🔥 CENTRAL */
+display:flex;align-items:center;justify-content:center;}
+/* 🔥 HOVER */
+.btn-entrar:hover{transform:translateY(-2px);box-shadow:0 8px 0 #1f5f94,0 12px 25px rgba(0,0,0,0.3);}
+/* 🔥 CLICK (EFEITO APERTO) */
+.btn-entrar:active{transform:translateY(4px);box-shadow:0 2px 0 #1f5f94,0 4px 10px rgba(0,0,0,0.2);}
+/* 🔥 FOCO (IMPORTANTE PARA TV / CONTROLE) */
+.btn-entrar:focus{outline:none;box-shadow:0 0 0 3px #00d4ff,0 6px 0 #1f5f94,0 10px 20px rgba(0,0,0,0.25);}    
+
 
 </style>
 </head>
@@ -112,7 +127,7 @@ select:focus, input:focus{outline:3px solid #00c853;background:#e8f5e9;}
 <div id="dadosEmpresa"></div>
 <input id="usuario" placeholder="Usuário">
 <input id="senha" type="password" placeholder="Senha">
-<button onclick="login()" class="btn-primary" style="width:100%">Entrar</button>
+<button id="btnEntrar" class="btn-entrar" onclick="login()">Entrar</button>
 </div>
 </div>
 <!-- ====================================================
