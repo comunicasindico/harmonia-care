@@ -252,7 +252,7 @@ let executadas=0
 p.rotinas.forEach(r=>{
 const status=(r.status||"pendente")
 if(status==="executado")executadas++
-let nomeProf=r.profissional||""
+let nomeProf=r.profissional_nome||r.profissional||""
 let corProf="#64748b"
 if(status==="executado"&&nomeProf)corProf=obterCorUsuario(nomeProf)
 
@@ -269,7 +269,7 @@ data-paciente="${r.paciente_id}"
 data-rotina="${r.rotina_id}"
 style="margin-bottom:3px">
 ${r.rotina}
-${status==="executado"?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}
+${status==="executado"&&nomeProf?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}
 </div>
 `
 })
