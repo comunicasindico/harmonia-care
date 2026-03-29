@@ -61,7 +61,7 @@ doc.text(`Dieta: ${paciente.dieta_especial?"SIM - "+(paciente.dieta_texto||""):"
 doc.text(`Risco: ${paciente.grau_risco||"—"}`,120,dy)
 dy+=5
 doc.text(`Comorbidades: ${paciente.outras_comorbidades||"—"}`,12,dy)
-y+=10
+y = dy + 10
 /* ====================================================
 082 – BLOCO ANÁLISE CLÍNICA
 ==================================================== */
