@@ -262,46 +262,30 @@ document.getElementById("adminRotina").value=""
 if(typeof carregarRotinas==="function")await carregarRotinas()
 }
 /* ====================================================
-068 – CONCLUIR PENDENTES (FINAL PROFISSIONAL)
+068 – CONCLUIR PENDENTES (ULTRA BLINDADO PRODUÇÃO)
 ==================================================== */
 async function concluirPendentes(){
-
 if(!db)return
-
 if(SALVANDO){
 alert("Aguarde finalizar...")
 return
 }
-
 SALVANDO=true
 window.salvandoPendencias=true
-
-/* 🔥 UI */
 mostrarProgresso()
 bloquearTela()
-
 try{
-
-/* 🔥 DATA PADRONIZADA */
 const dataHoje=obterDataSelecionada()
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
-
-/* 🔥 USUÁRIO BLINDADO */
 const user=obterUsuarioLogado()||{}
 const usuarioId=user.id||localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
-const nomeProfissional=
-user.nome||
-localStorage.getItem("usuario_nome")||
-"Administrador"
-
-/* 🔥 EMPRESA */
+const nomeProfissional=user.nome||localStorage.getItem("usuario_nome")||"Administrador"
 const empresaId=EMPRESA_ID||localStorage.getItem("empresa_id")
-
-/* 🔥 FILTRA PENDENTES */
-const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado")
-
+const pendentes=(ROTINAS_CACHE||[]).filter(r=>{
+r.turno=(r.turno||turno).toLowerCase()
+return r.status!=="executado"&&r.turno===turno
+})
 const total=pendentes.length
-
 if(total===0){
 alert("Nenhuma pendência encontrada")
 esconderProgresso()
@@ -310,15 +294,10 @@ SALVANDO=false
 window.salvandoPendencias=false
 return
 }
-
 let processados=0
-
-/* 🔥 LOOP CONTROLADO */
+const inserts=[]
 for(const r of pendentes){
-
 try{
-
-/* 🔒 VERIFICA SE JÁ EXISTE */
 const {data:jaExiste}=await db
 .from("rotinas_execucao")
 .select("id")
@@ -326,15 +305,10 @@ const {data:jaExiste}=await db
 .eq("rotina_id",r.rotina_id)
 .eq("data",dataHoje)
 .eq("turno",turno)
+.eq("empresa_id",empresaId)
 .maybeSingle()
-
-/* 🚫 NÃO SOBRESCREVE */
-if(jaExiste){
-continue
-}
-
-/* ✅ INSERE NOVO */
-const {error}=await db.from("rotinas_execucao").insert({
+if(jaExiste)continue
+inserts.push({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -345,45 +319,32 @@ profissional_nome:nomeProfissional||"Administrador",
 empresa_id:empresaId,
 horario_executado:new Date().toISOString()
 })
-
-if(error){
-console.error("Erro pendente:",error)
-continue
-}
-
-/* 🔥 ATUALIZA CACHE */
 r.status="executado"
-r.profissional=nomeProfissional||"Administrador"
-
+r.profissional_nome=nomeProfissional||"Administrador"
 }catch(e){
-console.error("Erro geral pendente:",e)
+console.error("Erro verificação pendente:",e)
 }
-
-/* 🔥 PROGRESSO VISUAL */
 processados++
-let percentual=Math.round((processados/total)*100)
+let percentual=Math.round((processados/total)*50)
 atualizarProgresso(percentual)
-
 }
-
-/* 🔥 GARANTE 100% VISUAL */
+if(inserts.length){
+const {error}=await db.from("rotinas_execucao").insert(inserts)
+if(error){
+console.error("Erro insert lote:",error)
+}
+}
 atualizarProgresso(100)
-
-/* 🔥 RECARREGA DO BANCO (CRÍTICO PRA NÃO SUMIR NOME/COR) */
 await carregarRotinas()
-
 }catch(e){
 console.error("Erro concluirPendentes:",e)
 }
-
-/* 🔥 FINALIZAÇÃO LIMPA */
 setTimeout(()=>{
 esconderProgresso()
 desbloquearTela()
 SALVANDO=false
 window.salvandoPendencias=false
-},500)
-
+},400)
 }
 /* ====================================================
 069 – SALVAR USUARIO LINHA (ROBUSTO)
