@@ -22,7 +22,7 @@ if(s>=160||d>=100)return"grave"
 return""
 }
 /* ====================================================
-039A – CARREGAR CLINICO (FINAL DEFINITIVO)
+039A – CARREGAR CLINICO (FINAL DEFINITIVO REAL)
 ==================================================== */
 async function carregarClinico(){
 const selectPaciente=document.getElementById("buscaPaciente")
@@ -41,11 +41,13 @@ if(error){console.error(error);return}
 const tabela=document.getElementById("quadroClinico")
 if(!tabela)return
 if(!data||data.length===0){tabela.innerHTML="";return}
+
 /* 🔥 PADRÃO DIETAS */
 const DIETAS={normal:{nome:"Normal",icone:"🍽️",cor:"#f4f6f9"},hipossodica:{nome:"Hipossódica",icone:"🧂",cor:"#eafaf1"},diabetica:{nome:"Diabética",icone:"🩸",cor:"#fdecea"},pastosa:{nome:"Pastosa",icone:"🥣",cor:"#fff3cd"},liquida:{nome:"Líquida",icone:"🧃",cor:"#e8f4fd"},vegetariana:{nome:"Vegetariana",icone:"🥗",cor:"#eafaf1"}}
 
+/* 🔥 NORMALIZADOR FORTE */
 function getDietaKey(txt){
-let t=(txt??"").toString().trim().toLowerCase()
+let t=(txt??"").toString().toLowerCase().trim()
 t=t.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
 if(!t||t==="-"||t==="nao")return"normal"
 if(t.includes("hipossodica"))return"hipossodica"
@@ -55,19 +57,43 @@ if(t.includes("liquida"))return"liquida"
 if(t.includes("vegetariana"))return"vegetariana"
 return"normal"
 }
+
 function formatarDieta(p){
 let key=getDietaKey(p.dieta_texto)
 let d=DIETAS[key]||DIETAS.normal
 return'<span style="padding:3px 8px;border-radius:6px;font-size:11px;background:'+d.cor+';font-weight:bold;display:inline-block">'+d.icone+' '+d.nome+'</span>'
 }
+
 let html=""
-let totalPacientes=0,totalHas=0,totalDm=0,totalDemencia=0,totalCardio=0,totalAcamado=0,totalPAAlterada=0
+let totalHas=0,totalDm=0,totalDemencia=0,totalCardio=0,totalAcamado=0,totalPAAlterada=0
 let risco1=0,risco2=0,risco3=0,risco4=0,risco5=0
+
+/* 🔥 CONTADORES DIETA CORRETOS */
 let dietaNormal=0,hipossodica=0,diabetica=0,pastosa=0,vegetariana=0,liquida=0
+
 data.forEach(p=>{
-p.dieta_texto=(p.dieta_texto??"Normal").toString().trim()
-let txtNorm=p.dieta_texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-if(!txtNorm||txtNorm==="-"||txtNorm==="nao")p.dieta_texto="Normal"
+
+/* 🔥 GARANTE NORMAL */
+let txtOriginal=(p.dieta_texto??"").toString().trim()
+let txtNorm=txtOriginal.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+if(!txtNorm||txtNorm==="-"||txtNorm==="nao"){
+p.dieta_texto="Normal"
+}else{
+p.dieta_texto=txtOriginal
+}
+
+/* 🔥 CLASSIFICA DIETA */
+let dietaKey=getDietaKey(p.dieta_texto)
+
+/* 🔥 CONTAGEM DIRETA (SEM HTML) */
+if(dietaKey==="hipossodica")hipossodica++
+else if(dietaKey==="diabetica")diabetica++
+else if(dietaKey==="pastosa")pastosa++
+else if(dietaKey==="vegetariana")vegetariana++
+else if(dietaKey==="liquida")liquida++
+else dietaNormal++
+
+/* 🔥 PRESSÃO */
 let paS=0,paD=0
 if(p.pressao_arterial){
 let pa=p.pressao_arterial.replace(/\s/g,"").split("/")
@@ -76,31 +102,30 @@ paS=parseInt(pa[0])||0
 paD=parseInt(pa[1])||0
 }}
 p.pa_alterada=(paS>=140||paD>=90)
+
+/* 🔥 NORMALIZA BOOLEANOS */
 p.has=p.has===true||p.has==="true"||p.has==1
 p.dm=p.dm===true||p.dm==="true"||p.dm==1
 p.da=p.da===true||p.da==="true"||p.da==1
 p.cardiopatia=p.cardiopatia===true||p.cardiopatia==="true"||p.cardiopatia==1
 p.acamado=p.acamado===true||p.acamado==="true"||p.acamado==1
 p.grau_risco=parseInt(p.grau_risco)||0
-totalPacientes++
+
+/* 🔥 CONTADORES */
 if(p.has)totalHas++
 if(p.dm)totalDm++
 if(p.da)totalDemencia++
 if(p.cardiopatia)totalCardio++
 if(p.acamado)totalAcamado++
 if(p.pa_alterada)totalPAAlterada++
+
 if(p.grau_risco===1)risco1++
 if(p.grau_risco===2)risco2++
 if(p.grau_risco===3)risco3++
 if(p.grau_risco===4)risco4++
 if(p.grau_risco===5)risco5++
-let dietaKey=getDietaKey(p.dieta_texto)
-if(dietaKey==="hipossodica")hipossodica++
-else if(dietaKey==="diabetica")diabetica++
-else if(dietaKey==="pastosa")pastosa++
-else if(dietaKey==="vegetariana")vegetariana++
-else if(dietaKey==="liquida")liquida++
-else dietaNormal++
+
+/* 🔥 VISUAL */
 let destaqueCritico=""
 if(p.grau_risco>=4&&p.pa_alterada)destaqueCritico="animation:pulse 1s infinite alternate;"
 let corLinha="#fff"
@@ -108,19 +133,18 @@ if(p.grau_risco>=4)corLinha="#ffe5e5"
 else if(p.grau_risco===3)corLinha="#fff8e1"
 let borda=""
 if(p.pa_alterada)borda="border-left:6px solid #e74c3c"
-let dietaHTML=""
-if(MODO_EDICAO_CLINICO){
-dietaHTML=`<select class="clin_dieta">
+
+let dietaHTML=MODO_EDICAO_CLINICO?
+`<select class="clin_dieta">
 <option value="normal"${dietaKey==="normal"?" selected":""}>🍽️ Normal</option>
 <option value="hipossodica"${dietaKey==="hipossodica"?" selected":""}>🧂 Hipossódica</option>
 <option value="diabetica"${dietaKey==="diabetica"?" selected":""}>🩸 Diabética</option>
 <option value="pastosa"${dietaKey==="pastosa"?" selected":""}>🥣 Pastosa</option>
 <option value="liquida"${dietaKey==="liquida"?" selected":""}>🧃 Líquida</option>
 <option value="vegetariana"${dietaKey==="vegetariana"?" selected":""}>🥗 Vegetariana</option>
-</select>`
-}else{
-dietaHTML=formatarDieta(p)
-}
+</select>`:
+formatarDieta(p)
+
 html+=`<tr data-id="${p.id}" style="background:${corLinha};${borda}${destaqueCritico}">
 <td>${p.nome_apelido||p.nome_completo||""}</td>
 <td>${calcularIdade(p.data_nascimento)}</td>
@@ -135,7 +159,9 @@ html+=`<tr data-id="${p.id}" style="background:${corLinha};${borda}${destaqueCri
 <td>${p.outras_comorbidades||"Não tem"}</td>
 </tr>`
 })
+
 const riscoTotal=risco1+risco2+risco3+risco4+risco5
+
 html=`<tr style="background:#fff200;font-weight:bold;text-align:center">
 <td>Todos</td><td></td>
 <td style="color:#e74c3c">${totalHas}</td>
@@ -148,28 +174,24 @@ html=`<tr style="background:#fff200;font-weight:bold;text-align:center">
 <td style="color:#2c3e50">${riscoTotal}</td>
 <td></td>
 </tr>`+html
+
 tabela.innerHTML=html
-const elTotal=document.getElementById("dietaTotal"),elHip=document.getElementById("dietaHipossodica"),elDia=document.getElementById("dietaDiabetica"),elPas=document.getElementById("dietaPastosa"),elVeg=document.getElementById("dietaVegetariana"),elLiq=document.getElementById("dietaLiquida")
-/* 🔥 RECONTAGEM DIRETO DO HTML (100% GARANTIDO) */
-setTimeout(()=>{
-const linhas=document.querySelectorAll("#quadroClinico tr[data-id]")
-let normal=0,veg=0,hipo=0,dia=0,pas=0,liq=0
-linhas.forEach(l=>{
-const txt=l.innerText.toLowerCase()
-if(txt.includes("vegetariana"))veg++
-else if(txt.includes("hipossodica"))hipo++
-else if(txt.includes("diabetica"))dia++
-else if(txt.includes("pastosa"))pas++
-else if(txt.includes("liquida"))liq++
-else normal++
-})
-if(elTotal)elTotal.innerHTML=`🍽️ ${normal}`
-if(elHip)elHip.innerHTML=`🧂 ${hipo}`
-if(elDia)elDia.innerHTML=`🩸 ${dia}`
-if(elPas)elPas.innerHTML=`🥣 ${pas}`
-if(elVeg)elVeg.innerHTML=`🥗 ${veg}`
-if(elLiq)elLiq.innerHTML=`🧃 ${liq}`
-},100)
+
+/* 🔥 AGORA FUNCIONA 100% */
+const elTotal=document.getElementById("dietaTotal")
+const elHip=document.getElementById("dietaHipossodica")
+const elDia=document.getElementById("dietaDiabetica")
+const elPas=document.getElementById("dietaPastosa")
+const elVeg=document.getElementById("dietaVegetariana")
+const elLiq=document.getElementById("dietaLiquida")
+
+if(elTotal)elTotal.innerHTML=`🍽️ ${dietaNormal}`
+if(elHip)elHip.innerHTML=`🧂 ${hipossodica}`
+if(elDia)elDia.innerHTML=`🩸 ${diabetica}`
+if(elPas)elPas.innerHTML=`🥣 ${pastosa}`
+if(elVeg)elVeg.innerHTML=`🥗 ${vegetariana}`
+if(elLiq)elLiq.innerHTML=`🧃 ${liquida}`
+
 const elRisco=document.getElementById("painelRiscoResumo")
 if(elRisco){
 elRisco.innerHTML=`
@@ -179,7 +201,7 @@ elRisco.innerHTML=`
 <span style="background:#e74c3c;color:#fff;padding:4px 10px;border-radius:6px">Alto ${risco5}</span>
 `
 }
-
+}
 /* ===============================
 040B INDICADORES VISUAIS
 =============================== */
