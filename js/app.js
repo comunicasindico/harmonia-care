@@ -1,5 +1,5 @@
 window.salvandoPendencias=false
-//* ====================================================
+/* ====================================================
 010 – LOGIN (FINAL LIMPO E CORRETO)
 ==================================================== */
 async function login(){
@@ -54,7 +54,7 @@ alert("Erro no login")
 return
 }
 /* 🔍 LOCALIZA USUÁRIO */
-const user=data.find(u=>
+const user=(data||[]).find(u=>
 (
 (u.nome_apelido||"").toLowerCase()===loginInput||
 (u.email||"").toLowerCase()===loginInput||
