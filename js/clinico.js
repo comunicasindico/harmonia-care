@@ -43,10 +43,11 @@ if(!tabela)return
 if(!data||data.length===0){tabela.innerHTML="";return}
 /* 🔥 PADRÃO DIETAS */
 const DIETAS={normal:{nome:"Normal",icone:"🍽️",cor:"#f4f6f9"},hipossodica:{nome:"Hipossódica",icone:"🧂",cor:"#eafaf1"},diabetica:{nome:"Diabética",icone:"🩸",cor:"#fdecea"},pastosa:{nome:"Pastosa",icone:"🥣",cor:"#fff3cd"},liquida:{nome:"Líquida",icone:"🧃",cor:"#e8f4fd"},vegetariana:{nome:"Vegetariana",icone:"🥗",cor:"#eafaf1"}}
+
 function getDietaKey(txt){
-let t=(txt||"").toString().toLowerCase().trim()
-if(!t||t==="-"||t==="nao"||t==="não")return"normal"
+let t=(txt??"").toString().trim().toLowerCase()
 t=t.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+if(!t||t==="-"||t==="nao")return"normal"
 if(t.includes("hipossodica"))return"hipossodica"
 if(t.includes("diabetica"))return"diabetica"
 if(t.includes("pastosa"))return"pastosa"
@@ -56,7 +57,7 @@ return"normal"
 }
 function formatarDieta(p){
 let key=getDietaKey(p.dieta_texto)
-let d=DIETAS[key]
+let d=DIETAS[key]||DIETAS.normal
 return'<span style="padding:3px 8px;border-radius:6px;font-size:11px;background:'+d.cor+';font-weight:bold;display:inline-block">'+d.icone+' '+d.nome+'</span>'
 }
 let html=""
@@ -64,6 +65,9 @@ let totalPacientes=0,totalHas=0,totalDm=0,totalDemencia=0,totalCardio=0,totalAca
 let risco1=0,risco2=0,risco3=0,risco4=0,risco5=0
 let dietaNormal=0,hipossodica=0,diabetica=0,pastosa=0,vegetariana=0,liquida=0
 data.forEach(p=>{
+p.dieta_texto=(p.dieta_texto??"Normal").toString().trim()
+let txtNorm=p.dieta_texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+if(!txtNorm||txtNorm==="-"||txtNorm==="nao")p.dieta_texto="Normal"
 let paS=0,paD=0
 if(p.pressao_arterial){
 let pa=p.pressao_arterial.replace(/\s/g,"").split("/")
