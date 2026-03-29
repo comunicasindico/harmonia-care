@@ -332,6 +332,8 @@ if(inserts.length){
 const {error}=await db.from("rotinas_execucao").insert(inserts)
 if(error){
 console.error("Erro insert lote:",error)
+alert("Erro ao salvar pendentes (ver console)")
+return
 }
 }
 await carregarRotinas()
