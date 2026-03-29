@@ -22,46 +22,72 @@ if(s>=160||d>=100)return"grave"
 return""
 }
 /* ====================================================
-039A – CARREGAR CLINICO (PADRÃO LIVRE DEFINITIVO)
+039A – CARREGAR CLINICO
 ==================================================== */
 async function carregarClinico(){
-
 const selectPaciente=document.getElementById("buscaPaciente")
 const pacienteSelecionado=selectPaciente?selectPaciente.value:"todos"
-
 if(!db)return
 if(!EMPRESA_ID)return
-
 let usuarioId=localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
-
 let query=db.from("pacientes").select("*")
-
 if(usuarioId&&usuarioId!=="admin"){
-const {data:rel}=await db
-.from("pacientes_profissionais")
-.select("paciente_id")
-.eq("usuario_id",usuarioId)
-.eq("ativo",true)
-
+const {data:rel}=await db.from("pacientes_profissionais").select("paciente_id").eq("usuario_id",usuarioId).eq("ativo",true)
 const ids=rel?.map(r=>r.paciente_id)||[]
-
 if(ids.length)query=query.in("id",ids)
 else{
 const tabela=document.getElementById("quadroClinico")
 if(tabela)tabela.innerHTML=""
 return
-}
-}
-
-const {data}=await query
-.eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true)
-.order("nome_completo")
-
+}}
+const {data}=await query.eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo")
 const tabela=document.getElementById("quadroClinico")
 if(!tabela)return
+let html=""
+let dietaLivre=0,hipossodica=0,diabetica=0,pastosa=0,vegetariana=0,liquida=0
+data.forEach(p=>{
+let txt=(p.dieta_texto??"").toString().trim()
+if(!txt||txt==="-"||txt.toLowerCase()==="normal")txt="Livre"
+p.dieta_texto=txt
+let key=getDietaKey(txt)
+if(key==="hipossodica")hipossodica++
+else if(key==="diabetica")diabetica++
+else if(key==="pastosa")pastosa++
+else if(key==="vegetariana")vegetariana++
+else if(key==="liquida")liquida++
+else dietaLivre++
+let dietaHTML=MODO_EDICAO_CLINICO?renderSelectDieta(key):formatarDieta(p)
+html+=`<tr data-id="${p.id}">
+<td>${p.nome_completo}</td>
+<td>${dietaHTML}</td>
+<td>${p.grau_risco||""}</td>
+<td>${p.outras_comorbidades||"Não tem"}</td>
+</tr>`
+})
+tabela.innerHTML=html
+atualizarIndicadoresDieta(dietaLivre,hipossodica,diabetica,pastosa,vegetariana,liquida)
+ativarEventosClinico()
+}
 
-/* 🔥 PADRÃO NOVO */
+/* ====================================================
+039B – GET DIETA KEY
+==================================================== */
+function getDietaKey(txt){
+let t=(txt??"").toString().toLowerCase().trim()
+t=t.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+if(!t||t==="-"||t==="nao")return"livre"
+if(t.includes("hipossodica"))return"hipossodica"
+if(t.includes("diabetica"))return"diabetica"
+if(t.includes("pastosa"))return"pastosa"
+if(t.includes("liquida"))return"liquida"
+if(t.includes("vegetariana"))return"vegetariana"
+return"livre"
+}
+
+/* ====================================================
+039C – FORMATAR DIETA
+==================================================== */
+function formatarDieta(p){
 const DIETAS={
 livre:{nome:"Livre",icone:"🍽️",cor:"#f4f6f9"},
 hipossodica:{nome:"Hipossódica",icone:"🧂",cor:"#eafaf1"},
@@ -70,54 +96,16 @@ pastosa:{nome:"Pastosa",icone:"🥣",cor:"#fff3cd"},
 liquida:{nome:"Líquida",icone:"🧃",cor:"#e8f4fd"},
 vegetariana:{nome:"Vegetariana",icone:"🥗",cor:"#eafaf1"}
 }
-
-/* 🔥 IDENTIFICAÇÃO SEGURA */
-function getDietaKey(txt){
-let t=(txt??"").toString().toLowerCase().trim()
-t=t.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-
-if(!t||t==="-"||t==="nao")return"livre"
-
-if(t.includes("hipossodica"))return"hipossodica"
-if(t.includes("diabetica"))return"diabetica"
-if(t.includes("pastosa"))return"pastosa"
-if(t.includes("liquida"))return"liquida"
-if(t.includes("vegetariana"))return"vegetariana"
-
-return"livre"
-}
-
-function formatarDieta(p){
 let key=getDietaKey(p.dieta_texto)
 let d=DIETAS[key]
 return`<span style="padding:3px 8px;border-radius:6px;font-size:11px;background:${d.cor};font-weight:bold">${d.icone} ${d.nome}</span>`
 }
 
-let html=""
-
-/* 🔥 CONTADORES */
-let dietaLivre=0,hipossodica=0,diabetica=0,pastosa=0,vegetariana=0,liquida=0
-
-data.forEach(p=>{
-
-/* 🔥 GARANTE LIVRE */
-let txt=(p.dieta_texto??"").toString().trim()
-if(!txt||txt==="-"||txt.toLowerCase()==="livre")txt="Livre"
-
-p.dieta_texto=txt
-
-let key=getDietaKey(txt)
-
-/* 🔥 CONTAGEM LIMPA */
-if(key==="hipossodica")hipossodica++
-else if(key==="diabetica")diabetica++
-else if(key==="pastosa")pastosa++
-else if(key==="vegetariana")vegetariana++
-else if(key==="liquida")liquida++
-else dietaLivre++
-
-let dietaHTML=MODO_EDICAO_CLINICO?
-`<select class="clin_dieta">
+/* ====================================================
+039D – SELECT DIETA
+==================================================== */
+function renderSelectDieta(key){
+return`<select class="clin_dieta">
 <option value="livre"${key==="livre"?" selected":""}>🍽️ Livre</option>
 <option value="hipossodica"${key==="hipossodica"?" selected":""}>🧂 Hipossódica</option>
 <option value="diabetica"${key==="diabetica"?" selected":""}>🩸 Diabética</option>
@@ -125,39 +113,30 @@ let dietaHTML=MODO_EDICAO_CLINICO?
 <option value="liquida"${key==="liquida"?" selected":""}>🧃 Líquida</option>
 <option value="vegetariana"${key==="vegetariana"?" selected":""}>🥗 Vegetariana</option>
 </select>`
-:formatarDieta(p)
-
-html+=`<tr data-id="${p.id}">
-<td>${p.nome_completo}</td>
-<td>${dietaHTML}</td>
-<td>${p.grau_risco||""}</td>
-<td>${p.outras_comorbidades||"Não tem"}</td>
-</tr>`
-})
-
-tabela.innerHTML=html
-
-/* 🔥 INDICADORES */
-document.getElementById("dietaTotal").innerHTML=`🍽️ ${dietaLivre}`
-document.getElementById("dietaHipossodica").innerHTML=`🧂 ${hipossodica}`
-document.getElementById("dietaDiabetica").innerHTML=`🩸 ${diabetica}`
-document.getElementById("dietaPastosa").innerHTML=`🥣 ${pastosa}`
-document.getElementById("dietaVegetariana").innerHTML=`🥗 ${vegetariana}`
-document.getElementById("dietaLiquida").innerHTML=`🧃 ${liquida}`
-
 }
 
-/* ===============================
-040B INDICADORES VISUAIS
-=============================== */
-const elR5=document.getElementById("indicadorRISCO5")
-const elR4=document.getElementById("indicadorRISCO4")
-const elR3=document.getElementById("indicadorRISCO3")
-const elR12=document.getElementById("indicadorRISCO12")
-if(elR5)elR5.innerHTML=`🔴 Alto ${risco5}`
-if(elR4)elR4.innerHTML=`🟠 Médio ${risco4}`
-if(elR3)elR3.innerHTML=`🟡 Moderado ${risco3}`
-if(elR12)elR12.innerHTML=`🟢 Baixo ${risco1+risco2}`
+/* ====================================================
+039E – INDICADORES DIETA
+==================================================== */
+function atualizarIndicadoresDieta(livre,hipo,dia,pas,veg,liq){
+const elTotal=document.getElementById("dietaTotal")
+const elHip=document.getElementById("dietaHipossodica")
+const elDia=document.getElementById("dietaDiabetica")
+const elPas=document.getElementById("dietaPastosa")
+const elVeg=document.getElementById("dietaVegetariana")
+const elLiq=document.getElementById("dietaLiquida")
+if(elTotal)elTotal.innerHTML=`🍽️ ${livre}`
+if(elHip)elHip.innerHTML=`🧂 ${hipo}`
+if(elDia)elDia.innerHTML=`🩸 ${dia}`
+if(elPas)elPas.innerHTML=`🥣 ${pas}`
+if(elVeg)elVeg.innerHTML=`🥗 ${veg}`
+if(elLiq)elLiq.innerHTML=`🧃 ${liq}`
+}
+
+/* ====================================================
+040A – EVENTOS CLINICO
+==================================================== */
+function ativarEventosClinico(){
 document.querySelectorAll("#quadroClinico select,#quadroClinico input").forEach(el=>{
 el.onchange=null
 el.onchange=async()=>{
@@ -178,7 +157,6 @@ if(el.className.includes("clin_pa_class"))dados.pa_classificacao=el.value||null
 if(el.className.includes("clin_risco"))dados.grau_risco=parseInt(el.value||0)
 if(el.className.includes("clin_outros"))dados.outras_comorbidades=el.value||null
 if(el.className.includes("clin_dieta")){
-
 const mapa={
 livre:"Livre",
 hipossodica:"Hipossódica",
@@ -187,13 +165,9 @@ pastosa:"Pastosa",
 liquida:"Líquida",
 vegetariana:"Vegetariana"
 }
-
-/* 🔥 GARANTE SEMPRE VALOR */
 let val=el.value||"livre"
-
 dados.dieta_especial=true
 dados.dieta_texto=mapa[val]||"Livre"
-
 }
 if(Object.keys(dados).length===0)return
 await db.from("pacientes").update(dados).eq("id",id).eq("empresa_id",EMPRESA_ID)
