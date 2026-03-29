@@ -102,7 +102,7 @@ data.forEach(p=>{
 
 /* 🔥 GARANTE LIVRE */
 let txt=(p.dieta_texto??"").toString().trim()
-if(!txt||txt==="-"||txt.toLowerCase()==="normal")txt="Livre"
+if(!txt||txt==="-"||txt.toLowerCase()==="livre")txt="Livre"
 
 p.dieta_texto=txt
 
@@ -178,9 +178,22 @@ if(el.className.includes("clin_pa_class"))dados.pa_classificacao=el.value||null
 if(el.className.includes("clin_risco"))dados.grau_risco=parseInt(el.value||0)
 if(el.className.includes("clin_outros"))dados.outras_comorbidades=el.value||null
 if(el.className.includes("clin_dieta")){
-const mapa={normal:"Normal",hipossodica:"Hipossódica",diabetica:"Diabética",pastosa:"Pastosa",liquida:"Líquida",vegetariana:"Vegetariana"}
-dados.dieta_especial=el.value?true:false
-dados.dieta_texto=mapa[el.value]||null
+
+const mapa={
+livre:"Livre",
+hipossodica:"Hipossódica",
+diabetica:"Diabética",
+pastosa:"Pastosa",
+liquida:"Líquida",
+vegetariana:"Vegetariana"
+}
+
+/* 🔥 GARANTE SEMPRE VALOR */
+let val=el.value||"livre"
+
+dados.dieta_especial=true
+dados.dieta_texto=mapa[val]||"Livre"
+
 }
 if(Object.keys(dados).length===0)return
 await db.from("pacientes").update(dados).eq("id",id).eq("empresa_id",EMPRESA_ID)
@@ -211,7 +224,7 @@ return
 }
 const linhas=document.querySelectorAll("#quadroClinico tr[data-id]")
 const DIETAS={
-normal:{nome:"Normal",icone:"🍽️"},
+normal:{nome:"Livre",icone:"🍽️"},
 hipossodica:{nome:"Hipossódica",icone:"🧂"},
 diabetica:{nome:"Diabética",icone:"🩸"},
 pastosa:{nome:"Pastosa",icone:"🥣"},
