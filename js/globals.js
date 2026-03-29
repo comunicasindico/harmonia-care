@@ -1,18 +1,14 @@
-/* ====================================================
-LOGIN UNIVERSAL (CLICK + ENTER + CONTROLE)
-==================================================== */
-/* 🔥 ENTER */
-document.addEventListener("keydown",e=>{if(e.key==="Enter"){login()}})
-/* 🔥 FOCO AUTOMÁTICO (TV) */
-window.addEventListener("load",()=>{const btn=document.getElementById("btnEntrar")if(btn)btn.focus()})
-/* 🔥 CONTROLE REMOTO (ENTER / OK / SPACE) */
-document.addEventListener("keydown",e=>{const btn=document.getElementById("btnEntrar")if(!btn)return
+/* 🔥 LOGIN UNIVERSAL (ENTER + CONTROLE + CLICK) */
+document.addEventListener("keydown",e=>{
+const btn=document.getElementById("btnEntrar")
+if(!btn)return
 if(
 e.key==="Enter"||
 e.key===" "||
 e.key==="OK"||
 e.keyCode===13
 ){
+e.preventDefault()
 btn.click()
 }
 })
