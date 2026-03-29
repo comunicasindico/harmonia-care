@@ -108,7 +108,6 @@ else if(dietaKey==="pastosa")pastosa++
 else if(dietaKey==="vegetariana")vegetariana++
 else if(dietaKey==="liquida")liquida++
 else dietaNormal++
-}
 
 /* 🔥 VISUAL */
 let destaqueCritico=""
