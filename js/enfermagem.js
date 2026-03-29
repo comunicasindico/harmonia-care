@@ -308,7 +308,7 @@ executarRotina(pacienteId,rotinaId)
 })
 }
 /* ====================================================
-024B – EXECUTAR ROTINA (CORRIGIDO DEFINITIVO)
+024B – EXECUTAR ROTINA (ANTI-SOBRESCRITA)
 ==================================================== */
 async function executarRotina(pacienteId,rotinaId){
 if(!db)return
@@ -317,7 +317,9 @@ const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 const user=obterUsuarioLogado()||{}
 const usuarioId=user.id||null
 const nome=user.nome||localStorage.getItem("usuario_nome")||"Administrador"
-try{
+/* 🔒 VERIFICA SE JÁ EXISTE EXECUTADO */
+const {data:existe}=await db.from("rotinas_execucao").select("status").eq("paciente_id",pacienteId).eq("rotina_id",rotinaId).eq("data",dataHoje).eq("turno",turno).maybeSingle()
+if(existe&&existe.status==="executado")return
 const {error}=await db.from("rotinas_execucao").upsert({
 paciente_id:pacienteId,
 rotina_id:rotinaId,
@@ -328,18 +330,15 @@ usuario_id:usuarioId,
 profissional_nome:nome,
 empresa_id:EMPRESA_ID,
 horario_executado:new Date().toISOString()
-},{
-onConflict:"paciente_id,rotina_id,data,turno"
-})
+},{onConflict:"paciente_id,rotina_id,data,turno"})
 if(error){console.error("Erro executarRotina:",error);return}
 const item=ROTINAS_CACHE.find(r=>String(r.paciente_id)===String(pacienteId)&&String(r.rotina_id)===String(rotinaId)&&String((r.turno||"").toLowerCase())===turno)
-if(item){
+if(item&&item.status!=="executado"){
 item.status="executado"
 item.profissional_nome=nome
 }
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
-}catch(e){console.error(e)}
 }
 /* ====================================================
 027 – INDICADORES
@@ -396,7 +395,7 @@ calcularIndicadores(ROTINAS_CACHE)
 }
 
 /* ====================================================
-029 – EXECUTAR ROTINA PARA TODOS (CORRIGIDO)
+029 – EXECUTAR ROTINA PARA TODOS (ANTI-SOBRESCRITA)
 ==================================================== */
 async function executarRotinaTodos(rotinaId){
 if(!db||!rotinaId)return
@@ -406,7 +405,10 @@ const user=obterUsuarioLogado()||{}
 const usuarioId=user.id||null
 const nome=user.nome||localStorage.getItem("usuario_nome")||"Administrador"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.rotina_id)===String(rotinaId)&&String((r.turno||"").toLowerCase())===turno)
-const inserts=rotinas.filter(r=>r.status!=="executado").map(r=>({
+/* 🔥 SOMENTE PENDENTES */
+const pendentes=rotinas.filter(r=>r.status!=="executado")
+if(!pendentes.length)return
+const inserts=pendentes.map(r=>({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -417,10 +419,10 @@ profissional_nome:nome,
 empresa_id:EMPRESA_ID,
 horario_executado:new Date().toISOString()
 }))
-if(!inserts.length)return
 const {error}=await db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
 if(error){console.error("Erro executarRotinaTodos:",error);return}
-rotinas.forEach(r=>{
+/* 🔥 ATUALIZA SÓ PENDENTES */
+pendentes.forEach(r=>{
 r.status="executado"
 r.profissional_nome=nome
 })
