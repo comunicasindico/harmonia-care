@@ -22,7 +22,7 @@ if(s>=160||d>=100)return"grave"
 return""
 }
 /* ====================================================
-039A – CARREGAR CLINICO
+040 – CARREGAR CLINICO
 ==================================================== */
 async function carregarClinico(){
 const selectPaciente=document.getElementById("buscaPaciente")
@@ -70,7 +70,7 @@ ativarEventosClinico()
 }
 
 /* ====================================================
-039B – GET DIETA KEY
+041 – GET DIETA KEY
 ==================================================== */
 function getDietaKey(txt){
 let t=(txt??"").toString().toLowerCase().trim()
@@ -85,7 +85,7 @@ return"livre"
 }
 
 /* ====================================================
-039C – FORMATAR DIETA
+042 – FORMATAR DIETA
 ==================================================== */
 function formatarDieta(p){
 const DIETAS={
@@ -102,7 +102,7 @@ return`<span style="padding:3px 8px;border-radius:6px;font-size:11px;background:
 }
 
 /* ====================================================
-039D – SELECT DIETA
+043 – SELECT DIETA
 ==================================================== */
 function renderSelectDieta(key){
 return`<select class="clin_dieta">
@@ -116,7 +116,7 @@ return`<select class="clin_dieta">
 }
 
 /* ====================================================
-039E – INDICADORES DIETA
+044 – INDICADORES DIETA
 ==================================================== */
 function atualizarIndicadoresDieta(livre,hipo,dia,pas,veg,liq){
 const elTotal=document.getElementById("dietaTotal")
@@ -134,7 +134,7 @@ if(elLiq)elLiq.innerHTML=`🧃 ${liq}`
 }
 
 /* ====================================================
-040A – EVENTOS CLINICO
+045 – EVENTOS CLINICO
 ==================================================== */
 function ativarEventosClinico(){
 document.querySelectorAll("#quadroClinico select,#quadroClinico input").forEach(el=>{
@@ -178,7 +178,7 @@ setTimeout(()=>{linha.style.background=""},800)
 })
 }
 /* ====================================================
-041 – CALCULAR IDADE
+046 – CALCULAR IDADE
 ==================================================== */
 function calcularIdade(data){
 if(!data)return""
@@ -260,7 +260,7 @@ await carregarClinico()
 alert("Dados salvos com sucesso!")
 }
 /* ====================================================
-044 – CARREGAR DADOS CLÍNICOS DO PACIENTE
+047 – CARREGAR DADOS CLÍNICOS DO PACIENTE
 ==================================================== */
 async function carregarDadosClinicosPaciente(pacienteId){
 const box=document.getElementById("dadosClinicosPaciente")
@@ -290,7 +290,7 @@ ${data.outras_comorbidades&&data.outras_comorbidades.trim()!==""?data.outras_com
 box.innerHTML=html
 }
 /* ====================================================
-045 – EXCLUIR PACIENTE (COM CONTROLE)
+048 – EXCLUIR PACIENTE (COM CONTROLE)
 ==================================================== */
 async function excluirPaciente(id){
 if(!id)return
