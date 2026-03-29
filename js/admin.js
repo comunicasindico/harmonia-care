@@ -325,8 +325,8 @@ r.profissional_nome=nomeProfissional||"Administrador"
 console.error("Erro verificação pendente:",e)
 }
 processados++
-let percentual=Math.round((processados/total)*50)
-atualizarProgresso(percentual)
+let percentual=Math.round((processados/total)*100)
+atualizarProgresso(percentual,`Processando ${processados}/${total}`)
 }
 if(inserts.length){
 const {error}=await db.from("rotinas_execucao").insert(inserts)
@@ -334,7 +334,6 @@ if(error){
 console.error("Erro insert lote:",error)
 }
 }
-atualizarProgresso(100)
 await carregarRotinas()
 }catch(e){
 console.error("Erro concluirPendentes:",e)
