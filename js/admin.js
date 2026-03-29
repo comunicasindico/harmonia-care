@@ -262,7 +262,7 @@ document.getElementById("adminRotina").value=""
 if(typeof carregarRotinas==="function")await carregarRotinas()
 }
 /* ====================================================
-068 – CONCLUIR PENDENTES (CORRIGIDO DEFINITIVO)
+068 – CONCLUIR PENDENTES (ANTI-SOBRESCRITA)
 ==================================================== */
 async function concluirPendentes(){
 if(!db)return
@@ -277,9 +277,8 @@ const user=obterUsuarioLogado()||{}
 const usuarioId=user.id||localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
 const nome=user.nome||localStorage.getItem("usuario_nome")||"Administrador"
 const empresaId=EMPRESA_ID||localStorage.getItem("empresa_id")
-const pendentes=(ROTINAS_CACHE||[]).filter(r=>{
-return r.status!=="executado"&&String((r.turno||"").toLowerCase())===turno
-})
+/* 🔥 SOMENTE PENDENTES */
+const pendentes=(ROTINAS_CACHE||[]).filter(r=>r.status!=="executado"&&String((r.turno||"").toLowerCase())===turno)
 if(!pendentes.length){
 alert("Nenhuma pendência encontrada")
 esconderProgresso()
@@ -298,9 +297,7 @@ profissional_nome:nome,
 empresa_id:empresaId,
 horario_executado:new Date().toISOString()
 }))
-console.log("SALVANDO:",inserts)
 const {error}=await db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
-console.log("RESULT:",error)
 if(error){
 console.error("Erro concluirPendentes:",error)
 alert("Erro ao concluir pendentes")
@@ -309,6 +306,7 @@ esconderProgresso()
 desbloquearTela()
 return
 }
+/* 🔥 ATUALIZA SOMENTE PENDENTES */
 pendentes.forEach(r=>{
 r.status="executado"
 r.profissional_nome=nome
