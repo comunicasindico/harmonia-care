@@ -1,21 +1,63 @@
 window.salvandoPendencias=false
-/* ====================================================
-010 – LOGIN
+//* ====================================================
+010 – LOGIN (FINAL LIMPO E CORRETO)
 ==================================================== */
 async function login(){
-if(!db){alert("Sistema carregando");return}
 
+/* 🔥 EFEITO BOTÃO */
+const btn=document.getElementById("btnEntrar")
+if(btn){
+btn.innerText="Entrando..."
+btn.style.opacity="0.7"
+btn.style.transform="scale(0.97)"
+btn.disabled=true
+}
+
+/* 🔥 VALIDA SISTEMA */
+if(!db){
+if(btn){
+btn.innerText="Entrar"
+btn.style.opacity="1"
+btn.style.transform="scale(1)"
+btn.disabled=false
+}
+alert("Sistema carregando")
+return
+}
+
+/* 🔥 INPUTS */
 const loginInput=document.getElementById("usuario")?.value?.trim().toLowerCase()
 const senha=document.getElementById("senha")?.value?.trim()
 
-if(!usuario||!senha){alert("Informe usuário e senha");return}
-/* 🔥 NÃO DEPENDER MAIS DO EMPRESA_ID */
+if(!loginInput||!senha){
+if(btn){
+btn.innerText="Entrar"
+btn.style.opacity="1"
+btn.style.transform="scale(1)"
+btn.disabled=false
+}
+alert("Informe usuário e senha")
+return
+}
+
+/* 🔥 BUSCA USUÁRIOS */
 const {data,error}=await db
 .from("usuarios")
 .select("*")
 .eq("ativo",true)
 
-if(error){console.error(error);alert("Erro no login");return}
+if(error){
+console.error(error)
+if(btn){
+btn.innerText="Entrar"
+btn.style.opacity="1"
+btn.style.transform="scale(1)"
+btn.disabled=false
+}
+alert("Erro no login")
+return
+}
+
 /* 🔍 LOCALIZA USUÁRIO */
 const user=data.find(u=>
 (
@@ -26,32 +68,43 @@ const user=data.find(u=>
 && String(u.senha_hash)===senha
 )
 
-if(!user){alert("Usuário ou senha inválidos");return}
+if(!user){
+if(btn){
+btn.innerText="Entrar"
+btn.style.opacity="1"
+btn.style.transform="scale(1)"
+btn.disabled=false
+}
+alert("Usuário ou senha inválidos")
+return
+}
 /* ====================================================
-010 – LOGIN (CORRIGIDO DEFINITIVO)
+011 – LOGIN OK (UNIFICADO DEFINITIVO)
 ==================================================== */
-/* ✅ SALVAR SESSÃO */
+/* 🔐 SALVAR SESSÃO */
 localStorage.setItem("usuario_id",user.id)
-localStorage.setItem("usuario_nome",user.nome_apelido||user.nome_completo)
+localStorage.setItem("usuario_nome",user.nome_apelido||user.nome_completo||"")
 localStorage.setItem("usuario_hierarquia",user.hierarquia||1)
 localStorage.setItem("perfil",user.perfil||"cuidador")
 localStorage.setItem("usuario_perfil",(user.perfil||"cuidador").toLowerCase())
-/* 🔥 EMPRESA FIXA (PADRÃO ÚNICO) */
+/* 🔥 EMPRESA PADRÃO */
 const EMPRESA_FIXA="d9f678e5-6c7a-485e-895c-cb4791db840e"
-
 localStorage.setItem("empresa_id",EMPRESA_FIXA)
 EMPRESA_ID=EMPRESA_FIXA
-/* UI */
-document.getElementById("login").style.display="none"
-document.getElementById("app").style.display="block"
-/* INICIALIZA */
+/* 🔥 UI LOGIN → APP */
+const telaLogin=document.getElementById("login")
+const telaApp=document.getElementById("app")
+
+if(telaLogin)telaLogin.style.display="none"
+if(telaApp)telaApp.style.display="block"
+/* 🔥 INICIALIZA SISTEMA */
 if(typeof definirDataHoje==="function")definirDataHoje()
 if(typeof carregarPacientesBusca==="function")carregarPacientesBusca()
 if(typeof carregarRotinas==="function")carregarRotinas()
 if(typeof carregarClinico==="function")carregarClinico()
 }
 /* ====================================================
-011 – INICIAR SISTEMA
+012 – INICIAR SISTEMA
 ==================================================== */
 async function iniciarSistema(){
 definirDataHoje()
@@ -101,14 +154,14 @@ btnAdmin.style.display="none"
 }
 }
 /* ====================================================
-012 – LOGOUT
+013 – LOGOUT
 ==================================================== */
 function logout(){
 localStorage.clear()
 location.reload()
 }
 /* ====================================================
-013 – SALVAR PACIENTE SELECIONADO
+014 – SALVAR PACIENTE SELECIONADO
 ==================================================== */
 document.addEventListener("change",async function(e){
 if(e.target && e.target.id==="buscaPaciente"){
@@ -129,7 +182,7 @@ await montarGradePeriodo()
 }
 })
 /* ====================================================
-014 – INIT
+015 – INIT
 ==================================================== */
 window.addEventListener("load",async()=>{
 while(!db){await new Promise(r=>setTimeout(r,50))}
@@ -151,7 +204,7 @@ console.log("Página restaurada do cache")
 }
 })
 /* ====================================================
-015 – DATA HOJE
+016 – DATA HOJE
 ==================================================== */
 function definirDataHoje(){
 
@@ -169,7 +222,7 @@ if(fim && !fim.value)fim.value=dataLocal
 
 }
 /* ====================================================
-016 – NAVEGAÇÃO PAINÉIS
+017 – NAVEGAÇÃO PAINÉIS
 ==================================================== */
 function abrirPainel(id){
 if(window.salvandoPendencias){
@@ -196,7 +249,7 @@ btnAdmin.style.display="none"
 }
 }
 /* ====================================================
-017 – ABRIR ENFERMAGEM
+018 – ABRIR ENFERMAGEM
 ==================================================== */
 function abrirEnfermagem(){
 abrirPainel("painelEnfermagem")
@@ -205,7 +258,7 @@ const paciente=document.getElementById("buscaPaciente")?.value
 if(typeof carregarDadosClinicosPaciente==="function"){carregarDadosClinicosPaciente(paciente)}
 }
 /* ====================================================
-018 – ABRIR CLINICO
+019 – ABRIR CLINICO
 ==================================================== */
 function abrirClinico(){
 abrirPainel("painelClinico")
@@ -214,7 +267,7 @@ if(acoes)acoes.style.display="flex"
 if(typeof carregarClinico==="function"){carregarClinico()}
 }
 /* ====================================================
-019 – ABRIR ADMIN
+020 – ABRIR ADMIN
 ==================================================== */
 async function abrirAdmin(){
 abrirPainel("painelAdmin")
@@ -236,7 +289,7 @@ inputBusca.addEventListener("input",()=>carregarUsuarios())
 },200)
 }
 /* ====================================================
-020 – EMPRESA – CARREGAR DADOS
+021 – EMPRESA – CARREGAR DADOS
 ==================================================== */
 async function carregarEmpresa(){
 if(!db)return
