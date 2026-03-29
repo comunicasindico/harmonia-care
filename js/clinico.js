@@ -47,27 +47,32 @@ let html=""
 let totalPacientes=0,totalHas=0,totalDm=0,totalDemencia=0,totalCardio=0,totalAcamado=0,totalPAAlterada=0
 let risco1=0,risco2=0,risco3=0,risco4=0,risco5=0
 let dietaNormal=0,dietaHipossodica=0,dietaDiabetica=0,dietaPastosa=0,dietaLiquida=0,dietaVegetariana=0
+let html=""
+let totalPacientes=0,totalHas=0,totalDm=0,totalDemencia=0,totalCardio=0,totalAcamado=0,totalPAAlterada=0
+let risco1=0,risco2=0,risco3=0,risco4=0,risco5=0
+let totalDietas=0,hipossodica=0,diabetica=0,pastosa=0,vegetariana=0,liquida=0
+
 data.forEach(p=>{
-/* 🔥 CORREÇÃO PA ANTES DO USO */
+
+/* 🔥 NORMALIZAÇÃO */
 let paS=0,paD=0
-if(p.pressao_arterial){let pa=p.pressao_arterial.replace(/\s/g,"").split("/");if(pa.length===2){paS=parseInt(pa[0])||0;paD=parseInt(pa[1])||0}}
+if(p.pressao_arterial){
+let pa=p.pressao_arterial.replace(/\s/g,"").split("/")
+if(pa.length===2){
+paS=parseInt(pa[0])||0
+paD=parseInt(pa[1])||0
+}
+}
+
 p.pa_alterada=(paS>=140||paD>=90)
-let destaqueCritico=""
-if(p.grau_risco>=4&&p.pa_alterada){destaqueCritico="animation:pulse 1s infinite alternate;"}
 p.has=p.has===true||p.has==="true"||p.has==1
 p.dm=p.dm===true||p.dm==="true"||p.dm==1
 p.da=p.da===true||p.da==="true"||p.da==1
 p.cardiopatia=p.cardiopatia===true||p.cardiopatia==="true"||p.cardiopatia==1
 p.acamado=p.acamado===true||p.acamado==="true"||p.acamado==1
 p.grau_risco=parseInt(p.grau_risco)||0
-/* 🔥 CONTADOR CORRIGIDO */
-let dietaKey=getDietaKey(p.dieta_texto)
-if(!dietaKey||dietaKey==="normal")dietaNormal++
-else if(dietaKey==="hipossodica")dietaHipossodica++
-else if(dietaKey==="diabetica")dietaDiabetica++
-else if(dietaKey==="pastosa")dietaPastosa++
-else if(dietaKey==="liquida")dietaLiquida++
-else if(dietaKey==="vegetariana")dietaVegetariana++
+
+/* 🔥 CONTADORES GERAIS */
 totalPacientes++
 if(p.has)totalHas++
 if(p.dm)totalDm++
@@ -75,88 +80,82 @@ if(p.da)totalDemencia++
 if(p.cardiopatia)totalCardio++
 if(p.acamado)totalAcamado++
 if(p.pa_alterada)totalPAAlterada++
+
 if(p.grau_risco===1)risco1++
 if(p.grau_risco===2)risco2++
 if(p.grau_risco===3)risco3++
 if(p.grau_risco===4)risco4++
 if(p.grau_risco===5)risco5++
-})
-const riscoTotal=risco1+risco2+risco3+risco4+risco5
-html+=`<tr style="background:#fff200;font-weight:bold;text-align:center"><td>Todos</td><td></td><td style="color:#e74c3c">${totalHas}</td><td style="color:#f39c12">${totalDm}</td><td style="color:#8e44ad">${totalDemencia}</td><td style="color:#c0392b">${totalCardio}</td><td style="color:#34495e">${totalAcamado}</td><td style="color:#e67e22">${totalPAAlterada}</td><td></td><td style="color:#2c3e50">${riscoTotal}</td><td></td></tr>`
-data.forEach(p=>{
+
+/* 🔥 DIETAS */
+let dietaKey=getDietaKey(p.dieta_texto)
+if(dietaKey){
+totalDietas++
+if(dietaKey==="hipossodica")hipossodica++
+if(dietaKey==="diabetica")diabetica++
+if(dietaKey==="pastosa")pastosa++
+if(dietaKey==="vegetariana")vegetariana++
+if(dietaKey==="liquida")liquida++
+}
+
+/* 🔥 VISUAL */
 let destaqueCritico=""
-if(p.grau_risco>=4&&p.pa_alterada){destaqueCritico="animation:pulse 1s infinite alternate;"}
+if(p.grau_risco>=4&&p.pa_alterada)destaqueCritico="animation:pulse 1s infinite alternate;"
+
 let corLinha="#fff"
 if(p.grau_risco>=4)corLinha="#ffe5e5"
 else if(p.grau_risco===3)corLinha="#fff8e1"
+
 let borda=""
 if(p.pa_alterada)borda="border-left:6px solid #e74c3c"
-let dietaKey=getDietaKey(p.dieta_texto)
+
 let dietaHTML=""
 if(MODO_EDICAO_CLINICO){
-dietaHTML=`<select class="clin_dieta"><option value="">-</option><option value="normal"${dietaKey==="normal"?" selected":""}>🍽️ Normal</option><option value="hipossodica"${dietaKey==="hipossodica"?" selected":""}>🧂 Hipossódica</option><option value="diabetica"${dietaKey==="diabetica"?" selected":""}>🩸 Diabética</option><option value="pastosa"${dietaKey==="pastosa"?" selected":""}>🥣 Pastosa</option><option value="liquida"${dietaKey==="liquida"?" selected":""}>🧃 Líquida</option><option value="vegetariana"${dietaKey==="vegetariana"?" selected":""}>🥗 Vegetariana</option></select>`
-}else{dietaHTML=formatarDieta(p)}
+dietaHTML=`<select class="clin_dieta"><option value="">-</option>
+<option value="normal"${dietaKey==="normal"?" selected":""}>🍽️ Normal</option>
+<option value="hipossodica"${dietaKey==="hipossodica"?" selected":""}>🧂 Hipossódica</option>
+<option value="diabetica"${dietaKey==="diabetica"?" selected":""}>🩸 Diabética</option>
+<option value="pastosa"${dietaKey==="pastosa"?" selected":""}>🥣 Pastosa</option>
+<option value="liquida"${dietaKey==="liquida"?" selected":""}>🧃 Líquida</option>
+<option value="vegetariana"${dietaKey==="vegetariana"?" selected":""}>🥗 Vegetariana</option>
+</select>`
+}else{
+dietaHTML=formatarDieta(p)
+}
+
+/* 🔥 HTML */
 html+=`<tr data-id="${p.id}" style="background:${corLinha};${borda}${destaqueCritico}">
 <td>${p.nome_apelido||p.nome_completo||""}</td>
 <td>${calcularIdade(p.data_nascimento)}</td>
-<td>${MODO_EDICAO_CLINICO?`<select class="clin_has"><option value="true"${p.has?" selected":""}>✔</option><option value="false"${!p.has?" selected":""}></option></select>`:(p.has?"✔":"")}</td>
-<td>${MODO_EDICAO_CLINICO?`<select class="clin_dm"><option value="true"${p.dm?" selected":""}>✔</option><option value="false"${!p.dm?" selected":""}></option></select>`:(p.dm?"✔":"")}</td>
-<td>${MODO_EDICAO_CLINICO?`<select class="clin_da"><option value="true"${p.da?" selected":""}>✔</option><option value="false"${!p.da?" selected":""}></option></select>`:(p.da?"✔":"")}</td>
-<td>${MODO_EDICAO_CLINICO?`<select class="clin_cardio"><option value="true"${p.cardiopatia?" selected":""}>✔</option><option value="false"${!p.cardiopatia?" selected":""}></option></select>`:(p.cardiopatia?"✔":"")}</td>
-<td>${MODO_EDICAO_CLINICO?`<select class="clin_acamado"><option value="true"${p.acamado?" selected":""}>✔</option><option value="false"${!p.acamado?" selected":""}></option></select>`:(p.acamado?"✔":"")}</td>
-<td>${MODO_EDICAO_CLINICO?`<input class="clin_pa" inputmode="numeric" pattern="[0-9/]*" value="${p.pressao_arterial||""}" placeholder="120/80" style="width:70px">`:(p.pressao_arterial?`<span style="color:${p.pa_alterada?'#e74c3c':'#27ae60'};font-weight:bold">${p.pressao_arterial}</span>`:"")}</td>
+<td>${p.has?"✔":""}</td>
+<td>${p.dm?"✔":""}</td>
+<td>${p.da?"✔":""}</td>
+<td>${p.cardiopatia?"✔":""}</td>
+<td>${p.acamado?"✔":""}</td>
+<td>${p.pressao_arterial?`<span style="color:${p.pa_alterada?'#e74c3c':'#27ae60'};font-weight:bold">${p.pressao_arterial}</span>`:""}</td>
 <td>${dietaHTML}</td>
-<td>${MODO_EDICAO_CLINICO?`<select class="clin_risco"><option value="1"${p.grau_risco==1?" selected":""}>1</option><option value="2"${p.grau_risco==2?" selected":""}>2</option><option value="3"${p.grau_risco==3?" selected":""}>3</option><option value="4"${p.grau_risco==4?" selected":""}>4</option><option value="5"${p.grau_risco==5?" selected":""}>5</option></select>`:(p.grau_risco?`<b style="color:${p.grau_risco>=4?'#e74c3c':'#2c3e50'}">${p.grau_risco}</b>`:"")}</td>
-<td>${MODO_EDICAO_CLINICO?`<input class="clin_outros" value="${p.outras_comorbidades||""}">`:(p.outras_comorbidades||"Não tem")}</td>
-<td class="acoesClinico" style="${MODO_EDICAO_CLINICO?'':'display:none'}"><button class="btn-danger" onclick="excluirPaciente('${p.id}')">Excluir</button></td>
+<td><b style="color:${p.grau_risco>=4?'#e74c3c':'#2c3e50'}">${p.grau_risco||""}</b></td>
+<td>${p.outras_comorbidades||"Não tem"}</td>
 </tr>`
-})
-tabela.innerHTML=html
-document.querySelectorAll("#quadroClinico select,#quadroClinico input").forEach(el=>{
-el.onchange=null
-el.onchange=async()=>{
-if(!pode("editar_clinico"))return
-const linha=el.closest("tr")
-if(!linha)return
-const id=linha.dataset.id
-if(!id)return
-const bool=v=>v==="true"||v==="1"||v==="sim"
-let dados={}
-if(el.className.includes("clin_has"))dados.has=bool(el.value)
-if(el.className.includes("clin_dm"))dados.dm=bool(el.value)
-if(el.className.includes("clin_da"))dados.da=bool(el.value)
-if(el.className.includes("clin_cardio"))dados.cardiopatia=bool(el.value)
-if(el.className.includes("clin_acamado"))dados.acamado=bool(el.value)
-if(el.className.includes("clin_pa"))dados.pressao_arterial=el.value||null
-if(el.className.includes("clin_pa_class"))dados.pa_classificacao=el.value||null
-if(el.className.includes("clin_risco"))dados.grau_risco=parseInt(el.value||0)
-if(el.className.includes("clin_outros"))dados.outras_comorbidades=el.value||null
-if(el.className.includes("clin_dieta")){
-const mapa={normal:"Normal",hipossodica:"Hipossódica",diabetica:"Diabética",pastosa:"Pastosa",liquida:"Líquida",vegetariana:"Vegetariana"}
-dados.dieta_especial=el.value?true:false
-dados.dieta_texto=mapa[el.value]||null
-}
-if(Object.keys(dados).length===0)return
-await db.from("pacientes").update(dados).eq("id",id).eq("empresa_id",EMPRESA_ID)
-linha.style.transition="all 0.3s"
-linha.style.background="#d4edda"
-setTimeout(()=>{linha.style.background=""},800)
-}
-})
-}
-/* 040 A🔥 PAINEL NUTRICIONAL */
-let totalDietas=0,hipossodica=0,diabetica=0,pastosa=0,vegetariana=0,liquida=0
 
-data.forEach(p=>{
-let key=getDietaKey(p.dieta_texto)
-if(!key)return
-totalDietas++
-if(key==="hipossodica")hipossodica++
-if(key==="diabetica")diabetica++
-if(key==="pastosa")pastosa++
-if(key==="vegetariana")vegetariana++
-if(key==="liquida")liquida++
 })
+
+/* 🔥 LINHA TOTAL */
+const riscoTotal=risco1+risco2+risco3+risco4+risco5
+html=`<tr style="background:#fff200;font-weight:bold;text-align:center">
+<td>Todos</td><td></td>
+<td style="color:#e74c3c">${totalHas}</td>
+<td style="color:#f39c12">${totalDm}</td>
+<td style="color:#8e44ad">${totalDemencia}</td>
+<td style="color:#c0392b">${totalCardio}</td>
+<td style="color:#34495e">${totalAcamado}</td>
+<td style="color:#e67e22">${totalPAAlterada}</td>
+<td></td>
+<td style="color:#2c3e50">${riscoTotal}</td>
+<td></td>
+</tr>`+html
+tabela.innerHTML=html
+  
 
 const elTotal=document.getElementById("dietaTotal"),elHip=document.getElementById("dietaHipossodica"),elDia=document.getElementById("dietaDiabetica"),elPas=document.getElementById("dietaPastosa"),elVeg=document.getElementById("dietaVegetariana"),elLiq=document.getElementById("dietaLiquida")
 
@@ -190,6 +189,38 @@ if(elR5)elR5.innerHTML=`🔴 Alto ${risco5}`
 if(elR4)elR4.innerHTML=`🟠 Médio ${risco4}`
 if(elR3)elR3.innerHTML=`🟡 Moderado ${risco3}`
 if(elR12)elR12.innerHTML=`🟢 Baixo ${risco1+risco2}`
+document.querySelectorAll("#quadroClinico select,#quadroClinico input").forEach(el=>{
+el.onchange=null
+el.onchange=async()=>{
+if(!pode("editar_clinico"))return
+const linha=el.closest("tr")
+if(!linha)return
+const id=linha.dataset.id
+if(!id)return
+const bool=v=>v==="true"||v==="1"||v==="sim"
+let dados={}
+if(el.className.includes("clin_has"))dados.has=bool(el.value)
+if(el.className.includes("clin_dm"))dados.dm=bool(el.value)
+if(el.className.includes("clin_da"))dados.da=bool(el.value)
+if(el.className.includes("clin_cardio"))dados.cardiopatia=bool(el.value)
+if(el.className.includes("clin_acamado"))dados.acamado=bool(el.value)
+if(el.className.includes("clin_pa"))dados.pressao_arterial=el.value||null
+if(el.className.includes("clin_pa_class"))dados.pa_classificacao=el.value||null
+if(el.className.includes("clin_risco"))dados.grau_risco=parseInt(el.value||0)
+if(el.className.includes("clin_outros"))dados.outras_comorbidades=el.value||null
+if(el.className.includes("clin_dieta")){
+const mapa={normal:"Normal",hipossodica:"Hipossódica",diabetica:"Diabética",pastosa:"Pastosa",liquida:"Líquida",vegetariana:"Vegetariana"}
+dados.dieta_especial=el.value?true:false
+dados.dieta_texto=mapa[el.value]||null
+}
+if(Object.keys(dados).length===0)return
+await db.from("pacientes").update(dados).eq("id",id).eq("empresa_id",EMPRESA_ID)
+linha.style.transition="all 0.3s"
+linha.style.background="#d4edda"
+setTimeout(()=>{linha.style.background=""},800)
+}
+})
+}
 /* ====================================================
 041 – CALCULAR IDADE
 ==================================================== */
