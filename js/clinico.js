@@ -16,8 +16,8 @@ if(v.length!==2)return""
 let s=parseInt(v[0])||0
 let d=parseInt(v[1])||0
 if(s<120&&d<80)return"normal"
-if(s>=120&&s<=139||d>=80&&d<=89)return"limitrofe"
-if(s>=140&&s<=159||d>=90&&d<=99)return"leve"
+if((s>=120&&s<=139)||(d>=80&&d<=89))return"limítrofe"
+if((s>=140&&s<=159)||(d>=90&&d<=99))return"leve"
 if(s>=160||d>=100)return"grave"
 return""
 }
@@ -144,9 +144,7 @@ setTimeout(()=>{linha.style.background=""},800)
 }
 })
 }
-/* ====================================================
-040A – PAINEL NUTRICIONAL (PADRÃO NOVO)
-==================================================== */
+/* 040 A🔥 PAINEL NUTRICIONAL */
 let totalDietas=0,hipossodica=0,diabetica=0,pastosa=0,vegetariana=0,liquida=0
 
 data.forEach(p=>{
@@ -192,7 +190,6 @@ if(elR5)elR5.innerHTML=`🔴 Alto ${risco5}`
 if(elR4)elR4.innerHTML=`🟠 Médio ${risco4}`
 if(elR3)elR3.innerHTML=`🟡 Moderado ${risco3}`
 if(elR12)elR12.innerHTML=`🟢 Baixo ${risco1+risco2}`
-
 /* ====================================================
 041 – CALCULAR IDADE
 ==================================================== */
