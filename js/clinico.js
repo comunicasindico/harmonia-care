@@ -58,7 +58,14 @@ else if(key==="liquida")liquida++
 else dietaLivre++
 let dietaHTML=MODO_EDICAO_CLINICO?renderSelectDieta(key):formatarDieta(p)
 html+=`<tr data-id="${p.id}">
-<td>${p.nome_completo}</td>
+<td>${p.nome_apelido||p.nome_completo||""}</td>
+<td>${calcularIdade(p.data_nascimento)}</td>
+<td>${p.has?"✔":""}</td>
+<td>${p.dm?"✔":""}</td>
+<td>${p.da?"✔":""}</td>
+<td>${p.cardiopatia?"✔":""}</td>
+<td>${p.acamado?"✔":""}</td>
+<td>${p.pressao_arterial||""}</td>
 <td>${dietaHTML}</td>
 <td>${p.grau_risco||""}</td>
 <td>${montarColunaOutras(p)}</td>
