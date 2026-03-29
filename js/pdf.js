@@ -61,10 +61,117 @@ doc.text(`Dieta: ${paciente.dieta_especial?"SIM - "+(paciente.dieta_texto||""):"
 doc.text(`Risco: ${paciente.grau_risco||"—"}`,120,dy)
 dy+=5
 doc.text(`Comorbidades: ${paciente.outras_comorbidades||"—"}`,12,dy)
-y+=47
+y+=10
+/* ====================================================
+082 – BLOCO ANÁLISE CLÍNICA
+==================================================== */
+doc.setFont("Roboto","bold")
+doc.text("Análise Clínica e Cuidados",10,y)
+y+=6
+doc.setFont("Roboto","normal")
+doc.setFontSize(9)
+const analise=gerarAnaliseClinica(paciente)
+analise.forEach(item=>{
+doc.text("• "+item,10,y,{maxWidth:180})
+y+=5
+if(y>250){doc.addPage();y=20}
+})
 function normalizar(txt){
 return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim()
 }
+/* ====================================================
+081 – GERAR ANÁLISE CLÍNICA INTELIGENTE
+==================================================== */
+function gerarAnaliseClinica(p){
+
+let analise=[]
+/* 🔴 HAS */
+if(p.has){
+analise.push("Hipertensão: Monitorar PA diariamente, evitar picos >140/90, reduzir sódio e manter medicação regular.")
+}
+/* 🔵 DIABETES */
+if(p.dm){
+analise.push("Diabetes: Controle rigoroso de glicemia, atenção a hipoglicemia, fracionar alimentação e evitar açúcares simples.")
+}
+/* 🟣 DEMÊNCIA (DA) */
+if(p.da){
+analise.push("Demência: Manter ambiente seguro, evitar quedas, orientar equipe para reorientação frequente e supervisão contínua.")
+}
+/* ❤️ CARDIOPATIA */
+if(p.cardiopatia){
+analise.push("Cardiopatia: Observar sinais de dispneia, edema e fadiga. Evitar esforços e monitorar sinais vitais.")
+}
+/* 🛏️ ACAMADO */
+if(p.acamado){
+analise.push("Paciente acamado: Realizar mudança de decúbito a cada 2h, prevenir lesão por pressão e manter hidratação adequada.")
+}
+/* 🍽️ DIETA */
+let dieta=(p.dieta_texto||"Livre").toLowerCase()
+
+if(dieta.includes("hipossodica")){
+analise.push("Dieta hipossódica: Controle rigoroso de sódio para evitar sobrecarga cardiovascular.")
+}
+else if(dieta.includes("diabetica")){
+analise.push("Dieta diabética: Evitar picos glicêmicos, alimentação balanceada e controle de carboidratos.")
+}
+else if(dieta.includes("pastosa")){
+analise.push("Dieta pastosa: Atenção ao risco de broncoaspiração. Alimentação assistida.")
+}
+else if(dieta.includes("liquida")){
+analise.push("Dieta líquida: Monitorar ingestão calórica e risco de desnutrição.")
+}
+else if(dieta.includes("vegetariana")){
+analise.push("Dieta vegetariana: Garantir aporte proteico adequado.")
+}
+else{
+analise.push("Dieta livre: Manter equilíbrio alimentar e monitoramento nutricional.")
+}
+
+/* 🩺 PRESSÃO ARTERIAL */
+if(p.pressao_arterial){
+let v=p.pressao_arterial.split("/")
+let s=parseInt(v[0])||0
+let d=parseInt(v[1])||0
+
+if(s>=160||d>=100){
+analise.push("Pressão arterial elevada: risco aumentado. Monitoramento intensivo necessário.")
+}
+}
+
+/* ⚠️ OUTRAS COMORBIDADES */
+if(p.outras_comorbidades){
+let txt=normalizar(p.outras_comorbidades)
+
+if(txt.includes("avc")){
+analise.push("Histórico de AVC: atenção à mobilidade, fala e risco de nova ocorrência.")
+}
+if(txt.includes("alzheimer")){
+analise.push("Alzheimer: acompanhamento cognitivo contínuo e supervisão integral.")
+}
+if(txt.includes("depressao")){
+analise.push("Depressão: observar comportamento, apatia e adesão ao tratamento.")
+}
+if(txt.includes("fratura")){
+analise.push("Histórico de fratura: alto risco de queda. Redobrar segurança.")
+}
+if(txt.includes("glaucoma")){
+analise.push("Glaucoma: atenção à visão e risco de acidentes.")
+}
+}
+
+/* 🎯 CONCLUSÃO INTELIGENTE */
+if(p.grau_risco>=4){
+analise.push("Paciente de ALTO RISCO: exige acompanhamento intensivo da equipe.")
+}else if(p.grau_risco===3){
+analise.push("Paciente com risco moderado: requer atenção contínua.")
+}else{
+analise.push("Paciente estável dentro do quadro clínico atual.")
+}
+
+return analise
+}
+
+
 let atual=new Date(dataInicio+"T00:00:00")
 const fim=new Date(dataFim+"T00:00:00")
 const dias=[]
