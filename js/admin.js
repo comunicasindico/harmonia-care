@@ -262,7 +262,7 @@ document.getElementById("adminRotina").value=""
 if(typeof carregarRotinas==="function")await carregarRotinas()
 }
 /* ====================================================
-068 – CONCLUIR PENDENTES (ULTRA BLINDADO PRODUÇÃO)
+068 – CONCLUIR PENDENTES (TURBO PRODUÇÃO)
 ==================================================== */
 async function concluirPendentes(){
 if(!db)return
@@ -294,21 +294,8 @@ SALVANDO=false
 window.salvandoPendencias=false
 return
 }
-let processados=0
-const inserts=[]
-for(const r of pendentes){
-try{
-const {data:jaExiste}=await db
-.from("rotinas_execucao")
-.select("id")
-.eq("paciente_id",r.paciente_id)
-.eq("rotina_id",r.rotina_id)
-.eq("data",dataHoje)
-.eq("turno",turno)
-.eq("empresa_id",empresaId)
-.maybeSingle()
-if(jaExiste)continue
-inserts.push({
+/* 🔥 MONTA LOTE DIRETO */
+const inserts=pendentes.map(r=>({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -318,24 +305,28 @@ usuario_id:usuarioId,
 profissional_nome:nomeProfissional||"Administrador",
 empresa_id:empresaId,
 horario_executado:new Date().toISOString()
+}))
+/* 🔥 UPSERT (NÃO DUPLICA) */
+const {error}=await db.from("rotinas_execucao").upsert(inserts,{
+onConflict:"paciente_id,rotina_id,data,turno"
 })
-r.status="executado"
-r.profissional_nome=nomeProfissional||"Administrador"
-}catch(e){
-console.error("Erro verificação pendente:",e)
-}
-processados++
-let percentual=Math.round((processados/total)*100)
-atualizarProgresso(percentual,`Processando ${processados}/${total}`)
-}
-if(inserts.length){
-const {error}=await db.from("rotinas_execucao").insert(inserts)
 if(error){
-console.error("Erro insert lote:",error)
-alert("Erro ao salvar pendentes (ver console)")
+console.error("Erro turbo:",error)
+alert("Erro ao concluir pendentes")
+SALVANDO=false
+window.salvandoPendencias=false
+esconderProgresso()
+desbloquearTela()
 return
 }
-}
+/* 🔥 ATUALIZA CACHE IMEDIATO */
+pendentes.forEach(r=>{
+r.status="executado"
+r.profissional_nome=nomeProfissional||"Administrador"
+})
+/* 🔥 PROGRESSO REAL */
+atualizarProgresso(100)
+/* 🔥 RELOAD LIMPO */
 await carregarRotinas()
 }catch(e){
 console.error("Erro concluirPendentes:",e)
@@ -345,7 +336,7 @@ esconderProgresso()
 desbloquearTela()
 SALVANDO=false
 window.salvandoPendencias=false
-},400)
+},300)
 }
 /* ====================================================
 069 – SALVAR USUARIO LINHA (ROBUSTO)
