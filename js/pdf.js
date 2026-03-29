@@ -62,23 +62,7 @@ doc.text(`Risco: ${paciente.grau_risco||"—"}`,120,dy)
 dy+=5
 doc.text(`Comorbidades: ${paciente.outras_comorbidades||"—"}`,12,dy)
 y = Math.max(y, dy) + 10
-/* ====================================================
-082 – BLOCO ANÁLISE CLÍNICA
-==================================================== */
-doc.setFont("Roboto","bold")
-doc.text("Análise Clínica e Cuidados",10,y)
-y+=6
-doc.setFont("Roboto","normal")
-doc.setFontSize(9)
-const analise=gerarAnaliseClinica(paciente)
-analise.forEach(item=>{
-doc.text("• "+item,10,y,{maxWidth:180})
-y+=5
-if(y>250){doc.addPage();y=20}
-})
-function normalizar(txt){
-return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim()
-}
+
 /* ====================================================
 081 – GERAR ANÁLISE CLÍNICA INTELIGENTE
 ==================================================== */
@@ -278,8 +262,25 @@ doc.setFillColor(46,204,113)
 doc.rect(10,y,180*(perc/100),5,"F")
 y+=10
 doc.setFont("Roboto","normal")
-doc.text(perc>=80?"Paciente estável com boa adesão às rotinas.":perc>=50?"Paciente requer monitoramento.":"Paciente com risco elevado assistencial.",10,y,{maxWidth:180})
-y+=12
+doc.text(perc>=80?"Paciente estável com boa adesão às rotinas.":perc>=50?"Situação Clínica: Paciente requer monitoramento contínuo.":"Paciente com risco elevado assistencial.",10,y,{maxWidth:180})
+y+=8
+/* ====================================================
+082 – BLOCO ANÁLISE CLÍNICA
+==================================================== */
+doc.setFont("Roboto","bold")
+doc.text("Análise Clínica e Cuidados",10,y)
+y+=6
+doc.setFont("Roboto","normal")
+doc.setFontSize(9)
+const analise=gerarAnaliseClinica(paciente)
+analise.forEach(item=>{
+doc.text("• "+item,10,y,{maxWidth:180})
+y+=5
+if(y>250){doc.addPage();y=20}
+})
+function normalizar(txt){
+return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim()
+}
 doc.text("Responsável:",10,y)
 y+=5
 let nome="Sistema"
