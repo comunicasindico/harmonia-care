@@ -46,10 +46,6 @@ function formatarDieta(p){let key=getDietaKey(p.dieta_texto);if(!key)return"-";l
 let html=""
 let totalPacientes=0,totalHas=0,totalDm=0,totalDemencia=0,totalCardio=0,totalAcamado=0,totalPAAlterada=0
 let risco1=0,risco2=0,risco3=0,risco4=0,risco5=0
-let dietaNormal=0,dietaHipossodica=0,dietaDiabetica=0,dietaPastosa=0,dietaLiquida=0,dietaVegetariana=0
-let html=""
-let totalPacientes=0,totalHas=0,totalDm=0,totalDemencia=0,totalCardio=0,totalAcamado=0,totalPAAlterada=0
-let risco1=0,risco2=0,risco3=0,risco4=0,risco5=0
 let totalDietas=0,hipossodica=0,diabetica=0,pastosa=0,vegetariana=0,liquida=0
 
 data.forEach(p=>{
