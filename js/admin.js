@@ -262,16 +262,12 @@ document.getElementById("adminRotina").value=""
 if(typeof carregarRotinas==="function")await carregarRotinas()
 }
 /* ====================================================
-068 – CONCLUIR PENDENTES (TURBO PRODUÇÃO)
+068 – CONCLUIR PENDENTES (CORRIGIDO DEFINITIVO)
 ==================================================== */
 async function concluirPendentes(){
 if(!db)return
-if(SALVANDO){
-alert("Aguarde finalizar...")
-return
-}
+if(SALVANDO){alert("Aguarde finalizar...");return}
 SALVANDO=true
-window.salvandoPendencias=true
 mostrarProgresso()
 bloquearTela()
 try{
@@ -279,22 +275,18 @@ const dataHoje=obterDataSelecionada()
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 const user=obterUsuarioLogado()||{}
 const usuarioId=user.id||localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
-const nomeProfissional=user.nome||localStorage.getItem("usuario_nome")||"Administrador"
+const nome=user.nome||localStorage.getItem("usuario_nome")||"Administrador"
 const empresaId=EMPRESA_ID||localStorage.getItem("empresa_id")
 const pendentes=(ROTINAS_CACHE||[]).filter(r=>{
-r.turno=(r.turno||turno).toLowerCase()
-return r.status!=="executado"&&r.turno===turno
+return r.status!=="executado"&&String((r.turno||"").toLowerCase())===turno
 })
-const total=pendentes.length
-if(total===0){
+if(!pendentes.length){
 alert("Nenhuma pendência encontrada")
 esconderProgresso()
 desbloquearTela()
 SALVANDO=false
-window.salvandoPendencias=false
 return
 }
-/* 🔥 MONTA LOTE DIRETO */
 const inserts=pendentes.map(r=>({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
@@ -302,32 +294,28 @@ data:dataHoje,
 turno:turno,
 status:"executado",
 usuario_id:usuarioId,
-profissional_nome:nomeProfissional||"Administrador",
+profissional_nome:nome,
 empresa_id:empresaId,
 horario_executado:new Date().toISOString()
 }))
-/* 🔥 UPSERT (NÃO DUPLICA) */
-const {error}=await db.from("rotinas_execucao").upsert(inserts,{
-onConflict:"paciente_id,rotina_id,data,turno"
-})
+console.log("SALVANDO:",inserts)
+const {error}=await db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
+console.log("RESULT:",error)
 if(error){
-console.error("Erro turbo:",error)
+console.error("Erro concluirPendentes:",error)
 alert("Erro ao concluir pendentes")
 SALVANDO=false
-window.salvandoPendencias=false
 esconderProgresso()
 desbloquearTela()
 return
 }
-/* 🔥 ATUALIZA CACHE IMEDIATO */
 pendentes.forEach(r=>{
 r.status="executado"
-r.profissional_nome=nomeProfissional||"Administrador"
+r.profissional_nome=nome
 })
-/* 🔥 PROGRESSO REAL */
 atualizarProgresso(100)
-/* 🔥 RELOAD LIMPO */
 await carregarRotinas()
+renderizarRotinas(ROTINAS_CACHE)
 }catch(e){
 console.error("Erro concluirPendentes:",e)
 }
@@ -335,7 +323,6 @@ setTimeout(()=>{
 esconderProgresso()
 desbloquearTela()
 SALVANDO=false
-window.salvandoPendencias=false
 },300)
 }
 /* ====================================================
