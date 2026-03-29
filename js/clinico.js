@@ -61,7 +61,7 @@ html+=`<tr data-id="${p.id}">
 <td>${p.nome_completo}</td>
 <td>${dietaHTML}</td>
 <td>${p.grau_risco||""}</td>
-<td>${p.outras_comorbidades||"Não tem"}</td>
+<td>${montarColunaOutras(p)}</td>
 </tr>`
 })
 tabela.innerHTML=html
