@@ -148,13 +148,13 @@ return`<select class="clin_dieta">
 045 – INDICADORES DIETA
 ==================================================== */
 function atualizarIndicadoresDieta(livre,hipo,dia,pas,veg,liq){
-const elTotal=document.getElementById("dietaTotal")
+const elLivre=document.getElementById("dietaLivre")
 const elHip=document.getElementById("dietaHipossodica")
 const elDia=document.getElementById("dietaDiabetica")
 const elPas=document.getElementById("dietaPastosa")
 const elVeg=document.getElementById("dietaVegetariana")
 const elLiq=document.getElementById("dietaLiquida")
-if(elTotal)elTotal.innerHTML=`🍽️ ${livre}`
+if(elLivre)elLivre.innerHTML=`🍽️ ${livre}`
 if(elHip)elHip.innerHTML=`🧂 ${hipo}`
 if(elDia)elDia.innerHTML=`🩸 ${dia}`
 if(elPas)elPas.innerHTML=`🥣 ${pas}`
