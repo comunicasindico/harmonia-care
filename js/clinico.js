@@ -161,7 +161,7 @@ elRisco.innerHTML=`
 <span style="background:#e74c3c;color:#fff;padding:4px 10px;border-radius:6px">Alto ${risco5}</span>
 `
 }
-}
+
 /* ===============================
 040B INDICADORES VISUAIS
 =============================== */
