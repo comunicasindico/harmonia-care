@@ -3,7 +3,6 @@ window.salvandoPendencias=false
 010 – LOGIN (FINAL LIMPO E CORRETO)
 ==================================================== */
 async function login(){
-
 /* 🔥 EFEITO BOTÃO */
 const btn=document.getElementById("btnEntrar")
 if(btn){
@@ -12,7 +11,6 @@ btn.style.opacity="0.7"
 btn.style.transform="scale(0.97)"
 btn.disabled=true
 }
-
 /* 🔥 VALIDA SISTEMA */
 if(!db){
 if(btn){
@@ -24,7 +22,6 @@ btn.disabled=false
 alert("Sistema carregando")
 return
 }
-
 /* 🔥 INPUTS */
 const loginInput=document.getElementById("usuario")?.value?.trim().toLowerCase()
 const senha=document.getElementById("senha")?.value?.trim()
@@ -39,7 +36,6 @@ btn.disabled=false
 alert("Informe usuário e senha")
 return
 }
-
 /* 🔥 BUSCA USUÁRIOS */
 const {data,error}=await db
 .from("usuarios")
@@ -57,7 +53,6 @@ btn.disabled=false
 alert("Erro no login")
 return
 }
-
 /* 🔍 LOCALIZA USUÁRIO */
 const user=data.find(u=>
 (
@@ -78,6 +73,7 @@ btn.disabled=false
 alert("Usuário ou senha inválidos")
 return
 }
+localStorage.setItem("painelAtual","painelEnfermagem")
 /* ====================================================
 011 – LOGIN OK (UNIFICADO DEFINITIVO)
 ==================================================== */
