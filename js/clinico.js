@@ -146,12 +146,26 @@ html=`<tr style="background:#fff200;font-weight:bold;text-align:center">
 </tr>`+html
 tabela.innerHTML=html
 const elTotal=document.getElementById("dietaTotal"),elHip=document.getElementById("dietaHipossodica"),elDia=document.getElementById("dietaDiabetica"),elPas=document.getElementById("dietaPastosa"),elVeg=document.getElementById("dietaVegetariana"),elLiq=document.getElementById("dietaLiquida")
-if(elTotal)elTotal.innerHTML=`🍽️ ${dietaNormal}`
-if(elHip)elHip.innerHTML=`🧂 ${hipossodica}`
-if(elDia)elDia.innerHTML=`🩸 ${diabetica}`
-if(elPas)elPas.innerHTML=`🥣 ${pastosa}`
-if(elVeg)elVeg.innerHTML=`🥗 ${vegetariana}`
-if(elLiq)elLiq.innerHTML=`🧃 ${liquida}`
+/* 🔥 RECONTAGEM DIRETO DO HTML (100% GARANTIDO) */
+setTimeout(()=>{
+const linhas=document.querySelectorAll("#quadroClinico tr[data-id]")
+let normal=0,veg=0,hipo=0,dia=0,pas=0,liq=0
+linhas.forEach(l=>{
+const txt=l.innerText.toLowerCase()
+if(txt.includes("vegetariana"))veg++
+else if(txt.includes("hipossodica"))hipo++
+else if(txt.includes("diabetica"))dia++
+else if(txt.includes("pastosa"))pas++
+else if(txt.includes("liquida"))liq++
+else normal++
+})
+if(elTotal)elTotal.innerHTML=`🍽️ ${normal}`
+if(elHip)elHip.innerHTML=`🧂 ${hipo}`
+if(elDia)elDia.innerHTML=`🩸 ${dia}`
+if(elPas)elPas.innerHTML=`🥣 ${pas}`
+if(elVeg)elVeg.innerHTML=`🥗 ${veg}`
+if(elLiq)elLiq.innerHTML=`🧃 ${liq}`
+},100)
 const elRisco=document.getElementById("painelRiscoResumo")
 if(elRisco){
 elRisco.innerHTML=`
