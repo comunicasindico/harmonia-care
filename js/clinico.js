@@ -58,11 +58,11 @@ if(t.includes("vegetariana"))return "vegetariana"
 return "normal"
 }
 
-  function formatarDieta(p){let key=getDietaKey(p.dieta_texto);if(!key)return"-";let d=DIETAS[key];return'<span style="padding:3px 8px;border-radius:6px;font-size:11px;background:'+d.cor+';font-weight:bold;display:inline-block">'+d.icone+' '+d.nome+'</span>'}
+function formatarDieta(p){let key=getDietaKey(p.dieta_texto);if(!key)return"-";let d=DIETAS[key];return'<span style="padding:3px 8px;border-radius:6px;font-size:11px;background:'+d.cor+';font-weight:bold;display:inline-block">'+d.icone+' '+d.nome+'</span>'}
 let html=""
 let totalPacientes=0,totalHas=0,totalDm=0,totalDemencia=0,totalCardio=0,totalAcamado=0,totalPAAlterada=0
 let risco1=0,risco2=0,risco3=0,risco4=0,risco5=0
-let totalDietas=0,hipossodica=0,diabetica=0,pastosa=0,vegetariana=0,liquida=0
+let dietaNormal=0,hipossodica=0,diabetica=0,pastosa=0,vegetariana=0,liquida=0
 
 data.forEach(p=>{
 
@@ -101,14 +101,13 @@ if(p.grau_risco===5)risco5++
 
 /* 🔥 DIETAS */
 let dietaKey=getDietaKey(p.dieta_texto)
-if(dietaKey){
-totalDietas++
-if(dietaKey==="normal"){}
-else if(dietaKey==="hipossodica")hipossodica++
+/* 🔥 TODOS entram */
+if(dietaKey==="hipossodica")hipossodica++
 else if(dietaKey==="diabetica")diabetica++
 else if(dietaKey==="pastosa")pastosa++
 else if(dietaKey==="vegetariana")vegetariana++
 else if(dietaKey==="liquida")liquida++
+else dietaNormal++
 }
 
 /* 🔥 VISUAL */
@@ -172,7 +171,9 @@ tabela.innerHTML=html
 
 const elTotal=document.getElementById("dietaTotal"),elHip=document.getElementById("dietaHipossodica"),elDia=document.getElementById("dietaDiabetica"),elPas=document.getElementById("dietaPastosa"),elVeg=document.getElementById("dietaVegetariana"),elLiq=document.getElementById("dietaLiquida")
 
-if(elTotal)elTotal.innerText=`🍽️ ${totalDietas}`
+const totalDietas=dietaNormal+hipossodica+diabetica+pastosa+vegetariana+liquida
+
+if(elTotal)elTotal.innerText=`🍽️ ${dietaNormal}`
 if(elHip)elHip.innerText=`🧂 ${hipossodica}`
 if(elDia)elDia.innerText=`🩸 ${diabetica}`
 if(elPas)elPas.innerText=`🥣 ${pastosa}`
