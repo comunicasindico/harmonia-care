@@ -83,9 +83,9 @@ if(t.includes("vegetariana"))return"vegetariana"
 return"livre"
 }
 /* ====================================================
-042 – MONTAR COMORBIDADES COMPLETAS
+042 – MONTAR coluna outras COMORBIDADES COMPLETAS
 ==================================================== */
-function montarComorbidades(p){
+function montarColunaOutras(p){
 
 let lista=[]
 
