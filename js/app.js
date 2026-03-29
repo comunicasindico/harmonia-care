@@ -73,7 +73,11 @@ btn.disabled=false
 alert("Usuário ou senha inválidos")
 return
 }
+if((user.perfil||"").toLowerCase()==="admin"){
+localStorage.setItem("painelAtual","painelAdmin")
+}else{
 localStorage.setItem("painelAtual","painelEnfermagem")
+}
 /* ====================================================
 011 – LOGIN OK (UNIFICADO DEFINITIVO)
 ==================================================== */
