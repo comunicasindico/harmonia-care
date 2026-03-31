@@ -817,110 +817,89 @@ renderizarMedicacoes(data||[])
 
 }
 /* ====================================================
-202 – RENDER MEDICAÇÕES (AGRUPADO POR PACIENTE)
+202 – RENDER MEDICAÇÕES (AGRUPADO POR PACIENTE – COMPLETO)
 ==================================================== */
 function renderizarMedicacoes(lista){
-
 const div=document.getElementById("listaMedicacoes")
 if(!div)return
-
-if(!lista.length){
-div.innerHTML="<b>Nenhuma medicação encontrada</b>"
-return
-}
-
-/* 🔥 AGRUPAR POR PACIENTE */
+if(!lista)lista=[]
 const pacientes={}
-
+;(window.PACIENTES_CACHE||[]).forEach(p=>{
+pacientes[p.id]={nome:p.nome_completo,itens:[]}
+})
 lista.forEach(m=>{
 if(!pacientes[m.paciente_id]){
-pacientes[m.paciente_id]={
-nome:"",
-itens:[]
-}
+pacientes[m.paciente_id]={nome:"Paciente",itens:[]}
 }
 pacientes[m.paciente_id].itens.push(m)
 })
-
-/* 🔥 PEGAR NOMES */
-Object.keys(pacientes).forEach(pid=>{
-const p=window.PACIENTES_CACHE?.find(x=>String(x.id)===String(pid))
-if(p)pacientes[pid].nome=p.nome_completo
-})
-
 let html=""
-
-/* 🔥 RENDER */
 Object.keys(pacientes).forEach(pid=>{
-
 const p=pacientes[pid]
-
 html+=`
-<div style="background:#fff;padding:12px;margin-bottom:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-
+<div style="background:${p.itens.length?'#fff':'#f1f2f6'};padding:12px;margin-bottom:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
 <div style="font-weight:bold;font-size:15px;margin-bottom:8px">
 👤 ${p.nome||"Paciente"}
 </div>
 `
-
-p.itens.forEach(m=>{
-
-let horarios=(m.horarios||"").split("|")
-
-let botoes=horarios.map(h=>{
-
-return `<button onclick="administrarMedicacao('${m.id}','${h}',this)"
-style="background:#f87171;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;margin:2px;">
-${h}
-</button>`
-
-}).join("")
-
+if(!p.itens.length){
 html+=`
-<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding:6px 0">
-
-<div style="flex:1">
-<b>${m.nome_medicamento}</b><br>
-<small>${m.dosagem||""}</small>
-</div>
-
-<div style="flex:1;text-align:right">
-${botoes}
-</div>
-
+<div style="background:#2d3436;color:#fff;padding:6px 10px;border-radius:8px;font-size:12px;margin-bottom:6px;display:inline-block">
+💊 0 medicamentos
 </div>
 `
-
+}
+p.itens.forEach(m=>{
+let horarios=(m.horarios||"").split("|").filter(h=>h)
+let botoes=horarios.map(h=>{
+return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:#f87171;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;margin:2px;">${h}</button>`
+}).join("")
+html+=`
+<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding:6px 0">
+<div style="flex:1">
+<b>${m.nome_medicamento||""}</b><br>
+<small>${m.dosagem||""}</small>
+</div>
+<div style="flex:1;text-align:right">
+${botoes||""}
+</div>
+</div>
+`
 })
-
 html+=`</div>`
-
 })
-
 div.innerHTML=html
-
 }
 /* ====================================================
-203 – ADMINISTRAR MEDICAÇÃO
+203 – ADMINISTRAR MEDICAÇÃO (SALVAR + UI)
 ==================================================== */
-async function administrarMedicacao(medicacaoId,hora,btn){
-
+async function administrarMedicacao(medicacaoId,horario,botao){
 if(!db)return
-
-const user=obterUsuarioLogado()
-
+if(!medicacaoId||!horario)return
+const dataHoje=new Date().toISOString().slice(0,10)
+const usuarioId=localStorage.getItem("usuario_id")||null
+const jaExiste=await db.from("medicacoes_execucao").select("id").eq("medicacao_id",medicacaoId).eq("data",dataHoje).eq("horario",horario).maybeSingle()
+if(jaExiste?.data){
+botao.style.background="#22c55e"
+botao.innerText="✔ "+horario
+return
+}
 await db.from("medicacoes_execucao").insert({
 medicacao_id:medicacaoId,
-paciente_id:document.getElementById("buscaPacienteMedicacao").value,
-data:new Date().toISOString().slice(0,10),
-hora:hora,
-status:"administrado",
-usuario_id:user.id,
-usuario_nome:user.nome,
-horario_administrado:new Date()
+data:dataHoje,
+horario:horario,
+status:"executado",
+usuario_id:usuarioId
 })
-
-btn.style.background="#22c55e"
-btn.innerText="✔ "+hora
-
+botao.style.background="#22c55e"
+botao.innerText="✔ "+horario
+}
+/* ====================================================
+203C – CARREGAR STATUS EXECUTADO
+==================================================== */
+async function carregarStatusMedicacoes(){
+if(!db)return
+const dataHoje=new Date().toISOString().slice(0,10)
+const {data}=await db.from("medicacoes_execucao").select("*").eq("data",dataHoje)
+window.EXEC_CACHE=data||[]
 }
