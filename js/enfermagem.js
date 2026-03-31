@@ -943,6 +943,27 @@ async function administrarMedicacao(medicacaoId,horario,botao){
 if(!db)return
 if(!medicacaoId||!horario)return
 
+/* 🔒 VALIDAÇÃO DE VÍNCULO (INSERIR AQUI) */
+const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+const usuarioId=localStorage.getItem("usuario_id")||null
+if(hierarquia!==1&&usuarioId){
+const {data:rel}=await db
+.from("pacientes_profissionais")
+.select("paciente_id")
+.eq("usuario_id",usuarioId)
+.eq("ativo",true)
+const ids=rel?.map(r=>r.paciente_id)||[]
+const {data:med}=await db
+.from("medicacoes")
+.select("paciente_id")
+.eq("id",medicacaoId)
+.single()
+if(!ids.includes(med?.paciente_id)){
+alert("Sem permissão para este paciente")
+return
+}
+}
+
 const user=obterUsuarioLogado()
 const dataHoje=new Date().toISOString().slice(0,10)
 /* 🔹 VERIFICA SE JÁ EXISTE */
