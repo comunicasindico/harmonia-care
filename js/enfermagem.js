@@ -915,11 +915,12 @@ botao.style.background="#22c55e"
 botao.innerText="✔ "+horario
 }
 /* ====================================================
-203C – CARREGAR STATUS EXECUTADO
+203C – CARREGAR STATUS EXECUTADO (FINAL)
 ==================================================== */
 async function carregarStatusMedicacoes(){
 if(!db)return
 const dataHoje=new Date().toISOString().slice(0,10)
 const {data}=await db.from("medicacoes_execucao").select("*").eq("data",dataHoje)
 window.EXEC_CACHE=data||[]
+if(typeof carregarMedicacoes==="function"){carregarMedicacoes()}
 }
