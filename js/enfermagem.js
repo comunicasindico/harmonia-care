@@ -914,16 +914,21 @@ ${m.nome_medicamento||""} <span style="color:#666;font-weight:400">${m.dosagem||
 `
 /* LINHA 2 – HORÁRIOS */
 html+=`
-<div style="display:grid;grid-template-columns:repeat(${HORARIOS.length},1fr);gap:4px;padding-bottom:6px;border-bottom:1px solid #ddd">
+<div style="display:grid;grid-template-columns:repeat(${HORARIOS.length},50px);
+justify-content:start;gap:4px;padding-bottom:6px;border-bottom:1px solid #ddd">
 ${HORARIOS.map(h=>{
 let tem=horarios.includes(h)
 if(!tem)return `<div></div>`
 let exec=(window.EXEC_CACHE||[]).find(e=>norm(e.horario)===h&&e.medicacao_id===m.id)
 let cor=exec?"#22c55e":"#f87171"
 let usuarioExec=exec?.usuario_nome||""
-return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${cor};color:#fff;border:none;border-radius:6px;font-size:10px;padding:4px">
-${h}${usuarioExec?`<div style="font-size:8px">${usuarioExec}</div>`:""}
-</button>`
+return `<div style="display:flex;justify-content:center;align-items:center">
+<button onclick="administrarMedicacao('${m.id}','${h}',this)"
+style="background:${cor};color:#fff;border:none;border-radius:6px;font-size:10px;padding:3px 4px;min-width:44px">
+${h}
+${usuarioExec?`<div style="font-size:8px">${usuarioExec}</div>`:""}
+</button>
+</div>`
 }).join("")}
 </div>
 `
