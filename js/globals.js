@@ -76,14 +76,15 @@ empresa_id:localStorage.getItem("empresa_id")
 }
 }
 /* ====================================================
-010 – CONTROLE DE PERMISSÃO (PADRÃO SISTEMA)
+010 – CONTROLE DE PERMISSÃO (CORRIGIDO DEFINITIVO)
 ==================================================== */
 function pode(acao){
+
 const user=obterUsuarioLogado()
 const perfil=user.perfil
 const h=user.hierarquia
 
-cconst regras={
+const regras={
 admin:true,
 
 editar_clinico:(perfil==="admin"||h<=2),
@@ -92,14 +93,18 @@ excluir_paciente:(perfil==="admin"),
 executar_rotina:(h<=4),
 concluir_pendentes:(h<=2),
 editar_admin:(perfil==="admin"),
+
 /* ====================================================
 011 – PERMISSÕES MEDICAÇÃO
 ==================================================== */
 medicacao_visualizar:true,
 medicacao_editar:(perfil==="admin"||h<=3),
 medicacao_excluir:(perfil==="admin"||h<=2)
+
 }
+
 return regras[acao]===true
+
 }
 /* ====================================================
 003 – CACHE DE USUÁRIOS (DINÂMICO)
