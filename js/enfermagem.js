@@ -817,7 +817,8 @@ renderizarMedicacoes(data||[])
 
 }
 /* ====================================================
-202 – RENDER MEDICAÇÕES (AGRUPADO POR PACIENTE – COMPLETO FINAL)
+2/* ====================================================
+202 – RENDER MEDICAÇÕES (PADRÃO HH:MM + COMPLETO)
 ==================================================== */
 function renderizarMedicacoes(lista){
 const div=document.getElementById("listaMedicacoes")
@@ -825,6 +826,14 @@ if(!div)return
 const pacienteSelecionado=document.getElementById("buscaPacienteMedicacao")?.value||"todos"
 const modoTodos=(!pacienteSelecionado||pacienteSelecionado==="todos")
 if(!lista)lista=[]
+const normalizarHora=h=>{
+if(!h)return""
+h=h.toString().trim()
+if(h.toLowerCase()==="jejum"||h.toLowerCase()==="almoco"||h.toLowerCase()==="almoço")return h.toUpperCase()
+if(!h.includes(":"))return h.padStart(2,"0")+":00"
+let[p,m]=h.split(":")
+return p.padStart(2,"0")+":"+m.padStart(2,"0")
+}
 const pacientes={}
 ;(window.PACIENTES_CACHE||[]).forEach(p=>{
 pacientes[p.id]={nome:p.nome_completo,itens:[]}
@@ -854,6 +863,8 @@ html+=`
 `
 }
 p.itens.forEach(m=>{
+let horariosRaw=(m.horarios||"").split("|").filter(h=>h)
+let horarios=horariosRaw.map(normalizarHora)
 if(modoTodos){
 html+=`
 <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #ddd;padding:6px 0">
@@ -861,14 +872,13 @@ html+=`
 <b>${m.nome_medicamento||""}</b>
 </div>
 <div style="flex:1;text-align:right">
-${(m.horarios||"").split("|").filter(h=>h).map(h=>`<span style="background:#636e72;color:#fff;padding:3px 6px;border-radius:6px;font-size:10px;margin-left:4px">${h}</span>`).join("")}
+${horarios.map(h=>`<span style="background:#636e72;color:#fff;padding:3px 6px;border-radius:6px;font-size:10px;margin-left:4px">${h}</span>`).join("")}
 </div>
 </div>
 `
 }else{
-let horarios=(m.horarios||"").split("|").filter(h=>h)
 let botoes=horarios.map(h=>{
-let executado=(window.EXEC_CACHE||[]).find(e=>e.medicacao_id===m.id&&e.horario===h)
+let executado=(window.EXEC_CACHE||[]).find(e=>normalizarHora(e.horario)===h&&e.medicacao_id===m.id)
 let corBtn=executado?"#22c55e":"#f87171"
 let texto=executado?"✔ "+h:h
 return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${corBtn};color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;margin:2px;">${texto}</button>`
