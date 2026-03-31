@@ -763,3 +763,117 @@ window.executarRotinaTodos = executarRotinaTodos
 if(typeof mudarTurno==="function"){
 window.mudarTurno = mudarTurno
 }
+/* ====================================================
+200 – CARREGAR PACIENTES MEDICAÇÃO
+==================================================== */
+async function carregarPacientesMedicacao(){
+
+if(!db||!EMPRESA_ID)return
+
+const select=document.getElementById("buscaPacienteMedicacao")
+if(!select)return
+
+const {data}=await db
+.from("pacientes")
+.select("id,nome_completo")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+.order("nome_completo")
+
+let html='<option value="todos">TODOS</option>'
+
+data?.forEach(p=>{
+html+=`<option value="${p.id}">${p.nome_completo}</option>`
+})
+
+select.innerHTML=html
+
+select.onchange=carregarMedicacoes
+
+}
+/* ====================================================
+201 – CARREGAR MEDICAÇÕES
+==================================================== */
+async function carregarMedicacoes(){
+
+if(!db||!EMPRESA_ID)return
+
+const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value||"todos"
+
+let query=db.from("medicacoes")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+
+if(pacienteId!=="todos"){
+query=query.eq("paciente_id",pacienteId)
+}
+
+const {data}=await query
+
+renderizarMedicacoes(data||[])
+
+}
+/* ====================================================
+202 – RENDER MEDICAÇÕES (VISUAL FORTE)
+==================================================== */
+function renderizarMedicacoes(lista){
+
+const div=document.getElementById("listaMedicacoes")
+if(!div)return
+
+let html=""
+
+lista.forEach(m=>{
+
+let horarios=(m.horarios||"").split("|")
+
+let botoes=horarios.map(h=>{
+
+return `<button onclick="administrarMedicacao('${m.id}','${h}',this)"
+style="background:#f87171;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;margin:2px;">
+${h}
+</button>`
+
+}).join("")
+
+html+=`
+<div style="background:#fff;padding:10px;margin-bottom:8px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+
+<b>${m.nome_medicamento}</b><br>
+<small>${m.dosagem||""}</small><br>
+
+<div style="margin-top:6px">${botoes}</div>
+
+</div>
+`
+
+})
+
+div.innerHTML=html
+
+}
+/* ====================================================
+203 – ADMINISTRAR MEDICAÇÃO
+==================================================== */
+async function administrarMedicacao(medicacaoId,hora,btn){
+
+if(!db)return
+
+const user=obterUsuarioLogado()
+
+await db.from("medicacoes_execucao").insert({
+medicacao_id:medicacaoId,
+paciente_id:document.getElementById("buscaPacienteMedicacao").value,
+data:new Date().toISOString().slice(0,10),
+hora:hora,
+status:"administrado",
+usuario_id:user.id,
+usuario_nome:user.nome,
+horario_administrado:new Date()
+})
+
+btn.style.background="#22c55e"
+btn.innerText="✔ "+hora
+
+}
