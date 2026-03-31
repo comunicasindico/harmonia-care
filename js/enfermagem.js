@@ -840,7 +840,7 @@ const {data}=await query
 renderizarMedicacoes(data||[])
 }
 /* ====================================================
-202 – RENDER MEDICAÇÕES (LAYOUT COMPACTO HOSPITALAR FINAL)
+202 – RENDER MEDICAÇÕES (ULTRA COMPACTO 2 LINHAS)
 ==================================================== */
 function renderizarMedicacoes(lista){
 const div=document.getElementById("listaMedicacoes")
@@ -891,43 +891,39 @@ const cor=cores[idx%cores.length]
 idx++
 html+=`
 <div style="background:${cor};padding:10px;margin-bottom:12px;border-radius:12px">
-<div style="font-weight:600;font-size:13px;margin-bottom:6px">👤 ${p.nome}</div>
-<div style="display:grid;grid-template-columns:1fr repeat(${HORARIOS.length},60px);gap:4px;font-size:10px;font-weight:600;color:#444;margin-bottom:4px">
-<div style="text-align:right;padding-right:6px">Medicamento</div>
-${HORARIOS.map(h=>`<div style="text-align:center">${h}</div>`).join("")}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+<div style="font-weight:600;font-size:13px">👤 ${p.nome}</div>
+${podeEditar?`
+<div style="display:flex;gap:6px">
+<button onclick="abrirNovaMedicacao('${pid}')" style="background:#10b981;color:#fff;border:none;border-radius:6px;font-size:10px;padding:4px 8px">＋</button>
+</div>`:""}
 </div>
 `
 if(!p.itens.length){
 html+=`<div style="font-size:11px;color:#777">Sem medicação</div></div>`
 return
 }
+/* 🔹 MEDICAÇÕES */
 p.itens.forEach(m=>{
 let horarios=(m.horarios||"").split("|").map(norm)
+/* LINHA 1 – NOME */
 html+=`
-<div style="display:grid;grid-template-columns:1fr repeat(${HORARIOS.length},60px);gap:4px;align-items:center;padding:4px 0;border-top:1px solid #ddd">
-<div style="text-align:right;padding-right:6px;font-size:11px">
-<span style="font-weight:600">${m.nome_medicamento||""}</span>
-<span style="color:#666"> ${m.dosagem||""}</span>
-${podeEditar?`
-<span style="margin-left:6px">
-<button onclick="editarMedicacao('${m.id}')" style="background:#3b82f6;color:#fff;border:none;border-radius:4px;font-size:9px;padding:2px 5px">✏️</button>
-<button onclick="duplicarMedicacao('${m.id}')" style="background:#10b981;color:#fff;border:none;border-radius:4px;font-size:9px;padding:2px 5px">＋</button>
-<button onclick="excluirMedicacao('${m.id}')" style="background:#ef4444;color:#fff;border:none;border-radius:4px;font-size:9px;padding:2px 5px">🗑️</button>
-</span>`:""}
+<div style="font-size:12px;font-weight:600;padding-top:6px">
+${m.nome_medicamento||""} <span style="color:#666;font-weight:400">${m.dosagem||""}</span>
 </div>
+`
+/* LINHA 2 – HORÁRIOS */
+html+=`
+<div style="display:grid;grid-template-columns:repeat(${HORARIOS.length},1fr);gap:4px;padding-bottom:6px;border-bottom:1px solid #ddd">
 ${HORARIOS.map(h=>{
 let tem=horarios.includes(h)
 if(!tem)return `<div></div>`
 let exec=(window.EXEC_CACHE||[]).find(e=>norm(e.horario)===h&&e.medicacao_id===m.id)
 let cor=exec?"#22c55e":"#f87171"
 let usuarioExec=exec?.usuario_nome||""
-return `<div>
-<button onclick="administrarMedicacao('${m.id}','${h}',this)"
-style="background:${cor};color:#fff;border:none;border-radius:6px;font-size:10px;padding:3px;width:100%">
-${h}
-${usuarioExec?`<div style="font-size:8px">${usuarioExec}</div>`:""}
-</button>
-</div>`
+return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${cor};color:#fff;border:none;border-radius:6px;font-size:10px;padding:4px">
+${h}${usuarioExec?`<div style="font-size:8px">${usuarioExec}</div>`:""}
+</button>`
 }).join("")}
 </div>
 `
