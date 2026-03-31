@@ -824,7 +824,7 @@ const div=document.getElementById("listaMedicacoes")
 if(!div)return
 if(!lista)lista=[]
 const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
-const podeEditar=(hierarquia<=3)
+const podeEditar=true
 
 /* 🔹 NORMALIZAR HORA */
 const norm=h=>{
@@ -895,9 +895,11 @@ html+=`
 <small>${m.dosagem||""}</small>
 ${podeEditar?`
 <div style="font-size:10px;margin-top:2px">
-<span onclick="editarMedicacao('${m.id}')" style="cursor:pointer">✏️</span>
-<span onclick="duplicarMedicacao('${m.id}')" style="cursor:pointer;margin-left:6px">➕</span>
-<span onclick="excluirMedicacao('${m.id}')" style="cursor:pointer;margin-left:6px;color:red">🗑️</span>
+<div style="display:flex;gap:6px;margin-top:4px">
+<button onclick="editarMedicacao('${m.id}')" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;font-size:10px;padding:2px 6px">✏️</button>
+<button onclick="duplicarMedicacao('${m.id}')" style="background:#10b981;color:#fff;border:none;border-radius:6px;font-size:10px;padding:2px 6px">＋</button>
+<button onclick="excluirMedicacao('${m.id}')" style="background:#ef4444;color:#fff;border:none;border-radius:6px;font-size:10px;padding:2px 6px">🗑️</button>
+</div>
 </div>`:""}
 </div>
 
