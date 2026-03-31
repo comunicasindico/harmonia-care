@@ -130,6 +130,7 @@ display:flex;align-items:center;justify-content:center;}
 <button id="btnEntrar" class="btn-entrar" onclick="login()">Entrar</button>
 </div>
 </div>
+
 <!-- ====================================================
 004 – APP PRINCIPAL
 ==================================================== -->
@@ -162,17 +163,18 @@ display:flex;align-items:center;justify-content:center;}
 <div style="display:flex;gap:10px;flex-wrap:wrap">
 <button onclick="abrirEnfermagem()" class="btn-primary">Painel Enfermagem</button>
 <button onclick="abrirClinico()" class="btn-secondary">Painel Clínico</button>
+<button onclick="abrirPainel('painelMedicacao')" class="btn-primary">💊 Medicação</button>
 <button onclick="abrirAdmin()" class="btn-success">Admin</button>
 <button id="btnConcluirPendentes" class="btn-secondary" onclick="window.concluirPendentes()">✔ Concluir Pendentes</button>
 <button onclick="gerarPDFGeral()" class="btn-primary">Gerar PDF</button>
 <button onclick="gerarPDFPaciente()" class="btn-primary">PDF do Paciente</button>
-<button onclick="backupCompleto()" style="background:#6c5ce7;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer">
-💾 Backup Completo
-</button>
+<button onclick="backupCompleto()" style="background:#6c5ce7;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer">💾 Backup Completo</button>
+
 <div id="acoesClinico" style="display:none;gap:8px;margin-left:10px">
 <button onclick="editarClinicoGlobal()" class="btn-secondary">Editar Clínico</button>
 <button onclick="salvarClinicoGlobal()" class="btn-success">Salvar</button>
 </div>
+
 </div>
 
 <div style="display:flex;gap:10px;font-weight:bold">
@@ -182,6 +184,19 @@ display:flex;align-items:center;justify-content:center;}
 </div>
 
 </div>
+</div>
+
+<!-- ====================================================
+008 – PAINEL MEDICAÇÃO (FORA DO MENU – CORRETO)
+==================================================== -->
+<div id="painelMedicacao" class="box" style="display:none">
+
+<h3>💊 Controle de Medicação</h3>
+
+<select id="buscaPacienteMedicacao"></select>
+
+<div id="listaMedicacoes"></div>
+
 </div>
 
 <!-- ====================================================
