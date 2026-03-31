@@ -817,13 +817,13 @@ renderizarMedicacoes(data||[])
 
 }
 /* ====================================================
-202 – RENDER MEDICAÇÕES (AGRUPADO POR PACIENTE – COMPLETO)
+202 – RENDER MEDICAÇÕES (AGRUPADO POR PACIENTE – COMPLETO FINAL)
 ==================================================== */
 function renderizarMedicacoes(lista){
 const div=document.getElementById("listaMedicacoes")
+if(!div)return
 const pacienteSelecionado=document.getElementById("buscaPacienteMedicacao")?.value||"todos"
 const modoTodos=(!pacienteSelecionado||pacienteSelecionado==="todos")
-if(!div)return
 if(!lista)lista=[]
 const pacientes={}
 ;(window.PACIENTES_CACHE||[]).forEach(p=>{
@@ -836,12 +836,8 @@ pacientes[m.paciente_id]={nome:"Paciente",itens:[]}
 pacientes[m.paciente_id].itens.push(m)
 })
 let html=""
-const cores=[
-"#e3f2fd","#e8f5e9","#fff3e0","#f3e5f5","#e0f7fa",
-"#fce4ec","#f1f8e9","#ede7f6","#fffde7","#e0f2f1"
-]
-Object.keys(pacientes).forEach(pid=>{
-const idx=Object.keys(pacientes).indexOf(pid)
+const cores=["#e3f2fd","#e8f5e9","#fff3e0","#f3e5f5","#e0f7fa","#fce4ec","#f1f8e9","#ede7f6","#fffde7","#e0f2f1"]
+Object.keys(pacientes).forEach((pid,idx)=>{
 const cor=cores[idx%cores.length]
 const p=pacientes[pid]
 html+=`
@@ -857,49 +853,39 @@ html+=`
 </div>
 `
 }
+p.itens.forEach(m=>{
 if(modoTodos){
-
 html+=`
 <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #ddd;padding:6px 0">
-
 <div style="flex:1;font-size:13px">
 <b>${m.nome_medicamento||""}</b>
 </div>
-
 <div style="flex:1;text-align:right">
 ${(m.horarios||"").split("|").filter(h=>h).map(h=>`<span style="background:#636e72;color:#fff;padding:3px 6px;border-radius:6px;font-size:10px;margin-left:4px">${h}</span>`).join("")}
 </div>
-
 </div>
 `
-
 }else{
-
 let horarios=(m.horarios||"").split("|").filter(h=>h)
-
 let botoes=horarios.map(h=>{
 let executado=(window.EXEC_CACHE||[]).find(e=>e.medicacao_id===m.id&&e.horario===h)
 let corBtn=executado?"#22c55e":"#f87171"
 let texto=executado?"✔ "+h:h
 return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${corBtn};color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;margin:2px;">${texto}</button>`
 }).join("")
-
 html+=`
 <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding:6px 0">
-
 <div style="flex:1">
 <b>${m.nome_medicamento||""}</b><br>
 <small>${m.dosagem||""}</small>
 </div>
-
 <div style="flex:1;text-align:right">
 ${botoes}
 </div>
-
 </div>
 `
-
 }
+})
 html+=`</div>`
 })
 div.innerHTML=html
