@@ -817,23 +817,34 @@ renderizarMedicacoes(data||[])
 
 }
 /* ====================================================
-2/* ====================================================
-202 – RENDER MEDICAÇÕES (PADRÃO HH:MM + COMPLETO)
+202 – RENDER MEDICAÇÕES (GRADE FIXA HOSPITALAR)
 ==================================================== */
 function renderizarMedicacoes(lista){
 const div=document.getElementById("listaMedicacoes")
 if(!div)return
-const pacienteSelecionado=document.getElementById("buscaPacienteMedicacao")?.value||"todos"
-const modoTodos=(!pacienteSelecionado||pacienteSelecionado==="todos")
 if(!lista)lista=[]
-const normalizarHora=h=>{
+const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+const podeEditar=(hierarquia<=3)
+
+/* 🔹 NORMALIZAR HORA */
+const norm=h=>{
 if(!h)return""
 h=h.toString().trim()
-if(h.toLowerCase()==="jejum"||h.toLowerCase()==="almoco"||h.toLowerCase()==="almoço")return h.toUpperCase()
+if(["jejum","almoço","almoco"].includes(h.toLowerCase()))return h.toUpperCase()
 if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
+
+/* 🔹 COLETAR TODOS HORÁRIOS */
+let HORARIOS=[...new Set(lista.flatMap(m=>(m.horarios||"").split("|").map(norm)))]
+.filter(h=>h)
+.sort((a,b)=>{
+const toMin=t=>t.includes(":")?(parseInt(t)*60+parseInt(t.split(":")[1])):0
+return toMin(a)-toMin(b)
+})
+
+/* 🔹 AGRUPAR PACIENTES */
 const pacientes={}
 ;(window.PACIENTES_CACHE||[]).forEach(p=>{
 pacientes[p.id]={nome:p.nome_completo,itens:[]}
@@ -844,60 +855,65 @@ pacientes[m.paciente_id]={nome:"Paciente",itens:[]}
 }
 pacientes[m.paciente_id].itens.push(m)
 })
+
 let html=""
-const cores=["#e3f2fd","#e8f5e9","#fff3e0","#f3e5f5","#e0f7fa","#fce4ec","#f1f8e9","#ede7f6","#fffde7","#e0f2f1"]
-Object.keys(pacientes).forEach((pid,idx)=>{
-const cor=cores[idx%cores.length]
+
+Object.keys(pacientes).forEach(pid=>{
 const p=pacientes[pid]
+
 html+=`
-<div style="background:${modoTodos?cor:(p.itens.length?'#fff':'#f1f2f6')};padding:12px;margin-bottom:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-<div style="font-weight:bold;font-size:15px;margin-bottom:8px;color:#2d3436">
-👤 ${p.nome||"Paciente"}
+<div style="background:#fff;padding:12px;margin-bottom:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+<div style="font-weight:bold;margin-bottom:8px">👤 ${p.nome}</div>
+
+<div style="display:grid;grid-template-columns:2fr repeat(${HORARIOS.length},1fr);gap:4px;font-size:11px;font-weight:bold;color:#555;margin-bottom:6px">
+<div>Medicamento</div>
+${HORARIOS.map(h=>`<div style="text-align:center">${h}</div>`).join("")}
 </div>
 `
+
 if(!p.itens.length){
-html+=`
-<div style="background:#2d3436;color:#fff;padding:6px 10px;border-radius:8px;font-size:12px;margin-bottom:6px;display:inline-block">
-💊 0 medicamentos
-</div>
-`
+html+=`<div style="font-size:12px;color:#888">💊 0 medicamentos</div></div>`
+return
 }
+
+/* 🔹 LINHAS */
 p.itens.forEach(m=>{
-let horariosRaw=(m.horarios||"").split("|").filter(h=>h)
-let horarios=horariosRaw.map(normalizarHora)
-if(modoTodos){
+
+let horarios=(m.horarios||"").split("|").map(norm)
+
 html+=`
-<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #ddd;padding:6px 0">
-<div style="flex:1;font-size:13px">
-<b>${m.nome_medicamento||""}</b>
-</div>
-<div style="flex:1;text-align:right">
-${horarios.map(h=>`<span style="background:#636e72;color:#fff;padding:3px 6px;border-radius:6px;font-size:10px;margin-left:4px">${h}</span>`).join("")}
-</div>
-</div>
-`
-}else{
-let botoes=horarios.map(h=>{
-let executado=(window.EXEC_CACHE||[]).find(e=>normalizarHora(e.horario)===h&&e.medicacao_id===m.id)
-let corBtn=executado?"#22c55e":"#f87171"
-let texto=executado?"✔ "+h:h
-return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${corBtn};color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;margin:2px;">${texto}</button>`
-}).join("")
-html+=`
-<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding:6px 0">
-<div style="flex:1">
+<div style="display:grid;grid-template-columns:2fr repeat(${HORARIOS.length},1fr);gap:4px;align-items:center;border-top:1px solid #eee;padding:6px 0">
+
+<div>
 <b>${m.nome_medicamento||""}</b><br>
 <small>${m.dosagem||""}</small>
+${podeEditar?`
+<div style="font-size:10px;margin-top:2px">
+<span onclick="editarMedicacao('${m.id}')" style="cursor:pointer">✏️</span>
+<span onclick="duplicarMedicacao('${m.id}')" style="cursor:pointer;margin-left:6px">➕</span>
+<span onclick="excluirMedicacao('${m.id}')" style="cursor:pointer;margin-left:6px;color:red">🗑️</span>
+</div>`:""}
 </div>
-<div style="flex:1;text-align:right">
-${botoes}
-</div>
+
+${HORARIOS.map(h=>{
+let tem=horarios.includes(h)
+if(!tem)return `<div></div>`
+let exec=(window.EXEC_CACHE||[]).find(e=>norm(e.horario)===h&&e.medicacao_id===m.id)
+let cor=exec?"#22c55e":"#f87171"
+let txt=exec?"✔":""
+return `<div style="text-align:center">
+<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${cor};color:#fff;border:none;border-radius:6px;font-size:11px;padding:4px 6px;width:100%">${txt||h}</button>
+</div>`
+}).join("")}
+
 </div>
 `
-}
+
 })
+
 html+=`</div>`
 })
+
 div.innerHTML=html
 }
 /* ====================================================
