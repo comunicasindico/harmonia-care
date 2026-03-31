@@ -835,15 +835,21 @@ if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
-
 /* 🔹 COLETAR TODOS HORÁRIOS */
-let HORARIOS=[...new Set(lista.flatMap(m=>(m.horarios||"").split("|").map(norm)))]
-.filter(h=>h)
-.sort((a,b)=>{
-const toMin=t=>t.includes(":")?(parseInt(t)*60+parseInt(t.split(":")[1])):0
+let HORARIOS=[...new Set(lista.flatMap(m=>(m.horarios||"").split("|").map(norm)).filter(h=>{
+if(!h)return false
+if(h==="JEJUM"||h==="ALMOÇO")return true
+return /^\d{2}:\d{2}$/.test(h)
+}))].sort((a,b)=>{
+const toMin=t=>{
+if(t==="JEJUM")return -10
+if(t==="ALMOÇO")return 720
+if(!t.includes(":"))return 0
+let[p,m]=t.split(":")
+return parseInt(p)*60+parseInt(m)
+}
 return toMin(a)-toMin(b)
 })
-
 /* 🔹 AGRUPAR PACIENTES */
 const pacientes={}
 ;(window.PACIENTES_CACHE||[]).forEach(p=>{
