@@ -131,6 +131,12 @@ abrirPainel(painelSalvo)
 if(typeof carregarRotinas==="function"){await carregarRotinas()}
 if(typeof carregarClinico==="function"){await carregarClinico()}
 if(typeof carregarUsuarios==="function"){await carregarUsuarios()}
+/* ====================================================
+011 – INICIAR MEDICAÇÃO
+==================================================== */
+if(typeof carregarPacientesMedicacao==="function"){
+await carregarPacientesMedicacao()
+}
 const inputBusca=document.getElementById("buscaUsuario")
 if(inputBusca){
 inputBusca.addEventListener("input",()=>carregarUsuarios())
