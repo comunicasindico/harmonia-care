@@ -804,39 +804,44 @@ select.innerHTML=html
 select.onchange=carregarMedicacoes
 }
 /* ====================================================
-201 – CARREGAR MEDICAÇÕES (ALINHADO COM FILTRO USUÁRIO)
+201 – CARREGAR MEDICAÇÕES (FILTRO REAL POR USUÁRIO)
 ==================================================== */
 async function carregarMedicacoes(){
 if(!db||!EMPRESA_ID)return
 const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value||"todos"
-const usuarioId=localStorage.getItem("usuario_id")||null
+const usuarioId=localStorage.getItem("usuario_id")
 const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
-/* 🔹 BASE QUERY */
+/* 🔒 SE NÃO FOR ADMIN → FILTRA PACIENTES */
+let pacientesPermitidos=null
+if(hierarquia!==1&&usuarioId){
+const {data:rel,error}=await db
+.from("pacientes_profissionais")
+.select("paciente_id")
+.eq("usuario_id",usuarioId)
+.eq("ativo",true)
+if(error){console.error(error)}
+pacientesPermitidos=rel?.map(r=>r.paciente_id)||[]
+if(!pacientesPermitidos.length){
+renderizarMedicacoes([])
+return
+}
+}
+/* 🔹 BUSCA MEDICAÇÕES */
 let query=db
 .from("medicacoes")
 .select("*")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
-/* 🔒 FILTRO POR USUÁRIO (MESMA REGRA DO 200) */
-if(hierarquia!==1&&usuarioId){
-const {data:rel}=await db
-.from("pacientes_profissionais")
-.select("paciente_id")
-.eq("usuario_id",usuarioId)
-.eq("ativo",true)
-const ids=rel?.map(r=>r.paciente_id)||[]
-if(!ids.length){
-renderizarMedicacoes([])
-return
+/* 🔒 AQUI ESTAVA O ERRO */
+if(pacientesPermitidos){
+query=query.in("paciente_id",pacientesPermitidos)
 }
-query=query.in("paciente_id",ids)
-}
-/* 🔹 FILTRO DO SELECT */
+/* 🔹 SELECT */
 if(pacienteId!=="todos"){
 query=query.eq("paciente_id",pacienteId)
 }
-/* 🔹 EXECUTA */
-const {data}=await query
+const {data,error}=await query
+if(error){console.error(error)}
 renderizarMedicacoes(data||[])
 }
 /* ====================================================
@@ -914,21 +919,18 @@ ${m.nome_medicamento||""} <span style="color:#666;font-weight:400">${m.dosagem||
 `
 /* LINHA 2 – HORÁRIOS */
 html+=`
-<div style="display:grid;grid-template-columns:repeat(${HORARIOS.length},50px);
-justify-content:start;gap:4px;padding-bottom:6px;border-bottom:1px solid #ddd">
+<div style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:6px;border-bottom:1px solid #ddd;justify-content:flex-start">
 ${HORARIOS.map(h=>{
 let tem=horarios.includes(h)
-if(!tem)return `<div></div>`
+if(!tem)return ""
 let exec=(window.EXEC_CACHE||[]).find(e=>norm(e.horario)===h&&e.medicacao_id===m.id)
 let cor=exec?"#22c55e":"#f87171"
 let usuarioExec=exec?.usuario_nome||""
-return `<div style="display:flex;justify-content:center;align-items:center">
-<button onclick="administrarMedicacao('${m.id}','${h}',this)"
-style="background:${cor};color:#fff;border:none;border-radius:6px;font-size:10px;padding:3px 4px;min-width:44px">
+return `<button onclick="administrarMedicacao('${m.id}','${h}',this)"
+style="background:${cor};color:#fff;border:none;border-radius:6px;font-size:10px;padding:4px 6px;min-width:48px;text-align:center">
 ${h}
 ${usuarioExec?`<div style="font-size:8px">${usuarioExec}</div>`:""}
-</button>
-</div>`
+</button>`
 }).join("")}
 </div>
 `
