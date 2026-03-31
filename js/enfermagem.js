@@ -817,15 +817,15 @@ renderizarMedicacoes(data||[])
 
 }
 /* ====================================================
-202 – RENDER MEDICAÇÕES (GRADE FIXA HOSPITALAR)
+202 – RENDER MEDICAÇÕES (LAYOUT COMPACTO HOSPITALAR FINAL)
 ==================================================== */
 function renderizarMedicacoes(lista){
 const div=document.getElementById("listaMedicacoes")
 if(!div)return
 if(!lista)lista=[]
 const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
-const podeEditar=true
-
+const podeEditar=hierarquia===1
+const cores=["#f0f9ff","#fefce8","#f0fdf4","#fff7ed","#fdf2f8","#eef2ff"]
 /* 🔹 NORMALIZAR HORA */
 const norm=h=>{
 if(!h)return""
@@ -835,7 +835,7 @@ if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
-/* 🔹 COLETAR TODOS HORÁRIOS */
+/* 🔹 HORÁRIOS */
 let HORARIOS=[...new Set(lista.flatMap(m=>(m.horarios||"").split("|").map(norm)).filter(h=>{
 if(!h)return false
 if(h==="JEJUM"||h==="ALMOÇO")return true
@@ -844,13 +844,12 @@ return /^\d{2}:\d{2}$/.test(h)
 const toMin=t=>{
 if(t==="JEJUM")return -10
 if(t==="ALMOÇO")return 720
-if(!t.includes(":"))return 0
 let[p,m]=t.split(":")
 return parseInt(p)*60+parseInt(m)
 }
 return toMin(a)-toMin(b)
 })
-/* 🔹 AGRUPAR PACIENTES */
+/* 🔹 AGRUPAR */
 const pacientes={}
 ;(window.PACIENTES_CACHE||[]).forEach(p=>{
 pacientes[p.id]={nome:p.nome_completo,itens:[]}
@@ -861,76 +860,57 @@ pacientes[m.paciente_id]={nome:"Paciente",itens:[]}
 }
 pacientes[m.paciente_id].itens.push(m)
 })
-
 let html=""
-
+let idx=0
 Object.keys(pacientes).forEach(pid=>{
 const p=pacientes[pid]
-
+const cor=cores[idx%cores.length]
+idx++
 html+=`
-<div style="background:#fff;padding:12px;margin-bottom:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-<div style="font-weight:bold;margin-bottom:8px">👤 ${p.nome}</div>
-
-<div style="display:grid;grid-template-columns:2fr repeat(${HORARIOS.length},1fr);gap:4px;font-size:11px;font-weight:bold;color:#555;margin-bottom:6px">
-<div>Medicamento</div>
+<div style="background:${cor};padding:10px;margin-bottom:12px;border-radius:12px">
+<div style="font-weight:600;font-size:13px;margin-bottom:6px">👤 ${p.nome}</div>
+<div style="display:grid;grid-template-columns:1fr repeat(${HORARIOS.length},60px);gap:4px;font-size:10px;font-weight:600;color:#444;margin-bottom:4px">
+<div style="text-align:right;padding-right:6px">Medicamento</div>
 ${HORARIOS.map(h=>`<div style="text-align:center">${h}</div>`).join("")}
 </div>
 `
-
 if(!p.itens.length){
-html+=`<div style="font-size:12px;color:#888">💊 0 medicamentos</div></div>`
+html+=`<div style="font-size:11px;color:#777">Sem medicação</div></div>`
 return
 }
-
-/* 🔹 LINHAS */
 p.itens.forEach(m=>{
-
 let horarios=(m.horarios||"").split("|").map(norm)
-
 html+=`
-<div style="display:grid;grid-template-columns:2fr repeat(${HORARIOS.length},1fr);gap:4px;align-items:center;border-top:1px solid #eee;padding:6px 0">
-
-<div>
-<b>${m.nome_medicamento||""}</b><br>
-<small>${m.dosagem||""}</small>
+<div style="display:grid;grid-template-columns:1fr repeat(${HORARIOS.length},60px);gap:4px;align-items:center;padding:4px 0;border-top:1px solid #ddd">
+<div style="text-align:right;padding-right:6px;font-size:11px">
+<span style="font-weight:600">${m.nome_medicamento||""}</span>
+<span style="color:#666"> ${m.dosagem||""}</span>
 ${podeEditar?`
-<div style="font-size:10px;margin-top:2px">
-<div style="display:flex;gap:6px;margin-top:4px">
-<button onclick="editarMedicacao('${m.id}')" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;font-size:10px;padding:2px 6px">✏️</button>
-<button onclick="duplicarMedicacao('${m.id}')" style="background:#10b981;color:#fff;border:none;border-radius:6px;font-size:10px;padding:2px 6px">＋</button>
-<button onclick="excluirMedicacao('${m.id}')" style="background:#ef4444;color:#fff;border:none;border-radius:6px;font-size:10px;padding:2px 6px">🗑️</button>
+<span style="margin-left:6px">
+<button onclick="editarMedicacao('${m.id}')" style="background:#3b82f6;color:#fff;border:none;border-radius:4px;font-size:9px;padding:2px 5px">✏️</button>
+<button onclick="duplicarMedicacao('${m.id}')" style="background:#10b981;color:#fff;border:none;border-radius:4px;font-size:9px;padding:2px 5px">＋</button>
+<button onclick="excluirMedicacao('${m.id}')" style="background:#ef4444;color:#fff;border:none;border-radius:4px;font-size:9px;padding:2px 5px">🗑️</button>
+</span>`:""}
 </div>
-</div>`:""}
-</div>
-
 ${HORARIOS.map(h=>{
 let tem=horarios.includes(h)
 if(!tem)return `<div></div>`
 let exec=(window.EXEC_CACHE||[]).find(e=>norm(e.horario)===h&&e.medicacao_id===m.id)
 let cor=exec?"#22c55e":"#f87171"
-let txt=exec?"✔":""
 let usuarioExec=exec?.usuario_nome||""
-return `<div style="text-align:center">
-
+return `<div>
 <button onclick="administrarMedicacao('${m.id}','${h}',this)"
-style="background:${cor};color:#fff;border:none;border-radius:6px;font-size:11px;padding:4px 6px;width:100%;display:flex;flex-direction:column;align-items:center">
-
-<span>${h}</span>
-${usuarioExec?`<span style="font-size:9px;margin-top:2px">${usuarioExec}</span>`:""}
-
+style="background:${cor};color:#fff;border:none;border-radius:6px;font-size:10px;padding:3px;width:100%">
+${h}
+${usuarioExec?`<div style="font-size:8px">${usuarioExec}</div>`:""}
 </button>
-
 </div>`
 }).join("")}
-
 </div>
 `
-
 })
-
 html+=`</div>`
 })
-
 div.innerHTML=html
 }
 /* ====================================================
