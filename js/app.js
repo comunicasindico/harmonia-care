@@ -137,6 +137,7 @@ if(typeof carregarUsuarios==="function"){await carregarUsuarios()}
 if(typeof carregarPacientesMedicacao==="function"){
 await carregarPacientesMedicacao()
 }
+if(typeof carregarStatusMedicacoes==="function"){await carregarStatusMedicacoes()}
 const inputBusca=document.getElementById("buscaUsuario")
 if(inputBusca){
 inputBusca.addEventListener("input",()=>carregarUsuarios())
