@@ -901,8 +901,17 @@ if(!tem)return `<div></div>`
 let exec=(window.EXEC_CACHE||[]).find(e=>norm(e.horario)===h&&e.medicacao_id===m.id)
 let cor=exec?"#22c55e":"#f87171"
 let txt=exec?"✔":""
+let usuarioExec=exec?.usuario_nome||""
 return `<div style="text-align:center">
-<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${cor};color:#fff;border:none;border-radius:6px;font-size:11px;padding:4px 6px;width:100%">${txt||h}</button>
+
+<button onclick="administrarMedicacao('${m.id}','${h}',this)"
+style="background:${cor};color:#fff;border:none;border-radius:6px;font-size:11px;padding:4px 6px;width:100%;display:flex;flex-direction:column;align-items:center">
+
+<span>${h}</span>
+${usuarioExec?`<span style="font-size:9px;margin-top:2px">${usuarioExec}</span>`:""}
+
+</button>
+
 </div>`
 }).join("")}
 
@@ -917,28 +926,46 @@ html+=`</div>`
 div.innerHTML=html
 }
 /* ====================================================
-203 – ADMINISTRAR MEDICAÇÃO (SALVAR + UI)
+203 – ADMINISTRAR MEDICAÇÃO (COM NOME NA TELA)
 ==================================================== */
 async function administrarMedicacao(medicacaoId,horario,botao){
 if(!db)return
 if(!medicacaoId||!horario)return
+
+const user=obterUsuarioLogado()
 const dataHoje=new Date().toISOString().slice(0,10)
-const usuarioId=localStorage.getItem("usuario_id")||null
-const jaExiste=await db.from("medicacoes_execucao").select("id").eq("medicacao_id",medicacaoId).eq("data",dataHoje).eq("horario",horario).maybeSingle()
-if(jaExiste?.data){
+/* 🔹 VERIFICA SE JÁ EXISTE */
+const {data:ja}=await db
+.from("medicacoes_execucao")
+.select("*")
+.eq("medicacao_id",medicacaoId)
+.eq("data",dataHoje)
+.eq("horario",horario)
+.maybeSingle()
+
+if(ja){
 botao.style.background="#22c55e"
-botao.innerText="✔ "+horario
+botao.innerHTML=`
+<span>${horario}</span>
+<span style="font-size:9px;margin-top:2px">${ja.usuario_nome||""}</span>
+`
 return
 }
+/* 🔹 SALVA */
 await db.from("medicacoes_execucao").insert({
 medicacao_id:medicacaoId,
 data:dataHoje,
 horario:horario,
 status:"executado",
-usuario_id:usuarioId
+usuario_id:user.id,
+usuario_nome:user.nome
 })
+/* 🔹 UI */
 botao.style.background="#22c55e"
-botao.innerText="✔ "+horario
+botao.innerHTML=`
+<span>${horario}</span>
+<span style="font-size:9px;margin-top:2px">${user.nome||""}</span>
+`
 }
 /* ====================================================
 203C – CARREGAR STATUS EXECUTADO (FINAL)
