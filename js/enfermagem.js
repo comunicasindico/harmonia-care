@@ -767,54 +767,77 @@ window.mudarTurno = mudarTurno
 200 – CARREGAR PACIENTES MEDICAÇÃO (COM CACHE)
 ==================================================== */
 async function carregarPacientesMedicacao(){
-
 if(!db||!EMPRESA_ID)return
-
 const select=document.getElementById("buscaPacienteMedicacao")
 if(!select)return
-
-const {data}=await db
+const usuarioId=localStorage.getItem("usuario_id")||null
+const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+/* 🔹 BASE QUERY */
+let query=db
 .from("pacientes")
 .select("*")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
-.order("nome_completo")
-
+/* 🔒 FILTRO POR USUÁRIO (MESMA REGRA DO PAINEL) */
+if(hierarquia!==1&&usuarioId){
+const {data:rel}=await db
+.from("pacientes_profissionais")
+.select("paciente_id")
+.eq("usuario_id",usuarioId)
+.eq("ativo",true)
+const ids=rel?.map(r=>r.paciente_id)||[]
+if(!ids.length){
+window.PACIENTES_CACHE=[]
+select.innerHTML='<option value="todos">SEM PACIENTES</option>'
+return
+}
+query=query.in("id",ids)
+}
+/* 🔹 EXECUTA */
+const {data}=await query.order("nome_completo")
 window.PACIENTES_CACHE=data||[]
-
 let html='<option value="todos">TODOS</option>'
-
 data?.forEach(p=>{
 html+=`<option value="${p.id}">${p.nome_completo}</option>`
 })
-
 select.innerHTML=html
-
 select.onchange=carregarMedicacoes
-
 }
 /* ====================================================
-201 – CARREGAR MEDICAÇÕES (TODOS OU INDIVIDUAL)
+201 – CARREGAR MEDICAÇÕES (ALINHADO COM FILTRO USUÁRIO)
 ==================================================== */
 async function carregarMedicacoes(){
-
 if(!db||!EMPRESA_ID)return
-
 const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value||"todos"
-
-let query=db.from("medicacoes")
+const usuarioId=localStorage.getItem("usuario_id")||null
+const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+/* 🔹 BASE QUERY */
+let query=db
+.from("medicacoes")
 .select("*")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
-
+/* 🔒 FILTRO POR USUÁRIO (MESMA REGRA DO 200) */
+if(hierarquia!==1&&usuarioId){
+const {data:rel}=await db
+.from("pacientes_profissionais")
+.select("paciente_id")
+.eq("usuario_id",usuarioId)
+.eq("ativo",true)
+const ids=rel?.map(r=>r.paciente_id)||[]
+if(!ids.length){
+renderizarMedicacoes([])
+return
+}
+query=query.in("paciente_id",ids)
+}
+/* 🔹 FILTRO DO SELECT */
 if(pacienteId!=="todos"){
 query=query.eq("paciente_id",pacienteId)
 }
-
+/* 🔹 EXECUTA */
 const {data}=await query
-
 renderizarMedicacoes(data||[])
-
 }
 /* ====================================================
 202 – RENDER MEDICAÇÕES (LAYOUT COMPACTO HOSPITALAR FINAL)
