@@ -764,7 +764,7 @@ if(typeof mudarTurno==="function"){
 window.mudarTurno = mudarTurno
 }
 /* ====================================================
-200 – CARREGAR PACIENTES MEDICAÇÃO
+200 – CARREGAR PACIENTES MEDICAÇÃO (COM CACHE)
 ==================================================== */
 async function carregarPacientesMedicacao(){
 
@@ -775,10 +775,12 @@ if(!select)return
 
 const {data}=await db
 .from("pacientes")
-.select("id,nome_completo")
+.select("*")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
 .order("nome_completo")
+
+window.PACIENTES_CACHE=data||[]
 
 let html='<option value="todos">TODOS</option>'
 
@@ -792,7 +794,7 @@ select.onchange=carregarMedicacoes
 
 }
 /* ====================================================
-201 – CARREGAR MEDICAÇÕES
+201 – CARREGAR MEDICAÇÕES (TODOS OU INDIVIDUAL)
 ==================================================== */
 async function carregarMedicacoes(){
 
@@ -815,16 +817,53 @@ renderizarMedicacoes(data||[])
 
 }
 /* ====================================================
-202 – RENDER MEDICAÇÕES (VISUAL FORTE)
+202 – RENDER MEDICAÇÕES (AGRUPADO POR PACIENTE)
 ==================================================== */
 function renderizarMedicacoes(lista){
 
 const div=document.getElementById("listaMedicacoes")
 if(!div)return
 
-let html=""
+if(!lista.length){
+div.innerHTML="<b>Nenhuma medicação encontrada</b>"
+return
+}
+
+/* 🔥 AGRUPAR POR PACIENTE */
+const pacientes={}
 
 lista.forEach(m=>{
+if(!pacientes[m.paciente_id]){
+pacientes[m.paciente_id]={
+nome:"",
+itens:[]
+}
+}
+pacientes[m.paciente_id].itens.push(m)
+})
+
+/* 🔥 PEGAR NOMES */
+Object.keys(pacientes).forEach(pid=>{
+const p=window.PACIENTES_CACHE?.find(x=>String(x.id)===String(pid))
+if(p)pacientes[pid].nome=p.nome_completo
+})
+
+let html=""
+
+/* 🔥 RENDER */
+Object.keys(pacientes).forEach(pid=>{
+
+const p=pacientes[pid]
+
+html+=`
+<div style="background:#fff;padding:12px;margin-bottom:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+<div style="font-weight:bold;font-size:15px;margin-bottom:8px">
+👤 ${p.nome||"Paciente"}
+</div>
+`
+
+p.itens.forEach(m=>{
 
 let horarios=(m.horarios||"").split("|")
 
@@ -838,15 +877,23 @@ ${h}
 }).join("")
 
 html+=`
-<div style="background:#fff;padding:10px;margin-bottom:8px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding:6px 0">
 
+<div style="flex:1">
 <b>${m.nome_medicamento}</b><br>
-<small>${m.dosagem||""}</small><br>
+<small>${m.dosagem||""}</small>
+</div>
 
-<div style="margin-top:6px">${botoes}</div>
+<div style="flex:1;text-align:right">
+${botoes}
+</div>
 
 </div>
 `
+
+})
+
+html+=`</div>`
 
 })
 
