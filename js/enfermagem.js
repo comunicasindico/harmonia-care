@@ -944,7 +944,7 @@ if(h)medsUnicos[chave].horarios_set.add(h)
 })
 })
 let listaFinal=Object.values(medsUnicos).map(m=>{
-m.horarios=[...m.horarios_set]
+m.horarios=[...m.horarios_set].filter(Boolean)
 return m
 }).sort((a,b)=>{
 return (a.nome_medicamento||"").localeCompare(b.nome_medicamento||"")
@@ -964,7 +964,8 @@ return
 html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">`
 
 listaFinal.forEach(m=>{
-let horarios=(m.horarios||"").split("|").map(norm)
+let horarios=Array.isArray(m.horarios)?m.horarios:(m.horarios||"").split("|")
+horarios=horarios.map(norm)
 
 /* 🔹 BOTÕES HORÁRIOS */
 let horariosHTML=horarios.map(h=>{
@@ -1003,12 +1004,12 @@ if(!medicacaoId||!horario)return
 
 /* 🔒 VALIDAÇÃO DE VÍNCULO (INSERIR AQUI) */
 const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
-const usuarioId=localStorage.getItem("usuario_id")||null
+let usuarioIdExec=localStorage.getItem("usuario_id")||null
 if(hierarquia!==1&&usuarioId){
 const {data:rel}=await db
 .from("pacientes_profissionais")
 .select("paciente_id")
-.eq("usuario_id",usuarioId)
+.eq("usuario_id",usuarioIdExec)
 .eq("ativo",true)
 const ids=rel?.map(r=>r.paciente_id)||[]
 const {data:med}=await db
