@@ -934,17 +934,34 @@ idx++
 
 /* 🔹 REMOVER DUPLICADOS + ORDENAR */
 let medsUnicos={}
-p.itens.forEach(m=>{
-let chave=(m.nome_medicamento+"_"+m.dosagem).toLowerCase()
-if(!medsUnicos[chave]){
-medsUnicos[chave]={...m,horarios_set:new Set()}
+const limpar=(txt)=>{
+return (txt||"")
+.toString()
+.toLowerCase()
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.replace(/\s+/g,"")
+.replace(/mg|cp|cps|ml/g,"")
+.trim()
 }
-;(m.horarios||"").split("|").forEach(h=>{
+p.itens.forEach(m=>{
+let nomeBase=limpar(m.nome_medicamento)
+let doseBase=limpar(m.dosagem)
+let chave=nomeBase+"_"+doseBase
+if(!medsUnicos[chave]){
+medsUnicos[chave]={
+...m,
+horarios_set:new Set()
+}
+}
+/* 🔒 TRATA HORÁRIOS (STRING OU ARRAY) */
+let listaHorarios=Array.isArray(m.horarios)?m.horarios:(m.horarios||"").split("|")
+listaHorarios.forEach(h=>{
 if(h)medsUnicos[chave].horarios_set.add(h)
 })
 })
 let listaFinal=Object.values(medsUnicos).map(m=>{
-m.horarios=[...m.horarios_set].filter(Boolean)
+m.horarios=[...m.horarios_set].filter(Boolean).sort()
 return m
 }).sort((a,b)=>{
 return (a.nome_medicamento||"").localeCompare(b.nome_medicamento||"")
