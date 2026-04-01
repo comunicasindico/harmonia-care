@@ -1,4 +1,12 @@
 /* ====================================================
+005 – ABRIR PAINEL MEDICAÇÃO
+==================================================== */
+async function abrirPainelMedicacao(){
+await carregarPacientesMedicacao()
+await carregarStatusMedicacoes()
+await carregarMedicacoes()
+}
+/* ====================================================
 020 – CORES POR USUÁRIO
 ==================================================== */
 function obterCorUsuario(nome){
@@ -807,6 +815,12 @@ select.onchange=carregarMedicacoes
 201 – CARREGAR MEDICAÇÕES (FILTRO REAL POR USUÁRIO)
 ==================================================== */
 async function carregarMedicacoes(){
+/* 🔒 GARANTE USUÁRIO CARREGADO */
+let usuarioId=localStorage.getItem("usuario_id")
+if(!usuarioId){
+setTimeout(carregarMedicacoes,300)
+return
+}
 if(!db||!EMPRESA_ID)return
 const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value||"todos"
 const usuarioId=localStorage.getItem("usuario_id")
@@ -845,7 +859,7 @@ if(error){console.error(error)}
 renderizarMedicacoes(data||[])
 }
 /* ====================================================
-202 – RENDER MEDICAÇÕES (FINAL LIMPO + BOTÃO GLOBAL)
+202 – RENDER MEDICAÇÕES (GRID 3 COLUNAS + ORDENADO)
 ==================================================== */
 function renderizarMedicacoes(lista){
 const div=document.getElementById("listaMedicacoes")
@@ -854,6 +868,7 @@ if(!lista)lista=[]
 const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
 const podeEditar=hierarquia===1
 const cores=["#f0f9ff","#fefce8","#f0fdf4","#fff7ed","#fdf2f8","#eef2ff"]
+
 const norm=h=>{
 if(!h)return""
 h=h.toString().trim()
@@ -862,82 +877,99 @@ if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
-let HORARIOS=[...new Set(lista.flatMap(m=>(m.horarios||"").split("|").map(norm)).filter(h=>{
-if(!h)return false
-if(h==="JEJUM"||h==="ALMOÇO")return true
-return /^\d{2}:\d{2}$/.test(h)
-}))].sort((a,b)=>{
-const toMin=t=>{
-if(t==="JEJUM")return -10
-if(t==="ALMOÇO")return 720
-let[p,m]=t.split(":")
-return parseInt(p)*60+parseInt(m)
-}
-return toMin(a)-toMin(b)
-})
+
+/* 🔹 AGRUPAR PACIENTES */
 const pacientes={}
 ;(window.PACIENTES_CACHE||[]).forEach(p=>{
 pacientes[p.id]={nome:p.nome_completo,itens:[]}
 })
+
 lista.forEach(m=>{
 if(!pacientes[m.paciente_id]){
 pacientes[m.paciente_id]={nome:"Paciente",itens:[]}
 }
 pacientes[m.paciente_id].itens.push(m)
 })
+
 let html=""
 
-/* 🔹 BOTÕES GERAIS (ADMIN) */
+/* 🔹 BOTÕES ADMIN */
 if(podeEditar){
 html+=`
 <div style="display:flex;gap:8px;margin-bottom:10px">
 <button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:12px">➕ Nova</button>
 <button onclick="editarMedicacaoGlobal()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:12px">✏️ Editar</button>
 <button onclick="excluirMedicacaoGlobal()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:12px">🗑️ Excluir</button>
-</div>
-`
+</div>`
 }
 
 let idx=0
+
 Object.keys(pacientes).forEach(pid=>{
 const p=pacientes[pid]
 const cor=cores[idx%cores.length]
 idx++
+
+/* 🔹 REMOVER DUPLICADOS + ORDENAR */
+let medsUnicos={}
+p.itens.forEach(m=>{
+let chave=(m.nome_medicamento+"_"+m.dosagem).toLowerCase()
+if(!medsUnicos[chave]){
+medsUnicos[chave]={...m,horarios_set:new Set()}
+}
+;(m.horarios||"").split("|").forEach(h=>{
+if(h)medsUnicos[chave].horarios_set.add(h)
+})
+})
+let listaFinal=Object.values(medsUnicos).map(m=>{
+m.horarios=[...m.horarios_set]
+return m
+}).sort((a,b)=>{
+return (a.nome_medicamento||"").localeCompare(b.nome_medicamento||"")
+})
+
 html+=`
-<div style="background:${cor};padding:10px;margin-bottom:12px;border-radius:12px">
-<div style="font-weight:600;font-size:13px;margin-bottom:6px">👤 ${p.nome}</div>
+<div style="background:${cor};padding:12px;margin-bottom:14px;border-radius:12px">
+<div style="font-weight:600;font-size:14px;margin-bottom:10px">👤 ${p.nome}</div>
 `
-if(!p.itens.length){
+
+if(!listaFinal.length){
 html+=`<div style="font-size:11px;color:#777">Sem medicação</div></div>`
 return
 }
-p.itens.forEach(m=>{
+
+/* 🔹 GRID 3 COLUNAS */
+html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">`
+
+listaFinal.forEach(m=>{
 let horarios=(m.horarios||"").split("|").map(norm)
-/* LINHA 1 */
-html+=`
-<div style="font-size:12px;font-weight:600;padding-top:6px">
-${m.nome_medicamento||""} <span style="color:#666;font-weight:400">${m.dosagem||""}</span>
-</div>
-`
-/* LINHA 2 */
-html+=`
-<div style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:6px;border-bottom:1px solid #ddd">
-${HORARIOS.map(h=>{
-let tem=horarios.includes(h)
-if(!tem)return""
+
+/* 🔹 BOTÕES HORÁRIOS */
+let horariosHTML=horarios.map(h=>{
 let exec=(window.EXEC_CACHE||[]).find(e=>norm(e.horario)===h&&e.medicacao_id===m.id)
 let corBtn=exec?"#22c55e":"#f87171"
 let usuarioExec=exec?.usuario_nome||""
-return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${corBtn};color:#fff;border:none;border-radius:6px;font-size:10px;padding:4px 6px;min-width:48px;text-align:center">
+return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${corBtn};color:#fff;border:none;border-radius:6px;font-size:10px;padding:4px 6px">
 ${h}
 ${usuarioExec?`<div style="font-size:8px">${usuarioExec}</div>`:""}
 </button>`
-}).join("")}
+}).join("")
+
+html+=`
+<div style="border-bottom:1px solid #ddd;padding-bottom:6px">
+<div style="font-size:12px;font-weight:600">
+${m.nome_medicamento||""} <span style="color:#666;font-weight:400">${m.dosagem||""}</span>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+${horariosHTML}
+</div>
 </div>
 `
 })
-html+=`</div>`
+
+html+=`</div></div>`
 })
+
 div.innerHTML=html
 }
 /* ====================================================
@@ -1012,4 +1044,19 @@ const dataHoje=new Date().toISOString().slice(0,10)
 const {data}=await db.from("medicacoes_execucao").select("*").eq("data",dataHoje)
 window.EXEC_CACHE=data||[]
 if(typeof carregarMedicacoes==="function"){carregarMedicacoes()}
+}
+/* ====================================================
+204 – MODAL MEDICAÇÃO (PADRÃO CLÍNICO)
+==================================================== */
+function abrirModalMedicacao(){
+window.MODO_MEDICACAO="novo"
+alert("Abrir modal NOVA medicação (vamos montar depois)")
+}
+function editarMedicacaoGlobal(){
+window.MODO_MEDICACAO="editar"
+alert("Abrir lista para editar medicação")
+}
+function excluirMedicacaoGlobal(){
+window.MODO_MEDICACAO="excluir"
+alert("Abrir lista para excluir medicação")
 }
