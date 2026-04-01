@@ -961,7 +961,20 @@ if(h)medsUnicos[chave].horarios_set.add(h)
 })
 })
 let listaFinal=Object.values(medsUnicos).map(m=>{
-m.horarios=[...m.horarios_set].filter(Boolean).sort()
+m.horarios=[...new Set(
+[...m.horarios_set]
+.map(h=>h.toString().trim())
+.filter(Boolean)
+)].sort((a,b)=>{
+const toMin=t=>{
+if(t==="JEJUM")return -10
+if(t==="ALMOÇO")return 720
+if(!t.includes(":"))return 0
+let[p,m]=t.split(":")
+return parseInt(p)*60+parseInt(m)
+}
+return toMin(a)-toMin(b)
+})
 return m
 }).sort((a,b)=>{
 return (a.nome_medicamento||"").localeCompare(b.nome_medicamento||"")
