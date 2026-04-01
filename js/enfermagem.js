@@ -812,50 +812,72 @@ select.innerHTML=html
 select.onchange=carregarMedicacoes
 }
 /* ====================================================
-201 – CARREGAR MEDICAÇÕES (FILTRO REAL POR USUÁRIO)
+201 – CARREGAR MEDICAÇÕES (FILTRO REAL CORRIGIDO)
 ==================================================== */
 async function carregarMedicacoes(){
-/* 🔒 GARANTE USUÁRIO CARREGADO */
+if(!db||!EMPRESA_ID)return
+
+/* 🔒 GARANTE USUÁRIO (SEM LOOP INFINITO) */
 let usuarioId=localStorage.getItem("usuario_id")
+let hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+
 if(!usuarioId){
-setTimeout(carregarMedicacoes,300)
+console.warn("Aguardando usuário...")
+setTimeout(()=>carregarMedicacoes(),300)
 return
 }
-if(!db||!EMPRESA_ID)return
+
 const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value||"todos"
-const usuarioId=localStorage.getItem("usuario_id")
-const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
-/* 🔒 SE NÃO FOR ADMIN → FILTRA PACIENTES */
+
+/* 🔒 FILTRO POR USUÁRIO */
 let pacientesPermitidos=null
-if(hierarquia!==1&&usuarioId){
+
+if(hierarquia!==1){
 const {data:rel,error}=await db
 .from("pacientes_profissionais")
 .select("paciente_id")
 .eq("usuario_id",usuarioId)
 .eq("ativo",true)
-if(error){console.error(error)}
+
+if(error){
+console.error(error)
+return
+}
+
 pacientesPermitidos=rel?.map(r=>r.paciente_id)||[]
+
 if(!pacientesPermitidos.length){
 renderizarMedicacoes([])
 return
 }
 }
-/* 🔹 BUSCA MEDICAÇÕES */
+
+/* 🔹 QUERY BASE */
 let query=db
 .from("medicacoes")
 .select("*")
 .eq("empresa_id",EMPRESA_ID)
 .eq("ativo",true)
-/* 🔒 AQUI ESTAVA O ERRO */
+
+/* 🔒 APLICA FILTRO */
 if(pacientesPermitidos){
 query=query.in("paciente_id",pacientesPermitidos)
 }
-/* 🔹 SELECT */
+
+/* 🔹 FILTRO SELECT */
 if(pacienteId!=="todos"){
 query=query.eq("paciente_id",pacienteId)
 }
+
+/* 🔹 EXECUTA */
 const {data,error}=await query
-if(error){console.error(error)}
+
+if(error){
+console.error(error)
+renderizarMedicacoes([])
+return
+}
+
 renderizarMedicacoes(data||[])
 }
 /* ====================================================
