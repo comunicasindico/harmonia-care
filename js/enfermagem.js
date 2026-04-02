@@ -860,7 +860,7 @@ let query=db
 .eq("ativo",true)
 
 /* 🔒 APLICA FILTRO */
-if(pacientesPermitidos){
+if(pacientesPermitidos && pacientesPermitidos.length){
 query=query.in("paciente_id",pacientesPermitidos)
 }
 
