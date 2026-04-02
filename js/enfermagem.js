@@ -881,15 +881,18 @@ return
 renderizarMedicacoes(data||[])
 }
 /* ====================================================
-202 – RENDER MEDICAÇÕES (GRID 3 COLUNAS + ORDENADO)
+202 – RENDER MEDICAÇÕES (CORRIGIDO DEFINITIVO)
 ==================================================== */
 function renderizarMedicacoes(lista){
 const div=document.getElementById("listaMedicacoes")
 if(!div)return
 if(!lista)lista=[]
+
 const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
 const podeEditar=hierarquia===1
+
 const cores=["#f0f9ff","#fefce8","#f0fdf4","#fff7ed","#fdf2f8","#eef2ff"]
+
 const norm=h=>{
 if(!h)return""
 h=h.toString().trim()
@@ -898,10 +901,12 @@ if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
-const limpar=(txt)=>{
+
+const limpar=txt=>{
 return (txt||"").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"").replace(/mg|cp|cps|ml|ui/g,"").trim()
 }
-const normalizarHora=(h)=>{
+
+const normalizarHora=h=>{
 if(!h)return""
 h=h.toString().trim().toUpperCase()
 if(h==="JEJUM"||h==="ALMOÇO")return h
@@ -909,31 +914,43 @@ if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
+
+/* ====================================================
+🔹 MAPA DE PACIENTES (CORRETO)
+==================================================== */
 const pacientes={}
+
 ;(window.PACIENTES_CACHE||[]).forEach(p=>{
-pacientes[p.id]={nome:p.nome_completo,itens:[]}
-})
-lista.forEach(m=>{
-let pid=(m.paciente_id||"").toString().trim()
-
-let paciente=Object.values(pacientes).find(p=>{
-return (p.id||"").toString().trim()===pid
-})
-
-if(!paciente){
-if(!pacientes[pid]){
-pacientes[p.id]={
-id:(p.id||"").toString().trim(),
+const id=(p.id||"").toString().trim()
+pacientes[id]={
+id:id,
 nome:p.nome_completo,
 itens:[]
 }
-}
-pacientes[pid].itens.push(m)
-}else{
-paciente.itens.push(m)
-}
 })
+
+/* ====================================================
+🔹 VINCULAR MEDICAÇÕES
+==================================================== */
+lista.forEach(m=>{
+const pid=(m.paciente_id||"").toString().trim()
+
+if(!pacientes[pid]){
+pacientes[pid]={
+id:pid,
+nome:"Paciente Não Identificado",
+itens:[]
+}
+}
+
+pacientes[pid].itens.push(m)
+})
+
 let html=""
+
+/* ====================================================
+🔹 BOTÕES ADMIN
+==================================================== */
 if(podeEditar){
 html+=`<div style="display:flex;gap:8px;margin-bottom:10px">
 <button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:12px">➕ Nova</button>
@@ -941,27 +958,49 @@ html+=`<div style="display:flex;gap:8px;margin-bottom:10px">
 <button onclick="excluirMedicacaoGlobal()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:12px">🗑️ Excluir</button>
 </div>`
 }
+
 let idx=0
-Object.keys(pacientes).forEach(pid=>{
-const p=pacientes[pid]
+
+/* ====================================================
+🔹 LOOP PACIENTES
+==================================================== */
+Object.values(pacientes).forEach(p=>{
 const cor=cores[idx%cores.length]
 idx++
+
 let medsUnicos={}
+
+/* ====================================================
+🔹 UNIFICAR MEDICAÇÕES
+==================================================== */
 p.itens.forEach(m=>{
 let nomeBase=limpar(m.nome_medicamento)
 let doseBase=limpar(m.dosagem)
 let chave=nomeBase+"_"+doseBase
+
 if(!medsUnicos[chave]){
-medsUnicos[chave]={nome_medicamento:m.nome_medicamento,dosagem:m.dosagem,paciente_id:m.paciente_id,horarios_set:new Set()}
+medsUnicos[chave]={
+id:m.id,
+nome_medicamento:m.nome_medicamento,
+dosagem:m.dosagem,
+horarios_set:new Set()
 }
+}
+
 let listaHorarios=Array.isArray(m.horarios)?m.horarios:(m.horarios||"").split("|")
+
 listaHorarios.forEach(h=>{
 let hNorm=normalizarHora(h)
 if(hNorm)medsUnicos[chave].horarios_set.add(hNorm)
 })
 })
+
+/* ====================================================
+🔹 FINAL LISTA
+==================================================== */
 let listaFinal=Object.values(medsUnicos).map(m=>{
-m.horarios=[...m.horarios_set].sort((a,b)=>{
+m.horarios=[...m.horarios_set]
+.sort((a,b)=>{
 const toMin=t=>{
 if(t==="JEJUM")return -10
 if(t==="ALMOÇO")return 720
@@ -971,31 +1010,50 @@ return parseInt(p)*60+parseInt(m)
 return toMin(a)-toMin(b)
 })
 return m
-}).sort((a,b)=>{
-return (a.nome_medicamento||"").localeCompare(b.nome_medicamento||"")
 })
+
 html+=`<div style="background:${cor};padding:12px;margin-bottom:14px;border-radius:12px">
 <div style="font-weight:600;font-size:14px;margin-bottom:10px">👤 ${p.nome}</div>`
+
 if(!listaFinal.length){
-console.log("SEM MEDICAÇÃO:",p)
-html+=`<div style="font-size:11px;color:#999">Sem medicação</div>`
+html+=`<div style="font-size:11px;color:#999">Sem medicação</div></div>`
+return
 }
+
 html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">`
+
+/* ====================================================
+🔹 RENDER MEDICAÇÕES
+==================================================== */
 listaFinal.forEach(m=>{
-let horarios=m.horarios.map(norm)
-let horariosHTML=horarios.map(h=>{
+
+let horariosHTML=m.horarios.map(h=>{
+
 let exec=(window.EXEC_CACHE||[]).find(e=>norm(e.horario)===h&&e.medicacao_id===m.id)
+
 let corBtn=exec?"#22c55e":"#f87171"
 let usuarioExec=exec?.usuario_nome||""
-return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${corBtn};color:#fff;border:none;border-radius:6px;font-size:10px;padding:4px 6px">${h}${usuarioExec?"<div style='font-size:8px'>"+usuarioExec+"</div>":""}</button>`
+
+return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${corBtn};color:#fff;border:none;border-radius:6px;font-size:10px;padding:4px 6px">
+${h}${usuarioExec?"<div style='font-size:8px'>"+usuarioExec+"</div>":""}
+</button>`
+
 }).join("")
+
 html+=`<div style="border-bottom:1px solid #ddd;padding-bottom:6px">
-<div style="font-size:12px;font-weight:600">${m.nome_medicamento||""} <span style="color:#666;font-weight:400">${m.dosagem||""}</span></div>
-<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${horariosHTML}</div>
+<div style="font-size:12px;font-weight:600">
+${m.nome_medicamento||""} <span style="color:#666;font-weight:400">${m.dosagem||""}</span>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+${horariosHTML}
+</div>
 </div>`
 })
+
 html+=`</div></div>`
+
 })
+
 div.innerHTML=html
 }
 /* ====================================================
