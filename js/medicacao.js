@@ -59,7 +59,7 @@ return
 renderizarMedicacoes(data||[])
 }
 /* ====================================================
-202 – RENDER MEDICAÇÕES POR PACIENTE
+202 – RENDER MEDICAÇÕES (LAYOUT GRID PROFISSIONAL)
 ==================================================== */
 function renderizarMedicacoes(lista){
 const div=document.getElementById("listaMedicacoes")
@@ -92,7 +92,7 @@ let html=""
 
 /* 🔥 BOTÕES */
 html+=`
-<div style="display:flex;gap:8px;margin-bottom:10px">
+<div style="display:flex;gap:8px;margin-bottom:12px">
 <button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px">➕ Nova</button>
 <button onclick="editarMedicacaoGlobal()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 10px">✏️ Editar</button>
 <button onclick="excluirMedicacaoGlobal()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px">🗑️ Excluir</button>
@@ -102,10 +102,21 @@ html+=`
 /* 🔥 LOOP PACIENTES */
 Object.values(pacientes).forEach(p=>{
 
-html+=`<div style="background:#f9fafb;padding:10px;margin-bottom:12px;border-radius:10px">
-<div style="font-weight:bold;margin-bottom:6px">👤 ${p.nome}</div>`
+html+=`
+<div style="background:#f9fafb;padding:12px;margin-bottom:14px;border-radius:12px">
 
-/* 🔥 AGRUPAR MEDICAÇÃO */
+<div style="font-weight:bold;margin-bottom:10px;font-size:14px">
+👤 ${p.nome}
+</div>
+
+<div style="
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:10px;
+">
+`
+
+/* 🔥 AGRUPAR MEDICAÇÕES */
 let mapa={}
 
 p.itens.forEach(m=>{
@@ -130,6 +141,10 @@ if(n)mapa[chave].horarios.add(n)
 
 let meds=Object.values(mapa)
 
+/* 🔥 ORDENAR */
+meds.sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR"))
+
+/* 🔥 RENDER MEDICAÇÕES */
 meds.forEach(m=>{
 
 let horarios=[...m.horarios].sort((a,b)=>{
@@ -139,18 +154,43 @@ return(p1*60+m1)-(p2*60+m2)
 })
 
 let hHTML=horarios.map(h=>{
-return `<span style="background:#ef4444;color:#fff;padding:4px 6px;border-radius:6px;margin-right:4px">${h}</span>`
+return `<span style="
+background:#ef4444;
+color:#fff;
+padding:4px 6px;
+border-radius:6px;
+font-size:11px;
+margin-right:4px;
+display:inline-block;
+margin-top:3px;
+">${h}</span>`
 }).join("")
 
 html+=`
-<div style="margin-bottom:8px">
-<div style="font-weight:600">${m.nome} <span style="color:#666">${m.dose||""}</span></div>
-<div style="margin-top:4px">${hHTML}</div>
+<div style="
+background:#fff;
+padding:8px;
+border-radius:8px;
+box-shadow:0 1px 3px rgba(0,0,0,0.08);
+">
+
+<div style="font-weight:600;font-size:12px;margin-bottom:4px">
+${m.nome}
+</div>
+
+<div style="color:#666;font-size:11px;margin-bottom:6px">
+${m.dose||""}
+</div>
+
+<div>
+${hHTML}
+</div>
+
 </div>
 `
 })
 
-html+=`</div>`
+html+=`</div></div>`
 })
 
 div.innerHTML=html
