@@ -113,7 +113,16 @@ display:flex;align-items:center;justify-content:center;}
 .btn-entrar:focus{outline:none;box-shadow:0 0 0 3px #00d4ff,0 6px 0 #1f5f94,0 10px 20px rgba(0,0,0,0.25);}    
 @keyframes pulseOk{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
 .pulse-ok{animation:pulseOk 0.4s ease;}
+/* ====================================================
+019 – BOTÕES 3D PROFISSIONAL
+==================================================== */
+.btn-topo{padding:8px 14px;border-radius:10px;border:none;font-weight:600;cursor:pointer;transition:all .15s ease;box-shadow:0 4px 0 rgba(0,0,0,.25);}
+.btn-topo:hover{transform:translateY(-1px);box-shadow:0 6px 0 rgba(0,0,0,.25);}
+.btn-topo:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25);}
+.btn-topo.ativo{outline:2px solid #22c55e;transform:scale(1.05);}
 
+
+  
 
 </style>
 </head>
@@ -163,27 +172,27 @@ display:flex;align-items:center;justify-content:center;}
 <div class="menu">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
 
-<div style="display:flex;gap:10px;flex-wrap:wrap">
-<button onclick="abrirEnfermagem()" class="btn-primary">Painel Enfermagem</button>
-<button onclick="abrirClinico()" class="btn-secondary">Painel Clínico</button>
-<button onclick="abrirPainel('painelMedicacao');abrirPainelMedicacao()" class="btn-primary">💊 Medicação</button>
-<button onclick="abrirAdmin()" class="btn-success">Admin</button>
+<div id="topoBotoes" style="display:flex;gap:10px;flex-wrap:wrap">
+<button id="btnEnfermagem" onclick="abrirPainel('painelEnfermagem')" class="btn-primary">Painel Enfermagem</button>
+<button id="btnClinico" onclick="abrirPainel('painelClinico')" class="btn-secondary">Painel Clínico</button>
+<button id="btnMedicacao" onclick="abrirPainel('painelMedicacao');abrirPainelMedicacao()" class="btn-primary">💊 Medicação</button>
+<button id="btnAdmin" onclick="abrirPainel('painelAdmin')" class="btn-success">Admin</button>
 <button id="btnConcluirPendentes" class="btn-secondary" onclick="window.concluirPendentes()">✔ Concluir Pendentes</button>
-<button onclick="gerarPDFGeral()" class="btn-primary">Gerar PDF</button>
-<button onclick="gerarPDFPaciente()" class="btn-primary">PDF do Paciente</button>
-<button onclick="backupCompleto()" style="background:#6c5ce7;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer">💾 Backup Completo</button>
+<button id="btnGerarPDF" onclick="gerarPDFGeral()" class="btn-primary">Gerar PDF</button>
+<button id="btnPDFPaciente" onclick="gerarPDFPaciente()" class="btn-primary">PDF do Paciente</button>
+<button id="btnBackup" onclick="backupCompleto()" style="background:#6c5ce7;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer">💾 Backup Completo</button>
+<div id="acoesClinico" style="display:none;gap:8px;margin-left:10px" class="grupo-clinico">
+<button id="btnEditarClinico" onclick="editarClinicoGlobal()" class="btn-secondary">Editar Clínico</button>
+<button id="btnSalvar" onclick="salvarClinicoGlobal()" class="btn-success">Salvar</button>
 
-<div id="acoesClinico" style="display:none;gap:8px;margin-left:10px">
-<button onclick="editarClinicoGlobal()" class="btn-secondary">Editar Clínico</button>
-<button onclick="salvarClinicoGlobal()" class="btn-success">Salvar</button>
 </div>
 
 </div>
 
 <div style="display:flex;gap:10px;font-weight:bold">
-<div id="indicadorExecutado" style="background:#2ecc71;color:#fff;padding:6px 10px;border-radius:8px">✔ 0</div>
-<div id="indicadorPendente" style="background:#f39c12;color:#fff;padding:6px 10px;border-radius:8px">🔴 0</div>
-<div id="indicadorAtrasado" style="background:#e74c3c;color:#fff;padding:6px 10px;border-radius:8px">⚠ 0</div>
+<div id="indicadorExecutado" class="btn-topo" style="background:#2ecc71;color:#fff;padding:6px 10px;border-radius:8px">✔ 0</div>
+<div id="indicadorPendente" class="btn-topo" style="background:#f39c12;color:#fff;padding:6px 10px;border-radius:8px">🔴 0</div>
+<div id="indicadorAtrasado" class="btn-topo" style="background:#e74c3c;color:#fff;padding:6px 10px;border-radius:8px">⚠ 0</div>
 </div>
 
 </div>
