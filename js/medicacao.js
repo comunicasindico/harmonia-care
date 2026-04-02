@@ -57,6 +57,7 @@ renderizarMedicacoes([])
 return
 }
 renderizarMedicacoes(data||[])
+aplicarDataInteligente()
 }
 /* ====================================================
 202 – RENDER MEDICAÇÕES (FINAL LIMPO PROFISSIONAL)
@@ -663,4 +664,38 @@ datas.push(atual.toISOString().slice(0,10))
 atual.setDate(atual.getDate()+1)
 }
 return datas
+}
+/* ====================================================
+230 – DATA INTELIGENTE
+==================================================== */
+function aplicarDataInteligente(){
+
+const hoje=new Date()
+const inicio=hoje.toISOString().slice(0,10)
+
+/* +7 dias */
+const fimDate=new Date()
+fimDate.setDate(fimDate.getDate()+7)
+const fim=fimDate.toISOString().slice(0,10)
+
+const d1=document.getElementById("dataInicioMedicacao")
+const d2=document.getElementById("dataFimMedicacao")
+
+if(d1&&!d1.value)d1.value=inicio
+if(d2&&!d2.value)d2.value=fim
+}
+/* ====================================================
+231 – SET PERIODO DIAS - MEDICACAO
+==================================================== */
+function setPeriodoDias(dias){
+
+const hoje=new Date()
+const inicio=hoje.toISOString().slice(0,10)
+
+const fimDate=new Date()
+fimDate.setDate(fimDate.getDate()+dias-1)
+const fim=fimDate.toISOString().slice(0,10)
+
+document.getElementById("dataInicioMedicacao").value=inicio
+document.getElementById("dataFimMedicacao").value=fim
 }
