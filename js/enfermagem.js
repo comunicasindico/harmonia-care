@@ -959,17 +959,58 @@ let listaHorarios=Array.isArray(m.horarios)?m.horarios:(m.horarios||"").split("|
 listaHorarios.forEach(h=>{
 if(h)medsUnicos[chave].horarios_set.add(h)
 })
+let medsUnicos={}
+
+const limpar=(txt)=>{
+return (txt||"")
+.toString()
+.toLowerCase()
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.replace(/\s+/g,"")
+.replace(/mg|cp|cps|ml|ui/g,"")
+.trim()
+}
+
+const normalizarHora=(h)=>{
+if(!h)return""
+h=h.toString().trim().toUpperCase()
+if(h==="JEJUM"||h==="ALMOÇO")return h
+if(!h.includes(":"))return h.padStart(2,"0")+":00"
+let[p,m]=h.split(":")
+return p.padStart(2,"0")+":"+m.padStart(2,"0")
+}
+
+p.itens.forEach(m=>{
+let nomeBase=limpar(m.nome_medicamento)
+let doseBase=limpar(m.dosagem)
+let chave=nomeBase+"_"+doseBase
+
+if(!medsUnicos[chave]){
+medsUnicos[chave]={
+nome_medicamento:m.nome_medicamento,
+dosagem:m.dosagem,
+paciente_id:m.paciente_id,
+horarios_set:new Set()
+}
+}
+
+/* 🔒 NORMALIZA ANTES DE ADICIONAR */
+let listaHorarios=Array.isArray(m.horarios)?m.horarios:(m.horarios||"").split("|")
+
+listaHorarios.forEach(h=>{
+let hNorm=normalizarHora(h)
+if(hNorm)medsUnicos[chave].horarios_set.add(hNorm)
 })
+
+})
+
 let listaFinal=Object.values(medsUnicos).map(m=>{
-m.horarios=[...new Set(
-[...m.horarios_set]
-.map(h=>h.toString().trim())
-.filter(Boolean)
-)].sort((a,b)=>{
+m.horarios=[...m.horarios_set]
+.sort((a,b)=>{
 const toMin=t=>{
 if(t==="JEJUM")return -10
 if(t==="ALMOÇO")return 720
-if(!t.includes(":"))return 0
 let[p,m]=t.split(":")
 return parseInt(p)*60+parseInt(m)
 }
