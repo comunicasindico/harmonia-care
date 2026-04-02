@@ -120,9 +120,9 @@ let cor=exec?"#22c55e":"#ef4444"
 let usuario=(exec&&exec.usuario_nome)?exec.usuario_nome:""
 return `<button onclick="(function(){
 if(window.MODO_MEDICACAO==='editar'){
-editarMedicacao('${m.id}','${m.nome}','${m.dose||""}')
+editarMedicacao('${m.nome}','${m.dose||""}','${p.id}')
 }else if(window.MODO_MEDICACAO==='excluir'){
-excluirMedicacao('${m.id}')
+excluirMedicacao('${m.nome}','${m.dose||""}','${p.id}')
 }else{
 administrarMedicacao('${m.id}','${h}',this)
 }
@@ -284,13 +284,56 @@ function abrirModalMedicacao(){
 window.MODO_MEDICACAO="novo"
 alert("Modo NOVA medicação ativo")
 }
-
 function editarMedicacaoGlobal(){
 window.MODO_MEDICACAO="editar"
 alert("Modo edição ativado\nClique em um horário")
 }
-
 function excluirMedicacaoGlobal(){
 window.MODO_MEDICACAO="excluir"
 alert("Modo exclusão ativado")
+}
+/* ====================================================
+220 – EDITAR MEDICAÇÃO (FUNCIONAL)
+==================================================== */
+async function editarMedicacao(nome,dose,pacienteId){
+let novoNome=prompt("Nome:",nome||"")
+if(novoNome===null)return
+novoNome=novoNome.trim()
+if(!novoNome){alert("Nome obrigatório");return}
+let novaDose=prompt("Dosagem:",dose||"")
+if(novaDose===null)return
+novaDose=novaDose.trim()
+try{
+const {error}=await db.from("medicacoes")
+.update({
+nome_medicamento:novoNome,
+dosagem:novaDose||null
+})
+.eq("paciente_id",pacienteId)
+.eq("nome_medicamento",nome)
+.eq("dosagem",dose||null)
+if(error){console.error(error);alert("Erro ao editar");return}
+carregarMedicacoes()
+}catch(e){
+console.error(e)
+alert("Erro inesperado")
+}
+}
+/* ====================================================
+221 – EXCLUIR MEDICAÇÃO (FUNCIONAL)
+==================================================== */
+async function excluirMedicacao(nome,dose,pacienteId){
+if(!confirm("Excluir esta medicação?"))return
+try{
+const {error}=await db.from("medicacoes")
+.delete()
+.eq("paciente_id",pacienteId)
+.eq("nome_medicamento",nome)
+.eq("dosagem",dose||null)
+if(error){console.error(error);alert("Erro ao excluir");return}
+carregarMedicacoes()
+}catch(e){
+console.error(e)
+alert("Erro inesperado")
+}
 }
