@@ -367,16 +367,20 @@ alert("Nenhuma medicação encontrada")
 return
 }
 
-let inserts=[]
-
+let mapa={}
 meds.forEach(m=>{
 let horarios=(m.horarios||"").toString().split("|")
+
 horarios.forEach(h=>{
 if(!h)return
+
 h=h.toString().trim()
 if(!h.includes(":"))h=h.padStart(2,"0")+":00"
 
-inserts.push({
+/* 🔑 CHAVE ÚNICA */
+let chave=`${m.id}_${dataHoje}_${h}_${EMPRESA_ID}`
+
+mapa[chave]={
 medicacao_id:m.id,
 data:dataHoje,
 horario:h,
@@ -384,9 +388,13 @@ status:"executado",
 usuario_id:usuarioId,
 usuario_nome:nome,
 empresa_id:EMPRESA_ID
+}
+
 })
 })
-})
+
+/* 🔥 CONVERTE PARA ARRAY SEM DUPLICADOS */
+let inserts=Object.values(mapa)
 
 const {error}=await db
 .from("medicacoes_execucao")
