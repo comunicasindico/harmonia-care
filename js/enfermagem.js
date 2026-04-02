@@ -914,10 +914,24 @@ const pacientes={}
 pacientes[p.id]={nome:p.nome_completo,itens:[]}
 })
 lista.forEach(m=>{
-if(!pacientes[m.paciente_id]){
-pacientes[m.paciente_id]={nome:"Paciente",itens:[]}
+let pid=(m.paciente_id||"").toString().trim()
+
+let paciente=Object.values(pacientes).find(p=>{
+return (p.id||"").toString().trim()===pid
+})
+
+if(!paciente){
+if(!pacientes[pid]){
+pacientes[p.id]={
+id:(p.id||"").toString().trim(),
+nome:p.nome_completo,
+itens:[]
 }
-pacientes[m.paciente_id].itens.push(m)
+}
+pacientes[pid].itens.push(m)
+}else{
+paciente.itens.push(m)
+}
 })
 let html=""
 if(podeEditar){
