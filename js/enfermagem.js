@@ -856,7 +856,7 @@ return
 let query=db
 .from("medicacoes")
 .select("*")
-.eq("empresa_id",EMPRESA_ID)
+/* .eq("empresa_id",EMPRESA_ID) */
 .eq("ativo",true)
 
 /* 🔒 APLICA FILTRO */
