@@ -266,7 +266,7 @@ inputHorario.value=modelo.horarios_padrao
 async function salvarNovaMedicacao(){
 if(!db||!EMPRESA_ID)return
 
-coconst nome=(document.getElementById("nomeMedicacao").value||"").trim().toUpperCase()
+const nome=(document.getElementById("nomeMedicacao").value||"").trim().toUpperCase()
 const dose=(document.getElementById("doseMedicacao").value||"").trim().toUpperCase()
 const horario=(document.getElementById("horarioMedicacao").value||"").trim()
 const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value
