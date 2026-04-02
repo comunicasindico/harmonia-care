@@ -118,7 +118,7 @@ return String(e.medicacao_id)===String(m.id) && String(e.horario)===String(h)
 })
 let cor=exec?"#22c55e":"#ef4444"
 let usuario=(exec&&exec.usuario_nome)?exec.usuario_nome:""
-return `<button onclick="
+return `<button onclick="(function(){
 if(window.MODO_MEDICACAO==='editar'){
 editarMedicacao('${m.id}','${m.nome}','${m.dose||""}')
 }else if(window.MODO_MEDICACAO==='excluir'){
@@ -126,7 +126,7 @@ excluirMedicacao('${m.id}')
 }else{
 administrarMedicacao('${m.id}','${h}',this)
 }
-"
+})()"
 style="background:${cor};color:#fff;border:none;border-radius:6px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:60px"><span>${h}</span>${usuario?`<span style="font-size:9px">${usuario}</span>`:""}</button>`
 }).join("")
 html+=`<div style="background:${corMedicacao};padding:8px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
