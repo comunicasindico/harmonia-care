@@ -115,7 +115,12 @@ let corPaciente=gerarCor(p.nome,60,92)
 html+=`<div style="background:${corPaciente};padding:12px;margin-bottom:14px;border-radius:12px">
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-<div style="font-weight:bold">👤 ${p.nome}</div>
+<div class="paciente-header">
+<div class="paciente-ficha">
+<span class="icone">📋</span>
+<span class="nome">${p.nome}</span>
+</div>
+</div>
 ${hierarquia===1?`<button onclick="concluirPacienteMedicacao('${p.id}')" style="background:#22c55e;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px">✔ Concluir Paciente</button>`:""}
 </div>
 
