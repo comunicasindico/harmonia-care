@@ -436,7 +436,15 @@ window.concluirPacienteMedicacao=async function(pacienteId){
 if(!db||!pacienteId)return
 
 const user=obterUsuarioLogado()||{}
-const dataHoje=new Date().toISOString().slice(0,10)
+const dataInicio=document.getElementById("dataInicioMedicacao")?.value
+const dataFim=document.getElementById("dataFimMedicacao")?.value
+
+if(!dataInicio||!dataFim){
+alert("Informe período")
+return
+}
+
+const datas=gerarDatasPeriodo(dataInicio,dataFim)
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
 
@@ -479,7 +487,11 @@ empresa_id:EMPRESA_ID
 const inserts=Object.values(mapa)
 
 /* 🔒 INSERE SEM SOBRESCREVER */
-for(const item of inserts){
+for(const dataHoje of datas){
+
+for(const itemBase of inserts){
+
+let item={...itemBase,data:dataHoje}
 
 const {data:existe}=await db
 .from("medicacoes_execucao")
@@ -490,12 +502,12 @@ const {data:existe}=await db
 .eq("empresa_id",item.empresa_id)
 .maybeSingle()
 
-/* ⛔ JÁ EXISTE → NÃO ALTERA */
 if(existe)continue
 
-const {error}=await db
-.from("medicacoes_execucao")
-.insert(item)
+await db.from("medicacoes_execucao").insert(item)
+
+}
+}
 
 if(error){
 console.error(error)
@@ -563,7 +575,15 @@ window.concluirPendentesMedicacao=async function(){
 if(!db)return
 
 const user=obterUsuarioLogado()||{}
-const dataHoje=new Date().toISOString().slice(0,10)
+const dataInicio=document.getElementById("dataInicioMedicacao")?.value
+const dataFim=document.getElementById("dataFimMedicacao")?.value
+
+if(!dataInicio||!dataFim){
+alert("Informe período")
+return
+}
+
+const datas=gerarDatasPeriodo(dataInicio,dataFim)
 
 const lista=window.MEDICACOES_CACHE||[]
 if(!lista.length){
@@ -601,10 +621,13 @@ return
 }
 
 /* 🔥 BARRA */
-iniciarBarra(inserts.length)
+iniciarBarra(inserts.length * datas.length)
 
-/* 🔒 PROCESSA SEM SOBRESCREVER */
-for(const item of inserts){
+for(const dataHoje of datas){
+
+for(const itemBase of inserts){
+
+let item={...itemBase,data:dataHoje}
 
 const {data:existe}=await db
 .from("medicacoes_execucao")
@@ -621,8 +644,23 @@ await db.from("medicacoes_execucao").insert(item)
 
 atualizarBarra()
 }
+}
 
-/* 🔄 FINALIZA */
 finalizarBarra()
 await carregarStatusMedicacoes()
+}
+
+/* ====================================================
+223 GERAR DATAS MEDICACAO
+==================================================== */
+function gerarDatasPeriodo(inicio,fim){
+let datas=[]
+let atual=new Date(inicio)
+let final=new Date(fim)
+
+while(atual<=final){
+datas.push(atual.toISOString().slice(0,10))
+atual.setDate(atual.getDate()+1)
+}
+return datas
 }
