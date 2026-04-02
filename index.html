@@ -120,7 +120,58 @@ display:flex;align-items:center;justify-content:center;}
 .btn-topo:hover{transform:translateY(-1px);box-shadow:0 6px 0 rgba(0,0,0,.25);}
 .btn-topo:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25);}
 .btn-topo.ativo{outline:2px solid #22c55e;transform:scale(1.05);}
-
+/* ====================================================
+030 – BOTÕES 3D GORDINHOS PROFISSIONAIS
+==================================================== */
+.btn-topo,.btn-primary,.btn-secondary,.btn-success{
+padding:10px 18px;
+border-radius:14px;
+font-weight:700;
+letter-spacing:.3px;
+border:none;
+cursor:pointer;
+transition:all .12s ease;
+display:inline-flex;
+align-items:center;
+gap:6px;
+box-shadow:0 6px 0 rgba(0,0,0,.25),0 10px 18px rgba(0,0,0,.15);
+}
+.btn-topo:hover,.btn-primary:hover,.btn-secondary:hover,.btn-success:hover{
+transform:translateY(-2px);
+box-shadow:0 8px 0 rgba(0,0,0,.25),0 14px 22px rgba(0,0,0,.18);
+}
+.btn-topo:active,.btn-primary:active,.btn-secondary:active,.btn-success:active{
+transform:translateY(4px) scale(0.97);
+box-shadow:0 2px 0 rgba(0,0,0,.3),0 4px 10px rgba(0,0,0,.2);
+}
+.btn-topo.ativo{
+outline:3px solid #22c55e;
+transform:scale(1.08);
+box-shadow:0 6px 0 #166534,0 12px 24px rgba(0,0,0,.25);
+}
+.btn-topo:focus{
+animation:clickPulse .2s ease;
+}
+@keyframes clickPulse{
+0%{transform:scale(1)}
+50%{transform:scale(0.95)}
+100%{transform:scale(1)}
+}
+/* ====================================================
+030A – CORES GRADIENTE PREMIUM
+==================================================== */
+.btn-primary{
+background:linear-gradient(180deg,#4facfe,#007bff);
+color:#fff;
+}
+.btn-secondary{
+background:linear-gradient(180deg,#6c757d,#495057);
+color:#fff;
+}
+.btn-success{
+background:linear-gradient(180deg,#2ecc71,#27ae60);
+color:#fff;
+}
 
   
 
