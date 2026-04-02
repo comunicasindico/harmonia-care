@@ -696,3 +696,29 @@ const fim=fimDate.toISOString().slice(0,10)
 document.getElementById("dataInicioMedicacao").value=inicio
 document.getElementById("dataFimMedicacao").value=fim
 }
+/* ====================================================
+240 – FILTRAR MEDICAÇÃO POR PERÍODO
+==================================================== */
+async function filtrarPeriodoMedicacao(){
+if(!db)return
+
+const dataInicio=document.getElementById("dataInicioMedicacao")?.value
+const dataFim=document.getElementById("dataFimMedicacao")?.value
+
+if(!dataInicio||!dataFim){
+alert("Informe período")
+return
+}
+
+/* 🔥 BUSCA EXECUÇÕES */
+const {data:exec}=await db
+.from("medicacoes_execucao")
+.select("*")
+.gte("data",dataInicio)
+.lte("data",dataFim)
+
+window.EXEC_CACHE=exec||[]
+
+/* 🔄 RECARREGA TELA */
+carregarMedicacoes()
+}
