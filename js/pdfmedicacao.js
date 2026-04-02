@@ -64,56 +64,70 @@ if(n)mapa[chave].horarios.add(n)
 })
 return Object.values(mapa)
 }
-
 /* ====================================================
-006 – PDF PACIENTE
+006 – PDF MEDICAÇÃO PACIENTE 
 ==================================================== */
 async function gerarPDFMedicacaoPaciente(){
 if(!window.jspdf)return alert("jsPDF não carregado")
 const{jsPDF}=window.jspdf
 const doc=new jsPDF()
-
 const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value
 if(!pacienteId||pacienteId==="todos"){alert("Selecione um paciente");return}
-
 const paciente=(window.PACIENTES_CACHE||[]).find(p=>String(p.id)===String(pacienteId))
 const meds=(window.MEDICACOES_CACHE||[]).filter(m=>String(m.paciente_id)===String(pacienteId))
-
-cabecalhoPDF(doc,"Relatório de Medicações")
-
+doc.setFillColor(30,64,175)
+doc.rect(0,0,210,18,"F")
+doc.setTextColor(255,255,255)
+doc.setFontSize(13)
+doc.text("HARMONIA-CARE",14,11)
+doc.setFontSize(10)
+doc.text("Relatório de Medicações",120,11)
+doc.setTextColor(0,0,0)
 doc.setFontSize(11)
 doc.text("Paciente: "+(paciente?.nome_completo||""),14,28)
 doc.text("Data: "+new Date().toLocaleDateString(),14,34)
-
 let y=44
-
-let lista=agruparMedicacoesPDF(meds)
-
-lista.forEach(m=>{
+let mapa={}
+meds.forEach(m=>{
+let chave=(m.nome_medicamento||"")+"_"+(m.dosagem||"")
+if(!mapa[chave]){mapa[chave]={id:m.id,nome:m.nome_medicamento,dose:m.dosagem,horarios:[]}}
+;(m.horarios||"").split("|").forEach(h=>{if(h)mapa[chave].horarios.push(h.trim())})
+})
+Object.values(mapa).forEach(m=>{
+doc.setFillColor(240,240,240)
+doc.roundedRect(12,y-6,186,8,2,2,"F")
 doc.setFontSize(11)
+doc.setTextColor(0,0,0)
 doc.text(m.nome+" ("+(m.dose||"")+")",14,y)
-y+=6
-
-let horarios=[...m.horarios].sort()
-
+y+=8
+let horarios=[...new Set(m.horarios)].sort()
+let x=14
 horarios.forEach(h=>{
-let exec=(window.EXEC_CACHE||[]).find(e=>String(e.medicacao_id)===String(m.id)&&String(e.horario)===String(h))
-let cor=corHorarioPDF(h,exec)
-
+let hora=h.toString().replace(/[^\d:]/g,"").slice(0,5)
+if(!hora.includes(":"))return
+let exec=(window.EXEC_CACHE||[]).find(e=>String(e.medicacao_id)===String(m.id)&&String(e.horario).includes(hora))
+let hNum=parseInt(hora.split(":")[0])
+let cor=[253,224,71]
+let label="MANHÃ"
+if(hNum>=12&&hNum<18){cor=[251,146,60];label="TARDE"}
+if(hNum>=18||hNum<5){cor=[239,68,68];label="NOITE"}
+if(exec){cor=[34,197,94];label="OK"}
 doc.setFillColor(...cor)
-doc.roundedRect(16,y-4,45,6,2,2,"F")
-
+doc.roundedRect(x,y-5,40,8,3,3,"F")
 doc.setFontSize(9)
 doc.setTextColor(0,0,0)
-doc.text(`${h} ${exec?"✔":"•"}`,18,y)
-
-y+=7
+doc.text(`${hora}`,x+2,y-1)
+doc.setFontSize(7)
+doc.text(label,x+2,y+3)
+x+=44
+if(x>170){x=14;y+=10}
 })
-
-y+=4
+y+=12
+if(y>270){doc.addPage();y=20}
 })
-
-rodapePDF(doc)
+doc.setFontSize(8)
+doc.setTextColor(120,120,120)
+doc.text("Harmonia-Care • Sistema de Gestão Clínica",14,285)
 doc.save("medicacao_paciente.pdf")
 }
 
