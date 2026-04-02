@@ -113,9 +113,11 @@ let[p2,m2]=b.split(":")
 return(p1*60+m1)-(p2*60+m2)
 })
 let hHTML=horarios.map(h=>{
-let exec=(window.EXEC_CACHE||[]).find(e=>e.horario===h&&e.medicacao_id===m.id)
+let exec=(window.EXEC_CACHE||[]).find(e=>{
+return String(e.medicacao_id)===String(m.id) && String(e.horario)===String(h)
+})
 let cor=exec?"#22c55e":"#ef4444"
-let usuario=exec?.usuario_nome||""
+let usuario=(exec&&exec.usuario_nome)?exec.usuario_nome:""
 return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${cor};color:#fff;border:none;border-radius:6px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:60px"><span>${h}</span>${usuario?`<span style="font-size:9px">${usuario}</span>`:""}</button>`
 }).join("")
 html+=`<div style="background:${corMedicacao};padding:8px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
@@ -127,6 +129,45 @@ html+=`<div style="background:${corMedicacao};padding:8px;border-radius:8px;box-
 html+=`</div></div>`
 })
 div.innerHTML=html
+}
+/* ====================================================
+203 – ADMINISTRAR MEDICAÇÃO (COM NOME + REFRESH)
+==================================================== */
+async function administrarMedicacao(medicacaoId,horario,botao){
+if(!db||!medicacaoId||!horario)return
+const user=obterUsuarioLogado()||{}
+const dataHoje=new Date().toISOString().slice(0,10)
+const usuarioId=user.id||null
+const nome=user.nome||"Administrador"
+/* 🔍 VERIFICA SE JÁ EXISTE */
+const {data:ja}=await db
+.from("medicacoes_execucao")
+.select("*")
+.eq("medicacao_id",medicacaoId)
+.eq("data",dataHoje)
+.eq("horario",horario)
+.maybeSingle()
+if(ja){
+botao.style.background="#22c55e"
+botao.innerHTML=`<span>${horario}</span><span style="font-size:9px">${ja.usuario_nome||""}</span>`
+return
+}
+/* 💾 SALVA */
+const {error}=await db.from("medicacoes_execucao").insert({
+medicacao_id:medicacaoId,
+data:dataHoje,
+horario:horario,
+status:"executado",
+usuario_id:usuarioId,
+usuario_nome:nome,
+empresa_id:EMPRESA_ID
+})
+if(error){
+console.error(error)
+return
+}
+/* 🔄 ATUALIZA CACHE E TELA */
+await carregarStatusMedicacoes()
 }
 /* ====================================================
 203C – CARREGAR STATUS
