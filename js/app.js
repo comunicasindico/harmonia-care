@@ -241,19 +241,25 @@ alert("Aguarde finalizar o salvamento das pendências.")
 return
 }
 localStorage.setItem("painelAtual",id)
-const paineis=["painelEnfermagem","painelClinico","painelAdmin"]
+const paineis=["painelEnfermagem","painelClinico","painelAdmin","painelMedicacao"]
 paineis.forEach(p=>{
 const el=document.getElementById(p)
 if(el)el.style.display="none"
 })
 const alvo=document.getElementById(id)
 if(alvo)alvo.style.display="block"
+/* 🔥 CARREGAMENTO AUTOMÁTICO DO PAINEL */
+if(id==="painelEnfermagem")carregarRotinas?.()
+if(id==="painelClinico")carregarClinico?.()
+if(id==="painelMedicacao")carregarMedicacoes?.()
 const btnAdmin=document.getElementById("btnConcluirPendentes")
 const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
 
 if(btnAdmin){
 if(hierarquia===1 && id==="painelEnfermagem"){
 btnAdmin.style.display="inline-block"
+btnAdmin.style.opacity="1"
+btnAdmin.style.pointerEvents="auto"
 }else{
 btnAdmin.style.display="none"
 }
@@ -268,9 +274,57 @@ if(typeof carregarPacientesMedicacao==="function")carregarPacientesMedicacao()
 if(typeof carregarMedicacoes==="function")carregarMedicacoes()
 },100)
 }
+/* 🔥 ATUALIZA BOTÕES DINÂMICOS */
+if(id==="painelEnfermagem")atualizarBotoesTopo("enfermagem")
+if(id==="painelClinico")atualizarBotoesTopo("clinico")
+if(id==="painelAdmin")atualizarBotoesTopo("admin")
+if(id==="painelMedicacao")atualizarBotoesTopo("medicacao")
 }
 /* ====================================================
-018 – ABRIR ENFERMAGEM
+018 – CONTROLE VISUAL DOS BOTÕES
+==================================================== */
+function atualizarBotoesTopo(painel){
+
+const mostrar=(ids)=>{
+document.querySelectorAll("#topoBotoes button").forEach(b=>b.style.display="none")
+ids.forEach(id=>{
+const el=document.getElementById(id)
+if(el)el.style.display="inline-block"
+})
+}
+/* 🔥 CONFIG POR PAINEL */
+if(painel==="enfermagem"){
+mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnGerarPDF","btnPDFPaciente","btnConcluirPendentes","btnSalvar"])
+document.getElementById("acoesClinico").style.display="none"
+}
+if(painel==="clinico"){
+mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnSalvar"])
+document.getElementById("acoesClinico").style.display="flex"
+}
+if(painel==="admin"){
+mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnBackup"])
+document.getElementById("acoesClinico").style.display="none"
+}
+if(painel==="medicacao"){
+mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao"])
+document.getElementById("acoesClinico").style.display="none"
+}
+/* 🔥 DESTACA ATIVO */
+document.querySelectorAll("#topoBotoes button").forEach(b=>b.classList.remove("ativo"))
+const mapa={
+enfermagem:"btnEnfermagem",
+clinico:"btnClinico",
+admin:"btnAdmin",
+medicacao:"btnMedicacao"
+}
+const ativo=document.getElementById(mapa[painel])
+if(ativo)ativo.classList.add("ativo")
+/* 🔥 MOVE PARA PRIMEIRO */
+const container=document.getElementById("topoBotoes")
+if(ativo)container.prepend(ativo)
+}
+/* ====================================================
+019 – ABRIR ENFERMAGEM
 ==================================================== */
 function abrirEnfermagem(){
 abrirPainel("painelEnfermagem")
@@ -279,7 +333,7 @@ const paciente=document.getElementById("buscaPaciente")?.value
 if(typeof carregarDadosClinicosPaciente==="function"){carregarDadosClinicosPaciente(paciente)}
 }
 /* ====================================================
-019 – ABRIR CLINICO
+020 – ABRIR CLINICO
 ==================================================== */
 function abrirClinico(){
 abrirPainel("painelClinico")
@@ -288,7 +342,7 @@ if(acoes)acoes.style.display="flex"
 if(typeof carregarClinico==="function"){carregarClinico()}
 }
 /* ====================================================
-020 – ABRIR ADMIN
+021 – ABRIR ADMIN
 ==================================================== */
 async function abrirAdmin(){
 abrirPainel("painelAdmin")
@@ -310,7 +364,7 @@ inputBusca.addEventListener("input",()=>carregarUsuarios())
 },200)
 }
 /* ====================================================
-021 – EMPRESA – CARREGAR DADOS
+022 – EMPRESA – CARREGAR DADOS
 ==================================================== */
 async function carregarEmpresa(){
 if(!db)return
