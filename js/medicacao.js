@@ -144,7 +144,9 @@ let icone="🌅"
 let borda="#2563eb"
 if(horaNum>=12&&horaNum<18){icone="☀️";borda="#f59e0b"}
 if(horaNum>=18||horaNum<5){icone="🌙";borda="#6366f1"}
-return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${cor};color:#fff;border:2px solid ${borda};border-radius:8px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:65px;box-shadow:0 2px 4px rgba(0,0,0,0.15)">
+let bloqueado=exec?"pointer-events:none;opacity:0.6;cursor:not-allowed;":""
+
+return `<button onclick="${exec?"":`administrarMedicacao('${m.id}','${h}',this)`}" style="background:${cor};color:#fff;border:2px solid ${borda};border-radius:8px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:65px;box-shadow:0 2px 4px rgba(0,0,0,0.15);${bloqueado}"> style="background:${cor};color:#fff;border:2px solid ${borda};border-radius:8px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:65px;box-shadow:0 2px 4px rgba(0,0,0,0.15)">
 <span style="font-size:12px">${icone} ${h}</span>
 <span style="font-size:9px">${usuario||""}</span>
 </button>`
@@ -347,7 +349,7 @@ window.MODO_MEDICACAO=""
 carregarMedicacoes()
 }
 /* ====================================================
-212 – CONCLUIR MEDICAÇÃO POR PACIENTE (CORRIGIDO REAL)
+212 – CONCLUIR MEDICAÇÃO POR PACIENTE (FINAL PROFISSIONAL)
 ==================================================== */
 window.concluirPacienteMedicacao=async function(pacienteId){
 if(!db||!pacienteId)return
@@ -391,9 +393,11 @@ empresa_id:EMPRESA_ID
 
 })
 })
-/* 🔥 ARRAY FINAL SEM DUPLICAÇÃO */
+
+/* 🔥 ARRAY FINAL */
 const inserts=Object.values(mapa)
-/* 🔒 NÃO SOBRESCREVE — INSERE SOMENTE NOVOS */
+
+/* 🔒 INSERE SEM SOBRESCREVER */
 for(const item of inserts){
 
 const {data:existe}=await db
@@ -405,6 +409,7 @@ const {data:existe}=await db
 .eq("empresa_id",item.empresa_id)
 .maybeSingle()
 
+/* ⛔ JÁ EXISTE → NÃO ALTERA */
 if(existe)continue
 
 const {error}=await db
@@ -419,11 +424,7 @@ return
 
 }
 
-/* 🔄 ATUALIZA TELA */
-await carregarStatusMedicacoes()
-}
-/* 🔥 CONVERTE PARA ARRAY SEM DUPLICADOS */
-let inserts=Object.values(mapa)
+/* 🔄 ATUALIZA STATUS */
 await carregarStatusMedicacoes()
 }
 /* ====================================================
