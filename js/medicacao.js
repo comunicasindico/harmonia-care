@@ -59,7 +59,7 @@ return
 renderizarMedicacoes(data||[])
 }
 /* ====================================================
-202 – RENDER MEDICAÇÕES (LAYOUT GRID PROFISSIONAL)
+202 – RENDER MEDICAÇÕES (CONTROLE POR HORÁRIO)
 ==================================================== */
 function renderizarMedicacoes(lista){
 const div=document.getElementById("listaMedicacoes")
@@ -79,18 +79,16 @@ let pacientes={}
 
 lista.forEach(m=>{
 let pid=m.paciente_id||"0"
-
 if(!pacientes[pid]){
 let nome=(window.PACIENTES_CACHE||[]).find(p=>p.id==pid)?.nome_completo||"Paciente"
 pacientes[pid]={nome:nome,itens:[]}
 }
-
 pacientes[pid].itens.push(m)
 })
 
 let html=""
 
-/* 🔥 BOTÕES */
+/* 🔥 BOTÕES ADMIN */
 html+=`
 <div style="display:flex;gap:8px;margin-bottom:12px">
 <button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px">➕ Nova</button>
@@ -104,10 +102,7 @@ Object.values(pacientes).forEach(p=>{
 
 html+=`
 <div style="background:#f9fafb;padding:12px;margin-bottom:14px;border-radius:12px">
-
-<div style="font-weight:bold;margin-bottom:10px;font-size:14px">
-👤 ${p.nome}
-</div>
+<div style="font-weight:bold;margin-bottom:10px">👤 ${p.nome}</div>
 
 <div style="
 display:grid;
@@ -132,19 +127,15 @@ horarios:new Set()
 }
 
 let hs=(m.horarios||"").toString().split("|")
-
 hs.forEach(h=>{
 let n=normalizarHora(h)
 if(n)mapa[chave].horarios.add(n)
 })
 })
 
-let meds=Object.values(mapa)
+let meds=Object.values(mapa).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR"))
 
-/* 🔥 ORDENAR */
-meds.sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR"))
-
-/* 🔥 RENDER MEDICAÇÕES */
+/* 🔥 RENDER */
 meds.forEach(m=>{
 
 let horarios=[...m.horarios].sort((a,b)=>{
@@ -154,16 +145,30 @@ return(p1*60+m1)-(p2*60+m2)
 })
 
 let hHTML=horarios.map(h=>{
-return `<span style="
-background:#ef4444;
+
+let exec=(window.EXEC_CACHE||[]).find(e=>e.horario===h&&e.medicacao_id===m.id)
+let cor=exec?"#22c55e":"#ef4444"
+let usuario=exec?.usuario_nome||""
+
+return `
+<button onclick="administrarMedicacao('${m.id}','${h}',this)"
+style="
+background:${cor};
 color:#fff;
-padding:4px 6px;
+border:none;
 border-radius:6px;
+padding:6px;
 font-size:11px;
-margin-right:4px;
-display:inline-block;
-margin-top:3px;
-">${h}</span>`
+display:flex;
+flex-direction:column;
+align-items:center;
+min-width:60px;
+">
+<span>${h}</span>
+${usuario?`<span style="font-size:9px">${usuario}</span>`:""}
+</button>
+`
+
 }).join("")
 
 html+=`
@@ -173,19 +178,9 @@ padding:8px;
 border-radius:8px;
 box-shadow:0 1px 3px rgba(0,0,0,0.08);
 ">
-
-<div style="font-weight:600;font-size:12px;margin-bottom:4px">
-${m.nome}
-</div>
-
-<div style="color:#666;font-size:11px;margin-bottom:6px">
-${m.dose||""}
-</div>
-
-<div>
-${hHTML}
-</div>
-
+<div style="font-weight:600;font-size:12px">${m.nome}</div>
+<div style="color:#666;font-size:11px;margin-bottom:6px">${m.dose||""}</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px">${hHTML}</div>
 </div>
 `
 })
@@ -194,6 +189,16 @@ html+=`</div></div>`
 })
 
 div.innerHTML=html
+}
+/* ====================================================
+203C – CARREGAR STATUS
+==================================================== */
+async function carregarStatusMedicacoes(){
+if(!db)return
+const dataHoje=new Date().toISOString().slice(0,10)
+const {data}=await db.from("medicacoes_execucao").select("*").eq("data",dataHoje)
+window.EXEC_CACHE=data||[]
+if(typeof carregarMedicacoes==="function")carregarMedicacoes()
 }
 /* ====================================================
 205 – BUSCAR MODELO INTELIGENTE
