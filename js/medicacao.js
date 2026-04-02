@@ -255,6 +255,10 @@ console.error(error)
 alert("Erro ao salvar")
 return
 }
+if(botao){
+botao.classList.add("pulse-ok")
+setTimeout(()=>botao.classList.remove("pulse-ok"),400)
+}
 await carregarStatusMedicacoes()
 }
 /* ====================================================
@@ -364,6 +368,33 @@ let hue=hash%360
 return `hsl(${hue},${saturacao}%,${luminosidade}%)`
 }
 /* ====================================================
+210 – BARRA DE PROGRESSO GLOBAL
+==================================================== */
+function iniciarBarra(total){
+const c=document.getElementById("barraProgressoContainer")
+const b=document.getElementById("barraProgresso")
+if(!c||!b)return
+c.style.display="block"
+b.style.width="0%"
+window.__barraTotal=total
+window.__barraAtual=0
+}
+
+function atualizarBarra(){
+const b=document.getElementById("barraProgresso")
+if(!b)return
+window.__barraAtual++
+let p=(window.__barraAtual/window.__barraTotal)*100
+b.style.width=p+"%"
+}
+
+function finalizarBarra(){
+setTimeout(()=>{
+const c=document.getElementById("barraProgressoContainer")
+if(c)c.style.display="none"
+},500)
+}
+/* ====================================================
 211 – FUNÇÕES ADMIN (OBRIGATÓRIO)
 ==================================================== */
 function abrirModalMedicacao(){
@@ -387,6 +418,7 @@ function cancelarModoMedicacao(){
 window.MODO_MEDICACAO=""
 carregarMedicacoes()
 }
+
 /* ====================================================
 212 – CONCLUIR MEDICAÇÃO POR PACIENTE (FINAL PROFISSIONAL)
 ==================================================== */
