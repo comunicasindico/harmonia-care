@@ -376,6 +376,7 @@ const b=document.getElementById("barraProgresso")
 if(!c||!b)return
 c.style.display="block"
 b.style.width="0%"
+b.style.background="#ef4444" // começa vermelho
 window.__barraTotal=total
 window.__barraAtual=0
 }
@@ -386,6 +387,15 @@ if(!b)return
 window.__barraAtual++
 let p=(window.__barraAtual/window.__barraTotal)*100
 b.style.width=p+"%"
+/* 🎨 COR DINÂMICA */
+let cor="#ef4444" // vermelho
+if(p>30&&p<=70){
+cor="#facc15" // amarelo
+}
+if(p>70){
+cor="#22c55e" // verde
+}
+b.style.background=cor
 }
 
 function finalizarBarra(){
