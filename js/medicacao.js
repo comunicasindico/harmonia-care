@@ -431,7 +431,7 @@ carregarMedicacoes()
 }
 
 /* ====================================================
-212 – CONCLUIR MEDICAÇÃO POR PACIENTE (FINAL PROFISSIONAL)
+212 – CONCLUIR MEDICAÇÃO POR PACIENTE (FINAL CORRETO)
 ==================================================== */
 window.concluirPacienteMedicacao=async function(pacienteId){
 if(!db||!pacienteId)return
@@ -449,7 +449,7 @@ const datas=gerarDatasPeriodo(dataInicio,dataFim)
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
 
-/* 🔥 FILTRA MEDICAÇÕES DO PACIENTE */
+/* 🔥 MEDICAÇÕES DO PACIENTE */
 const meds=(window.MEDICACOES_CACHE||[]).filter(m=>String(m.paciente_id)===String(pacienteId))
 
 if(!meds.length){
@@ -457,8 +457,8 @@ alert("Nenhuma medicação encontrada")
 return
 }
 
-/* 🔒 MAPA PARA EVITAR DUPLICADOS */
-let mapa={}
+/* 🔒 BASE SEM DATA */
+let base=[]
 
 meds.forEach(m=>{
 let horarios=(m.horarios||"").toString().split("|")
@@ -469,30 +469,27 @@ if(!h)return
 h=h.toString().trim()
 if(!h.includes(":"))h=h.padStart(2,"0")+":00"
 
-let chave=`${m.id}_${dataHoje}_${h}_${EMPRESA_ID}`
-
-mapa[chave]={
+base.push({
 medicacao_id:m.id,
-data:dataHoje,
 horario:h,
 status:"executado",
 usuario_id:usuarioId,
 usuario_nome:nome,
 empresa_id:EMPRESA_ID
-}
+})
 
 })
 })
 
-/* 🔥 ARRAY FINAL */
-const inserts=Object.values(mapa)
-
-/* 🔒 INSERE SEM SOBRESCREVER */
+/* 🔒 EXECUTA POR PERÍODO */
 for(const dataHoje of datas){
 
-for(const itemBase of inserts){
+for(const itemBase of base){
 
-let item={...itemBase,data:dataHoje}
+let item={
+...itemBase,
+data:dataHoje
+}
 
 const {data:existe}=await db
 .from("medicacoes_execucao")
@@ -505,10 +502,9 @@ const {data:existe}=await db
 
 if(existe)continue
 
-await db.from("medicacoes_execucao").insert(item)
-
-}
-}
+const {error}=await db
+.from("medicacoes_execucao")
+.insert(item)
 
 if(error){
 console.error(error)
@@ -517,8 +513,9 @@ return
 }
 
 }
+}
 
-/* 🔄 ATUALIZA STATUS */
+/* 🔄 ATUALIZA */
 await carregarStatusMedicacoes()
 }
 /* ====================================================
