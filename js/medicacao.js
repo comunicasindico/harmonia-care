@@ -266,9 +266,9 @@ inputHorario.value=modelo.horarios_padrao
 async function salvarNovaMedicacao(){
 if(!db||!EMPRESA_ID)return
 
-const nome=document.getElementById("nomeMedicacao").value
-const dose=document.getElementById("doseMedicacao").value
-const horario=document.getElementById("horarioMedicacao").value
+coconst nome=(document.getElementById("nomeMedicacao").value||"").trim().toUpperCase()
+const dose=(document.getElementById("doseMedicacao").value||"").trim().toUpperCase()
+const horario=(document.getElementById("horarioMedicacao").value||"").trim()
 const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value
 
 if(!nome||!pacienteId||pacienteId==="todos"){
@@ -276,12 +276,30 @@ alert("Informe paciente e nome")
 return
 }
 
+const nomeLimpo=nome
+.toLowerCase()
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.replace(/\s+/g,"")
+.replace(/mg|cp|cps|ml|ui/g,"")
+.trim()
+const {data:existe}=await db
+.from("medicacoes")
+.select("id")
+.eq("empresa_id",EMPRESA_ID)
+.eq("nome_padrao",nomeLimpo)
+.eq("dosagem",dose||"")
+.maybeSingle()
+if(existe){
+alert("Medicação já cadastrada")
+return
+}
 await db.from("medicacoes").insert({
-paciente_id:pacienteId,
 nome_medicamento:nome,
 dosagem:dose,
-horarios:horario,
+horarios:horarios,
 empresa_id:EMPRESA_ID,
+nome_padrao:nomeLimpo,
 ativo:true
 })
 
