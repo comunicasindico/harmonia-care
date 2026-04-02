@@ -86,7 +86,21 @@ let hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
 let modo=window.MODO_MEDICACAO||""
 let mostrarAcoes=(hierarquia===1&&(modo==="editar"||modo==="excluir"))
 let html=""
-html+=`<div style="display:flex;gap:8px;margin-bottom:12px">
+
+html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+<div style="display:flex;gap:8px">
+<button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px">➕ Nova</button>
+${hierarquia===1?`
+<button onclick="editarMedicacaoGlobal()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 10px">✏️ Editar</button>
+<button onclick="excluirMedicacaoGlobal()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px">🗑️ Excluir</button>
+<button onclick="cancelarModoMedicacao()" style="background:#6b7280;color:#fff;border:none;border-radius:6px;padding:6px 10px">❌ Cancelar</button>
+`:""}
+</div>
+${hierarquia===1?`
+<button onclick="concluirPendentesMedicacao()" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px">✔ Concluir Pendentes</button>
+`:""}
+</div>`
+
 <button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px">➕ Nova</button>
 ${hierarquia===1?`
 <button onclick="editarMedicacaoGlobal()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 10px">✏️ Editar</button>
@@ -97,7 +111,14 @@ ${hierarquia===1?`
 Object.values(pacientes).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR")).forEach(p=>{
 let corPaciente=gerarCor(p.nome,60,92)
 html+=`<div style="background:${corPaciente};padding:12px;margin-bottom:14px;border-radius:12px">
-<div style="font-weight:bold;margin-bottom:10px">👤 ${p.nome}</div>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+<div style="font-weight:bold">👤 ${p.nome}</div>
+${hierarquia===1?`
+<button onclick="concluirPacienteMedicacao('${p.id}')" style="background:#22c55e;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px">✔ Concluir Paciente</button>
+`:""}
+</div>
+
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">`
 let mapa={}
 const limpar=txt=>{
@@ -428,4 +449,62 @@ carregarMedicacoes()
 console.error(e)
 alert("Erro inesperado")
 }
+}
+/* ====================================================
+222 – CONCLUIR PENDENTES MEDICACAO
+==================================================== */
+async function concluirPendentesMedicacao(){
+if(!db)return
+const user=obterUsuarioLogado()
+const dataHoje=new Date().toISOString().slice(0,10)
+let inserts=[]
+document.querySelectorAll("#listaMedicacoes button").forEach(btn=>{
+let h=btn.innerText.split("\n")[0].trim()
+let medicacaoId=btn.getAttribute("onclick")?.match(/'([^']+)'/)?.[1]
+if(!medicacaoId||!h)return
+let ja=(window.EXEC_CACHE||[]).find(e=>String(e.medicacao_id)===String(medicacaoId)&&String(e.horario)===String(h))
+if(!ja){
+inserts.push({
+medicacao_id:medicacaoId,
+data:dataHoje,
+horario:h,
+status:"executado",
+usuario_id:user.id,
+usuario_nome:user.nome,
+empresa_id:EMPRESA_ID
+})
+}
+})
+if(inserts.length){
+await db.from("medicacoes_execucao").insert(inserts)
+}
+await carregarStatusMedicacoes()
+}
+/* ====================================================
+223 – CONCLUIR PACIENTE MEDICACAO
+==================================================== */
+async function concluirPacienteMedicacao(pacienteId){
+if(!db||!pacienteId)return
+const user=obterUsuarioLogado()
+const dataHoje=new Date().toISOString().slice(0,10)
+let inserts=[]
+const itens=ROTINAS_CACHE||[]
+itens.filter(i=>String(i.paciente_id)===String(pacienteId)).forEach(i=>{
+let ja=(window.EXEC_CACHE||[]).find(e=>String(e.medicacao_id)===String(i.medicacao_id))
+if(!ja){
+inserts.push({
+medicacao_id:i.medicacao_id,
+data:dataHoje,
+horario:i.horario,
+status:"executado",
+usuario_id:user.id,
+usuario_nome:user.nome,
+empresa_id:EMPRESA_ID
+})
+}
+})
+if(inserts.length){
+await db.from("medicacoes_execucao").insert(inserts)
+}
+await carregarStatusMedicacoes()
 }
