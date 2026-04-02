@@ -1059,7 +1059,7 @@ ${horariosHTML}
 </div>
 `
 })
-html+=`</div></div>`
+html+=`</div>`
 })
 div.innerHTML=html
 }
