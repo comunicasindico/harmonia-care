@@ -976,18 +976,28 @@ let medsUnicos={}
 p.itens.forEach(m=>{
 let nomeBase=limpar(m.nome_medicamento)
 let doseBase=limpar(m.dosagem)
-let chave=nomeBase+"_"+doseBase
-
+let chave=m.id
 if(!medsUnicos[chave]){
 medsUnicos[chave]={
 id:m.id,
 nome_medicamento:m.nome_medicamento,
 dosagem:m.dosagem,
+paciente_id:m.paciente_id,
 horarios_set:new Set()
 }
 }
+let listaHorarios=[]
 
-let listaHorarios=Array.isArray(m.horarios)?m.horarios:(m.horarios||"").split("|")
+if(Array.isArray(m.horarios)){
+listaHorarios=m.horarios
+}else if(m.horarios){
+listaHorarios=m.horarios.toString().split("|")
+}
+
+/* 🔥 fallback se vier numero (7 ou 13) */
+if(typeof m.horarios==="number"){
+listaHorarios=[m.horarios.toString().padStart(2,"0")+":00"]
+}
 
 listaHorarios.forEach(h=>{
 let hNorm=normalizarHora(h)
@@ -1110,7 +1120,8 @@ data:dataHoje,
 horario:horario,
 status:"executado",
 usuario_id:user.id,
-usuario_nome:user.nome
+usuario_nome:user.nome,
+empresa_id:EMPRESA_ID
 })
 /* 🔹 UI */
 botao.style.background="#22c55e"
