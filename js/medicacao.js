@@ -82,11 +82,17 @@ pacientes[pid]={id:pid,nome:nome,itens:[]}
 }
 pacientes[pid].itens.push(m)
 })
+let hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+let modo=window.MODO_MEDICACAO||""
+let mostrarAcoes=(hierarquia===1&&(modo==="editar"||modo==="excluir"))
 let html=""
 html+=`<div style="display:flex;gap:8px;margin-bottom:12px">
 <button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px">➕ Nova</button>
+${hierarquia===1?`
 <button onclick="editarMedicacaoGlobal()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 10px">✏️ Editar</button>
 <button onclick="excluirMedicacaoGlobal()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px">🗑️ Excluir</button>
+<button onclick="cancelarModoMedicacao()" style="background:#6b7280;color:#fff;border:none;border-radius:6px;padding:6px 10px">❌ Cancelar</button>
+`:""}
 </div>`
 Object.values(pacientes).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR")).forEach(p=>{
 let corPaciente=gerarCor(p.nome,60,92)
@@ -126,10 +132,12 @@ return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="bac
 html+=`<div style="background:${corMedicacao};padding:8px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
 <div style="font-weight:600;font-size:12px;display:flex;justify-content:space-between">
 <span>${m.nome}</span>
+${mostrarAcoes?`
 <span style="display:flex;gap:6px">
-<button onclick="(function(){if(window.MODO_MEDICACAO==='editar'){editarMedicacao('${m.nome}','${m.dose||""}','${m.paciente_id}')}else{alert('Clique em EDITAR')}})()" style="background:#3b82f6;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">✏️</button>
-<button onclick="(function(){if(window.MODO_MEDICACAO==='excluir'){excluirMedicacao('${m.nome}','${m.dose||""}','${m.paciente_id}')}else{alert('Clique em EXCLUIR')}})()" style="background:#ef4444;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">🗑️</button>
+<button onclick="editarMedicacao('${m.id}','${m.nome}','${m.dose||""}')" style="background:#3b82f6;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">✏️</button>
+<button onclick="excluirMedicacao('${m.nome}','${m.dose||""}','${p.id}')" style="background:#ef4444;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">🗑️</button>
 </span>
+`:""}
 </div>
 <div style="color:#666;font-size:11px;margin-bottom:6px">${m.dose||""}</div>
 <div style="display:flex;flex-wrap:wrap;gap:6px">${hHTML}</div>
@@ -280,11 +288,20 @@ alert("Modo NOVA medicação ativo")
 }
 function editarMedicacaoGlobal(){
 window.MODO_MEDICACAO="editar"
+carregarMedicacoes()
 alert("Modo edição ativado\nClique em um horário")
 }
 function excluirMedicacaoGlobal(){
 window.MODO_MEDICACAO="excluir"
+carregarMedicacoes()
 alert("Modo exclusão ativado")
+}
+/* ====================================================
+211A – Cancelar Modo Medicação
+==================================================== */
+function cancelarModoMedicacao(){
+window.MODO_MEDICACAO=""
+carregarMedicacoes()
 }
 /* ====================================================
 220 – EDITAR MEDICAÇÃO (FUNCIONAL)
