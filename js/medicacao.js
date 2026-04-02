@@ -97,7 +97,7 @@ let mapa={}
 p.itens.forEach(m=>{
 const chave=(m.nome_medicamento||"").trim().toLowerCase()+"_"+(m.dosagem||"").trim().toLowerCase()
 if(!mapa[chave]){
-mapa[chave]={nome:m.nome_medicamento,dose:m.dosagem,paciente_id:p.id,horarios:new Set()}
+mapa[chave]={id:m.id,nome:m.nome_medicamento,dose:m.dosagem,paciente_id:p.id,horarios:new Set()}
 }
 let hs=(m.horarios||"").toString().split("|")
 hs.forEach(h=>{
@@ -115,11 +115,13 @@ return(p1*60+m1)-(p2*60+m2)
 })
 let hHTML=horarios.map(h=>{
 let exec=(window.EXEC_CACHE||[]).find(e=>{
-return String(e.horario)===String(h)
+let exec=(window.EXEC_CACHE||[]).find(e=>{
+return String(e.medicacao_id)===String(m.id) && String(e.horario)===String(h)
+})
 })
 let cor=exec?"#22c55e":"#ef4444"
 let usuario=(exec&&exec.usuario_nome)?exec.usuario_nome:""
-return `<button onclick="administrarMedicacao('${m.paciente_id}','${h}',this)" style="background:${cor};color:#fff;border:none;border-radius:6px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:60px"><span>${h}</span>${usuario?`<span style="font-size:9px">${usuario}</span>`:""}</button>`
+return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${cor};color:#fff;border:none;border-radius:6px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:60px"><span>${h}</span>${usuario?`<span style="font-size:9px">${usuario}</span>`:""}</button>`
 }).join("")
 html+=`<div style="background:${corMedicacao};padding:8px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
 <div style="font-weight:600;font-size:12px;display:flex;justify-content:space-between">
@@ -312,21 +314,19 @@ alert("Erro inesperado")
 }
 }
 /* ====================================================
-221 – EXCLUIR MEDICAÇÃO (FUNCIONAL)
+221 – EXCLUIR MEDICAÇÃO (CORRIGIDO DEFINITIVO)
 ==================================================== */
 async function excluirMedicacao(nome,dose,pacienteId){
-if(!pacienteId || pacienteId==="0"){
-console.warn("Paciente inválido",pacienteId)
-alert("Erro: paciente não identificado")
-return
-}
+if(!pacienteId){alert("Paciente inválido");return}
 if(!confirm("Excluir esta medicação?"))return
 try{
-const {error}=await db.from("medicacoes")
-.delete()
-.eq("paciente_id",pacienteId)
-.eq("nome_medicamento",nome)
-.eq("dosagem",dose||null)
+let query=db.from("medicacoes").delete().eq("paciente_id",pacienteId).ilike("nome_medicamento",nome)
+if(dose && dose.trim()!==""){
+query=query.ilike("dosagem",dose)
+}else{
+query=query.is("dosagem",null)
+}
+const {error}=await query
 if(error){console.error(error);alert("Erro ao excluir");return}
 carregarMedicacoes()
 }catch(e){
