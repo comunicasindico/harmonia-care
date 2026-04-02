@@ -100,8 +100,20 @@ html+=`<div style="background:${corPaciente};padding:12px;margin-bottom:14px;bor
 <div style="font-weight:bold;margin-bottom:10px">👤 ${p.nome}</div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">`
 let mapa={}
+const limpar=txt=>{
+return (txt||"")
+.toString()
+.toLowerCase()
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.replace(/\s+/g,"")
+.replace(/mg|cp|cps|ml|ui/g,"")
+.trim()
+}
 p.itens.forEach(m=>{
-const chave=(m.nome_medicamento||"").trim().toLowerCase()+"_"+(m.dosagem||"").trim().toLowerCase()
+const nomeBase=limpar(m.nome_medicamento)
+const doseBase=(m.dosagem||"").toString().toLowerCase().trim()
+const chave=nomeBase+"_"+doseBase
 if(!mapa[chave]){
 mapa[chave]={id:m.id,nome:m.nome_medicamento,dose:m.dosagem,paciente_id:p.id,horarios:new Set()}
 }
