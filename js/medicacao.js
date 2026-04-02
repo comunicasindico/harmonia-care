@@ -133,24 +133,44 @@ let[p1,m1]=a.split(":")
 let[p2,m2]=b.split(":")
 return(p1*60+m1)-(p2*60+m2)
 })
-let hHTML=horarios.map(h=>{
-let exec=(window.EXEC_CACHE||[]).find(e=>String(e.medicacao_id)===String(m.id)&&String(e.horario)===String(h))
-let mapaCores={"05:00":"#3b82f6","06:00":"#3b82f6","07:00":"#2563eb","08:00":"#1d4ed8","09:00":"#1e40af","10:00":"#1e3a8a","11:00":"#172554","12:00":"#f59e0b","13:00":"#f97316","14:00":"#ea580c","15:00":"#dc2626","16:00":"#b91c1c","17:00":"#991b1b","18:00":"#7c3aed","19:00":"#6d28d9","20:00":"#5b21b6","21:00":"#4c1d95","22:00":"#312e81","23:00":"#1e1b4b","00:00":"#111827","01:00":"#111827","02:00":"#111827","03:00":"#111827","04:00":"#111827"}
-let corBase=mapaCores[h]||"#6b7280"
-let cor=exec?"#22c55e":corBase
-let usuario=(exec&&exec.usuario_nome)?exec.usuario_nome:(exec&&exec.usuario_id?"✔":"")
-let horaNum=parseInt(h.split(":")[0])
-let icone="🌅"
-let borda="#2563eb"
-if(horaNum>=12&&horaNum<18){icone="☀️";borda="#f59e0b"}
-if(horaNum>=18||horaNum<5){icone="🌙";borda="#6366f1"}
-let bloqueado=exec?"pointer-events:none;opacity:0.6;cursor:not-allowed;":""
 
-return `<button onclick="${exec?"":`administrarMedicacao('${m.id}','${h}',this)`}" style="background:${cor};color:#fff;border:2px solid ${borda};border-radius:8px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:65px;box-shadow:0 2px 4px rgba(0,0,0,0.15);${bloqueado}"> style="background:${cor};color:#fff;border:2px solid ${borda};border-radius:8px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:65px;box-shadow:0 2px 4px rgba(0,0,0,0.15)">
-<span style="font-size:12px">${icone} ${h}</span>
-<span style="font-size:9px">${usuario||""}</span>
+let hHTML=horarios.map(h=>{
+
+let exec=(window.EXEC_CACHE||[]).find(e=>
+String(e.medicacao_id)===String(m.id)&&
+String(e.horario)===String(h)
+)
+
+/* 🔥 DEFINE COR POR TURNO */
+let horaNum=parseInt(h.split(":")[0])
+let corBase="#fde047" // manhã (amarelo)
+let icone="🌅"
+
+if(horaNum>=12&&horaNum<18){
+corBase="#fb923c" // tarde (laranja)
+icone="☀️"
+}
+if(horaNum>=18||horaNum<5){
+corBase="#ef4444" // noite (vermelho)
+icone="🌙"
+}
+
+/* ✅ EXECUTADO = VERDE */
+let cor=exec?"#22c55e":corBase
+
+/* 🔒 BLOQUEIO */
+let bloqueado=exec?"pointer-events:none;opacity:0.65;cursor:not-allowed;":""
+
+/* 👤 TEXTO */
+let texto=exec?`${h} ${exec.usuario_nome||"Admin"} OK`:`${h}`
+
+return `<button onclick="${exec?"":`administrarMedicacao('${m.id}','${h}',this)`}"
+style="background:${cor};color:#000;border:none;border-radius:8px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:70px;box-shadow:0 2px 4px rgba(0,0,0,0.15);${bloqueado}">
+<span style="font-size:12px">${icone} ${texto}</span>
 </button>`
+
 }).join("")
+
 html+=`<div style="background:${corMedicacao};padding:8px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
 <div style="font-weight:600;font-size:12px;display:flex;justify-content:space-between">
 <span>${m.nome}</span>
@@ -163,6 +183,7 @@ ${mostrarAcoes?`<span style="display:flex;gap:6px">
 <div style="display:flex;flex-wrap:wrap;gap:6px">${hHTML}</div>
 </div>`
 })
+
 html+=`</div></div>`
 })
 div.innerHTML=html
