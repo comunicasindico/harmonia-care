@@ -87,7 +87,6 @@ let hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
 let modo=window.MODO_MEDICACAO||""
 let mostrarAcoes=(hierarquia===1&&(modo==="editar"||modo==="excluir"))
 let html=""
-
 html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
 <div style="display:flex;gap:8px">
 <button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px">➕ Nova</button>
@@ -101,29 +100,17 @@ ${hierarquia===1?`
 <button onclick="concluirPendentesMedicacao()" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px">✔ Concluir Pendentes</button>
 `:""}
 </div>`
-
 Object.values(pacientes).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR")).forEach(p=>{
 let corPaciente=gerarCor(p.nome,60,92)
 html+=`<div style="background:${corPaciente};padding:12px;margin-bottom:14px;border-radius:12px">
-
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
 <div style="font-weight:bold">👤 ${p.nome}</div>
-${hierarquia===1?`
-<button onclick="concluirPacienteMedicacao('${p.id}')" style="background:#22c55e;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px">✔ Concluir Paciente</button>
-`:""}
+${hierarquia===1?`<button onclick="concluirPacienteMedicacao('${p.id}')" style="background:#22c55e;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px">✔ Concluir Paciente</button>`:""}
 </div>
-
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">`
 let mapa={}
 const limpar=txt=>{
-return (txt||"")
-.toString()
-.toLowerCase()
-.normalize("NFD")
-.replace(/[\u0300-\u036f]/g,"")
-.replace(/\s+/g,"")
-.replace(/mg|cp|cps|ml|ui/g,"")
-.trim()
+return (txt||"").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"").replace(/mg|cp|cps|ml|ui/g,"").trim()
 }
 p.itens.forEach(m=>{
 const nomeBase=limpar(m.nome_medicamento)
@@ -147,10 +134,7 @@ let[p2,m2]=b.split(":")
 return(p1*60+m1)-(p2*60+m2)
 })
 let hHTML=horarios.map(h=>{
-let exec=(window.EXEC_CACHE||[]).find(e=>{
-return String(e.medicacao_id)===String(m.id) && String(e.horario)===String(h)
-})
-
+let exec=(window.EXEC_CACHE||[]).find(e=>String(e.medicacao_id)===String(m.id)&&String(e.horario)===String(h))
 let mapaCores={"05:00":"#3b82f6","06:00":"#3b82f6","07:00":"#2563eb","08:00":"#1d4ed8","09:00":"#1e40af","10:00":"#1e3a8a","11:00":"#172554","12:00":"#f59e0b","13:00":"#f97316","14:00":"#ea580c","15:00":"#dc2626","16:00":"#b91c1c","17:00":"#991b1b","18:00":"#7c3aed","19:00":"#6d28d9","20:00":"#5b21b6","21:00":"#4c1d95","22:00":"#312e81","23:00":"#1e1b4b","00:00":"#111827","01:00":"#111827","02:00":"#111827","03:00":"#111827","04:00":"#111827"}
 let corBase=mapaCores[h]||"#6b7280"
 let cor=exec?"#22c55e":corBase
@@ -164,17 +148,14 @@ return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="bac
 <span style="font-size:12px">${icone} ${h}</span>
 <span style="font-size:9px">${usuario||""}</span>
 </button>`
-  
 }).join("")
 html+=`<div style="background:${corMedicacao};padding:8px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
 <div style="font-weight:600;font-size:12px;display:flex;justify-content:space-between">
 <span>${m.nome}</span>
-${mostrarAcoes?`
-<span style="display:flex;gap:6px">
+${mostrarAcoes?`<span style="display:flex;gap:6px">
 <button onclick="editarMedicacao('${m.id}','${m.nome}','${m.dose||""}')" style="background:#3b82f6;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">✏️</button>
 <button onclick="excluirMedicacao('${m.nome}','${m.dose||""}','${p.id}')" style="background:#ef4444;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">🗑️</button>
-</span>
-`:""}
+</span>`:""}
 </div>
 <div style="color:#666;font-size:11px;margin-bottom:6px">${m.dose||""}</div>
 <div style="display:flex;flex-wrap:wrap;gap:6px">${hHTML}</div>
