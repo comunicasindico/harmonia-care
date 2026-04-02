@@ -59,7 +59,7 @@ return
 renderizarMedicacoes(data||[])
 }
 /* ====================================================
-202 – RENDER MEDICAÇÕES (CONTROLE POR HORÁRIO)
+202 – RENDER MEDICAÇÕES (FINAL CORRIGIDO DEFINITIVO)
 ==================================================== */
 function renderizarMedicacoes(lista){
 const div=document.getElementById("listaMedicacoes")
@@ -77,7 +77,7 @@ lista.forEach(m=>{
 let pid=(m.paciente_id||"").toString().trim()
 if(!pid)return
 if(!pacientes[pid]){
-let nome=(window.PACIENTES_CACHE||[]).find(p=>p.id==pid)?.nome_completo||"Paciente"
+let nome=(window.PACIENTES_CACHE||[]).find(p=>String(p.id)===String(pid))?.nome_completo||"Paciente"
 pacientes[pid]={id:pid,nome:nome,itens:[]}
 }
 pacientes[pid].itens.push(m)
@@ -97,7 +97,7 @@ let mapa={}
 p.itens.forEach(m=>{
 const chave=(m.nome_medicamento||"").trim().toLowerCase()+"_"+(m.dosagem||"").trim().toLowerCase()
 if(!mapa[chave]){
-mapa[chave]={id:m.id,nome:m.nome_medicamento,dose:m.dosagem,horarios:new Set()}
+mapa[chave]={nome:m.nome_medicamento,dose:m.dosagem,paciente_id:p.id,horarios:new Set()}
 }
 let hs=(m.horarios||"").toString().split("|")
 hs.forEach(h=>{
@@ -115,27 +115,18 @@ return(p1*60+m1)-(p2*60+m2)
 })
 let hHTML=horarios.map(h=>{
 let exec=(window.EXEC_CACHE||[]).find(e=>{
-return String(e.medicacao_id)===String(m.id) && String(e.horario)===String(h)
+return String(e.horario)===String(h)
 })
 let cor=exec?"#22c55e":"#ef4444"
 let usuario=(exec&&exec.usuario_nome)?exec.usuario_nome:""
-return `<button onclick="(function(){
-if(window.MODO_MEDICACAO==='editar'){
-editarMedicacao('${m.nome}','${m.dose||""}','${p.id}')
-}else if(window.MODO_MEDICACAO==='excluir'){
-excluirMedicacao('${m.nome}','${m.dose||""}','${p.id}')
-}else{
-administrarMedicacao('${m.id}','${h}',this)
-}
-})()"
-style="background:${cor};color:#fff;border:none;border-radius:6px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:60px"><span>${h}</span>${usuario?`<span style="font-size:9px">${usuario}</span>`:""}</button>`
+return `<button onclick="administrarMedicacao('${m.paciente_id}','${h}',this)" style="background:${cor};color:#fff;border:none;border-radius:6px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:60px"><span>${h}</span>${usuario?`<span style="font-size:9px">${usuario}</span>`:""}</button>`
 }).join("")
 html+=`<div style="background:${corMedicacao};padding:8px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
 <div style="font-weight:600;font-size:12px;display:flex;justify-content:space-between">
 <span>${m.nome}</span>
 <span style="display:flex;gap:6px">
-<button onclick="editarMedicacao('${m.id}','${m.nome}','${m.dose||""}')" style="background:#3b82f6;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">✏️</button>
-<button onclick="excluirMedicacao('${m.id}')" style="background:#ef4444;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">🗑️</button>
+<button onclick="(function(){if(window.MODO_MEDICACAO==='editar'){editarMedicacao('${m.nome}','${m.dose||""}','${m.paciente_id}')}else{alert('Clique em EDITAR')}})()" style="background:#3b82f6;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">✏️</button>
+<button onclick="(function(){if(window.MODO_MEDICACAO==='excluir'){excluirMedicacao('${m.nome}','${m.dose||""}','${m.paciente_id}')}else{alert('Clique em EXCLUIR')}})()" style="background:#ef4444;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">🗑️</button>
 </span>
 </div>
 <div style="color:#666;font-size:11px;margin-bottom:6px">${m.dose||""}</div>
