@@ -133,3 +133,74 @@ html+=`</div>`
 })
 div.innerHTML=html
 }
+/* ====================================================
+205 – BUSCAR MODELO INTELIGENTE
+==================================================== */
+async function buscarModeloMedicacao(nome){
+if(!db||!nome)return null
+
+const {data}=await db
+.from("medicacoes_modelo")
+.select("*")
+.ilike("nome_medicamento",`%${nome}%`)
+.limit(1)
+
+return data?.[0]||null
+}
+/* ====================================================
+205 – BUSCAR MODELO MEDICAÇÃO
+==================================================== */
+async function buscarModeloMedicacao(nome){
+if(!db||!nome)return null
+const {data}=await db
+.from("medicacoes_modelo")
+.select("*")
+.ilike("nome_medicamento",`%${nome}%`)
+.limit(1)
+return data?.[0]||null
+}
+
+/* ====================================================
+206 – APLICAR MODELO AUTOMÁTICO
+==================================================== */
+async function aplicarModeloAutomatico(inputNome,inputDose,inputHorario){
+const modelo=await buscarModeloMedicacao(inputNome.value)
+if(!modelo)return
+if(!inputDose.value && modelo.dosagem_padrao){
+inputDose.value=modelo.dosagem_padrao
+}
+if(modelo.horarios_padrao){
+inputHorario.value=modelo.horarios_padrao
+}
+}
+/* ====================================================
+207 – SALVAR NOVA MEDICAÇÃO
+==================================================== */
+async function salvarNovaMedicacao(){
+if(!db||!EMPRESA_ID)return
+
+const nome=document.getElementById("nomeMedicacao").value
+const dose=document.getElementById("doseMedicacao").value
+const horario=document.getElementById("horarioMedicacao").value
+const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value
+
+if(!nome||!pacienteId||pacienteId==="todos"){
+alert("Informe paciente e nome")
+return
+}
+
+await db.from("medicacoes").insert({
+paciente_id:pacienteId,
+nome_medicamento:nome,
+dosagem:dose,
+horarios:horario,
+empresa_id:EMPRESA_ID,
+ativo:true
+})
+
+carregarMedicacoes()
+
+document.getElementById("nomeMedicacao").value=""
+document.getElementById("doseMedicacao").value=""
+document.getElementById("horarioMedicacao").value=""
+}
