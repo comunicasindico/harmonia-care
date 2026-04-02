@@ -74,7 +74,8 @@ return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
 let pacientes={}
 lista.forEach(m=>{
-let pid=m.paciente_id||"0"
+let pid=(m.paciente_id||"").toString().trim()
+if(!pid)return
 if(!pacientes[pid]){
 let nome=(window.PACIENTES_CACHE||[]).find(p=>p.id==pid)?.nome_completo||"Paciente"
 pacientes[pid]={id:pid,nome:nome,itens:[]}
@@ -323,8 +324,9 @@ alert("Erro inesperado")
 221 – EXCLUIR MEDICAÇÃO (FUNCIONAL)
 ==================================================== */
 async function excluirMedicacao(nome,dose,pacienteId){
-if(!pacienteId){
-alert("Paciente inválido")
+if(!pacienteId || pacienteId==="0"){
+console.warn("Paciente inválido",pacienteId)
+alert("Erro: paciente não identificado")
 return
 }
 if(!confirm("Excluir esta medicação?"))return
