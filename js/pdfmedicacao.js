@@ -154,19 +154,22 @@ doc.text("Harmonia-Care • Sistema de Gestão Clínica • Documento Auditável
 doc.save("medicacao_auditoria.pdf")
 }
 /* ====================================================
-007 – PDF GERAL
+007 – PDF GERAL COM PAGINAÇÃO CORRETA
 ==================================================== */
 async function gerarPDFMedicacaoGeral(){
 if(!window.jspdf)return alert("jsPDF não carregado")
 const{jsPDF}=window.jspdf
 const doc=new jsPDF()
-
-cabecalhoPDF(doc,"Relatório Geral de Medicações")
-
+doc.setFillColor(30,64,175)
+doc.rect(0,0,210,18,"F")
+doc.setTextColor(255,255,255)
+doc.setFontSize(13)
+doc.text("HARMONIA-CARE",14,11)
+doc.setFontSize(10)
+doc.text("Relatório Geral de Medicações",120,11)
+doc.setTextColor(0,0,0)
 let y=28
-
 const pacientes={}
-
 ;(window.MEDICACOES_CACHE||[]).forEach(m=>{
 if(!pacientes[m.paciente_id]){
 let nome=(window.PACIENTES_CACHE||[]).find(p=>String(p.id)===String(m.paciente_id))?.nome_completo||"Paciente"
@@ -174,24 +177,39 @@ pacientes[m.paciente_id]={nome,itens:[]}
 }
 pacientes[m.paciente_id].itens.push(m)
 })
-
 Object.values(pacientes).forEach(p=>{
+if(y>270){doc.addPage();y=20}
 doc.setFontSize(11)
 doc.setTextColor(0,0,0)
 doc.text(p.nome,14,y)
 y+=6
-
-let lista=agruparMedicacoesPDF(p.itens)
-
-lista.forEach(m=>{
+let mapa={}
+p.itens.forEach(m=>{
+let chave=(m.nome_medicamento||"")+"_"+(m.dosagem||"")
+if(!mapa[chave]){mapa[chave]={nome:m.nome_medicamento,dose:m.dosagem,horarios:[]}}
+;(m.horarios||"").split("|").forEach(h=>{if(h)mapa[chave].horarios.push(h.trim())})
+})
+Object.values(mapa).forEach(m=>{
+if(y>270){doc.addPage();y=20}
 doc.setFontSize(9)
 doc.text("- "+m.nome+" ("+(m.dose||"")+")",16,y)
 y+=5
+let horarios=[...new Set(m.horarios)].sort()
+let linha=""
+horarios.forEach(h=>{
+let hora=h.toString().replace(/[^\d:]/g,"").slice(0,5)
+if(hora.includes(":"))linha+=hora+"  "
 })
-
+if(y>270){doc.addPage();y=20}
+doc.setFontSize(8)
+doc.setTextColor(80,80,80)
+doc.text(linha,18,y)
+y+=6
+})
 y+=4
 })
-
-rodapePDF(doc)
+doc.setFontSize(8)
+doc.setTextColor(120,120,120)
+doc.text("Harmonia-Care • Sistema de Gestão Clínica",14,285)
 doc.save("medicacoes_geral.pdf")
 }
