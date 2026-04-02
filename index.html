@@ -219,6 +219,19 @@ style="width:100%;margin-bottom:6px;padding:6px">
 <input id="dataInicioMedicacao" type="date" style="flex:1;padding:6px">
 <input id="dataFimMedicacao" type="date" style="flex:1;padding:6px">
 </div>
+
+<div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+<button onclick="setPeriodoDias(1)" style="padding:4px 8px;border:none;border-radius:6px;background:#e5e7eb">Hoje</button>
+<button onclick="setPeriodoDias(7)" style="padding:4px 8px;border:none;border-radius:6px;background:#e5e7eb">7 dias</button>
+<button onclick="setPeriodoDias(15)" style="padding:4px 8px;border:none;border-radius:6px;background:#e5e7eb">15 dias</button>
+<button onclick="setPeriodoDias(30)" style="padding:4px 8px;border:none;border-radius:6px;background:#e5e7eb">30 dias</button>
+</div>
+
+<button onclick="filtrarPeriodoMedicacao()" 
+style="background:#2563eb;color:#fff;border:none;padding:6px 10px;border-radius:6px;margin-bottom:8px">
+🔎 Pesquisar Período
+</button>
+
 <button onclick="salvarNovaMedicacao()"
 style="background:#10b981;color:#fff;border:none;padding:6px 10px;border-radius:6px">
 Salvar
