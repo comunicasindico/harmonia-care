@@ -1044,15 +1044,18 @@ let exec=(window.EXEC_CACHE||[]).find(e=>norm(e.horario)===h&&e.medicacao_id===m
 let corBtn=exec?"#22c55e":"#f87171"
 let usuarioExec=exec?.usuario_nome||""
 
-return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${corBtn};color:#fff;border:none;border-radius:6px;font-size:10px;padding:4px 6px">
-${h}${usuarioExec?"<div style='font-size:8px'>"+usuarioExec+"</div>":""}
+return `<button onclick="window.MODO_MEDICACAO==='editar'?editarHorario('${m.id}','${h}',this):administrarMedicacao('${m.id}','${h}',this)" style="background:${corBtn};color:#fff;border:none;border-radius:6px;font-size:10px;padding:4px 6px">
+${h}${usuarioExec?`<div style="font-size:8px">${usuarioExec}</div>`:""}
 </button>`
 
 }).join("")
 
 html+=`<div style="border-bottom:1px solid #ddd;padding-bottom:6px">
 <div style="font-size:12px;font-weight:600">
-${m.nome_medicamento||""} <span style="color:#666;font-weight:400">${m.dosagem||""}</span>
+<span onclick="editarNomeMedicacao('${m.id}', \`${m.nome_medicamento||""}\`, \`${m.dosagem||""}\`)">
+${m.nome_medicamento||""}
+</span>
+<span style="color:#666;font-weight:400">${m.dosagem||""}</span>
 </div>
 <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
 ${horariosHTML}
@@ -1065,6 +1068,37 @@ html+=`</div></div>`
 })
 
 div.innerHTML=html
+}
+/* ====================================================
+202D – EDITAR NOME MEDICACAO
+==================================================== */
+async function editarNomeMedicacao(id,nome,dose){
+if(!db||!id)return
+let novoNome=prompt("Nome:",nome||"")
+if(novoNome===null)return
+novoNome=novoNome.trim()
+if(!novoNome){
+alert("Nome não pode ficar vazio")
+return
+}
+let novaDose=prompt("Dosagem:",dose||"")
+if(novaDose===null)return
+novaDose=novaDose.trim()
+try{
+const {error}=await db.from("medicacoes").update({
+nome_medicamento:novoNome,
+dosagem:novaDose||null
+}).eq("id",id)
+if(error){
+console.error(error)
+alert("Erro ao salvar")
+return
+}
+carregarMedicacoes()
+}catch(e){
+console.error(e)
+alert("Erro inesperado")
+}
 }
 /* ====================================================
 203 – ADMINISTRAR MEDICAÇÃO (COM NOME NA TELA)
@@ -1149,9 +1183,41 @@ alert("Abrir modal NOVA medicação (vamos montar depois)")
 }
 function editarMedicacaoGlobal(){
 window.MODO_MEDICACAO="editar"
-alert("Abrir lista para editar medicação")
+alert("Modo edição ativado\nClique em um horário para editar")
 }
 function excluirMedicacaoGlobal(){
 window.MODO_MEDICACAO="excluir"
 alert("Abrir lista para excluir medicação")
+}
+/* ====================================================
+210 – EDITAR HORÁRIO MEDICAÇÃO
+==================================================== */
+async function editarHorario(medicacaoId,horarioAtual,botao){
+if(!db)return
+let novo=prompt("Editar horário:",horarioAtual)
+if(!novo)return
+novo=novo.trim()
+/* normaliza */
+if(!novo.includes(":") && novo.toUpperCase()!=="JEJUM" && novo.toUpperCase()!=="ALMOÇO"){
+novo=novo.padStart(2,"0")+":00"
+}
+/* 🔹 BUSCA MEDICAÇÃO */
+const {data:med}=await db
+.from("medicacoes")
+.select("*")
+.eq("id",medicacaoId)
+.single()
+if(!med)return
+/* 🔹 CONVERTE HORÁRIOS */
+let horarios=(med.horarios||"").toString().split("|").filter(h=>h)
+/* 🔹 REMOVE ANTIGO */
+horarios=horarios.filter(h=>h!==horarioAtual)
+/* 🔹 ADICIONA NOVO */
+horarios.push(novo)
+/* 🔹 SALVA */
+await db.from("medicacoes").update({
+horarios:horarios.join("|")
+}).eq("id",medicacaoId)
+/* 🔹 RECARREGA */
+carregarMedicacoes()
 }
