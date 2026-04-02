@@ -1045,10 +1045,9 @@ let corBtn=exec?"#22c55e":"#f87171"
 let usuarioExec=exec?.usuario_nome||""
 return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${corBtn};color:#fff;border:none;border-radius:6px;font-size:10px;padding:4px 6px">
 ${h}
-${usuarioExec?`<div style="font-size:8px">${usuarioExec}</div>`:""}
+${usuarioExec ? "<div style='font-size:8px'>" + usuarioExec + "</div>" : ""}
 </button>`
 }).join("")
-
 html+=`
 <div style="border-bottom:1px solid #ddd;padding-bottom:6px">
 <div style="font-size:12px;font-weight:600">
@@ -1060,10 +1059,8 @@ ${horariosHTML}
 </div>
 `
 })
-
 html+=`</div></div>`
 })
-
 div.innerHTML=html
 }
 /* ====================================================
