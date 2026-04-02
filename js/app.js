@@ -258,6 +258,16 @@ btnAdmin.style.display="inline-block"
 btnAdmin.style.display="none"
 }
 }
+/* ====================================================
+017A – CARREGAR MEDICAÇÃO AO ABRIR
+==================================================== */
+if(id==="painelMedicacao"){
+setTimeout(()=>{
+if(typeof carregarStatusMedicacoes==="function")carregarStatusMedicacoes()
+if(typeof carregarPacientesMedicacao==="function")carregarPacientesMedicacao()
+if(typeof carregarMedicacoes==="function")carregarMedicacoes()
+},100)
+}
 }
 /* ====================================================
 018 – ABRIR ENFERMAGEM
