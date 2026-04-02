@@ -276,12 +276,10 @@ const nome=(document.getElementById("nomeMedicacao").value||"").trim().toUpperCa
 const dose=(document.getElementById("doseMedicacao").value||"").trim().toUpperCase()
 const horario=(document.getElementById("horarioMedicacao").value||"").trim()
 const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value
-
 if(!nome||!pacienteId||pacienteId==="todos"){
 alert("Informe paciente e nome")
 return
 }
-
 const nomeLimpo=nome
 .toLowerCase()
 .normalize("NFD")
@@ -308,9 +306,7 @@ empresa_id:EMPRESA_ID,
 nome_padrao:nomeLimpo,
 ativo:true
 })
-
 carregarMedicacoes()
-
 document.getElementById("nomeMedicacao").value=""
 document.getElementById("doseMedicacao").value=""
 document.getElementById("horarioMedicacao").value=""
@@ -359,27 +355,20 @@ const user=obterUsuarioLogado()||{}
 const dataHoje=new Date().toISOString().slice(0,10)
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
-
 const meds=(window.MEDICACOES_CACHE||[]).filter(m=>String(m.paciente_id)===String(pacienteId))
-
 if(!meds.length){
 alert("Nenhuma medicação encontrada")
 return
 }
-
 let mapa={}
 meds.forEach(m=>{
 let horarios=(m.horarios||"").toString().split("|")
-
 horarios.forEach(h=>{
 if(!h)return
-
 h=h.toString().trim()
 if(!h.includes(":"))h=h.padStart(2,"0")+":00"
-
 /* 🔑 CHAVE ÚNICA */
 let chave=`${m.id}_${dataHoje}_${h}_${EMPRESA_ID}`
-
 mapa[chave]={
 medicacao_id:m.id,
 data:dataHoje,
@@ -389,25 +378,31 @@ usuario_id:usuarioId,
 usuario_nome:nome,
 empresa_id:EMPRESA_ID
 }
-
 })
 })
-
 /* 🔥 CONVERTE PARA ARRAY SEM DUPLICADOS */
 let inserts=Object.values(mapa)
-
-const {error}=await db
-.from("medicacoes_execucao")
-.upsert(inserts,{
-onConflict:"medicacao_id,data,horario,empresa_id"
-})
-
-if(error){
-console.error(error)
-alert("Erro ao concluir paciente")
-return
+meds.forEach(m=>{
+let horarios=(m.horarios||"").toString().split("|")
+horarios.forEach(h=>{
+if(!h)return
+h=h.toString().trim()
+if(!h.includes(":"))h=h.padStart(2,"0")+":00"
+/* 🔑 CHAVE ÚNICA */
+let chave=`${m.id}_${dataHoje}_${h}_${EMPRESA_ID}`
+mapa[chave]={
+medicacao_id:m.id,
+data:dataHoje,
+horario:h,
+status:"executado",
+usuario_id:usuarioId,
+usuario_nome:nome,
+empresa_id:EMPRESA_ID
 }
-
+})
+})
+/* 🔥 CONVERTE PARA ARRAY SEM DUPLICADOS */
+let inserts=Object.values(mapa)
 await carregarStatusMedicacoes()
 }
 /* ====================================================
