@@ -59,13 +59,14 @@ return
 renderizarMedicacoes(data||[])
 }
 /* ====================================================
-202 – RENDER MEDICAÇÕES (FINAL CORRIGIDO DEFINITIVO)
+202 – RENDER MEDICAÇÕES (FINAL LIMPO PROFISSIONAL)
 ==================================================== */
 function renderizarMedicacoes(lista){
 const div=document.getElementById("listaMedicacoes")
 if(!div)return
 if(!lista)lista=[]
 window.MEDICACOES_CACHE=lista
+
 const normalizarHora=h=>{
 if(!h)return""
 h=h.toString().trim()
@@ -73,6 +74,7 @@ if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
+
 let pacientes={}
 lista.forEach(m=>{
 let pid=(m.paciente_id||"").toString().trim()
@@ -83,10 +85,14 @@ pacientes[pid]={id:pid,nome:nome,itens:[]}
 }
 pacientes[pid].itens.push(m)
 })
+
 let hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
 let modo=window.MODO_MEDICACAO||""
 let mostrarAcoes=(hierarquia===1&&(modo==="editar"||modo==="excluir"))
+
 let html=""
+
+/* 🔹 TOPO */
 html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
 <div style="display:flex;gap:8px">
 <button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px">➕ Nova</button>
@@ -96,38 +102,53 @@ ${hierarquia===1?`
 <button onclick="cancelarModoMedicacao()" style="background:#6b7280;color:#fff;border:none;border-radius:6px;padding:6px 10px">❌ Cancelar</button>
 `:""}
 </div>
-${hierarquia===1?`
-<button onclick="concluirPendentesMedicacao()" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px">✔ Concluir Pendentes</button>
-`:""}
+${hierarquia===1?`<button onclick="concluirPendentesMedicacao()" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px">✔ Concluir Pendentes</button>`:""}
 </div>`
+
+/* 🔹 PACIENTES */
 Object.values(pacientes).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR")).forEach(p=>{
+
 let corPaciente=gerarCor(p.nome,60,92)
+
 html+=`<div style="background:${corPaciente};padding:12px;margin-bottom:14px;border-radius:12px">
+
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
 <div style="font-weight:bold">👤 ${p.nome}</div>
 ${hierarquia===1?`<button onclick="concluirPacienteMedicacao('${p.id}')" style="background:#22c55e;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px">✔ Concluir Paciente</button>`:""}
 </div>
+
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">`
+
 let mapa={}
+
 const limpar=txt=>{
 return (txt||"").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"").replace(/mg|cp|cps|ml|ui/g,"").trim()
 }
+
+/* 🔹 AGRUPA MEDICAÇÕES */
 p.itens.forEach(m=>{
 const nomeBase=limpar(m.nome_medicamento)
 const doseBase=(m.dosagem||"").toString().toLowerCase().trim()
 const chave=nomeBase+"_"+doseBase
+
 if(!mapa[chave]){
 mapa[chave]={id:m.id,nome:m.nome_medicamento,dose:m.dosagem,paciente_id:p.id,horarios:new Set()}
 }
+
 let hs=(m.horarios||"").toString().split("|")
 hs.forEach(h=>{
 let n=normalizarHora(h)
 if(n)mapa[chave].horarios.add(n)
 })
 })
+
 let meds=Object.values(mapa).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR"))
+
+/* 🔹 MEDICAÇÕES */
 meds.forEach(m=>{
+
 let corMedicacao=gerarCor(m.nome,50,96)
+
 let horarios=[...m.horarios].sort((a,b)=>{
 let[p1,m1]=a.split(":")
 let[p2,m2]=b.split(":")
@@ -141,32 +162,26 @@ String(e.medicacao_id)===String(m.id)&&
 String(e.horario)===String(h)
 )
 
-/* 🔥 DEFINE COR POR TURNO */
-let horaNum=parseInt(h.split(":")[0])
-let corBase="#fde047" // manhã (amarelo)
+/* 🔥 TURNO */
+let hora=parseInt(h.split(":")[0])
+let corBase="#fde047"
 let icone="🌅"
 
-if(horaNum>=12&&horaNum<18){
-corBase="#fb923c" // tarde (laranja)
-icone="☀️"
-}
-if(horaNum>=18||horaNum<5){
-corBase="#ef4444" // noite (vermelho)
-icone="🌙"
-}
+if(hora>=12&&hora<18){corBase="#fb923c";icone="☀️"}
+if(hora>=18||hora<5){corBase="#ef4444";icone="🌙"}
 
-/* ✅ EXECUTADO = VERDE */
+/* 🔥 EXECUTADO */
 let cor=exec?"#22c55e":corBase
 
 /* 🔒 BLOQUEIO */
 let bloqueado=exec?"pointer-events:none;opacity:0.65;cursor:not-allowed;":""
 
-/* 👤 TEXTO */
-let texto=exec?`${h} ${exec.usuario_nome||"Admin"} OK`:`${h}`
+/* 🔥 TEXTO */
+let texto=exec?`${h} ${exec.usuario_nome||"Admin"} OK`:h
 
 return `<button onclick="${exec?"":`administrarMedicacao('${m.id}','${h}',this)`}"
 style="background:${cor};color:#000;border:none;border-radius:8px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:70px;box-shadow:0 2px 4px rgba(0,0,0,0.15);${bloqueado}">
-<span style="font-size:12px">${icone} ${texto}</span>
+<span>${icone} ${texto}</span>
 </button>`
 
 }).join("")
@@ -179,13 +194,16 @@ ${mostrarAcoes?`<span style="display:flex;gap:6px">
 <button onclick="excluirMedicacao('${m.nome}','${m.dose||""}','${p.id}')" style="background:#ef4444;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">🗑️</button>
 </span>`:""}
 </div>
-<div style="color:#666;font-size:11px;margin-bottom:6px">${m.dose||""}</div>
+
+<div style="color:#555;font-size:11px;margin-bottom:6px">${m.dose||""}</div>
 <div style="display:flex;flex-wrap:wrap;gap:6px">${hHTML}</div>
+
 </div>`
 })
 
 html+=`</div></div>`
 })
+
 div.innerHTML=html
 }
 /* ====================================================
