@@ -360,7 +360,6 @@ const dataHoje=new Date().toISOString().slice(0,10)
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
 
-/* 🔥 PEGAR MEDICAÇÕES REAIS (SEM AGRUPAMENTO) */
 const meds=(window.MEDICACOES_CACHE||[]).filter(m=>String(m.paciente_id)===String(pacienteId))
 
 if(!meds.length){
@@ -374,8 +373,6 @@ meds.forEach(m=>{
 let horarios=(m.horarios||"").toString().split("|")
 horarios.forEach(h=>{
 if(!h)return
-
-/* 🔥 NORMALIZA HORA */
 h=h.toString().trim()
 if(!h.includes(":"))h=h.padStart(2,"0")+":00"
 
@@ -391,10 +388,11 @@ empresa_id:EMPRESA_ID
 })
 })
 
-/* 🔥 UPSERT (EVITA DUPLICAR) */
 const {error}=await db
 .from("medicacoes_execucao")
-.upsert(inserts,{onConflict:"medicacao_id,data,horario,empresa_id"})
+.upsert(inserts,{
+onConflict:"medicacao_id,data,horario,empresa_id"
+})
 
 if(error){
 console.error(error)
@@ -402,7 +400,6 @@ alert("Erro ao concluir paciente")
 return
 }
 
-/* 🔄 RECARREGA STATUS */
 await carregarStatusMedicacoes()
 }
 /* ====================================================
