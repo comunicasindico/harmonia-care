@@ -353,7 +353,7 @@ carregarMedicacoes()
 /* ====================================================
 212 – CONCLUIR MEDICAÇÃO POR PACIENTE (CORRIGIDO REAL)
 ==================================================== */
-async function concluirPacienteMedicacao(pacienteId){
+window.concluirPacienteMedicacao=async function(pacienteId){
 if(!db||!pacienteId)return
 const user=obterUsuarioLogado()||{}
 const dataHoje=new Date().toISOString().slice(0,10)
@@ -456,7 +456,7 @@ alert("Erro inesperado")
 /* ====================================================
 222 – CONCLUIR PENDENTES MEDICACAO
 ==================================================== */
-async function concluirPendentesMedicacao(){
+window.concluirPendentesMedicacao=async function(){
 if(!db)return
 const user=obterUsuarioLogado()
 const dataHoje=new Date().toISOString().slice(0,10)
