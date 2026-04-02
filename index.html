@@ -192,26 +192,36 @@ display:flex;align-items:center;justify-content:center;}
 ==================================================== -->
 <div id="painelMedicacao" class="box" style="display:none">
 <h3>💊 Controle de Medicação</h3>
+
 <select id="buscaPacienteMedicacao"></select>
+
 <div style="background:#fff;padding:12px;margin-bottom:10px;border-radius:10px">
+
 <div style="font-weight:bold;margin-bottom:6px">Cadastrar Medicação</div>
+
 <input id="nomeMedicacao" placeholder="Nome"
+style="width:100%;margin-bottom:6px;padding:6px"
 oninput="aplicarModeloAutomatico(
 document.getElementById('nomeMedicacao'),
 document.getElementById('doseMedicacao'),
 document.getElementById('horarioMedicacao')
 )">
-style="width:100%;margin-bottom:6px;padding:6px">
+
 <input id="doseMedicacao" placeholder="Dosagem"
 style="width:100%;margin-bottom:6px;padding:6px">
+
 <input id="horarioMedicacao" placeholder="Horários (07:00|13:00)"
 style="width:100%;margin-bottom:6px;padding:6px">
+
 <button onclick="salvarNovaMedicacao()"
 style="background:#10b981;color:#fff;border:none;padding:6px 10px;border-radius:6px">
 Salvar
 </button>
+
 </div>
+
 <div id="listaMedicacoes"></div>
+
 </div>
 <!-- ====================================================
 010 – PAINEL ENFERMAGEM
