@@ -59,14 +59,13 @@ return
 renderizarMedicacoes(data||[])
 }
 /* ====================================================
-202 – RENDER MEDICAÇÕES (LAYOUT CLÍNICO)
+202 – RENDER MEDICAÇÕES POR PACIENTE
 ==================================================== */
 function renderizarMedicacoes(lista){
 const div=document.getElementById("listaMedicacoes")
 if(!div)return
 if(!lista)lista=[]
-const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
-const podeEditar=hierarquia===1
+
 const normalizarHora=h=>{
 if(!h)return""
 h=h.toString().trim()
@@ -74,63 +73,86 @@ if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
-const limpar=txt=>{
-return (txt||"").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"").replace(/mg|cp|cps|ml|ui/g,"").trim()
-}
+
+/* 🔥 AGRUPAR POR PACIENTE */
 let pacientes={}
+
 lista.forEach(m=>{
-let pid=m.paciente_id
+let pid=m.paciente_id||"0"
+
 if(!pacientes[pid]){
-let nome=(window.PACIENTES_CACHE||[]).find(p=>p.id===pid)?.nome_completo||"Paciente"
+let nome=(window.PACIENTES_CACHE||[]).find(p=>p.id==pid)?.nome_completo||"Paciente"
 pacientes[pid]={nome:nome,itens:[]}
 }
+
 pacientes[pid].itens.push(m)
 })
+
 let html=""
-if(podeEditar){
-html+=`<div style="display:flex;gap:8px;margin-bottom:10px">
-<button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:12px">➕ Nova</button>
-<button onclick="editarMedicacaoGlobal()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:12px">✏️ Editar</button>
-<button onclick="excluirMedicacaoGlobal()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:12px">🗑️ Excluir</button>
-</div>`
-}
+
+/* 🔥 BOTÕES */
+html+=`
+<div style="display:flex;gap:8px;margin-bottom:10px">
+<button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px">➕ Nova</button>
+<button onclick="editarMedicacaoGlobal()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 10px">✏️ Editar</button>
+<button onclick="excluirMedicacaoGlobal()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px">🗑️ Excluir</button>
+</div>
+`
+
+/* 🔥 LOOP PACIENTES */
 Object.values(pacientes).forEach(p=>{
-html+=`<div style="background:#f9fafb;padding:12px;margin-bottom:12px;border-radius:10px">
-<div style="font-weight:bold;margin-bottom:8px">👤 ${p.nome}</div>`
+
+html+=`<div style="background:#f9fafb;padding:10px;margin-bottom:12px;border-radius:10px">
+<div style="font-weight:bold;margin-bottom:6px">👤 ${p.nome}</div>`
+
+/* 🔥 AGRUPAR MEDICAÇÃO */
 let mapa={}
+
 p.itens.forEach(m=>{
-const chave=`${limpar(m.nome_medicamento)}_${limpar(m.dosagem)}`
+const chave=m.nome_medicamento+"_"+(m.dosagem||"")
+
 if(!mapa[chave]){
-mapa[chave]={id:m.id,nome:m.nome_medicamento,dose:m.dosagem,horarios:new Set()}
+mapa[chave]={
+id:m.id,
+nome:m.nome_medicamento,
+dose:m.dosagem,
+horarios:new Set()
 }
+}
+
 let hs=(m.horarios||"").toString().split("|")
+
 hs.forEach(h=>{
 let n=normalizarHora(h)
 if(n)mapa[chave].horarios.add(n)
 })
 })
-let meds=Object.values(mapa).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR"))
+
+let meds=Object.values(mapa)
+
 meds.forEach(m=>{
+
 let horarios=[...m.horarios].sort((a,b)=>{
 let[p1,m1]=a.split(":")
 let[p2,m2]=b.split(":")
 return(p1*60+m1)-(p2*60+m2)
 })
+
 let hHTML=horarios.map(h=>{
-let exec=(window.EXEC_CACHE||[]).find(e=>e.horario===h&&e.medicacao_id===m.id)
-let cor=exec?"#22c55e":"#f87171"
-return `<button onclick="window.MODO_MEDICACAO==='editar'?editarHorario('${m.id}','${h}',this):administrarMedicacao('${m.id}','${h}',this)" style="background:${cor};color:#fff;border:none;border-radius:6px;padding:4px 6px;font-size:11px">${h}</button>`
-}).join(" ")
-html+=`<div style="margin-bottom:8px">
-<div style="font-weight:600">
-<span onclick="editarNomeMedicacao('${m.id}',\`${m.nome}\`,\`${m.dose||""}\`)">${m.nome}</span>
-<span style="color:#666">${m.dose||""}</span>
+return `<span style="background:#ef4444;color:#fff;padding:4px 6px;border-radius:6px;margin-right:4px">${h}</span>`
+}).join("")
+
+html+=`
+<div style="margin-bottom:8px">
+<div style="font-weight:600">${m.nome} <span style="color:#666">${m.dose||""}</span></div>
+<div style="margin-top:4px">${hHTML}</div>
 </div>
-<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:6px">${hHTML}</div>
-</div>`
+`
 })
+
 html+=`</div>`
 })
+
 div.innerHTML=html
 }
 /* ====================================================
@@ -203,4 +225,21 @@ carregarMedicacoes()
 document.getElementById("nomeMedicacao").value=""
 document.getElementById("doseMedicacao").value=""
 document.getElementById("horarioMedicacao").value=""
+}
+/* ====================================================
+211 – FUNÇÕES ADMIN (OBRIGATÓRIO)
+==================================================== */
+function abrirModalMedicacao(){
+window.MODO_MEDICACAO="novo"
+alert("Modo NOVA medicação ativo")
+}
+
+function editarMedicacaoGlobal(){
+window.MODO_MEDICACAO="editar"
+alert("Modo edição ativado\nClique em um horário")
+}
+
+function excluirMedicacaoGlobal(){
+window.MODO_MEDICACAO="excluir"
+alert("Modo exclusão ativado")
 }
