@@ -65,28 +65,38 @@ if(n)mapa[chave].horarios.add(n)
 return Object.values(mapa)
 }
 /* ====================================================
-006 – PDF MEDICAÇÃO PACIENTE 
+006 – PDF MEDICAÇÃO AUDITORIA MÁXIMA + QR CODE
 ==================================================== */
 async function gerarPDFMedicacaoPaciente(){
 if(!window.jspdf)return alert("jsPDF não carregado")
+if(!window.QRCode)return alert("QRCode.js não carregado")
 const{jsPDF}=window.jspdf
 const doc=new jsPDF()
 const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value
 if(!pacienteId||pacienteId==="todos"){alert("Selecione um paciente");return}
 const paciente=(window.PACIENTES_CACHE||[]).find(p=>String(p.id)===String(pacienteId))
 const meds=(window.MEDICACOES_CACHE||[]).filter(m=>String(m.paciente_id)===String(pacienteId))
+const agora=new Date()
+const dataGeracao=agora.toLocaleString()
+/* 🔷 CABEÇALHO */
 doc.setFillColor(30,64,175)
-doc.rect(0,0,210,18,"F")
+doc.rect(0,0,210,20,"F")
 doc.setTextColor(255,255,255)
-doc.setFontSize(13)
-doc.text("HARMONIA-CARE",14,11)
+doc.setFontSize(14)
+doc.text("HARMONIA-CARE",14,12)
 doc.setFontSize(10)
-doc.text("Relatório de Medicações",120,11)
+doc.text("RELATÓRIO DE MEDICAÇÕES - AUDITORIA",105,12,null,null,"center")
 doc.setTextColor(0,0,0)
+/* 🔷 DADOS PACIENTE */
 doc.setFontSize(11)
 doc.text("Paciente: "+(paciente?.nome_completo||""),14,28)
-doc.text("Data: "+new Date().toLocaleDateString(),14,34)
-let y=44
+doc.text("Data emissão: "+dataGeracao,14,34)
+/* 🔷 QR CODE */
+const qrDiv=document.createElement("div")
+new QRCode(qrDiv,{text:`Paciente:${paciente?.nome_completo} Data:${dataGeracao}`,width:80,height:80})
+const qrImg=qrDiv.querySelector("img")?.src
+if(qrImg)doc.addImage(qrImg,"PNG",160,22,30,30)
+let y=50
 let mapa={}
 meds.forEach(m=>{
 let chave=(m.nome_medicamento||"")+"_"+(m.dosagem||"")
@@ -94,12 +104,12 @@ if(!mapa[chave]){mapa[chave]={id:m.id,nome:m.nome_medicamento,dose:m.dosagem,hor
 ;(m.horarios||"").split("|").forEach(h=>{if(h)mapa[chave].horarios.push(h.trim())})
 })
 Object.values(mapa).forEach(m=>{
-doc.setFillColor(240,240,240)
-doc.roundedRect(12,y-6,186,8,2,2,"F")
+doc.setFillColor(245,245,245)
+doc.roundedRect(12,y-6,186,9,2,2,"F")
 doc.setFontSize(11)
 doc.setTextColor(0,0,0)
 doc.text(m.nome+" ("+(m.dose||"")+")",14,y)
-y+=8
+y+=9
 let horarios=[...new Set(m.horarios)].sort()
 let x=14
 horarios.forEach(h=>{
@@ -111,26 +121,31 @@ let cor=[253,224,71]
 let label="MANHÃ"
 if(hNum>=12&&hNum<18){cor=[251,146,60];label="TARDE"}
 if(hNum>=18||hNum<5){cor=[239,68,68];label="NOITE"}
-if(exec){cor=[34,197,94];label="OK"}
+if(exec){cor=[34,197,94];label="ADMIN"}
 doc.setFillColor(...cor)
-doc.roundedRect(x,y-5,40,8,3,3,"F")
+doc.roundedRect(x,y-5,42,9,3,3,"F")
 doc.setFontSize(9)
-doc.setTextColor(0,0,0)
-doc.text(`${hora}`,x+2,y-1)
+doc.text(hora,x+2,y-1)
 doc.setFontSize(7)
 doc.text(label,x+2,y+3)
-x+=44
-if(x>170){x=14;y+=10}
+x+=46
+if(x>170){x=14;y+=12}
 })
-y+=12
-if(y>270){doc.addPage();y=20}
+y+=14
+if(y>265){doc.addPage();y=20}
 })
+/* 🔷 ASSINATURA */
+y+=10
+doc.setDrawColor(0)
+doc.line(14,y,100,y)
+doc.setFontSize(9)
+doc.text("Responsável Técnico",14,y+5)
+/* 🔷 RODAPÉ */
 doc.setFontSize(8)
 doc.setTextColor(120,120,120)
-doc.text("Harmonia-Care • Sistema de Gestão Clínica",14,285)
-doc.save("medicacao_paciente.pdf")
+doc.text("Harmonia-Care • Sistema de Gestão Clínica • Documento Auditável",14,285)
+doc.save("medicacao_auditoria.pdf")
 }
-
 /* ====================================================
 007 – PDF GERAL
 ==================================================== */
