@@ -370,7 +370,7 @@ window.MODO_MEDICACAO=""
 carregarMedicacoes()
 }
 /* ====================================================
-212 – CONCLUIR MEDICAÇÃO POR PACIENTE
+212 – CONCLUIR MEDICAÇÃO POR PACIENTE (CORRIGIDO REAL)
 ==================================================== */
 async function concluirPacienteMedicacao(pacienteId){
 if(!db||!pacienteId)return
@@ -379,18 +379,25 @@ const dataHoje=new Date().toISOString().slice(0,10)
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
 
-/* 🔥 PEGAR MEDICAÇÕES DO PACIENTE */
+/* 🔥 PEGAR MEDICAÇÕES REAIS (SEM AGRUPAMENTO) */
 const meds=(window.MEDICACOES_CACHE||[]).filter(m=>String(m.paciente_id)===String(pacienteId))
 
 if(!meds.length){
 alert("Nenhuma medicação encontrada")
 return
 }
+
 let inserts=[]
+
 meds.forEach(m=>{
 let horarios=(m.horarios||"").toString().split("|")
 horarios.forEach(h=>{
 if(!h)return
+
+/* 🔥 NORMALIZA HORA */
+h=h.toString().trim()
+if(!h.includes(":"))h=h.padStart(2,"0")+":00"
+
 inserts.push({
 medicacao_id:m.id,
 data:dataHoje,
@@ -402,14 +409,19 @@ empresa_id:EMPRESA_ID
 })
 })
 })
-/* 🔥 SALVAR EM LOTE */
-const {error}=await db.from("medicacoes_execucao").upsert(inserts,{onConflict:"medicacao_id,data,horario,empresa_id"})
+
+/* 🔥 UPSERT (EVITA DUPLICAR) */
+const {error}=await db
+.from("medicacoes_execucao")
+.upsert(inserts,{onConflict:"medicacao_id,data,horario,empresa_id"})
+
 if(error){
 console.error(error)
 alert("Erro ao concluir paciente")
 return
 }
-/* 🔄 ATUALIZA TELA */
+
+/* 🔄 RECARREGA STATUS */
 await carregarStatusMedicacoes()
 }
 /* ====================================================
