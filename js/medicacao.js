@@ -351,24 +351,34 @@ carregarMedicacoes()
 ==================================================== */
 window.concluirPacienteMedicacao=async function(pacienteId){
 if(!db||!pacienteId)return
+
 const user=obterUsuarioLogado()||{}
 const dataHoje=new Date().toISOString().slice(0,10)
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
+
+/* 🔥 FILTRA MEDICAÇÕES DO PACIENTE */
 const meds=(window.MEDICACOES_CACHE||[]).filter(m=>String(m.paciente_id)===String(pacienteId))
+
 if(!meds.length){
 alert("Nenhuma medicação encontrada")
 return
 }
+
+/* 🔒 MAPA PARA EVITAR DUPLICADOS */
 let mapa={}
+
 meds.forEach(m=>{
 let horarios=(m.horarios||"").toString().split("|")
+
 horarios.forEach(h=>{
 if(!h)return
+
 h=h.toString().trim()
 if(!h.includes(":"))h=h.padStart(2,"0")+":00"
-/* 🔑 CHAVE ÚNICA */
+
 let chave=`${m.id}_${dataHoje}_${h}_${EMPRESA_ID}`
+
 mapa[chave]={
 medicacao_id:m.id,
 data:dataHoje,
@@ -378,29 +388,40 @@ usuario_id:usuarioId,
 usuario_nome:nome,
 empresa_id:EMPRESA_ID
 }
+
 })
 })
-/* 🔥 CONVERTE PARA ARRAY SEM DUPLICADOS */
-let inserts=Object.values(mapa)
-meds.forEach(m=>{
-let horarios=(m.horarios||"").toString().split("|")
-horarios.forEach(h=>{
-if(!h)return
-h=h.toString().trim()
-if(!h.includes(":"))h=h.padStart(2,"0")+":00"
-/* 🔑 CHAVE ÚNICA */
-let chave=`${m.id}_${dataHoje}_${h}_${EMPRESA_ID}`
-mapa[chave]={
-medicacao_id:m.id,
-data:dataHoje,
-horario:h,
-status:"executado",
-usuario_id:usuarioId,
-usuario_nome:nome,
-empresa_id:EMPRESA_ID
+/* 🔥 ARRAY FINAL SEM DUPLICAÇÃO */
+const inserts=Object.values(mapa)
+/* 🔒 NÃO SOBRESCREVE — INSERE SOMENTE NOVOS */
+for(const item of inserts){
+
+const {data:existe}=await db
+.from("medicacoes_execucao")
+.select("id")
+.eq("medicacao_id",item.medicacao_id)
+.eq("data",item.data)
+.eq("horario",item.horario)
+.eq("empresa_id",item.empresa_id)
+.maybeSingle()
+
+if(existe)continue
+
+const {error}=await db
+.from("medicacoes_execucao")
+.insert(item)
+
+if(error){
+console.error(error)
+alert("Erro ao concluir paciente")
+return
 }
-})
-})
+
+}
+
+/* 🔄 ATUALIZA TELA */
+await carregarStatusMedicacoes()
+}
 /* 🔥 CONVERTE PARA ARRAY SEM DUPLICADOS */
 let inserts=Object.values(mapa)
 await carregarStatusMedicacoes()
