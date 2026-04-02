@@ -306,7 +306,7 @@ mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnBackup"])
 document.getElementById("acoesClinico").style.display="none"
 }
 if(painel==="medicacao"){
-mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao"])
+mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnPDFMedicacaoPaciente","btnPDFMedicacaoGeral"])
 document.getElementById("acoesClinico").style.display="none"
 }
 /* 🔥 DESTACA ATIVO */
