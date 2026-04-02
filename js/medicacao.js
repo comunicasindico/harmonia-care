@@ -65,7 +65,6 @@ function renderizarMedicacoes(lista){
 const div=document.getElementById("listaMedicacoes")
 if(!div)return
 if(!lista)lista=[]
-
 const normalizarHora=h=>{
 if(!h)return""
 h=h.toString().trim()
@@ -73,10 +72,7 @@ if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
-
-/* 🔥 AGRUPAR POR PACIENTE */
 let pacientes={}
-
 lista.forEach(m=>{
 let pid=m.paciente_id||"0"
 if(!pacientes[pid]){
@@ -85,122 +81,51 @@ pacientes[pid]={nome:nome,itens:[]}
 }
 pacientes[pid].itens.push(m)
 })
-
 let html=""
-
-/* 🔥 BOTÕES ADMIN */
-html+=`
-<div style="display:flex;gap:8px;margin-bottom:12px">
+html+=`<div style="display:flex;gap:8px;margin-bottom:12px">
 <button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px">➕ Nova</button>
 <button onclick="editarMedicacaoGlobal()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 10px">✏️ Editar</button>
 <button onclick="excluirMedicacaoGlobal()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px">🗑️ Excluir</button>
-</div>
-`
-/* 🔥 LOOP PACIENTES */
+</div>`
 Object.values(pacientes).forEach(p=>{
-
 let corPaciente=gerarCor(p.nome,60,92)
-
-html+=`
-<div style="
-background:${corPaciente};
-padding:12px;
-margin-bottom:14px;
-border-radius:12px;
-">
+html+=`<div style="background:${corPaciente};padding:12px;margin-bottom:14px;border-radius:12px">
 <div style="font-weight:bold;margin-bottom:10px">👤 ${p.nome}</div>
-
-<div style="
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-gap:10px;
-">
-`
-/* 🔥 AGRUPAR MEDICAÇÕES */
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">`
 let mapa={}
-
 p.itens.forEach(m=>{
 const chave=m.nome_medicamento+"_"+(m.dosagem||"")
-
 if(!mapa[chave]){
-mapa[chave]={
-id:m.id,
-nome:m.nome_medicamento,
-dose:m.dosagem,
-horarios:new Set()
+mapa[chave]={id:m.id,nome:m.nome_medicamento,dose:m.dosagem,horarios:new Set()}
 }
-}
-
 let hs=(m.horarios||"").toString().split("|")
 hs.forEach(h=>{
 let n=normalizarHora(h)
 if(n)mapa[chave].horarios.add(n)
 })
 })
-
 let meds=Object.values(mapa).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR"))
-
-/* 🔥 RENDER */
 meds.forEach(m=>{
-
+let corMedicacao=gerarCor(m.nome,50,96)
 let horarios=[...m.horarios].sort((a,b)=>{
 let[p1,m1]=a.split(":")
 let[p2,m2]=b.split(":")
 return(p1*60+m1)-(p2*60+m2)
 })
-
 let hHTML=horarios.map(h=>{
-
 let exec=(window.EXEC_CACHE||[]).find(e=>e.horario===h&&e.medicacao_id===m.id)
 let cor=exec?"#22c55e":"#ef4444"
 let usuario=exec?.usuario_nome||""
-
-return `
-<button onclick="administrarMedicacao('${m.id}','${h}',this)"
-style="
-background:${cor};
-color:#fff;
-border:none;
-border-radius:6px;
-padding:6px;
-font-size:11px;
-display:flex;
-flex-direction:column;
-align-items:center;
-min-width:60px;
-">
-<span>${h}</span>
-${usuario?`<span style="font-size:9px">${usuario}</span>`:""}
-</button>
-`
-
+return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${cor};color:#fff;border:none;border-radius:6px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:60px"><span>${h}</span>${usuario?`<span style="font-size:9px">${usuario}</span>`:""}</button>`
 }).join("")
-
-html+=`
-let corMedicacao=gerarCor(m.nome,50,96)
-
-html+=`
-<div style="
-background:${corMedicacao};
-padding:8px;
-border-radius:8px;
-box-shadow:0 1px 3px rgba(0,0,0,0.08);
-">
-`
-padding:8px;
-border-radius:8px;
-box-shadow:0 1px 3px rgba(0,0,0,0.08);
-">
+html+=`<div style="background:${corMedicacao};padding:8px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
 <div style="font-weight:600;font-size:12px">${m.nome}</div>
 <div style="color:#666;font-size:11px;margin-bottom:6px">${m.dose||""}</div>
 <div style="display:flex;flex-wrap:wrap;gap:6px">${hHTML}</div>
-</div>
-`
+</div>`
 })
-
 html+=`</div></div>`
 })
-
 div.innerHTML=html
 }
 /* ====================================================
