@@ -101,13 +101,6 @@ ${hierarquia===1?`
 `:""}
 </div>`
 
-<button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px">➕ Nova</button>
-${hierarquia===1?`
-<button onclick="editarMedicacaoGlobal()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 10px">✏️ Editar</button>
-<button onclick="excluirMedicacaoGlobal()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px">🗑️ Excluir</button>
-<button onclick="cancelarModoMedicacao()" style="background:#6b7280;color:#fff;border:none;border-radius:6px;padding:6px 10px">❌ Cancelar</button>
-`:""}
-</div>`
 Object.values(pacientes).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR")).forEach(p=>{
 let corPaciente=gerarCor(p.nome,60,92)
 html+=`<div style="background:${corPaciente};padding:12px;margin-bottom:14px;border-radius:12px">
