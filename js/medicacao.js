@@ -148,7 +148,7 @@ html+=`</div></div>`
 div.innerHTML=html
 }
 /* ====================================================
-203 – ADMINISTRAR MEDICAÇÃO (COM NOME + REFRESH)
+203 – ADMINISTRAR MEDICAÇÃO (TOGGLE CORRETO POR HORÁRIO)
 ==================================================== */
 async function administrarMedicacao(medicacaoId,horario,botao){
 if(!db||!medicacaoId||!horario)return
@@ -156,7 +156,7 @@ const user=obterUsuarioLogado()||{}
 const dataHoje=new Date().toISOString().slice(0,10)
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
-/* 🔍 VERIFICA SE JÁ EXISTE */
+/* 🔍 VERIFICA EXISTENTE EXATO */
 const {data:ja}=await db
 .from("medicacoes_execucao")
 .select("*")
@@ -165,13 +165,24 @@ const {data:ja}=await db
 .eq("empresa_id",EMPRESA_ID)
 .eq("horario",horario)
 .maybeSingle()
+/* 🔴 SE EXISTE → REMOVE */
 if(ja){
-botao.style.background="#22c55e"
-botao.innerHTML=`<span>${horario}</span><span style="font-size:9px">${ja.usuario_nome||""}</span>`
+const {error}=await db
+.from("medicacoes_execucao")
+.delete()
+.eq("id",ja.id)
+if(error){
+console.error(error)
+alert("Erro ao remover")
 return
 }
-/* 💾 SALVA */
-const {error}=await db.from("medicacoes_execucao").insert({
+await carregarStatusMedicacoes()
+return
+}
+/* 🟢 SE NÃO EXISTE → INSERE */
+const {error}=await db
+.from("medicacoes_execucao")
+.insert({
 medicacao_id:medicacaoId,
 data:dataHoje,
 horario:horario,
@@ -182,9 +193,9 @@ empresa_id:EMPRESA_ID
 })
 if(error){
 console.error(error)
+alert("Erro ao salvar")
 return
 }
-/* 🔄 ATUALIZA CACHE E TELA */
 await carregarStatusMedicacoes()
 }
 /* ====================================================
