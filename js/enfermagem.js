@@ -963,8 +963,8 @@ return (a.nome_medicamento||"").localeCompare(b.nome_medicamento||"")
 html+=`<div style="background:${cor};padding:12px;margin-bottom:14px;border-radius:12px">
 <div style="font-weight:600;font-size:14px;margin-bottom:10px">👤 ${p.nome}</div>`
 if(!listaFinal.length){
-html+=`<div style="font-size:11px;color:#777">Sem medicação</div></div>`
-return
+console.log("SEM MEDICAÇÃO:",p)
+html+=`<div style="font-size:11px;color:#999">Sem medicação</div>`
 }
 html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">`
 listaFinal.forEach(m=>{
