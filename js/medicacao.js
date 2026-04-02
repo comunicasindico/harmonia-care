@@ -87,14 +87,14 @@ html+=`<div style="display:flex;gap:8px;margin-bottom:12px">
 <button onclick="editarMedicacaoGlobal()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 10px">✏️ Editar</button>
 <button onclick="excluirMedicacaoGlobal()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px">🗑️ Excluir</button>
 </div>`
-Object.values(pacientes).forEach(p=>{
+Object.values(pacientes).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR")).forEach(p=>{
 let corPaciente=gerarCor(p.nome,60,92)
 html+=`<div style="background:${corPaciente};padding:12px;margin-bottom:14px;border-radius:12px">
 <div style="font-weight:bold;margin-bottom:10px">👤 ${p.nome}</div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">`
 let mapa={}
 p.itens.forEach(m=>{
-const chave=m.nome_medicamento+"_"+(m.dosagem||"")
+const chave=(m.nome_medicamento||"").trim().toLowerCase()+"_"+(m.dosagem||"").trim().toLowerCase()
 if(!mapa[chave]){
 mapa[chave]={id:m.id,nome:m.nome_medicamento,dose:m.dosagem,horarios:new Set()}
 }
@@ -118,10 +118,25 @@ return String(e.medicacao_id)===String(m.id) && String(e.horario)===String(h)
 })
 let cor=exec?"#22c55e":"#ef4444"
 let usuario=(exec&&exec.usuario_nome)?exec.usuario_nome:""
-return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${cor};color:#fff;border:none;border-radius:6px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:60px"><span>${h}</span>${usuario?`<span style="font-size:9px">${usuario}</span>`:""}</button>`
+return `<button onclick="
+if(window.MODO_MEDICACAO==='editar'){
+editarMedicacao('${m.id}','${m.nome}','${m.dose||""}')
+}else if(window.MODO_MEDICACAO==='excluir'){
+excluirMedicacao('${m.id}')
+}else{
+administrarMedicacao('${m.id}','${h}',this)
+}
+"
+style="background:${cor};color:#fff;border:none;border-radius:6px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:60px"><span>${h}</span>${usuario?`<span style="font-size:9px">${usuario}</span>`:""}</button>`
 }).join("")
 html+=`<div style="background:${corMedicacao};padding:8px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
-<div style="font-weight:600;font-size:12px">${m.nome}</div>
+<div style="font-weight:600;font-size:12px;display:flex;justify-content:space-between">
+<span>${m.nome}</span>
+<span style="display:flex;gap:6px">
+<button onclick="editarMedicacao('${m.id}','${m.nome}','${m.dose||""}')" style="background:#3b82f6;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">✏️</button>
+<button onclick="excluirMedicacao('${m.id}')" style="background:#ef4444;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">🗑️</button>
+</span>
+</div>
 <div style="color:#666;font-size:11px;margin-bottom:6px">${m.dose||""}</div>
 <div style="display:flex;flex-wrap:wrap;gap:6px">${hHTML}</div>
 </div>`
@@ -145,6 +160,7 @@ const {data:ja}=await db
 .select("*")
 .eq("medicacao_id",medicacaoId)
 .eq("data",dataHoje)
+.eq("empresa_id",EMPRESA_ID)
 .eq("horario",horario)
 .maybeSingle()
 if(ja){
