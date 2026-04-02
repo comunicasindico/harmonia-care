@@ -561,28 +561,68 @@ alert("Erro inesperado")
 ==================================================== */
 window.concluirPendentesMedicacao=async function(){
 if(!db)return
-const user=obterUsuarioLogado()
+
+const user=obterUsuarioLogado()||{}
 const dataHoje=new Date().toISOString().slice(0,10)
+
+const lista=window.MEDICACOES_CACHE||[]
+if(!lista.length){
+alert("Nenhuma medicação encontrada")
+return
+}
+
+/* 🔥 GERA TODOS OS ITENS */
 let inserts=[]
-document.querySelectorAll("#listaMedicacoes button").forEach(btn=>{
-let h=btn.innerText.split("\n")[0].trim()
-let medicacaoId=btn.getAttribute("onclick")?.match(/'([^']+)'/)?.[1]
-if(!medicacaoId||!h)return
-let ja=(window.EXEC_CACHE||[]).find(e=>String(e.medicacao_id)===String(medicacaoId)&&String(e.horario)===String(h))
-if(!ja){
+
+lista.forEach(m=>{
+let horarios=(m.horarios||"").toString().split("|")
+
+horarios.forEach(h=>{
+if(!h)return
+
+h=h.toString().trim()
+if(!h.includes(":"))h=h.padStart(2,"0")+":00"
+
 inserts.push({
-medicacao_id:medicacaoId,
+medicacao_id:m.id,
 data:dataHoje,
 horario:h,
 status:"executado",
-usuario_id:user.id,
-usuario_nome:user.nome,
+usuario_id:user.id||null,
+usuario_nome:user.nome||"Admin",
 empresa_id:EMPRESA_ID
 })
-}
 })
-if(inserts.length){
-await db.from("medicacoes_execucao").insert(inserts)
+})
+
+if(!inserts.length){
+alert("Nada para concluir")
+return
 }
+
+/* 🔥 BARRA */
+iniciarBarra(inserts.length)
+
+/* 🔒 PROCESSA SEM SOBRESCREVER */
+for(const item of inserts){
+
+const {data:existe}=await db
+.from("medicacoes_execucao")
+.select("id")
+.eq("medicacao_id",item.medicacao_id)
+.eq("data",item.data)
+.eq("horario",item.horario)
+.eq("empresa_id",item.empresa_id)
+.maybeSingle()
+
+if(!existe){
+await db.from("medicacoes_execucao").insert(item)
+}
+
+atualizarBarra()
+}
+
+/* 🔄 FINALIZA */
+finalizarBarra()
 await carregarStatusMedicacoes()
 }
