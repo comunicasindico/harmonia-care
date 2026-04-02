@@ -101,7 +101,17 @@ html+=`
 Object.values(pacientes).forEach(p=>{
 
 html+=`
-<div style="background:#f9fafb;padding:12px;margin-bottom:14px;border-radius:12px">
+let corPaciente=gerarCor(p.nome,60,92)
+
+html+=`
+<div style="
+background:${corPaciente};
+padding:12px;
+margin-bottom:14px;
+border-radius:12px;
+">
+`
+padding:12px;margin-bottom:14px;border-radius:12px">
 <div style="font-weight:bold;margin-bottom:10px">👤 ${p.nome}</div>
 
 <div style="
@@ -172,8 +182,16 @@ ${usuario?`<span style="font-size:9px">${usuario}</span>`:""}
 }).join("")
 
 html+=`
+let corMedicacao=gerarCor(m.nome,50,96)
+
+html+=`
 <div style="
-background:#fff;
+background:${corMedicacao};
+padding:8px;
+border-radius:8px;
+box-shadow:0 1px 3px rgba(0,0,0,0.08);
+">
+`
 padding:8px;
 border-radius:8px;
 box-shadow:0 1px 3px rgba(0,0,0,0.08);
@@ -270,6 +288,17 @@ carregarMedicacoes()
 document.getElementById("nomeMedicacao").value=""
 document.getElementById("doseMedicacao").value=""
 document.getElementById("horarioMedicacao").value=""
+}
+/* ====================================================
+208 – GERAR COR POR TEXTO (PACIENTE / MEDICAÇÃO)
+==================================================== */
+function gerarCor(texto, saturacao=70, luminosidade=85){
+let hash=0
+for(let i=0;i<texto.length;i++){
+hash=texto.charCodeAt(i)+((hash<<5)-hash)
+}
+let hue=hash%360
+return `hsl(${hue},${saturacao}%,${luminosidade}%)`
 }
 /* ====================================================
 211 – FUNÇÕES ADMIN (OBRIGATÓRIO)
