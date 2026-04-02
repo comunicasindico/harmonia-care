@@ -96,11 +96,9 @@ html+=`
 <button onclick="excluirMedicacaoGlobal()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px">🗑️ Excluir</button>
 </div>
 `
-
 /* 🔥 LOOP PACIENTES */
 Object.values(pacientes).forEach(p=>{
 
-html+=`
 let corPaciente=gerarCor(p.nome,60,92)
 
 html+=`
@@ -110,8 +108,6 @@ padding:12px;
 margin-bottom:14px;
 border-radius:12px;
 ">
-`
-padding:12px;margin-bottom:14px;border-radius:12px">
 <div style="font-weight:bold;margin-bottom:10px">👤 ${p.nome}</div>
 
 <div style="
@@ -120,7 +116,6 @@ grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
 gap:10px;
 ">
 `
-
 /* 🔥 AGRUPAR MEDICAÇÕES */
 let mapa={}
 
