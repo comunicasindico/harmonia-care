@@ -887,12 +887,9 @@ function renderizarMedicacoes(lista){
 const div=document.getElementById("listaMedicacoes")
 if(!div)return
 if(!lista)lista=[]
-
 const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
 const podeEditar=hierarquia===1
-
 const cores=["#f0f9ff","#fefce8","#f0fdf4","#fff7ed","#fdf2f8","#eef2ff"]
-
 const norm=h=>{
 if(!h)return""
 h=h.toString().trim()
@@ -901,11 +898,9 @@ if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
-
 const limpar=txt=>{
 return (txt||"").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"").replace(/mg|cp|cps|ml|ui/g,"").trim()
 }
-
 const normalizarHora=h=>{
 if(!h)return""
 h=h.toString().trim().toUpperCase()
@@ -914,12 +909,10 @@ if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
-
 /* ====================================================
 🔹 MAPA DE PACIENTES (CORRETO)
 ==================================================== */
 const pacientes={}
-
 ;(window.PACIENTES_CACHE||[]).forEach(p=>{
 const id=(p.id||"").toString().trim()
 pacientes[id]={
@@ -928,13 +921,11 @@ nome:p.nome_completo,
 itens:[]
 }
 })
-
 /* ====================================================
 🔹 VINCULAR MEDICAÇÕES
 ==================================================== */
 lista.forEach(m=>{
 const pid=(m.paciente_id||"").toString().trim()
-
 if(!pacientes[pid]){
 pacientes[pid]={
 id:pid,
@@ -942,12 +933,9 @@ nome:"Paciente Não Identificado",
 itens:[]
 }
 }
-
 pacientes[pid].itens.push(m)
 })
-
 let html=""
-
 /* ====================================================
 🔹 BOTÕES ADMIN
 ==================================================== */
@@ -958,18 +946,14 @@ html+=`<div style="display:flex;gap:8px;margin-bottom:10px">
 <button onclick="excluirMedicacaoGlobal()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:12px">🗑️ Excluir</button>
 </div>`
 }
-
 let idx=0
-
 /* ====================================================
 🔹 LOOP PACIENTES
 ==================================================== */
 Object.values(pacientes).forEach(p=>{
 const cor=cores[idx%cores.length]
 idx++
-
 let medsUnicos={}
-
 /* ====================================================
 🔹 UNIFICAR MEDICAÇÕES
 ==================================================== */
@@ -987,24 +971,20 @@ horarios_set:new Set()
 }
 }
 let listaHorarios=[]
-
 if(Array.isArray(m.horarios)){
 listaHorarios=m.horarios
 }else if(m.horarios){
 listaHorarios=m.horarios.toString().split("|")
 }
-
 /* 🔥 fallback se vier numero (7 ou 13) */
 if(typeof m.horarios==="number"){
 listaHorarios=[m.horarios.toString().padStart(2,"0")+":00"]
 }
-
 listaHorarios.forEach(h=>{
 let hNorm=normalizarHora(h)
 if(hNorm)medsUnicos[chave].horarios_set.add(hNorm)
 })
 })
-
 /* ====================================================
 🔹 FINAL LISTA
 ==================================================== */
@@ -1021,35 +1001,25 @@ return toMin(a)-toMin(b)
 })
 return m
 })
-
 html+=`<div style="background:${cor};padding:12px;margin-bottom:14px;border-radius:12px">
 <div style="font-weight:600;font-size:14px;margin-bottom:10px">👤 ${p.nome}</div>`
-
 if(!listaFinal.length){
 html+=`<div style="font-size:11px;color:#999">Sem medicação</div></div>`
 return
 }
-
 html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">`
-
 /* ====================================================
 🔹 RENDER MEDICAÇÕES
 ==================================================== */
 listaFinal.forEach(m=>{
-
 let horariosHTML=m.horarios.map(h=>{
-
 let exec=(window.EXEC_CACHE||[]).find(e=>norm(e.horario)===h&&e.medicacao_id===m.id)
-
 let corBtn=exec?"#22c55e":"#f87171"
 let usuarioExec=exec?.usuario_nome||""
-
 return `<button onclick="window.MODO_MEDICACAO==='editar'?editarHorario('${m.id}','${h}',this):administrarMedicacao('${m.id}','${h}',this)" style="background:${corBtn};color:#fff;border:none;border-radius:6px;font-size:10px;padding:4px 6px">
 ${h}${usuarioExec?`<div style="font-size:8px">${usuarioExec}</div>`:""}
 </button>`
-
 }).join("")
-
 html+=`<div style="border-bottom:1px solid #ddd;padding-bottom:6px">
 <div style="font-size:12px;font-weight:600">
 <span onclick="editarNomeMedicacao('${m.id}', \`${m.nome_medicamento||""}\`, \`${m.dosagem||""}\`)">
@@ -1062,11 +1032,8 @@ ${horariosHTML}
 </div>
 </div>`
 })
-
 html+=`</div></div>`
-
 })
-
 div.innerHTML=html
 }
 /* ====================================================
