@@ -175,17 +175,15 @@ let mapaCores={
 "03:00":"#111827",
 "04:00":"#111827"
 }
+let mapaCores={"05:00":"#3b82f6","06:00":"#3b82f6","07:00":"#2563eb","08:00":"#1d4ed8","09:00":"#1e40af","10:00":"#1e3a8a","11:00":"#172554","12:00":"#f59e0b","13:00":"#f97316","14:00":"#ea580c","15:00":"#dc2626","16:00":"#b91c1c","17:00":"#991b1b","18:00":"#7c3aed","19:00":"#6d28d9","20:00":"#5b21b6","21:00":"#4c1d95","22:00":"#312e81","23:00":"#1e1b4b","00:00":"#111827","01:00":"#111827","02:00":"#111827","03:00":"#111827","04:00":"#111827"}
 let corBase=mapaCores[h]||"#6b7280"
 let cor=exec?"#22c55e":corBase
 let usuario=(exec&&exec.usuario_nome)?exec.usuario_nome:(exec&&exec.usuario_id?"✔":"")
 let horaNum=parseInt(h.split(":")[0])
-let mapaCores={"05:00":"#3b82f6","06:00":"#3b82f6","07:00":"#2563eb","08:00":"#1d4ed8","09:00":"#1e40af","10:00":"#1e3a8a","11:00":"#172554","12:00":"#f59e0b","13:00":"#f97316","14:00":"#ea580c","15:00":"#dc2626","16:00":"#b91c1c","17:00":"#991b1b","18:00":"#7c3aed","19:00":"#6d28d9","20:00":"#5b21b6","21:00":"#4c1d95","22:00":"#312e81","23:00":"#1e1b4b","00:00":"#111827","01:00":"#111827","02:00":"#111827","03:00":"#111827","04:00":"#111827"}
-let corBase=mapaCores[h]||"#6b7280"
 let icone="🌅"
 let borda="#2563eb"
 if(horaNum>=12&&horaNum<18){icone="☀️";borda="#f59e0b"}
 if(horaNum>=18||horaNum<5){icone="🌙";borda="#6366f1"}
-let cor=exec?"#22c55e":corBase
 return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${cor};color:#fff;border:2px solid ${borda};border-radius:8px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:65px;box-shadow:0 2px 4px rgba(0,0,0,0.15)">
 <span style="font-size:12px">${icone} ${h}</span>
 <span style="font-size:9px">${usuario||""}</span>
