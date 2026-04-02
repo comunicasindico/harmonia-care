@@ -23,6 +23,7 @@
 <script src="js/enfermagem.js?v=4"></script>
 <script src="js/app.js"></script>
 <script src="js/admin.js?v=2"></script>
+<script src="js/medicacao.js?v=1"></script>
 <!-- ====================================================
 002 – ESTILOS GLOBAIS (CORRIGIDO E OTIMIZADO FINAL)
 ==================================================== -->
@@ -391,7 +392,16 @@ display:flex;align-items:center;justify-content:center;}
 <script>
 (async function(){
 const v=Date.now()
-const scripts=["js/globals.js","js/supabase.js","js/app.js","js/enfermagem.js","js/clinico.js","js/admin.js","js/pdf.js"]
+const scripts=[
+"js/globals.js",
+"js/supabase.js",
+"js/app.js",
+"js/enfermagem.js",
+"js/medicacao.js",
+"js/clinico.js",
+"js/admin.js",
+"js/pdf.js"
+]
 for(const src of scripts){
 await new Promise((resolve,reject)=>{
 const s=document.createElement("script")
