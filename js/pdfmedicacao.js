@@ -92,10 +92,17 @@ doc.setFontSize(11)
 doc.text("Paciente: "+(paciente?.nome_completo||""),14,28)
 doc.text("Data emissão: "+dataGeracao,14,34)
 /* 🔷 QR CODE */
-const qrDiv=document.createElement("div")
-new QRCode(qrDiv,{text:`Paciente:${paciente?.nome_completo} Data:${dataGeracao}`,width:80,height:80})
-const qrImg=qrDiv.querySelector("img")?.src
-if(qrImg)doc.addImage(qrImg,"PNG",160,22,30,30)
+let qrData=`Paciente:${paciente?.nome_completo} | Data:${dataGeracao}`
+
+if(window.QRCode){
+const canvas=document.createElement("canvas")
+QRCode.toCanvas(canvas,qrData,{width:120},function(err){
+if(!err){
+let img=canvas.toDataURL("image/png")
+doc.addImage(img,"PNG",160,22,30,30)
+}
+})
+}
 let y=50
 let mapa={}
 meds.forEach(m=>{
