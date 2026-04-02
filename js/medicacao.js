@@ -65,6 +65,7 @@ function renderizarMedicacoes(lista){
 const div=document.getElementById("listaMedicacoes")
 if(!div)return
 if(!lista)lista=[]
+window.MEDICACOES_CACHE=lista
 const normalizarHora=h=>{
 if(!h)return""
 h=h.toString().trim()
@@ -367,6 +368,49 @@ alert("Modo exclusão ativado")
 function cancelarModoMedicacao(){
 window.MODO_MEDICACAO=""
 carregarMedicacoes()
+}
+/* ====================================================
+212 – CONCLUIR MEDICAÇÃO POR PACIENTE
+==================================================== */
+async function concluirPacienteMedicacao(pacienteId){
+if(!db||!pacienteId)return
+const user=obterUsuarioLogado()||{}
+const dataHoje=new Date().toISOString().slice(0,10)
+const usuarioId=user.id||null
+const nome=user.nome||"Administrador"
+
+/* 🔥 PEGAR MEDICAÇÕES DO PACIENTE */
+const meds=(window.MEDICACOES_CACHE||[]).filter(m=>String(m.paciente_id)===String(pacienteId))
+
+if(!meds.length){
+alert("Nenhuma medicação encontrada")
+return
+}
+let inserts=[]
+meds.forEach(m=>{
+let horarios=(m.horarios||"").toString().split("|")
+horarios.forEach(h=>{
+if(!h)return
+inserts.push({
+medicacao_id:m.id,
+data:dataHoje,
+horario:h,
+status:"executado",
+usuario_id:usuarioId,
+usuario_nome:nome,
+empresa_id:EMPRESA_ID
+})
+})
+})
+/* 🔥 SALVAR EM LOTE */
+const {error}=await db.from("medicacoes_execucao").upsert(inserts,{onConflict:"medicacao_id,data,horario,empresa_id"})
+if(error){
+console.error(error)
+alert("Erro ao concluir paciente")
+return
+}
+/* 🔄 ATUALIZA TELA */
+await carregarStatusMedicacoes()
 }
 /* ====================================================
 220 – EDITAR MEDICAÇÃO (FUNCIONAL)
