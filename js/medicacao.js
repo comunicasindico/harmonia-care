@@ -63,6 +63,7 @@ aplicarDataInteligente()
 202 – RENDER MEDICAÇÕES (FINAL LIMPO PROFISSIONAL)
 ==================================================== */
 function renderizarMedicacoes(lista){
+forcarDataHoje()
 const div=document.getElementById("listaMedicacoes")
 if(!div)return
 if(!lista)lista=[]
@@ -695,6 +696,19 @@ const fim=fimDate.toISOString().slice(0,10)
 
 document.getElementById("dataInicioMedicacao").value=inicio
 document.getElementById("dataFimMedicacao").value=fim
+}
+/* ====================================================
+232 – DATA FIXA HOJE (SEMPRE)
+==================================================== */
+function forcarDataHoje(){
+
+const hoje=new Date().toISOString().slice(0,10)
+
+const d1=document.getElementById("dataInicioMedicacao")
+const d2=document.getElementById("dataFimMedicacao")
+
+if(d1)d1.value=hoje
+if(d2)d2.value=hoje
 }
 /* ====================================================
 240 – FILTRAR MEDICAÇÃO POR PERÍODO
