@@ -133,12 +133,15 @@ return(p1*60+m1)-(p2*60+m2)
 })
 let hHTML=horarios.map(h=>{
 let exec=(window.EXEC_CACHE||[]).find(e=>{
-let exec=(window.EXEC_CACHE||[]).find(e=>{
 return String(e.medicacao_id)===String(m.id) && String(e.horario)===String(h)
 })
-})
-let cor=exec?"#22c55e":"#ef4444"
-let usuario=(exec&&exec.usuario_nome)?exec.usuario_nome:""
+let horaNum=parseInt(h.split(":")[0])
+let corBase="#ef4444"
+if(horaNum>=5&&horaNum<12)corBase="#3b82f6"
+if(horaNum>=12&&horaNum<18)corBase="#f59e0b"
+if(horaNum>=18||horaNum<5)corBase="#6366f1"
+let cor=exec?"#22c55e":corBase
+let usuario=(exec&&exec.usuario_nome)?exec.usuario_nome:(exec&&exec.usuario_id?"✔":"")
 return `<button onclick="administrarMedicacao('${m.id}','${h}',this)" style="background:${cor};color:#fff;border:none;border-radius:6px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:60px"><span>${h}</span>${usuario?`<span style="font-size:9px">${usuario}</span>`:""}</button>`
 }).join("")
 html+=`<div style="background:${corMedicacao};padding:8px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
