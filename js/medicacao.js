@@ -507,7 +507,35 @@ empresa_id:EMPRESA_ID
 }
 })
 if(inserts.length){
-await db.from("medicacoes_execucao").insert(inserts)
+for(const m of meds){
+
+let horarios=(m.horarios||"").toString().split("|")
+
+for(const h of horarios){
+
+const {data:existe}=await db
+.from("medicacoes_execucao")
+.select("id")
+.eq("medicacao_id",m.id)
+.eq("data",dataHoje)
+.eq("horario",h)
+.eq("empresa_id",EMPRESA_ID)
+.maybeSingle()
+
+if(existe)continue
+
+await db.from("medicacoes_execucao").insert({
+medicacao_id:m.id,
+data:dataHoje,
+horario:h,
+status:"executado",
+usuario_id:usuarioId,
+usuario_nome:nome,
+empresa_id:EMPRESA_ID
+})
+
+}
+}
 }
 await carregarStatusMedicacoes()
 }
