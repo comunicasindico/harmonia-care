@@ -194,7 +194,10 @@ let bloqueado=exec?"pointer-events:none;opacity:0.65;cursor:not-allowed;":""
 /* 🔥 TEXTO */
 let texto=exec?`${h} ${exec.usuario_nome||"Admin"} OK`:h
 
-return `<button onclick="${exec?"":`administrarMedicacao('${m.id}','${h}',this)`}"
+return `<button
+data-hora="${h}" 
+class="${exec ? 'executado' : ''}"
+onclick="${exec?"":`administrarMedicacao('${m.id}','${h}',this)`}"
 style="background:${cor};color:#000;border:none;border-radius:8px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:70px;box-shadow:0 2px 4px rgba(0,0,0,0.15);${bloqueado}">
 <span>${icone} ${texto}</span>
 </button>`
@@ -803,19 +806,31 @@ function marcarPacienteCompleto(pacienteId,feito,total){
 const cards=document.querySelectorAll("[data-paciente-id]")
 
 cards.forEach(card=>{
-if(card.dataset.pacienteId!==pacienteId)return
+
+const id=card.dataset.pacienteId
+
+/* 🔥 CALCULA EXECUÇÃO REAL DO CARD */
+const botoes=card.querySelectorAll("button[data-hora]")
+let totalCard=botoes.length
+let feitosCard=0
+
+botoes.forEach(btn=>{
+if(btn.classList.contains("executado")){
+feitosCard++
+}
+})
 
 /* 🔥 100% COMPLETO */
-if(feito>=total&&total>0){
+if(totalCard>0 && feitosCard>=totalCard){
 
-card.style.background="#dcfce7" // verde claro
+card.style.background="#dcfce7"
 card.style.border="2px solid #22c55e"
 
 /* 🔘 BOTÃO */
-const btn=card.querySelector("button")
-if(btn){
-btn.innerText="✔ Completo"
-btn.style.background="#16a34a"
+const btnAcao=card.querySelector("button[onclick*='concluirPacienteMedicacao']")
+if(btnAcao){
+btnAcao.innerText="✔ Completo"
+btnAcao.style.background="#16a34a"
 }
 
 /* 🏷️ BADGE */
@@ -825,15 +840,24 @@ badge=document.createElement("div")
 badge.className="badge-status"
 badge.style.fontSize="11px"
 badge.style.marginTop="4px"
-card.querySelector("div")?.appendChild(badge)
+card.prepend(badge)
 }
-badge.innerText=`${feito}/${total} ✔`
+badge.innerText=`${feitosCard}/${totalCard} ✔`
 
 }else{
 
 /* 🔶 PARCIAL */
+card.style.background=""
 card.style.border="2px solid #facc15"
 
+/* 🔘 BOTÃO VOLTA */
+const btnAcao=card.querySelector("button[onclick*='concluirPacienteMedicacao']")
+if(btnAcao){
+btnAcao.innerText="✔ Concluir Paciente"
+btnAcao.style.background="#22c55e"
+}
+
+/* 🏷️ BADGE */
 let badge=card.querySelector(".badge-status")
 if(!badge){
 badge=document.createElement("div")
@@ -842,8 +866,10 @@ badge.style.fontSize="11px"
 badge.style.marginTop="4px"
 card.prepend(badge)
 }
-badge.innerText=`${feito}/${total}`
+badge.innerText=`${feitosCard}/${totalCard}`
 
 }
+
 })
+
 }
