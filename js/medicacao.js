@@ -233,8 +233,7 @@ let meds=Object.values(mapa).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR"))
 /* 🔹 MEDICAÇÕES */
 meds.forEach(m=>{
 
-let corMedicacao=gerarCor(m.nome,50,96)
-
+let corMedicacao = m.obrigatorio===false ? "#f1f5f9" : gerarCor(m.nome,50,96)
 let horarios=[...m.horarios].sort((a,b)=>{
 let[p1,m1]=a.split(":")
 let[p2,m2]=b.split(":")
@@ -290,7 +289,11 @@ style="background:${cor};color:#000;border:none;border-radius:8px;padding:6px;fo
 
 html+=`<div style="background:${corMedicacao};padding:8px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
 <div style="font-weight:600;font-size:12px;display:flex;justify-content:space-between">
-<span>${m.nome}</span>
+<span>
+${m.nome}
+${m.medicacoes_modelo?.tarja_preta ? '<span style="color:#fff;background:#000;padding:2px 6px;border-radius:6px;font-size:10px">TARJA PRETA</span>' : ''}
+${m.obrigatorio===false ? ' ⚠️' : ''}
+</span>
 ${mostrarAcoes?`<span style="display:flex;gap:6px">
 <button onclick="editarMedicacao('${m.nome}','${m.dose||""}','${p.id}',${m.obrigatorio})" style="background:#3b82f6;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">✏️</button>
 <button onclick="excluirMedicacao('${m.nome}','${m.dose||""}','${p.id}')" style="background:#ef4444;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">🗑️</button>
