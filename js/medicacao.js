@@ -50,7 +50,20 @@ return
 }
 let query=db.from("medicacoes").select("*").eq("ativo",true)
 if(pacientesPermitidos)query=query.in("paciente_id",pacientesPermitidos)
-if(pacienteId!=="todos")query=query.eq("paciente_id",pacienteId)
+if(pacienteId!=="todos"){
+if(pacientesPermitidos && !pacientesPermitidos.includes(pacienteId)){
+renderizarMedicacoes([])
+return
+}
+query=query.eq("paciente_id",pacienteId)
+}
+if(hierarquia!==1 && pacienteId!=="todos"){
+if(!pacientesPermitidos.includes(pacienteId)){
+console.warn("Acesso bloqueado ao paciente")
+renderizarMedicacoes([])
+return
+}
+}
 const {data,error}=await query
 if(error){
 renderizarMedicacoes([])
@@ -77,6 +90,16 @@ if(dataEnfFim&&dataMedFim)dataMedFim.value=dataEnfFim
 const div=document.getElementById("listaMedicacoes")
 if(!div)return
 if(!lista)lista=[]
+/* ====================================================
+202A – FILTRO FINAL SEGURANÇA (MEDICAÇÃO)
+==================================================== */
+let usuarioId=localStorage.getItem("usuario_id")
+let hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+
+if(hierarquia!==1 && usuarioId){
+let permitidos=new Set(window.PACIENTES_CACHE?.map(p=>String(p.id))||[])
+lista=lista.filter(m=>permitidos.has(String(m.paciente_id)))
+}
 window.MEDICACOES_CACHE=lista
 
 const normalizarHora=h=>{
