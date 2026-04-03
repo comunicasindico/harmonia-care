@@ -562,6 +562,7 @@ onConflict:"usuario_id,paciente_id,turno"
 /* 🔄 CONTADOR */
 carregarUsuarios()
 }
+}
 /* ====================================================
 076 – FILTRO PACIENTES VÍNCULO
 ==================================================== */
