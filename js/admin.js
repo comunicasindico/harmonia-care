@@ -535,7 +535,7 @@ carregarUsuarios()
 /* ====================================================
 076 – FILTRO PACIENTES VÍNCULO
 ==================================================== */
-let timerBusca=null
+var timerBusca=null
 function filtrarPacientesVinculo(txt){
 clearTimeout(timerBusca)
 timerBusca=setTimeout(()=>{
