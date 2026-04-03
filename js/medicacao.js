@@ -453,12 +453,19 @@ window.concluirPacienteMedicacao=async function(pacienteId){
 if(!db||!pacienteId)return
 
 const user=obterUsuarioLogado()||{}
-const dataInicio=document.getElementById("dataInicioMedicacao")?.value
-const dataFim=document.getElementById("dataFimMedicacao")?.value
+const d1=document.getElementById("dataInicioMedicacao")
+const d2=document.getElementById("dataFimMedicacao")
 
+let dataInicio=d1?.value
+let dataFim=d2?.value
+
+/* 🔥 GARANTE DATA SEM TRAVAR */
 if(!dataInicio||!dataFim){
-alert("Informe período")
-return
+const hoje=new Date().toISOString().slice(0,10)
+dataInicio=hoje
+dataFim=hoje
+if(d1)d1.value=hoje
+if(d2)d2.value=hoje
 }
 
 const datas=gerarDatasPeriodo(dataInicio,dataFim)
