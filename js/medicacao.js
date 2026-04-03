@@ -107,8 +107,8 @@ if(!lista)lista=[]
 /* ====================================================
 202A – FILTRO FINAL SEGURANÇA (MEDICAÇÃO)
 ==================================================== */
-let usuarioId=localStorage.getItem("usuario_id")
-let hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+usuarioId=usuarioId||localStorage.getItem("usuario_id")
+hierarquia=hierarquia||parseInt(localStorage.getItem("usuario_hierarquia")||5)
 
 if(hierarquia!==1 && usuarioId){
 let permitidos=new Set(window.PACIENTES_CACHE?.map(p=>String(p.id))||[])
