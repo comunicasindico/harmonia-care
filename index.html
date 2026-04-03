@@ -297,9 +297,12 @@ document.getElementById('horarioMedicacao')
 )">
 <input id="doseMedicacao" placeholder="Dosagem"
 style="width:100%;margin-bottom:6px;padding:6px">
-<select id="horarioMedicacao" multiple size="4" style="width:100%;margin-bottom:6px;padding:6px;border:1px solid #ddd;border-radius:6px">
-</select>
-<small style="color:#666;font-size:11px">Segure CTRL para selecionar vários horários</small>
+<div id="horarioMedicacao" style="
+display:grid;
+grid-template-columns:repeat(6,1fr);
+gap:6px;
+margin-bottom:8px;
+"></div>
 <!-- 🔥 PATCH 017 – PERÍODO -->
 <div style="display:flex;gap:6px;margin-bottom:6px">
 <input id="dataInicioMedicacao" type="date" style="flex:1;padding:6px">
