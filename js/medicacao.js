@@ -666,7 +666,7 @@ alert("Erro inesperado")
 }
 }
 /* ====================================================
-222 – CONCLUIR PENDENTES MEDICACAO
+222 – CONCLUIR PENDENTES MEDICACAO (FINAL TURBO)
 ==================================================== */
 window.concluirPendentesMedicacao=async function(){
 if(!db)return
@@ -688,44 +688,48 @@ alert("Nenhuma medicação encontrada")
 return
 }
 
-/* 🔥 GERA TODOS OS ITENS */
-let inserts=[]
+/* 🔥 BASE */
+let base=[]
 
 lista.forEach(m=>{
 let horarios=(m.horarios||"").toString().split("|")
-
 horarios.forEach(h=>{
 if(!h)return
-
 h=h.toString().trim()
 if(!h.includes(":"))h=h.padStart(2,"0")+":00"
-
-inserts.push({
+base.push({
 medicacao_id:m.id,
-data:dataHoje,
 horario:h,
-status:"executado",
-usuario_id:user.id||null,
-usuario_nome:user.nome||"Admin",
 empresa_id:EMPRESA_ID
 })
 })
 })
 
-if(!inserts.length){
+if(!base.length){
 alert("Nada para concluir")
 return
 }
 
-/* 🔥 BARRA */
-iniciarBarra(inserts.length * datas.length)
+/* 🔥 CONTROLE */
+let total=base.length * datas.length
+let atual=0
 
+iniciarBarra(total)
+
+/* 🔥 LOOP */
 for(const dataHoje of datas){
 
-for(const itemBase of inserts){
+for(const itemBase of base){
 
-let item={...itemBase,data:dataHoje}
+let item={
+...itemBase,
+data:dataHoje,
+status:"executado",
+usuario_id:user.id||null,
+usuario_nome:user.nome||"Admin"
+}
 
+/* 🔒 VERIFICA */
 const {data:existe}=await db
 .from("medicacoes_execucao")
 .select("id")
@@ -736,17 +740,34 @@ const {data:existe}=await db
 .maybeSingle()
 
 if(!existe){
+
 await db.from("medicacoes_execucao").insert(item)
+
+/* 🔥 ATIVA UI (BOTÃO VERDE) */
+const btn=document.querySelector(
+`[data-id="${item.medicacao_id}"][data-hora="${item.horario}"]`
+)
+
+if(btn){
+btn.classList.add("ok")
+btn.style.background="#22c55e"
+btn.style.color="#fff"
+btn.innerText=`${item.horario} ${user.nome||"Admin"} OK`
 }
 
-atualizarBarra()
+}
+
+atual++
+atualizarBarra(atual,total)
+
 }
 }
 
+/* 🔥 FINAL */
 finalizarBarra()
+
 await carregarStatusMedicacoes()
 }
-
 /* ====================================================
 223 GERAR DATAS MEDICACAO
 ==================================================== */
@@ -931,3 +952,41 @@ container.appendChild(btn)
 document.addEventListener("DOMContentLoaded",()=>{
 montarHorariosMedicacao()
 })
+/* ====================================================
+237 – BARRA PROGRESSO MEDICAÇÃO
+==================================================== */
+function atualizarBarraMedicacao(atual,total){
+let container=document.getElementById("barraProgressoMedicacao")
+if(!container){
+container=document.createElement("div")
+container.id="barraProgressoMedicacao"
+container.style.position="fixed"
+container.style.top="10px"
+container.style.right="10px"
+container.style.width="200px"
+container.style.height="10px"
+container.style.background="#fee2e2"
+container.style.borderRadius="6px"
+container.style.overflow="hidden"
+container.style.zIndex="9999"
+const barra=document.createElement("div")
+barra.id="barraInternaMedicacao"
+barra.style.height="100%"
+barra.style.width="0%"
+barra.style.background="#ef4444"
+barra.style.transition="0.3s"
+container.appendChild(barra)
+document.body.appendChild(container)
+}
+const barra=document.getElementById("barraInternaMedicacao")
+const perc=Math.round((atual/total)*100)
+barra.style.width=perc+"%"
+if(perc>70)barra.style.background="#22c55e"
+else if(perc>30)barra.style.background="#facc15"
+else barra.style.background="#ef4444"
+if(perc>=100){
+setTimeout(()=>{
+container.remove()
+},800)
+}
+}
