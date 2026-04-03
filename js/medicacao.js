@@ -1158,18 +1158,30 @@ usuario_nome:"Sistema"
 }
 }
 /* ====================================================
-502 – AO SELECIONAR MEDICAÇÃO → CARREGA STATUS
+240   710 – CARREGAR STATUS REAL DA MEDICAÇÃO
 ==================================================== */
-document.addEventListener("change",function(e){
+document.addEventListener("change",async function(e){
 if(e.target.id==="listaMedicacoesEditar"){
-const opt=e.target.selectedOptions[0]
-if(!opt)return
-const obrigatorio=opt.dataset.obrigatorio==="true"
+const nomeMedicamento=e.target.value
+if(!nomeMedicamento)return
+/* 🔥 BUSCA NO BANCO */
+const {data,error}=await db
+.from("medicacoes")
+.select("obrigatorio")
+.eq("nome_medicamento",nomeMedicamento)
+.limit(1)
+.maybeSingle()
+if(error){
+console.error(error)
+return
+}
+/* 🔥 DEFINE NO SELECT */
+const obrigatorio=data?.obrigatorio!==false
 document.getElementById("obrigatorioMedicacao").value=obrigatorio?"true":"false"
 }
 })
 /* ====================================================
-503 – SALVAR AUTOMÁTICO OBRIGATÓRIO
+241   503 – SALVAR AUTOMÁTICO OBRIGATÓRIO
 ==================================================== */
 document.addEventListener("change",async function(e){
 if(e.target.id==="obrigatorioMedicacao"){
