@@ -197,8 +197,15 @@ y+=5
 let horarios=[...new Set(m.horarios)].sort()
 let linha=""
 horarios.forEach(h=>{
-let hora=h.toString().replace(/[^\d:]/g,"").slice(0,5)
-if(hora.includes(":"))linha+=hora+"  "
+let hora=(h||"").toString().trim()
+if(!hora)return
+if(!hora.includes(":")){
+hora=hora.padStart(2,"0")+":00"
+}else{
+let[p,m]=hora.split(":")
+hora=p.padStart(2,"0")+":"+m.padStart(2,"0")
+}
+linha+=hora+"  "
 })
 if(y>270){doc.addPage();y=20}
 doc.setFontSize(8)
