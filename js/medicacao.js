@@ -809,66 +809,52 @@ if(d1)d1.value=hoje
 if(d2)d2.value=hoje
 }
 /* ====================================================
-240 – FILTRAR MEDICAÇÃO POR PERÍODO
+233 – FILTRAR MEDICAÇÃO POR PERÍODO
 ==================================================== */
 async function filtrarPeriodoMedicacao(){
 if(!db)return
-
 const dataInicio=document.getElementById("dataInicioMedicacao")?.value
 const dataFim=document.getElementById("dataFimMedicacao")?.value
-
 if(!dataInicio||!dataFim){
 alert("Informe período")
 return
 }
-
 /* 🔥 BUSCA EXECUÇÕES */
 const {data:exec}=await db
 .from("medicacoes_execucao")
 .select("*")
 .gte("data",dataInicio)
 .lte("data",dataFim)
-
 window.EXEC_CACHE=exec||[]
-
 /* 🔄 RECARREGA TELA */
 carregarMedicacoes()
 }
 /* ====================================================
-250 – MARCAR PACIENTE COMPLETO
+234 – MARCAR PACIENTE COMPLETO
 ==================================================== */
 function marcarPacienteCompleto(pacienteId,feito,total){
-
 const cards=document.querySelectorAll("[data-paciente-id]")
-
 cards.forEach(card=>{
-
 const id=card.dataset.pacienteId
-
 /* 🔥 CALCULA EXECUÇÃO REAL DO CARD */
 const botoes=card.querySelectorAll("button[data-hora]")
 let totalCard=botoes.length
 let feitosCard=0
-
 botoes.forEach(btn=>{
 if(btn.classList.contains("executado")){
 feitosCard++
 }
 })
-
 /* 🔥 100% COMPLETO */
 if(totalCard>0 && feitosCard>=totalCard){
-
 card.style.background="#dcfce7"
 card.style.border="2px solid #22c55e"
-
 /* 🔘 BOTÃO */
 const btnAcao=card.querySelector("button[onclick*='concluirPacienteMedicacao']")
 if(btnAcao){
 btnAcao.innerText="✔ Completo"
 btnAcao.style.background="#16a34a"
 }
-
 /* 🏷️ BADGE */
 let badge=card.querySelector(".badge-status")
 if(!badge){
@@ -879,20 +865,16 @@ badge.style.marginTop="4px"
 card.prepend(badge)
 }
 badge.innerText=`${feitosCard}/${totalCard} ✔`
-
 }else{
-
 /* 🔶 PARCIAL */
 card.style.background=""
 card.style.border="2px solid #facc15"
-
 /* 🔘 BOTÃO VOLTA */
 const btnAcao=card.querySelector("button[onclick*='concluirPacienteMedicacao']")
 if(btnAcao){
 btnAcao.innerText="✔ Concluir Paciente"
 btnAcao.style.background="#22c55e"
 }
-
 /* 🏷️ BADGE */
 let badge=card.querySelector(".badge-status")
 if(!badge){
@@ -903,40 +885,49 @@ badge.style.marginTop="4px"
 card.prepend(badge)
 }
 badge.innerText=`${feitosCard}/${totalCard}`
-
 }
-
 })
-
 }
 /* ====================================================
-208 – GERAR HORÁRIOS VISUAL (CLIQUE)
+235 – GERAR HORÁRIOS VISUAL (CLIQUE)
 ==================================================== */
 function montarHorariosMedicacao(){
 const container=document.getElementById("horarioMedicacao")
 if(!container)return
 container.innerHTML=""
-for(let h=6;h<=23;h++){
+
+for(let h=0;h<=23;h++){
 const hora=h.toString().padStart(2,"0")+":00"
+
 const btn=document.createElement("div")
 btn.innerText=hora
 btn.dataset.valor=hora
+
 btn.style.padding="6px"
 btn.style.border="1px solid #ddd"
 btn.style.borderRadius="6px"
 btn.style.textAlign="center"
 btn.style.cursor="pointer"
 btn.style.background="#f3f4f6"
+btn.style.userSelect="none"
+
 btn.onclick=function(){
-btn.classList.toggle("ativo")
 if(btn.classList.contains("ativo")){
-btn.style.background="#22c55e"
-btn.style.color="#fff"
-}else{
+btn.classList.remove("ativo")
 btn.style.background="#f3f4f6"
 btn.style.color="#000"
+}else{
+btn.classList.add("ativo")
+btn.style.background="#22c55e"
+btn.style.color="#fff"
 }
 }
 container.appendChild(btn)
 }
 }
+/* ====================================================
+236 – INIT HORÁRIOS (AUTOLOAD)
+==================================================== */
+document.addEventListener("DOMContentLoaded",()=>{
+montarHorariosMedicacao()
+})
