@@ -399,7 +399,7 @@ return
 if(!db||!EMPRESA_ID)return
 const nome=(document.getElementById("nomeMedicacao").value||"").trim().toUpperCase()
 const dose=(document.getElementById("doseMedicacao").value||"").trim().toUpperCase()
-const obrigatorio=document.getElementById("obrigatorioMedicacao")?.checked!==false
+const obrigatorio=document.getElementById("obrigatorioMedicacao")?.value==="true"
 const selecionados=[...document.querySelectorAll("#horarioMedicacao .ativo")]
 .map(e=>e.dataset.valor)
 let horario=selecionados.join("|")
