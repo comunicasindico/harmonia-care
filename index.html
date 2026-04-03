@@ -297,12 +297,12 @@ document.getElementById('horarioMedicacao')
 )">
 <input id="doseMedicacao" placeholder="Dosagem"
 style="width:100%;margin-bottom:6px;padding:6px">
-<div id="horarioMedicacao" style="
-display:grid;
-grid-template-columns:repeat(6,1fr);
-gap:6px;
-margin-bottom:8px;
-"></div>
+<div onclick="toggleHorariosMedicacao()" style="background:#f1f5f9;padding:8px;border-radius:8px;margin-bottom:6px;cursor:pointer;font-weight:bold">
+⏰ Selecionar Horários ▼
+</div>
+<div id="boxHorariosMedicacao" style="display:none">
+<div id="horarioMedicacao" style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:8px"></div>
+</div>
 <!-- 🔥 PATCH 017 – PERÍODO -->
 <div style="display:flex;gap:6px;margin-bottom:6px">
 <input id="dataInicioMedicacao" type="date" style="flex:1;padding:6px">
