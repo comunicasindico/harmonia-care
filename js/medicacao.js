@@ -62,7 +62,10 @@ renderizarMedicacoes([])
 return
 }
 }
-let query=db.from("medicacoes").select("*").eq("ativo",true)
+let query=db.from("medicacoes").select(`
+*,
+medicacoes_modelo(nome_medicamento)
+`).eq("ativo",true)
 if(pacientesPermitidos)query=query.in("paciente_id",pacientesPermitidos)
 if(pacienteId!=="todos"){
 if(pacientesPermitidos && !pacientesPermitidos.includes(pacienteId)){
@@ -210,12 +213,12 @@ return (txt||"").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u03
 
 /* 🔹 AGRUPA MEDICAÇÕES */
 p.itens.forEach(m=>{
-const nomeBase=limpar(m.nome_medicamento)
+const nomeBase=limpar(m.medicacoes_modelo?.nome_medicamento || m.nome_medicamento)
 const doseBase=(m.dosagem||"").toString().toLowerCase().trim()
 const chave=nomeBase+"_"+doseBase
 
 if(!mapa[chave]){
-mapa[chave]={id:m.id,nome:m.nome_medicamento,dose:m.dosagem,paciente_id:p.id,horarios:new Set(),obrigatorio:m.obrigatorio}
+mapa[chave]={id:m.id,nome:m.medicacoes_modelo?.nome_medicamento || m.nome_medicamento,dose:m.dosagem,paciente_id:p.id,horarios:new Set(),obrigatorio:m.obrigatorio}
 }
 
 let hs=(m.horarios||"").toString().split("|")
