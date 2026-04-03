@@ -247,6 +247,7 @@ if(r.turno==="manha")classe="rotina-ok-manha"
 else if(r.turno==="tarde")classe="rotina-ok-tarde"
 else if(r.turno==="noite")classe="rotina-ok-noite"
 }
+
 rotinasHTML+=`
 <div class="badge-rotina ${classe}"
 data-paciente="${r.paciente_id}"
