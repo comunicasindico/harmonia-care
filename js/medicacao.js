@@ -1,5 +1,5 @@
 /* ==240 – PERMISSÃO REAL MEDICAÇÃO==================================================== */
-function podeUsarMedicacao(){
+window.podeUsarMedicacao=function(){
 const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
 const perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase().trim()
 if(hierarquia===1)return true
@@ -135,7 +135,6 @@ pacientes[pid]={id:pid,nome:nome,itens:[]}
 pacientes[pid].itens.push(m)
 })
 
-let hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
 let modo=window.MODO_MEDICACAO||""
 let mostrarAcoes=(hierarquia===1&&(modo==="editar"||modo==="excluir"))
 
