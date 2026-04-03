@@ -189,7 +189,7 @@ const doseBase=(m.dosagem||"").toString().toLowerCase().trim()
 const chave=nomeBase+"_"+doseBase
 
 if(!mapa[chave]){
-mapa[chave]={id:m.id,nome:m.nome_medicamento,dose:m.dosagem,paciente_id:p.id,horarios:new Set()}
+mapa[chave]={id:m.id,nome:m.nome_medicamento,dose:m.dosagem,paciente_id:p.id,horarios:new Set(),obrigatorio:m.obrigatorio}
 }
 
 let hs=(m.horarios||"").toString().split("|")
@@ -263,7 +263,7 @@ html+=`<div style="background:${corMedicacao};padding:8px;border-radius:8px;box-
 <div style="font-weight:600;font-size:12px;display:flex;justify-content:space-between">
 <span>${m.nome}</span>
 ${mostrarAcoes?`<span style="display:flex;gap:6px">
-<button onclick="editarMedicacao('${m.id}','${m.nome}','${m.dose||""}')" style="background:#3b82f6;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">✏️</button>
+<button onclick="editarMedicacao('${m.nome}','${m.dose||""}','${p.id}',${m.obrigatorio})" style="background:#3b82f6;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">✏️</button>
 <button onclick="excluirMedicacao('${m.nome}','${m.dose||""}','${p.id}')" style="background:#ef4444;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">🗑️</button>
 </span>`:""}
 </div>
@@ -681,9 +681,9 @@ renderizarMedicacoes(window.MEDICACOES_CACHE||[])
 },100)
 }
 /* ====================================================
-213 – EDITAR MEDICAÇÃO (FUNCIONAL)
+213 – EDITAR MEDICAÇÃO (COM OBRIGATÓRIO)
 ==================================================== */
-async function editarMedicacao(nome,dose,pacienteId){
+async function editarMedicacao(nome,dose,pacienteId,obrigatorioAtual){
 if(!podeUsarMedicacao()){
 alert("Acesso restrito")
 return
@@ -695,11 +695,13 @@ if(!novoNome){alert("Nome obrigatório");return}
 let novaDose=prompt("Dosagem:",dose||"")
 if(novaDose===null)return
 novaDose=novaDose.trim()
+let novoObrigatorio=confirm("Medicação obrigatória?\nOK = SIM\nCancelar = NÃO")
 try{
 const {error}=await db.from("medicacoes")
 .update({
 nome_medicamento:novoNome,
-dosagem:novaDose||null
+dosagem:novaDose||null,
+obrigatorio:novoObrigatorio
 })
 .eq("paciente_id",pacienteId)
 .eq("nome_medicamento",nome)
