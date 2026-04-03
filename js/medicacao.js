@@ -107,15 +107,20 @@ if(!lista)lista=[]
 /* ====================================================
 202A – FILTRO FINAL SEGURANÇA (MEDICAÇÃO)
 ==================================================== */
-usuarioId=usuarioId||localStorage.getItem("usuario_id")
-hierarquia=hierarquia||parseInt(localStorage.getItem("usuario_hierarquia")||5)
-
-if(hierarquia!==1 && usuarioId){
-let permitidos=new Set(window.PACIENTES_CACHE?.map(p=>String(p.id))||[])
+const usuarioId=localStorage.getItem("usuario_id")
+const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+/* 🔒 ADMIN, MÉDICO E ENFERMEIRO VEEM TUDO */
+if(!(hierarquia===1 || hierarquia===2)){
+if(usuarioId && window.PACIENTES_CACHE && window.PACIENTES_CACHE.length){
+const permitidos=new Set(
+window.PACIENTES_CACHE.map(p=>String(p.id))
+)
 lista=lista.filter(m=>permitidos.has(String(m.paciente_id)))
+}else{
+console.warn("⚠ filtro não aplicado (PACIENTES_CACHE vazio)")
+}
 }
 window.MEDICACOES_CACHE=lista
-
 const normalizarHora=h=>{
 if(!h)return""
 h=h.toString().trim()
