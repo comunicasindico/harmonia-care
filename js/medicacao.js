@@ -59,6 +59,7 @@ return
 renderizarMedicacoes(data||[])
 aplicarDataInteligente()
 carregarListaHorarios()
+montarHorariosMedicacao()
 }
 /* ====================================================
 202 – RENDER MEDICAÇÕES (FINAL LIMPO PROFISSIONAL)
@@ -337,8 +338,13 @@ async function salvarNovaMedicacao(){
 if(!db||!EMPRESA_ID)return
 const nome=(document.getElementById("nomeMedicacao").value||"").trim().toUpperCase()
 const dose=(document.getElementById("doseMedicacao").value||"").trim().toUpperCase()
-const horarioInput=document.getElementById("horarioMedicacao")
-let horario=[...horarioInput.selectedOptions].map(o=>o.value).join("|")
+const selecionados=[...document.querySelectorAll("#horarioMedicacao .ativo")]
+.map(e=>e.dataset.valor)
+let horario=selecionados.join("|")
+if(!horario){
+alert("Selecione pelo menos um horário")
+return
+}
 const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value
 if(!nome||!pacienteId||pacienteId==="todos"){
 alert("Informe paciente e nome")
@@ -902,4 +908,35 @@ badge.innerText=`${feitosCard}/${totalCard}`
 
 })
 
+}
+/* ====================================================
+208 – GERAR HORÁRIOS VISUAL (CLIQUE)
+==================================================== */
+function montarHorariosMedicacao(){
+const container=document.getElementById("horarioMedicacao")
+if(!container)return
+container.innerHTML=""
+for(let h=6;h<=23;h++){
+const hora=h.toString().padStart(2,"0")+":00"
+const btn=document.createElement("div")
+btn.innerText=hora
+btn.dataset.valor=hora
+btn.style.padding="6px"
+btn.style.border="1px solid #ddd"
+btn.style.borderRadius="6px"
+btn.style.textAlign="center"
+btn.style.cursor="pointer"
+btn.style.background="#f3f4f6"
+btn.onclick=function(){
+btn.classList.toggle("ativo")
+if(btn.classList.contains("ativo")){
+btn.style.background="#22c55e"
+btn.style.color="#fff"
+}else{
+btn.style.background="#f3f4f6"
+btn.style.color="#000"
+}
+}
+container.appendChild(btn)
+}
 }
