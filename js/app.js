@@ -137,7 +137,7 @@ if(typeof carregarRotinas==="function"){await carregarRotinas()}
 if(typeof carregarClinico==="function"){await carregarClinico()}
 if(typeof carregarUsuarios==="function"){await carregarUsuarios()}
 /* ====================================================
-011 – INICIAR MEDICAÇÃO
+012A – INICIAR MEDICAÇÃO
 ==================================================== */
 if(typeof carregarPacientesMedicacao==="function"){
 await carregarPacientesMedicacao()
@@ -164,6 +164,14 @@ btnAdmin.style.display="inline-block"
 btnAdmin.style.display="none"
 }
 }
+setInterval(()=>{
+const agora=new Date()
+if(agora.getHours()===23 && agora.getMinutes()===59){
+if(typeof autoFinalizarNaoObrigatorios==="function"){
+autoFinalizarNaoObrigatorios()
+}
+}
+},60000)
 }
 /* ====================================================
 013 – LOGOUT
