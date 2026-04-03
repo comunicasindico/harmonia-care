@@ -215,23 +215,6 @@ lista.forEach(r=>{
 if(!pacientes[r.paciente_id])pacientes[r.paciente_id]={nome:r.paciente,rotinas:[]}
 pacientes[r.paciente_id].rotinas.push(r)
 })
-let rotinasUnicas={}
-lista.forEach(r=>{
-if(!rotinasUnicas[r.rotina_id])rotinasUnicas[r.rotina_id]={nome:r.rotina,turno:r.turno}
-})
-let headerHTML=`
-<tr>
-<th style="width:22%">Paciente</th>
-<th style="width:12%">Progresso</th>
-<th style="width:66%">
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center;font-weight:bold">
-<div style="color:#3b82f6">🌅 Manhã</div>
-<div style="color:#f59e0b">☀️ Tarde</div>
-<div style="color:#22c55e">🌙 Noite</div>
-</div>
-</th>
-</tr>
-`
 Object.keys(pacientes).forEach(pid=>{
 const p=pacientes[pid]
 let total=p.rotinas.length
@@ -257,7 +240,7 @@ data-paciente="${r.paciente_id}"
 data-rotina="${r.rotina_id}"
 style="margin:3px;max-width:100%">
 ${r.rotina}
-${status==="executado"&&nomeProf?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}
+${status==="executado"&&nomeProf?` <span style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`:""}
 </div>
 `
 if(r.turno==="manha")rotinasManha+=botao
@@ -266,46 +249,39 @@ else if(r.turno==="noite")rotinasNoite+=botao
 })
 let percentual=total?Math.round((executadas/total)*100):0
 let concluido=executadas===total
-
-html+=`<tr style="height:32px">
-
+html+=`
+<tr style="height:32px">
 <td style="font-size:12px;font-weight:600">${p.nome}</td>
-
 <td style="font-size:11px">
 <b>${percentual}% (${executadas}/${total})</b><br>
-<button onclick="executarTodos('${pid}')" 
-style="margin-top:3px;background:${concluido?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">
+<button onclick="executarTodos('${pid}')"
+style="margin-top:3px;background:${concluido?"#2ecc71":"#3498db"};
+color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">
 ${concluido?"✔":"Concluir"}
 </button>
 </td>
-
 <td style="font-size:11px">
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-
-<div style="display:flex;flex-wrap:wrap;gap:6px">
+<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
 ${rotinasManha}
-</div>
-
-<div style="display:flex;flex-wrap:wrap;gap:6px">
 ${rotinasTarde}
-</div>
-
-<div style="display:flex;flex-wrap:wrap;gap:6px">
 ${rotinasNoite}
 </div>
-
-</div>
 </td>
-
-</tr>`
+</tr>
+`
 })
-tbody.innerHTML=headerHTML+html
+tbody.innerHTML=html
+
 document.querySelectorAll(".badge-rotina").forEach(el=>{
 el.onclick=function(){
 const pacienteId=this.dataset.paciente
 const rotinaId=this.dataset.rotina
 const executado=this.classList.contains("rotina-ok-manha")||this.classList.contains("rotina-ok-tarde")||this.classList.contains("rotina-ok-noite")
-if(executado){desfazerRotina(pacienteId,rotinaId)}else{executarRotina(pacienteId,rotinaId)}
+if(executado){
+desfazerRotina(pacienteId,rotinaId)
+}else{
+executarRotina(pacienteId,rotinaId)
+}
 }
 })
 }
@@ -368,13 +344,13 @@ if(a)a.innerHTML="⚠ "+atrasado
 ==================================================== */
 async function executarTodos(pacienteId){
 if(!db||!pacienteId)return
-const dataHoje=obterDataSelecionada()
+const dataHoje=obterDataSelecionada()||new Date().toISOString().slice(0,10)
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 const user=obterUsuarioLogado()||{}
 const usuarioId=user.id||null
 const nome=user.nome||localStorage.getItem("usuario_nome")||"Administrador"
 const rotinas=ROTINAS_CACHE.filter(r=>String(r.paciente_id)===String(pacienteId)&&String((r.turno||"").toLowerCase())===turno)
-const inserts=rotinas.filter(r=>r.status!=="executado").map(r=>({
+const inserts=rotinas.map(r=>({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:dataHoje,
@@ -388,9 +364,12 @@ horario_executado:new Date().toISOString()
 if(!inserts.length)return
 const {error}=await db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
 if(error){console.error("Erro executarTodos:",error);return}
-rotinas.forEach(r=>{
+ROTINAS_CACHE.forEach(r=>{
+if(String(r.paciente_id)===String(pacienteId) &&
+String((r.turno||"").toLowerCase())===turno){
 r.status="executado"
 r.profissional_nome=nome
+}
 })
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
