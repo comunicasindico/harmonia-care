@@ -100,9 +100,8 @@ const select=document.getElementById("listaMedicacoesEditar")
 if(!select)return
 
 const {data,error}=await db
-.from("medicacoes")
-.select("id,nome_medicamento,obrigatorio")
-.eq("empresa_id",EMPRESA_ID)
+.from("medicacoes_modelo")
+.select("nome_medicamento")
 .order("nome_medicamento",{ascending:true})
 
 if(error){console.error(error);return}
@@ -110,8 +109,8 @@ if(error){console.error(error);return}
 select.innerHTML=`<option value="">🔄 Alterar medicação existente</option>`
 
 data.forEach(m=>{
-select.innerHTML+=`<option value="${m.id}" data-obrigatorio="${m.obrigatorio}">
-${m.nome_medicamento} ${m.obrigatorio?"✔":"⚠"}
+select.innerHTML+=`<option value="${m.nome_medicamento}">
+${m.nome_medicamento}
 </option>`
 })
 }
@@ -1169,13 +1168,13 @@ document.getElementById("obrigatorioMedicacao").value=obrigatorio?"true":"false"
 document.addEventListener("change",async function(e){
 if(e.target.id==="obrigatorioMedicacao"){
 const select=document.getElementById("listaMedicacoesEditar")
-const id=select.value
+const nomeMedicamento=select.value
 if(!id)return
 const obrigatorio=e.target.value==="true"
 const {error}=await db
 .from("medicacoes")
 .update({obrigatorio:obrigatorio})
-.eq("id",id)
+.eq("nome_medicamento",nomeMedicamento)
 if(error){
 console.error(error)
 alert("Erro ao atualizar")
