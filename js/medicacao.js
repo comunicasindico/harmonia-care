@@ -990,3 +990,11 @@ container.remove()
 },800)
 }
 }
+/* ====================================================
+238 090 – TOGGLE HORÁRIOS MEDICAÇÃO
+==================================================== */
+function toggleHorariosMedicacao(){
+const box=document.getElementById("boxHorariosMedicacao")
+if(!box)return
+box.style.display=(box.style.display==="none")?"block":"none"
+}
