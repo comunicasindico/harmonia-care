@@ -1,3 +1,13 @@
+/* ==240 – PERMISSÃO REAL MEDICAÇÃO==================================================== */
+function podeUsarMedicacao(){
+const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+const perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase().trim()
+if(hierarquia===1)return true
+if(perfil==="administrador")return true
+if(perfil==="enfermeiro")return true
+if(perfil==="medico")return true
+return false
+}
 /* ====================================================
 200 – CARREGAR PACIENTES MEDICAÇÃO
 ==================================================== */
@@ -31,6 +41,10 @@ select.onchange=carregarMedicacoes
 201 – CARREGAR MEDICAÇÕES
 ==================================================== */
 async function carregarMedicacoes(){
+if(!podeUsarMedicacao()){
+document.getElementById("listaMedicacoes").innerHTML="<div style='padding:20px;font-weight:bold;color:#ef4444'>⛔ Acesso restrito à medicação</div>"
+return
+}
 if(!db||!EMPRESA_ID)return
 let usuarioId=localStorage.getItem("usuario_id")
 let hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
