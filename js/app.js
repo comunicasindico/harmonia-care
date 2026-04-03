@@ -236,6 +236,10 @@ if(fim && !fim.value)fim.value=dataLocal
 017 – NAVEGAÇÃO PAINÉIS
 ==================================================== */
 function abrirPainel(id){
+if(!podeUsarMedicacao()){
+const btn=document.getElementById("btnMedicacao")
+if(btn)btn.style.display="none"
+}
 if(window.salvandoPendencias){
 alert("Aguarde finalizar o salvamento das pendências.")
 return
