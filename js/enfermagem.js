@@ -247,7 +247,23 @@ if(r.turno==="manha")classe="rotina-ok-manha"
 else if(r.turno==="tarde")classe="rotina-ok-tarde"
 else if(r.turno==="noite")classe="rotina-ok-noite"
 }
-rotinasHTML+=`<span class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}" style="white-space:nowrap">${r.rotina}${status==="executado"&&nomeProf?` ✔ <b style="color:${corProf}">${nomeProf}</b>`:""}</span>`
+rotinasHTML+=`
+<div class="badge-rotina ${classe}"
+data-paciente="${r.paciente_id}"
+data-rotina="${r.rotina_id}"
+style="
+display:inline-block;
+padding:4px 8px;
+font-size:11px;
+border-radius:6px;
+cursor:pointer;
+white-space:nowrap;
+margin:2px;
+">
+${r.rotina}
+${status==="executado"&&nomeProf?` <span style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`:""}
+</div>
+`
 })
 rotinasHTML+=`</div>`
 let percentual=total?Math.round((executadas/total)*100):0
