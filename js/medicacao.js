@@ -397,8 +397,26 @@ alert("Acesso restrito")
 return
 }
 if(!db||!EMPRESA_ID)return
-const nome=(document.getElementById("nomeMedicacao").value||"").trim().toUpperCase()
-const dose=(document.getElementById("doseMedicacao").value||"").trim().toUpperCase()
+let nomeRaw=(document.getElementById("nomeMedicacao").value||"").trim().toUpperCase()
+let doseRaw=(document.getElementById("doseMedicacao").value||"").trim().toUpperCase()
+/* 🔥 SEPARAÇÃO INTELIGENTE */
+let nome=nomeRaw
+let dose=doseRaw
+if(!doseRaw){
+let match=nomeRaw.match(/^(\d+)?\s*([A-ZÀ-Ú]+)(.*)$/)
+if(match){
+let numero=match[1]||""
+let texto=match[2]||""
+let resto=match[3]||""
+nome=(texto+" "+resto).trim()
+dose=numero||""
+}
+}
+/* 🔥 LIMPEZA FINAL */
+nome=nome.replace(/\s+/g," ").trim()
+nome=nome.replace(/([A-Z])([A-Z])/g,"$1 $2")
+dose=dose.replace(/\s+/g," ").trim()
+
 const obrigatorio=document.getElementById("obrigatorioMedicacao")?.value==="true"
 const selecionados=[...document.querySelectorAll("#horarioMedicacao .ativo")]
 .map(e=>e.dataset.valor)
