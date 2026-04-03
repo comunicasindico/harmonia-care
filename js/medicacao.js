@@ -63,7 +63,12 @@ aplicarDataInteligente()
 202 – RENDER MEDICAÇÕES (FINAL LIMPO PROFISSIONAL)
 ==================================================== */
 function renderizarMedicacoes(lista){
+const dataInicio=document.getElementById("dataInicioMedicacao")?.value
+const dataFim=document.getElementById("dataFimMedicacao")?.value
+
+if(!dataInicio||!dataFim){
 forcarDataHoje()
+}
 const div=document.getElementById("listaMedicacoes")
 if(!div)return
 if(!lista)lista=[]
