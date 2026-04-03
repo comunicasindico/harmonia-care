@@ -103,23 +103,22 @@ let modo=window.MODO_MEDICACAO||""
 let mostrarAcoes=(hierarquia===1&&(modo==="editar"||modo==="excluir"))
 
 let html=""
-
-/* 🔹 TOPO */
-/* 🔹 TOPO PROFISSIONAL ALINHADO */
+/* 🔹 TOPO PROFISSIONAL CORRIGIDO */
 html+=`
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
-<!-- ESQUERDA -->
+
 <div style="display:flex;gap:8px;flex-wrap:wrap">
 <button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px">➕ Nova</button>
 <button onclick="editarMedicacaoGlobal()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 10px">✏️ Editar</button>
 <button onclick="excluirMedicacaoGlobal()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px">🗑️ Excluir</button>
 <button onclick="cancelarModoMedicacao()" style="background:#6b7280;color:#fff;border:none;border-radius:6px;padding:6px 10px">❌ Cancelar</button>
 </div>
-<!-- DIREITA -->
+
 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-<button onclick="salvarMedicacoes?.()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px">💾 Salvar</button>
+<button onclick="if(window.salvarMedicacoes) salvarMedicacoes()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px">💾 Salvar</button>
 <button onclick="concluirPendentesMedicacao()" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px">✔ Concluir Pendentes</button>
 </div>
+
 </div>
 `
 <button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px">➕ Nova</button>
@@ -134,11 +133,8 @@ ${hierarquia===1?`
 
 /* 🔹 PACIENTES */
 Object.values(pacientes).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR")).forEach(p=>{
-
 let corPaciente=gerarCor(p.nome,60,92)
-
 html+=`<div data-paciente-id="${p.id}" style="background:${corPaciente};padding:12px;margin-bottom:14px;border-radius:12px">
-
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
 <div class="paciente-header">
 <div class="paciente-ficha">
@@ -148,9 +144,7 @@ html+=`<div data-paciente-id="${p.id}" style="background:${corPaciente};padding:
 </div>
 ${hierarquia===1?`<button onclick="concluirPacienteMedicacao('${p.id}')" style="background:#22c55e;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px">✔ Concluir Paciente</button>`:""}
 </div>
-
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">`
-
 let mapa={}
 
 const limpar=txt=>{
