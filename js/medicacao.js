@@ -266,6 +266,10 @@ div.innerHTML=html
 203 – ADMINISTRAR MEDICAÇÃO (TOGGLE CORRETO POR HORÁRIO)
 ==================================================== */
 async function administrarMedicacao(medicacaoId,horario,botao){
+if(!podeUsarMedicacao()){
+alert("Acesso restrito")
+return
+}
 if(!db||!medicacaoId||!horario)return
 const user=obterUsuarioLogado()||{}
 const dataHoje=new Date().toISOString().slice(0,10)
@@ -371,6 +375,10 @@ inputHorario.value=modelo.horarios_padrao
 207 – SALVAR NOVA MEDICAÇÃO (FINAL CORRIGIDO + HORÁRIO PADRÃO)
 ==================================================== */
 async function salvarNovaMedicacao(){
+if(!podeUsarMedicacao()){
+alert("Acesso restrito")
+return
+}
 if(!db||!EMPRESA_ID)return
 const nome=(document.getElementById("nomeMedicacao").value||"").trim().toUpperCase()
 const dose=(document.getElementById("doseMedicacao").value||"").trim().toUpperCase()
@@ -657,6 +665,10 @@ renderizarMedicacoes(window.MEDICACOES_CACHE||[])
 213 – EDITAR MEDICAÇÃO (FUNCIONAL)
 ==================================================== */
 async function editarMedicacao(nome,dose,pacienteId){
+if(!podeUsarMedicacao()){
+alert("Acesso restrito")
+return
+}
 let novoNome=prompt("Nome:",nome||"")
 if(novoNome===null)return
 novoNome=novoNome.trim()
@@ -684,6 +696,10 @@ alert("Erro inesperado")
 214 – EXCLUIR MEDICAÇÃO (CORRIGIDO DEFINITIVO)
 ==================================================== */
 async function excluirMedicacao(nome,dose,pacienteId){
+if(!podeUsarMedicacao()){
+alert("Acesso restrito")
+return
+}
 if(!pacienteId){alert("Paciente inválido");return}
 if(!confirm("Excluir esta medicação?"))return
 try{
