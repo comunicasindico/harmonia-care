@@ -87,6 +87,33 @@ renderizarMedicacoes(data||[])
 aplicarDataInteligente()
 carregarListaHorarios()
 montarHorariosMedicacao()
+if(typeof carregarListaMedicacoesEditar==="function"){
+carregarListaMedicacoesEditar()
+}
+}
+/* ====================================================
+501 – CARREGAR LISTA MEDICAÇÕES (EDITAR OBRIGATÓRIO)
+==================================================== */
+async function carregarListaMedicacoesEditar(){
+if(!db||!EMPRESA_ID)return
+const select=document.getElementById("listaMedicacoesEditar")
+if(!select)return
+
+const {data,error}=await db
+.from("medicacoes")
+.select("id,nome_medicamento,obrigatorio")
+.eq("empresa_id",EMPRESA_ID)
+.order("nome_medicamento",{ascending:true})
+
+if(error){console.error(error);return}
+
+select.innerHTML=`<option value="">🔄 Alterar medicação existente</option>`
+
+data.forEach(m=>{
+select.innerHTML+=`<option value="${m.id}" data-obrigatorio="${m.obrigatorio}">
+${m.nome_medicamento} ${m.obrigatorio?"✔":"⚠"}
+</option>`
+})
 }
 /* ====================================================
 202 – RENDER MEDICAÇÕES (FINAL LIMPO PROFISSIONAL)
@@ -1125,3 +1152,37 @@ usuario_nome:"Sistema"
 }
 }
 }
+/* ====================================================
+502 – AO SELECIONAR MEDICAÇÃO → CARREGA STATUS
+==================================================== */
+document.addEventListener("change",function(e){
+if(e.target.id==="listaMedicacoesEditar"){
+const opt=e.target.selectedOptions[0]
+if(!opt)return
+const obrigatorio=opt.dataset.obrigatorio==="true"
+document.getElementById("obrigatorioMedicacao").value=obrigatorio?"true":"false"
+}
+})
+/* ====================================================
+503 – SALVAR AUTOMÁTICO OBRIGATÓRIO
+==================================================== */
+document.addEventListener("change",async function(e){
+if(e.target.id==="obrigatorioMedicacao"){
+const select=document.getElementById("listaMedicacoesEditar")
+const id=select.value
+if(!id)return
+const obrigatorio=e.target.value==="true"
+const {error}=await db
+.from("medicacoes")
+.update({obrigatorio:obrigatorio})
+.eq("id",id)
+if(error){
+console.error(error)
+alert("Erro ao atualizar")
+return
+}
+/* 🔥 ATUALIZA TEXTO VISUAL */
+const nomeBase=select.selectedOptions[0].textContent.replace(/✔|⚠/g,"").trim()
+select.selectedOptions[0].textContent=nomeBase+(obrigatorio?" ✔":" ⚠")
+}
+})
