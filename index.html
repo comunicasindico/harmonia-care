@@ -68,7 +68,6 @@ border:1px solid #ccc;
 width:100%;
 background:linear-gradient(135deg,#4da3d9,#1f78b4);
 color:#fff;
-<div class="titulo-login-3d">HARMONIA CARE</div>
 }
 
 /* ====================================================
@@ -339,36 +338,31 @@ color:#fff!important;
 background:#e5e7eb!important;
 color:#333!important;
 }
-/* =======400 – TITULO LOGIN CENTRAL TOPO==================================================== */
-.titulo-login-3d{
+/* =======400 – TITULO LOGIN TOPO (FINAL LIMPO)==================================================== */
+.titulo-login{
 position:absolute;
 top:20px;
 left:50%;
 transform:translateX(-50%);
-z-index:10;
+z-index:1000;
 
-font-size:28px;
+font-size:32px;
 font-weight:900;
 letter-spacing:1px;
 color:#fff;
 text-align:center;
 
+/* 🔥 3D SUAVE (SEM POLUIR) */
 text-shadow:
-0 1px 0 #ccc,
-0 2px 0 #bbb,
-0 3px 0 #aaa,
-0 4px 0 #999,
-0 6px 10px rgba(0,0,0,0.4);
+0 2px 4px rgba(0,0,0,0.4),
+0 6px 12px rgba(0,0,0,0.4);
 
+/* 🔥 FUNDO LEVE (VIDRO) */
 background:rgba(0,0,0,0.25);
-padding:6px 14px;
-border-radius:8px;
+padding:6px 16px;
+border-radius:10px;
 backdrop-filter:blur(4px);
 }
-.login-card img{
-position:relative;
-}
-
 
 
   
@@ -379,6 +373,7 @@ position:relative;
 003 – LOGIN
 ==================================================== -->
 <div id="login">
+<div class="titulo-login-topo">Harmonia Care</div>
 <div class="login-box">
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
 <img src="logo-harmonia.png" style="height:38px">
