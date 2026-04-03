@@ -535,11 +535,34 @@ console.error(error)
 alert("Erro ao concluir paciente")
 return
 }
+/* 🔥 PATCH 043 — ATUALIZA CACHE IMEDIATO */
+if(!window.EXEC_CACHE)window.EXEC_CACHE=[]
+window.EXEC_CACHE.push(item)
+}
+}
+let totalGeral=0
+let totalFeito=0
+
+for(const dataHoje of datas){
+for(const itemBase of base){
+
+totalGeral++
+
+const jaExiste=await db
+.from("medicacoes_execucao")
+.select("id")
+.eq("medicacao_id",itemBase.medicacao_id)
+.eq("data",dataHoje)
+.eq("horario",itemBase.horario)
+.eq("empresa_id",itemBase.empresa_id)
+.maybeSingle()
+
+if(jaExiste?.data){
+totalFeito++
+}
 
 }
 }
-let totalGeral=base.length * datas.length
-let totalFeito=totalAplicacoes + totalJaExistentes
 
 console.log("✅ Progresso:",totalFeito,"/",totalGeral)
 
@@ -549,9 +572,14 @@ marcarPacienteCompleto(pacienteId,totalFeito,totalGeral)
 },300)
 /* 🔄 ATUALIZA */
 await carregarStatusMedicacoes()
+
+/* 🔥 FORÇA RE-RENDER IMEDIATO */
+setTimeout(()=>{
+renderizarMedicacoes(window.MEDICACOES_CACHE||[])
+},100)
 }
 /* ====================================================
-220 – EDITAR MEDICAÇÃO (FUNCIONAL)
+213 – EDITAR MEDICAÇÃO (FUNCIONAL)
 ==================================================== */
 async function editarMedicacao(nome,dose,pacienteId){
 let novoNome=prompt("Nome:",nome||"")
@@ -578,7 +606,7 @@ alert("Erro inesperado")
 }
 }
 /* ====================================================
-221 – EXCLUIR MEDICAÇÃO (CORRIGIDO DEFINITIVO)
+214 – EXCLUIR MEDICAÇÃO (CORRIGIDO DEFINITIVO)
 ==================================================== */
 async function excluirMedicacao(nome,dose,pacienteId){
 if(!pacienteId){alert("Paciente inválido");return}
@@ -797,7 +825,7 @@ badge=document.createElement("div")
 badge.className="badge-status"
 badge.style.fontSize="11px"
 badge.style.marginTop="4px"
-card.prepend(badge)
+card.querySelector("div")?.appendChild(badge)
 }
 badge.innerText=`${feito}/${total} ✔`
 
