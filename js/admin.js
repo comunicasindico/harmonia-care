@@ -471,102 +471,39 @@ PACIENTE_SELECIONADO=null
 PROFISSIONAL_SELECIONADO=null
 }
 /* ====================================================
-074 – VER PACIENTES DO PROFISSIONAL
+074 – VER PACIENTES DO PROFISSIONAL (FINAL OTIMIZADO)
 ==================================================== */
 async function verPacientesDoProfissional(usuarioId){
 if(!db||!usuarioId)return
 const painel=document.getElementById("painelVinculo")
 if(painel)painel.style.display="block"
 const elNome=document.getElementById("tituloVinculo")
-elNome.innerText="Vincular pacientes ao usuário"
+if(elNome)elNome.innerText="Vincular pacientes ao usuário"
 window.USUARIO_VINCULO_ATUAL=usuarioId
 let nome=""
 const {data:user}=await db.from("usuarios").select("nome_apelido,nome_completo").eq("id",usuarioId).single()
 nome=user?.nome_apelido||user?.nome_completo||""
 const elProf=document.getElementById("profissionalSelecionado")
 if(elProf)elProf.innerText=nome||"Usuário"
-/* 🔥 CARREGAR PACIENTES */
-const {data:pacientes}=await db
-.from("pacientes")
-.select("id,nome_completo")
-.eq("empresa_id",EMPRESA_ID)
-.eq("ativo",true)
-.order("nome_completo")
-/* 🔥 CARREGAR VÍNCULOS EXISTENTES */
-const {data:rel}=await db
-.from("pacientes_profissionais")
-.select("paciente_id")
-.eq("usuario_id",usuarioId)
-.eq("ativo",true)
-const vinculados=rel?.map(r=>r.paciente_id)||[]
-
-let html=`
-<div style="display:flex;gap:8px;margin-bottom:10px">
-<button onclick="selecionarTodosVinculo(true)" style="
-background:#16a34a;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">
-✔ Selecionar todos
-</button>
-<button onclick="selecionarTodosVinculo(false)" style="
-background:#ef4444;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">
-✖ Limpar
-</button>
-<input id="buscaPacienteVinculo" placeholder="Buscar paciente..."
-oninput="filtrarPacientesVinculo(this.value)"
-style="
-flex:1;
-padding:6px;
-border:1px solid #ddd;
-border-radius:6px;
-">
-</div>
-<div id="gridPacientesVinculo" style="
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:10px;
-max-height:300px;
-overflow-y:auto;
-padding:10px;
-">
-`
-
-pacientes?.forEach(p=>{
-const ativo=vinculados.includes(p.id)
-
-html+=`
-<label data-nome="${p.nome_completo.toLowerCase()}" style="
-display:flex;
-align-items:center;
-gap:10px;
-background:#f9fafb;
-padding:8px;
-border-radius:8px;
-cursor:pointer;
-transition:0.2s;
-border:1px solid #e5e7eb;
-">
-
-<input type="checkbox"
-${ativo?"checked":""}
-onchange="toggleVinculo('${p.id}',this)"
-style="
-width:18px;
-height:18px;
-cursor:pointer;
-">
-
-<span style="
-font-size:13px;
-${ativo?"font-weight:bold;color:#16a34a;":""}
-">
-${p.nome_completo}
-</span>
-
-</label>
-`
+const {data:pacientes}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo")
+const {data:rel}=await db.from("pacientes_profissionais").select("paciente_id").eq("usuario_id",usuarioId).eq("ativo",true)
+const vinculados=new Set((rel||[]).map(r=>r.paciente_id))
+let html='<div style="display:flex;gap:8px;margin-bottom:10px">'
+html+='<button onclick="selecionarTodosVinculo(true)" style="background:#16a34a;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">✔ Selecionar todos</button>'
+html+='<button onclick="selecionarTodosVinculo(false)" style="background:#ef4444;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">✖ Limpar</button>'
+html+='<input id="buscaPacienteVinculo" placeholder="Buscar paciente..." oninput="filtrarPacientesVinculo(this.value)" style="flex:1;padding:6px;border:1px solid #ddd;border-radius:6px">'
+html+='</div>'
+html+='<div id="gridPacientesVinculo" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-height:300px;overflow-y:auto;padding:10px">'
+;(pacientes||[]).forEach(p=>{
+const ativo=vinculados.has(p.id)
+html+='<label data-nome="'+(p.nome_completo||"").toLowerCase()+'" style="display:flex;align-items:center;gap:10px;background:'+(ativo?'#dcfce7':'#f9fafb')+';padding:8px;border-radius:8px;cursor:pointer;transition:0.2s;border:1px solid '+(ativo?'#22c55e':'#e5e7eb')+'">'
+html+='<input type="checkbox" '+(ativo?'checked':'')+' onchange="toggleVinculo(\''+p.id+'\',this)" style="width:18px;height:18px;cursor:pointer">'
+html+='<span style="font-size:13px;'+(ativo?'font-weight:bold;color:#16a34a;':'')+'">'+(p.nome_completo||"")+'</span>'
+html+='</label>'
 })
-
-html+=`</div>`
-document.getElementById("listaPacientesVinculo").innerHTML=html
+html+='</div>'
+const elLista=document.getElementById("listaPacientesVinculo")
+if(elLista)elLista.innerHTML=html
 }
 /* ====================================================
 075 TOGGLE Vínculo
