@@ -506,24 +506,13 @@ const elLista=document.getElementById("listaPacientesVinculo")
 if(elLista)elLista.innerHTML=html
 }
 /* ====================================================
-075 TOGGLE Vínculo
+075 – TOGGLE VÍNCULO (FINAL LIMPO E CORRETO)
 ==================================================== */
 async function toggleVinculo(pacienteId,el){
 const usuarioId=window.USUARIO_VINCULO_ATUAL
 if(!usuarioId)return
-const {data:existe}=await db
-.from("pacientes_profissionais")
-.select("*")
-.eq("usuario_id",usuarioId)
-.eq("paciente_id",pacienteId)
-.eq("ativo",true)
-async function toggleVinculo(pacienteId,el){
-const usuarioId=window.USUARIO_VINCULO_ATUAL
-if(!usuarioId)return
-
 const label=el.closest("label")
 const span=label.querySelector("span")
-/* 🔥 FEEDBACK IMEDIATO */
 if(el.checked){
 label.style.background="#dcfce7"
 label.style.border="1px solid #22c55e"
@@ -535,33 +524,13 @@ label.style.border="1px solid #e5e7eb"
 span.style.color="#000"
 span.style.fontWeight="normal"
 }
-const {data:existe}=await db
-.from("pacientes_profissionais")
-.select("*")
-.eq("usuario_id",usuarioId)
-.eq("paciente_id",pacienteId)
-.eq("ativo",true)
-if(existe && existe.length){
-await db
-.from("pacientes_profissionais")
-.update({ativo:false})
-.eq("usuario_id",usuarioId)
-.eq("paciente_id",pacienteId)
+const {data:existe}=await db.from("pacientes_profissionais").select("*").eq("usuario_id",usuarioId).eq("paciente_id",pacienteId).eq("ativo",true)
+if(existe&&existe.length){
+await db.from("pacientes_profissionais").update({ativo:false}).eq("usuario_id",usuarioId).eq("paciente_id",pacienteId)
 }else{
-await db
-.from("pacientes_profissionais")
-.upsert({
-usuario_id:usuarioId,
-paciente_id:pacienteId,
-turno:"manha",
-ativo:true
-},{
-onConflict:"usuario_id,paciente_id,turno"
-})
+await db.from("pacientes_profissionais").upsert({usuario_id:usuarioId,paciente_id:pacienteId,turno:"manha",ativo:true},{onConflict:"usuario_id,paciente_id,turno"})
 }
-/* 🔄 CONTADOR */
 carregarUsuarios()
-}
 }
 /* ====================================================
 076 – FILTRO PACIENTES VÍNCULO
