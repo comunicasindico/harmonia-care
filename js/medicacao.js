@@ -474,7 +474,7 @@ const nome=user.nome||"Administrador"
 
 /* 🔥 MEDICAÇÕES DO PACIENTE */
 const meds=(window.MEDICACOES_CACHE||[]).filter(m=>String(m.paciente_id)===String(pacienteId))
-
+console.log("📦 Medicações encontradas:",meds.length)
 if(!meds.length){
 alert("Nenhuma medicação encontrada")
 return
