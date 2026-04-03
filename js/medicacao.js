@@ -63,9 +63,7 @@ aplicarDataInteligente()
 202 – RENDER MEDICAÇÕES (FINAL LIMPO PROFISSIONAL)
 ==================================================== */
 function renderizarMedicacoes(lista){
-/* ====================================================
-110 – SINCRONIZA DATA COM ENFERMAGEM
-==================================================== */
+
 const dataEnfInicio=document.getElementById("dataInicio")?.value
 const dataEnfFim=document.getElementById("dataFim")?.value
 
@@ -122,7 +120,7 @@ Object.values(pacientes).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR")).forEa
 
 let corPaciente=gerarCor(p.nome,60,92)
 
-html+=`<div style="background:${corPaciente};padding:12px;margin-bottom:14px;border-radius:12px">
+html+=`<div data-paciente-id="${p.id}" style="background:${corPaciente};padding:12px;margin-bottom:14px;border-radius:12px">
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
 <div class="paciente-header">
@@ -482,7 +480,8 @@ return
 
 /* 🔒 BASE SEM DATA */
 let base=[]
-
+let totalAplicacoes=0
+let totalJaExistentes=0
 meds.forEach(m=>{
 let horarios=(m.horarios||"").toString().split("|")
 
@@ -523,12 +522,14 @@ const {data:existe}=await db
 .eq("empresa_id",item.empresa_id)
 .maybeSingle()
 
-if(existe)continue
-
+if(existe){
+totalJaExistentes++
+continue
+}
 const {error}=await db
 .from("medicacoes_execucao")
 .insert(item)
-
+totalAplicacoes++
 if(error){
 console.error(error)
 alert("Erro ao concluir paciente")
@@ -537,7 +538,15 @@ return
 
 }
 }
+let totalGeral=base.length * datas.length
+let totalFeito=totalAplicacoes + totalJaExistentes
 
+console.log("✅ Progresso:",totalFeito,"/",totalGeral)
+
+/* 🔥 STATUS VISUAL */
+setTimeout(()=>{
+marcarPacienteCompleto(pacienteId,totalFeito,totalGeral)
+},300)
 /* 🔄 ATUALIZA */
 await carregarStatusMedicacoes()
 }
@@ -757,4 +766,56 @@ window.EXEC_CACHE=exec||[]
 
 /* 🔄 RECARREGA TELA */
 carregarMedicacoes()
+}
+/* ====================================================
+250 – MARCAR PACIENTE COMPLETO
+==================================================== */
+function marcarPacienteCompleto(pacienteId,feito,total){
+
+const cards=document.querySelectorAll("[data-paciente-id]")
+
+cards.forEach(card=>{
+if(card.dataset.pacienteId!==pacienteId)return
+
+/* 🔥 100% COMPLETO */
+if(feito>=total&&total>0){
+
+card.style.background="#dcfce7" // verde claro
+card.style.border="2px solid #22c55e"
+
+/* 🔘 BOTÃO */
+const btn=card.querySelector("button")
+if(btn){
+btn.innerText="✔ Completo"
+btn.style.background="#16a34a"
+}
+
+/* 🏷️ BADGE */
+let badge=card.querySelector(".badge-status")
+if(!badge){
+badge=document.createElement("div")
+badge.className="badge-status"
+badge.style.fontSize="11px"
+badge.style.marginTop="4px"
+card.prepend(badge)
+}
+badge.innerText=`${feito}/${total} ✔`
+
+}else{
+
+/* 🔶 PARCIAL */
+card.style.border="2px solid #facc15"
+
+let badge=card.querySelector(".badge-status")
+if(!badge){
+badge=document.createElement("div")
+badge.className="badge-status"
+badge.style.fontSize="11px"
+badge.style.marginTop="4px"
+card.prepend(badge)
+}
+badge.innerText=`${feito}/${total}`
+
+}
+})
 }
