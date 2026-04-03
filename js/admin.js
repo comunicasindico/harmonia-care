@@ -499,18 +499,55 @@ const {data:rel}=await db
 .eq("usuario_id",usuarioId)
 .eq("ativo",true)
 const vinculados=rel?.map(r=>r.paciente_id)||[]
-let html=""
+let html=`
+<div style="
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
+max-height:300px;
+overflow-y:auto;
+padding:10px;
+">
+`
+
 pacientes?.forEach(p=>{
 const ativo=vinculados.includes(p.id)
+
 html+=`
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+<label style="
+display:flex;
+align-items:center;
+gap:10px;
+background:#f9fafb;
+padding:8px;
+border-radius:8px;
+cursor:pointer;
+transition:0.2s;
+border:1px solid #e5e7eb;
+">
+
 <input type="checkbox"
 ${ativo?"checked":""}
-onchange="toggleVinculo('${p.id}',this)">
-<span>${p.nome_completo}</span>
-</div>
+onchange="toggleVinculo('${p.id}',this)"
+style="
+width:18px;
+height:18px;
+cursor:pointer;
+">
+
+<span style="
+font-size:13px;
+${ativo?"font-weight:bold;color:#16a34a;":""}
+">
+${p.nome_completo}
+</span>
+
+</label>
 `
 })
+
+html+=`</div>`
+
 document.getElementById("listaPacientesVinculo").innerHTML=html
 }
 /* ====================================================
