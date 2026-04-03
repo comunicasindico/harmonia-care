@@ -290,10 +290,56 @@ img[src*="harmonia"]{max-width:420px!important;width:100%!important;height:auto!
 .btn-sair:hover{transform:translateY(-1px);box-shadow:0 6px 0 #991b1b;}
 .btn-sair:active{transform:translateY(3px);box-shadow:0 2px 0 #991b1b;}
 .login-card img{max-width:200px!important;width:100%!important;height:auto!important;display:block;margin:0 auto 10px auto;}
-.badge-rotina{transition:all .12s ease;}
-.badge-rotina:hover{transform:scale(1.05);}
-.badge-rotina:active{transform:scale(0.95);}
-/* ====================================================190 – TITULO LOGIN 3D==================================================== */
+/* ====================================================200 – BADGE ROTINA = BOTÃO REAL==================================================== */
+.badge-rotina{
+display:inline-flex!important;
+align-items:center;
+gap:4px;
+
+padding:4px 10px!important;
+font-size:11px!important;
+font-weight:600!important;
+
+border-radius:8px!important;
+cursor:pointer!important;
+white-space:nowrap!important;
+
+border:1px solid rgba(0,0,0,0.1)!important;
+
+box-shadow:0 3px 0 rgba(0,0,0,0.2),0 6px 10px rgba(0,0,0,0.1)!important;
+
+transition:all .12s ease!important;
+}
+/* HOVER */
+.badge-rotina:hover{
+transform:translateY(-1px) scale(1.05)!important;
+}
+/* CLICK */
+.badge-rotina:active{
+transform:translateY(2px) scale(0.97)!important;
+box-shadow:0 1px 0 rgba(0,0,0,0.3)!important;
+}
+/* MANHÃ */
+.rotina-ok-manha{
+background:#3b82f6!important;
+color:#fff!important;
+}
+/* TARDE */
+.rotina-ok-tarde{
+background:#f59e0b!important;
+color:#fff!important;
+}
+/* NOITE */
+.rotina-ok-noite{
+background:#22c55e!important;
+color:#fff!important;
+}
+/* PENDENTE */
+.rotina-pendente{
+background:#e5e7eb!important;
+color:#333!important;
+}
+/* ========190 – TITULO LOGIN 3D==================================================== */
 .titulo-login-3d{
 width:100%;
 text-align:center;
