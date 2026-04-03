@@ -279,6 +279,28 @@ if(id==="painelEnfermagem")atualizarBotoesTopo("enfermagem")
 if(id==="painelClinico")atualizarBotoesTopo("clinico")
 if(id==="painelAdmin")atualizarBotoesTopo("admin")
 if(id==="painelMedicacao")atualizarBotoesTopo("medicacao")
+/* ====================================================
+017B – CONTROLE BOTÃO CONCLUIR PENDENTES
+==================================================== */
+const btnPendentes=document.getElementById("btnConcluirPendentes")
+
+if(painel==="painelEnfermagem"){
+if(btnPendentes){
+btnPendentes.onclick=()=>window.concluirPendentes()
+btnPendentes.style.display="inline-block"
+}
+}
+if(painel==="painelMedicacao"){
+if(btnPendentes){
+btnPendentes.onclick=()=>window.concluirPendentesMedicacao()
+btnPendentes.style.display="inline-block"
+}
+}
+if(painel!=="painelEnfermagem"&&painel!=="painelMedicacao"){
+if(btnPendentes){
+btnPendentes.style.display="none"
+}
+}
 }
 /* ====================================================
 018 – CONTROLE VISUAL DOS BOTÕES
