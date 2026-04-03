@@ -338,7 +338,7 @@ if(!db||!EMPRESA_ID)return
 const nome=(document.getElementById("nomeMedicacao").value||"").trim().toUpperCase()
 const dose=(document.getElementById("doseMedicacao").value||"").trim().toUpperCase()
 const horarioInput=document.getElementById("horarioMedicacao")
-let horario=(horarioInput?.value||"").trim()
+let horario=[...horarioInput.selectedOptions].map(o=>o.value).join("|")
 const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value
 if(!nome||!pacienteId||pacienteId==="todos"){
 alert("Informe paciente e nome")
@@ -386,7 +386,7 @@ document.getElementById("doseMedicacao").value=""
 document.getElementById("horarioMedicacao").value=""
 }
 /* ====================================================
-208 – CARREGAR LISTA DE HORÁRIOS
+208 – CARREGAR LISTA DE HORÁRIOS (FINAL AJUSTADO)
 ==================================================== */
 function carregarListaHorarios(){
 const select=document.getElementById("horarioMedicacao")
@@ -399,7 +399,6 @@ opt.value=hora
 opt.textContent=hora
 select.appendChild(opt)
 }
-/* meia noite */
 let opt=document.createElement("option")
 opt.value="00:00"
 opt.textContent="00:00"
