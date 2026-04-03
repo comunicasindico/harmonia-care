@@ -228,13 +228,26 @@ if(hora>=12&&hora<18){corBase="#fb923c";icone="☀️"}
 if(hora>=18||hora<5){corBase="#ef4444";icone="🌙"}
 
 /* 🔥 EXECUTADO */
-let cor=exec?"#22c55e":corBase
-
+let cor=corBase
+if(exec){
+if(exec.status==="nao_obrigatorio"){
+cor="#9ca3af"
+}else{
+cor="#22c55e"
+}
+}
 /* 🔒 BLOQUEIO */
 let bloqueado=exec?"pointer-events:none;opacity:0.65;cursor:not-allowed;":""
 
 /* 🔥 TEXTO */
-let texto=exec?`${h} ${exec.usuario_nome||"Admin"} OK`:h
+let texto=h
+if(exec){
+if(exec.status==="nao_obrigatorio"){
+texto=`${h} NÃO OBRIGATÓRIO`
+}else{
+texto=`${h} ${exec.usuario_nome||"Admin"} OK`
+}
+}
 
 return `<button
 data-hora="${h}" 
@@ -386,6 +399,7 @@ return
 if(!db||!EMPRESA_ID)return
 const nome=(document.getElementById("nomeMedicacao").value||"").trim().toUpperCase()
 const dose=(document.getElementById("doseMedicacao").value||"").trim().toUpperCase()
+const obrigatorio=document.getElementById("obrigatorioMedicacao")?.checked!==false
 const selecionados=[...document.querySelectorAll("#horarioMedicacao .ativo")]
 .map(e=>e.dataset.valor)
 let horario=selecionados.join("|")
@@ -422,6 +436,7 @@ return
 const {error}=await db.from("medicacoes").insert({
 nome_medicamento:nome,
 dosagem:dose,
+obrigatorio:obrigatorio,
 horarios:horarioFinal,
 empresa_id:EMPRESA_ID,
 nome_padrao:nomeLimpo,
@@ -1053,4 +1068,40 @@ function toggleHorariosMedicacao(){
 const box=document.getElementById("boxHorariosMedicacao")
 if(!box)return
 box.style.display=(box.style.display==="none")?"block":"none"
+}
+
+/* ====================================================
+239 – autofinalizar nao obrigatorios
+=================================================== */
+async function autoFinalizarNaoObrigatorios(){
+if(!db)return
+const hoje=new Date().toISOString().slice(0,10)
+const {data:meds}=await db
+.from("medicacoes")
+.select("*")
+.eq("obrigatorio",false)
+.eq("ativo",true)
+if(!meds)return
+for(const m of meds){
+let horarios=(m.horarios||"").split("|")
+for(const h of horarios){
+const {data:ja}=await db
+.from("medicacoes_execucao")
+.select("id")
+.eq("medicacao_id",m.id)
+.eq("data",hoje)
+.eq("horario",h)
+.maybeSingle()
+if(!ja){
+await db.from("medicacoes_execucao").insert({
+medicacao_id:m.id,
+paciente_id:m.paciente_id,
+data:hoje,
+horario:h,
+status:"nao_obrigatorio",
+usuario_nome:"Sistema"
+})
+}
+}
+}
 }
