@@ -6,7 +6,6 @@ await carregarPacientesMedicacao()
 await carregarStatusMedicacoes()
 await carregarMedicacoes()
 }
-
 /* ====================================================
 020 – CORES POR USUÁRIO
 ==================================================== */
@@ -18,7 +17,6 @@ let cor="#"
 for(let i=0;i<3;i++){let value=(hash>>(i*8))&255;cor+=("00"+value.toString(16)).slice(-2)}
 return cor
 }
-
 /* ====================================================
 020A – USUARIO LOGADO
 ==================================================== */
@@ -221,20 +219,26 @@ let rotinasUnicas={}
 lista.forEach(r=>{
 if(!rotinasUnicas[r.rotina_id])rotinasUnicas[r.rotina_id]={nome:r.rotina,turno:r.turno}
 })
-let headerHTML=`<tr><td colspan="3" style="background:#f4f6f9;padding:6px 10px"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:bold;color:#2c3e50">Ações por Rotina</div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">`
-Object.keys(rotinasUnicas).forEach(rotinaId=>{
-const r=rotinasUnicas[rotinaId]
-let cor="#2ecc71"
-if(r.turno==="tarde")cor="#f39c12"
-if(r.turno==="noite")cor="#34495e"
-headerHTML+=`<button onclick="executarRotinaTodos('${rotinaId}')" style="background:${cor};color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer">✔ ${r.nome}</button>`
-})
-headerHTML+=`</div></div></td></tr>`
+let headerHTML=`
+<tr>
+<th style="width:22%">Paciente</th>
+<th style="width:12%">Progresso</th>
+<th style="width:66%">
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center;font-weight:bold">
+<div style="color:#3b82f6">🌅 Manhã</div>
+<div style="color:#f59e0b">☀️ Tarde</div>
+<div style="color:#22c55e">🌙 Noite</div>
+</div>
+</th>
+</tr>
+`
 Object.keys(pacientes).forEach(pid=>{
 const p=pacientes[pid]
 let total=p.rotinas.length
 let executadas=0
-let rotinasHTML=`<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">`
+let rotinasManha=""
+let rotinasTarde=""
+let rotinasNoite=""
 p.rotinas.forEach(r=>{
 const status=(r.status||"pendente")
 if(status==="executado")executadas++
@@ -247,29 +251,53 @@ if(r.turno==="manha")classe="rotina-ok-manha"
 else if(r.turno==="tarde")classe="rotina-ok-tarde"
 else if(r.turno==="noite")classe="rotina-ok-noite"
 }
-
-rotinasHTML+=`
+let botao=`
 <div class="badge-rotina ${classe}"
 data-paciente="${r.paciente_id}"
 data-rotina="${r.rotina_id}"
-style="
-display:inline-block;
-padding:4px 8px;
-font-size:11px;
-border-radius:6px;
-cursor:pointer;
-white-space:nowrap;
-margin:2px;
-">
+style="margin:3px;max-width:100%">
 ${r.rotina}
-${status==="executado"&&nomeProf?` <span style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`:""}
+${status==="executado"&&nomeProf?`<span style="color:${corProf};font-weight:bold"> ✔ ${nomeProf}</span>`:""}
 </div>
 `
+if(r.turno==="manha")rotinasManha+=botao
+else if(r.turno==="tarde")rotinasTarde+=botao
+else if(r.turno==="noite")rotinasNoite+=botao
 })
-rotinasHTML+=`</div>`
 let percentual=total?Math.round((executadas/total)*100):0
 let concluido=executadas===total
-html+=`<tr style="height:32px"><td style="font-size:12px;font-weight:600">${p.nome}</td><td style="font-size:11px"><b>${percentual}% (${executadas}/${total})</b><br><button onclick="executarTodos('${pid}')" style="margin-top:3px;background:${concluido?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">${concluido?"✔":"Concluir"}</button></td><td style="font-size:11px">${rotinasHTML}</td></tr>`
+
+html+=`<tr style="height:32px">
+
+<td style="font-size:12px;font-weight:600">${p.nome}</td>
+
+<td style="font-size:11px">
+<b>${percentual}% (${executadas}/${total})</b><br>
+<button onclick="executarTodos('${pid}')" 
+style="margin-top:3px;background:${concluido?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">
+${concluido?"✔":"Concluir"}
+</button>
+</td>
+
+<td style="font-size:11px">
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+${rotinasManha}
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+${rotinasTarde}
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+${rotinasNoite}
+</div>
+
+</div>
+</td>
+
+</tr>`
 })
 tbody.innerHTML=headerHTML+html
 document.querySelectorAll(".badge-rotina").forEach(el=>{
