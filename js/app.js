@@ -82,6 +82,7 @@ localStorage.setItem("usuario_id",user.id||"")
 localStorage.setItem("usuario_nome",user.nome_completo||user.nome_apelido||"")
 localStorage.setItem("usuario_hierarquia",user.hierarquia||1)
 localStorage.setItem("empresa_id",user.empresa_id||"")
+
 /* ====================================================
 011 – LOGIN OK (UNIFICADO DEFINITIVO)
 ==================================================== */
