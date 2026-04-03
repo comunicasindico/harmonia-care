@@ -58,6 +58,7 @@ return
 }
 renderizarMedicacoes(data||[])
 aplicarDataInteligente()
+carregarListaHorarios()
 }
 /* ====================================================
 202 – RENDER MEDICAÇÕES (FINAL LIMPO PROFISSIONAL)
@@ -330,52 +331,82 @@ inputHorario.value=modelo.horarios_padrao
 }
 }
 /* ====================================================
-207 – SALVAR NOVA MEDICAÇÃO
+207 – SALVAR NOVA MEDICAÇÃO (FINAL CORRIGIDO + HORÁRIO PADRÃO)
 ==================================================== */
 async function salvarNovaMedicacao(){
 if(!db||!EMPRESA_ID)return
-
 const nome=(document.getElementById("nomeMedicacao").value||"").trim().toUpperCase()
 const dose=(document.getElementById("doseMedicacao").value||"").trim().toUpperCase()
-const horario=(document.getElementById("horarioMedicacao").value||"").trim()
+const horarioInput=document.getElementById("horarioMedicacao")
+let horario=(horarioInput?.value||"").trim()
 const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value
 if(!nome||!pacienteId||pacienteId==="todos"){
 alert("Informe paciente e nome")
 return
 }
-const nomeLimpo=nome
-.toLowerCase()
-.normalize("NFD")
-.replace(/[\u0300-\u036f]/g,"")
-.replace(/\s+/g,"")
-.replace(/mg|cp|cps|ml|ui/g,"")
-.trim()
-const {data:existe}=await db
-.from("medicacoes")
-.select("id")
-.eq("empresa_id",EMPRESA_ID)
-.eq("nome_padrao",nomeLimpo)
-.eq("dosagem",dose||"")
-.maybeSingle()
+/* 🔥 NORMALIZA HORÁRIOS (ACEITA MULTIPLOS COM | ) */
+const horarioFinal=horario.split("|").map(h=>{
+h=h.trim()
+if(!h)return""
+if(!h.includes(":"))return h.padStart(2,"0")+":00"
+let[p,m]=h.split(":")
+return p.padStart(2,"0")+":"+m.padStart(2,"0")
+}).filter(h=>h).join("|")
+if(!horarioFinal){
+alert("Informe ao menos um horário")
+return
+}
+/* 🔥 NOME PADRÃO */
+const nomeLimpo=nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"").replace(/mg|cp|cps|ml|ui/g,"").trim()
+/* 🔍 EVITA DUPLICADO */
+const {data:existe}=await db.from("medicacoes").select("id").eq("empresa_id",EMPRESA_ID).eq("nome_padrao",nomeLimpo).eq("dosagem",dose||"").eq("paciente_id",pacienteId).maybeSingle()
 if(existe){
 alert("Medicação já cadastrada")
 return
 }
-await db.from("medicacoes").insert({
+/* 💾 INSERT */
+const {error}=await db.from("medicacoes").insert({
 nome_medicamento:nome,
 dosagem:dose,
-horarios:horarios,
+horarios:horarioFinal,
 empresa_id:EMPRESA_ID,
 nome_padrao:nomeLimpo,
+paciente_id:pacienteId,
 ativo:true
 })
+if(error){
+console.error("Erro ao salvar:",error)
+alert("Erro ao salvar medicação")
+return
+}
+/* 🔄 RELOAD */
 carregarMedicacoes()
 document.getElementById("nomeMedicacao").value=""
 document.getElementById("doseMedicacao").value=""
 document.getElementById("horarioMedicacao").value=""
 }
 /* ====================================================
-208 – GERAR COR POR TEXTO (PACIENTE / MEDICAÇÃO)
+208 – CARREGAR LISTA DE HORÁRIOS
+==================================================== */
+function carregarListaHorarios(){
+const select=document.getElementById("horarioMedicacao")
+if(!select)return
+select.innerHTML=""
+for(let h=6;h<=23;h++){
+let hora=h.toString().padStart(2,"0")+":00"
+let opt=document.createElement("option")
+opt.value=hora
+opt.textContent=hora
+select.appendChild(opt)
+}
+/* meia noite */
+let opt=document.createElement("option")
+opt.value="00:00"
+opt.textContent="00:00"
+select.appendChild(opt)
+}
+/* ====================================================
+209 – GERAR COR POR TEXTO (PACIENTE / MEDICAÇÃO)
 ==================================================== */
 function gerarCor(texto, saturacao=70, luminosidade=85){
 let hash=0
