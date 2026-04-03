@@ -499,8 +499,27 @@ const {data:rel}=await db
 .eq("usuario_id",usuarioId)
 .eq("ativo",true)
 const vinculados=rel?.map(r=>r.paciente_id)||[]
+
 let html=`
-<div style="
+<div style="display:flex;gap:8px;margin-bottom:10px">
+<button onclick="selecionarTodosVinculo(true)" style="
+background:#16a34a;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">
+✔ Selecionar todos
+</button>
+<button onclick="selecionarTodosVinculo(false)" style="
+background:#ef4444;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">
+✖ Limpar
+</button>
+<input id="buscaPacienteVinculo" placeholder="Buscar paciente..."
+oninput="filtrarPacientesVinculo(this.value)"
+style="
+flex:1;
+padding:6px;
+border:1px solid #ddd;
+border-radius:6px;
+">
+</div>
+<div id="gridPacientesVinculo" style="
 display:grid;
 grid-template-columns:repeat(3,1fr);
 gap:10px;
@@ -514,7 +533,7 @@ pacientes?.forEach(p=>{
 const ativo=vinculados.includes(p.id)
 
 html+=`
-<label style="
+<label data-nome="${p.nome_completo.toLowerCase()}" style="
 display:flex;
 align-items:center;
 gap:10px;
@@ -547,30 +566,50 @@ ${p.nome_completo}
 })
 
 html+=`</div>`
-
 document.getElementById("listaPacientesVinculo").innerHTML=html
 }
 /* ====================================================
-075 vínculo
+075 TOGGLE Vínculo
 ==================================================== */
 async function toggleVinculo(pacienteId,el){
 const usuarioId=window.USUARIO_VINCULO_ATUAL
 if(!usuarioId)return
-
 const {data:existe}=await db
 .from("pacientes_profissionais")
 .select("*")
 .eq("usuario_id",usuarioId)
 .eq("paciente_id",pacienteId)
 .eq("ativo",true)
+async function toggleVinculo(pacienteId,el){
+const usuarioId=window.USUARIO_VINCULO_ATUAL
+if(!usuarioId)return
 
+const label=el.closest("label")
+const span=label.querySelector("span")
+/* 🔥 FEEDBACK IMEDIATO */
+if(el.checked){
+label.style.background="#dcfce7"
+label.style.border="1px solid #22c55e"
+span.style.color="#16a34a"
+span.style.fontWeight="bold"
+}else{
+label.style.background="#f9fafb"
+label.style.border="1px solid #e5e7eb"
+span.style.color="#000"
+span.style.fontWeight="normal"
+}
+const {data:existe}=await db
+.from("pacientes_profissionais")
+.select("*")
+.eq("usuario_id",usuarioId)
+.eq("paciente_id",pacienteId)
+.eq("ativo",true)
 if(existe && existe.length){
 await db
 .from("pacientes_profissionais")
 .update({ativo:false})
 .eq("usuario_id",usuarioId)
 .eq("paciente_id",pacienteId)
-
 }else{
 await db
 .from("pacientes_profissionais")
@@ -583,12 +622,26 @@ ativo:true
 onConflict:"usuario_id,paciente_id,turno"
 })
 }
-
-/* 🔥 ATUALIZA CONTADOR */
+/* 🔄 CONTADOR */
 carregarUsuarios()
 }
 /* ====================================================
-076 – RESUMO HOSPITAL
+076 – FILTRO PACIENTES VÍNCULO
+==================================================== */
+let timerBusca=null
+function filtrarPacientesVinculo(txt){
+clearTimeout(timerBusca)
+timerBusca=setTimeout(()=>{
+txt=txt.toLowerCase()
+const itens=document.querySelectorAll("#gridPacientesVinculo label")
+itens.forEach(el=>{
+const nome=el.dataset.nome||""
+el.style.display=nome.includes(txt)?"flex":"none"
+})
+},150)
+}
+/* ====================================================
+077 – RESUMO HOSPITAL
 ==================================================== */
 function montarResumoUsuarios(lista,mapaQtd){
 let total=lista.length
@@ -602,6 +655,31 @@ let html=`
 const el=document.getElementById("painelResumo")
 if(!el)return
 el.innerHTML=html
+}
+/* ====================================================
+078 – SELECIONAR TODOS VINCULO
+==================================================== */
+async function selecionarTodosVinculo(marcar){
+const usuarioId=window.USUARIO_VINCULO_ATUAL
+if(!usuarioId)return
+const checkboxes=document.querySelectorAll("#gridPacientesVinculo input[type='checkbox']")
+for(const cb of checkboxes){
+if(cb.checked===marcar)continue
+cb.checked=marcar
+const pacienteId=cb.getAttribute("onchange").match(/'(.*?)'/)[1]
+await toggleVinculo(pacienteId,cb)
+}
+}
+/* ====================================================
+079 – FILTRAR PACIENTES VINCULO
+==================================================== */
+function filtrarPacientesVinculo(txt){
+txt=txt.toLowerCase()
+const itens=document.querySelectorAll("#gridPacientesVinculo label")
+itens.forEach(el=>{
+const nome=el.dataset.nome||""
+el.style.display=nome.includes(txt)?"flex":"none"
+})
 }
 /* ====================================================
 999 – EXPORT GLOBAL ADMIN
