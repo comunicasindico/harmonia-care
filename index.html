@@ -468,13 +468,16 @@ style="width:100%;margin-bottom:6px;padding:6px">
 Tipo da Medicação
 </label>
 
-<select id="obrigatorioMedicacao"
-style="width:100%;margin-bottom:10px;padding:6px;border-radius:6px">
-
+<div style="display:flex;gap:8px;margin-bottom:6px">
+<select id="obrigatorioMedicacao" style="width:40%;padding:6px;border-radius:6px">
 <option value="true">✔ Obrigatório</option>
 <option value="false">⚠ Não obrigatório</option>
-
 </select>
+
+<select id="listaMedicacoesEditar" style="width:60%;padding:6px;border-radius:6px">
+<option value="">🔄 Alterar medicação existente</option>
+</select>
+</div>
 
 <div onclick="toggleHorariosMedicacao()"
 style="background:#f1f5f9;padding:8px;border-radius:8px;margin-bottom:6px;cursor:pointer;font-weight:bold">
