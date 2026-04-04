@@ -720,9 +720,7 @@ if(p.dm)texto+=" | Controle glicêmico"
 if(p.has||p.cardiopatia)texto+=" | Monitorar PA"
 return texto
 }
-
 /* ====================================================999 – EXPORT==================================================== */
 window.executarRotina=executarRotina
 window.executarTodos=executarTodos
 window.executarRotinaTodosPaciente=executarRotinaTodosPaciente
-
