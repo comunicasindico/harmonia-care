@@ -239,7 +239,7 @@ if(inicio && !inicio.value)inicio.value=dataLocal
 if(fim && !fim.value)fim.value=dataLocal
 
 }
-/* ====================================================017 – NAVEGAÇÃO PAINÉIS==================================================== */
+/* ====================================================017 – NAVEGAÇÃO PAINÉIS (FINAL CORRIGIDO)==================================================== */
 function abrirPainel(id){
 if(!podeUsarMedicacao()){const btn=document.getElementById("btnMedicacao");if(btn)btn.style.display="none"}
 if(window.salvandoPendencias){alert("Aguarde finalizar o salvamento das pendências.");return}
@@ -247,73 +247,33 @@ localStorage.setItem("painelAtual",id)
 const paineis=["painelEnfermagem","painelClinico","painelAdmin","painelMedicacao"]
 for(let i=0;i<paineis.length;i++){const el=document.getElementById(paineis[i]);if(el)el.style.display="none"}
 const alvo=document.getElementById(id);if(alvo)alvo.style.display="block"
-/* 🔥 CARREGAMENTO AUTOMÁTICO */
+/* 🔥 CARREGAMENTO */
 if(id==="painelEnfermagem"&&typeof carregarRotinas==="function")carregarRotinas()
 if(id==="painelClinico"&&typeof carregarClinico==="function")carregarClinico()
-if(id==="painelMedicacao"&&typeof carregarMedicacoes==="function")carregarMedicacoes()
-const btnPendentes=document.getElementById("btnConcluirPendentes")
-const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
-/* 🔥 CONTROLE BOTÃO */
-if(btnPendentes){
-if((id==="painelEnfermagem"||id==="painelMedicacao")&&hierarquia===1){
-btnPendentes.style.display="inline-block"
-btnPendentes.onclick=id==="painelEnfermagem"?()=>window.concluirPendentes():()=>window.concluirPendentesMedicacao()
-}else{
-btnPendentes.style.display="none"
-}
-}
-/* 🔥 MEDICAÇÃO */
 if(id==="painelMedicacao"){
-setTimeout(()=>{
+setTimeout(function(){
 if(typeof carregarStatusMedicacoes==="function")carregarStatusMedicacoes()
 if(typeof carregarPacientesMedicacao==="function")carregarPacientesMedicacao()
 if(typeof carregarMedicacoes==="function")carregarMedicacoes()
 },100)
+}
+/* 🔥 BOTÃO PENDENTES */
+const btnPendentes=document.getElementById("btnConcluirPendentes")
+const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+if(btnPendentes){
+if((id==="painelEnfermagem"||id==="painelMedicacao")&&hierarquia===1){
+btnPendentes.style.display="inline-block"
+if(id==="painelEnfermagem")btnPendentes.onclick=function(){window.concluirPendentes()}
+if(id==="painelMedicacao")btnPendentes.onclick=function(){window.concluirPendentesMedicacao()}
+}else{
+btnPendentes.style.display="none"
+}
 }
 /* 🔥 TOPO */
 if(id==="painelEnfermagem")atualizarBotoesTopo("enfermagem")
 if(id==="painelClinico")atualizarBotoesTopo("clinico")
 if(id==="painelAdmin")atualizarBotoesTopo("admin")
 if(id==="painelMedicacao")atualizarBotoesTopo("medicacao")
-}
-/* ====================================================
-017A – CARREGAR MEDICAÇÃO AO ABRIR
-==================================================== */
-if(id==="painelMedicacao"){
-setTimeout(()=>{
-if(typeof carregarStatusMedicacoes==="function")carregarStatusMedicacoes()
-if(typeof carregarPacientesMedicacao==="function")carregarPacientesMedicacao()
-if(typeof carregarMedicacoes==="function")carregarMedicacoes()
-},100)
-}
-/* 🔥 ATUALIZA BOTÕES DINÂMICOS */
-if(id==="painelEnfermagem")atualizarBotoesTopo("enfermagem")
-if(id==="painelClinico")atualizarBotoesTopo("clinico")
-if(id==="painelAdmin")atualizarBotoesTopo("admin")
-if(id==="painelMedicacao")atualizarBotoesTopo("medicacao")
-/* ====================================================
-017B – CONTROLE BOTÃO CONCLUIR PENDENTES (CORRIGIDO)
-==================================================== */
-const btnPendentes=document.getElementById("btnConcluirPendentes")
-
-if(id==="painelEnfermagem"){
-if(btnPendentes){
-btnPendentes.onclick=()=>window.concluirPendentes()
-btnPendentes.style.display="inline-block"
-}
-}
-if(id==="painelMedicacao"){
-if(btnPendentes){
-btnPendentes.onclick=()=>window.concluirPendentesMedicacao()
-btnPendentes.style.display="inline-block"
-}
-}
-if(id!=="painelEnfermagem"&&id!=="painelMedicacao"){
-if(btnPendentes){
-btnPendentes.style.display="none"
-}
-}
-  
 }
 /* ====================================================
 018 – CONTROLE VISUAL DOS BOTÕES
