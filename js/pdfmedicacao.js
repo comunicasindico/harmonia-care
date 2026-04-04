@@ -151,7 +151,22 @@ doc.text("Responsável Técnico",14,y+5)
 doc.setFontSize(8)
 doc.setTextColor(120,120,120)
 doc.text("Harmonia-Care • Sistema de Gestão Clínica • Documento Auditável",14,285)
-doc.save("medicacao_auditoria.pdf")
+const pacienteSelect=document.getElementById("buscaPacienteMedicacao")
+let nomePaciente="PACIENTE"
+
+if(pacienteSelect && pacienteSelect.value!=="todos"){
+const nomeTexto=pacienteSelect.options[pacienteSelect.selectedIndex]?.text||"PACIENTE"
+
+/* 🔥 LIMPA NOME PARA ARQUIVO */
+nomePaciente=nomeTexto
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.replace(/[^\w\s]/gi,"")
+.replace(/\s+/g," ")
+.toUpperCase()
+}
+
+doc.save(`${nomePaciente}_${new Date().toISOString().slice(0,10)}.pdf`)
 }
 /* ====================================================
 007 – PDF GERAL COM PAGINAÇÃO CORRETA
