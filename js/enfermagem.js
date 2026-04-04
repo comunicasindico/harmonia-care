@@ -203,6 +203,7 @@ return(a.ordem||99)-(b.ordem||99)
 })
 ROTINAS_CACHE=lista
 renderizarRotinas(lista)
+renderizarBotoesRotinas()
 calcularIndicadores(lista)
 }
 /* ==024 – RENDERIZAR ROTINAS (MODO LINHA COMPACTO HOSPITAL)==================================================== */
@@ -280,7 +281,7 @@ const executado=this.classList.contains("rotina-ok-manha")||this.classList.conta
 if(executado){
 desfazerRotina(pacienteId,rotinaId)
 }else{
-executarRotina(pacienteId,rotinaId)
+executarRotina(pacienteId,rotinaId,this)
 }
 }
 })
@@ -288,13 +289,15 @@ executarRotina(pacienteId,rotinaId)
 /* ====================================================
 024B – EXECUTAR ROTINA (ANTI-SOBRESCRITA)
 ==================================================== */
-async function executarRotina(pacienteId,rotinaId){
+async function executarRotina(pacienteId,rotinaId,botao){
 if(!db)return
 const dataHoje=obterDataSelecionada()
 const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
 const user=obterUsuarioLogado()||{}
 const usuarioId=user.id||null
 const nome=user.nome||localStorage.getItem("usuario_nome")||"Administrador"
+/* aplicar feedback visual imediato no item 024B - async function executarRotina(pacienteId,rotinaId) */
+if(botao){botao.style.opacity="0.6";botao.style.pointerEvents="none";setTimeout(()=>{botao.style.opacity="1";botao.style.pointerEvents="auto"},600)}
 /* 🔒 VERIFICA SE JÁ EXISTE EXECUTADO */
 const {data:existe}=await db.from("rotinas_execucao").select("status").eq("paciente_id",pacienteId).eq("rotina_id",rotinaId).eq("data",dataHoje).eq("turno",turno).maybeSingle()
 if(existe&&existe.status==="executado")return
@@ -315,8 +318,23 @@ if(item&&item.status!=="executado"){
 item.status="executado"
 item.profissional_nome=nome
 }
+if(botao){setTimeout(()=>{botao.style.opacity="1";botao.style.pointerEvents="auto"},600)}
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
+}
+/* ====================================================025A – BOTÕES POR ROTINA (CABEÇALHO)==================================================== */
+function renderizarBotoesRotinas(){
+const div=document.getElementById("acoesRotinas");if(!div)return
+const turno=(TURNO_ATUAL||"manha").toLowerCase().trim()
+const unicas={}
+ROTINAS_CACHE.forEach(r=>{if((r.turno||"").toLowerCase()!==turno)return;unicas[r.rotina_id]=r.rotina})
+let cor="#34495e";if(turno==="manha")cor="#3498db";if(turno==="tarde")cor="#e67e22";if(turno==="noite")cor="#2c3e50"
+let html=""
+Object.keys(unicas).forEach(rotinaId=>{
+const nome=unicas[rotinaId]
+html+=`<button onclick="executarRotinaTodos('${rotinaId}')" style="background:${cor};color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer">✔ ${nome}</button>`
+})
+div.innerHTML=html
 }
 /* ====================================================
 027 – INDICADORES
