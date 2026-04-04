@@ -241,41 +241,42 @@ if(inicio && !inicio.value)inicio.value=dataLocal
 if(fim && !fim.value)fim.value=dataLocal
 
 }
-/* ====================================================
-017 – NAVEGAÇÃO PAINÉIS
-==================================================== */
+/* ====================================================017 – NAVEGAÇÃO PAINÉIS==================================================== */
 function abrirPainel(id){
-if(!podeUsarMedicacao()){
-const btn=document.getElementById("btnMedicacao")
-if(btn)btn.style.display="none"
-}
-if(window.salvandoPendencias){
-alert("Aguarde finalizar o salvamento das pendências.")
-return
-}
+if(!podeUsarMedicacao()){const btn=document.getElementById("btnMedicacao");if(btn)btn.style.display="none"}
+if(window.salvandoPendencias){alert("Aguarde finalizar o salvamento das pendências.");return}
 localStorage.setItem("painelAtual",id)
 const paineis=["painelEnfermagem","painelClinico","painelAdmin","painelMedicacao"]
-paineis.forEach(p=>{
-const el=document.getElementById(p)
-if(el)el.style.display="none"
-})
-const alvo=document.getElementById(id)
-if(alvo)alvo.style.display="block"
-/* 🔥 CARREGAMENTO AUTOMÁTICO DO PAINEL */
-if(id==="painelEnfermagem")carregarRotinas?.()
-if(id==="painelClinico")carregarClinico?.()
-if(id==="painelMedicacao")carregarMedicacoes?.()
-const btnAdmin=document.getElementById("btnConcluirPendentes")
+for(let i=0;i<paineis.length;i++){const el=document.getElementById(paineis[i]);if(el)el.style.display="none"}
+const alvo=document.getElementById(id);if(alvo)alvo.style.display="block"
+/* 🔥 CARREGAMENTO AUTOMÁTICO */
+if(id==="painelEnfermagem"&&typeof carregarRotinas==="function")carregarRotinas()
+if(id==="painelClinico"&&typeof carregarClinico==="function")carregarClinico()
+if(id==="painelMedicacao"&&typeof carregarMedicacoes==="function")carregarMedicacoes()
+const btnPendentes=document.getElementById("btnConcluirPendentes")
 const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
-
-if(btnAdmin){
-if(hierarquia===1 && id==="painelEnfermagem"){
-btnAdmin.style.display="inline-block"
-btnAdmin.style.opacity="1"
-btnAdmin.style.pointerEvents="auto"
+/* 🔥 CONTROLE BOTÃO */
+if(btnPendentes){
+if((id==="painelEnfermagem"||id==="painelMedicacao")&&hierarquia===1){
+btnPendentes.style.display="inline-block"
+btnPendentes.onclick=id==="painelEnfermagem"?()=>window.concluirPendentes():()=>window.concluirPendentesMedicacao()
 }else{
-btnAdmin.style.display="none"
+btnPendentes.style.display="none"
 }
+}
+/* 🔥 MEDICAÇÃO */
+if(id==="painelMedicacao"){
+setTimeout(()=>{
+if(typeof carregarStatusMedicacoes==="function")carregarStatusMedicacoes()
+if(typeof carregarPacientesMedicacao==="function")carregarPacientesMedicacao()
+if(typeof carregarMedicacoes==="function")carregarMedicacoes()
+},100)
+}
+/* 🔥 TOPO */
+if(id==="painelEnfermagem")atualizarBotoesTopo("enfermagem")
+if(id==="painelClinico")atualizarBotoesTopo("clinico")
+if(id==="painelAdmin")atualizarBotoesTopo("admin")
+if(id==="painelMedicacao")atualizarBotoesTopo("medicacao")
 }
 /* ====================================================
 017A – CARREGAR MEDICAÇÃO AO ABRIR
