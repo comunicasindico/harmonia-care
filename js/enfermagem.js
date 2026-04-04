@@ -164,9 +164,50 @@ html+=`<button onclick="executarRotinaTodos('${id}')" style="margin:3px;padding:
 div.innerHTML=html
 }
 /* ====================================================027 – INDICADORES==================================================== */
-function calcularIndicadores(lista){let e=0,p=0;lista.forEach(r=>r.status==="executado"?e++:p++);document.getElementById("indicadorExecutado")?.innerText=e;document.getElementById("indicadorPendente")?.innerText=p}
+function calcularIndicadores(lista){
+let e=0,p=0
+for(let i=0;i<lista.length;i++){
+let r=lista[i]
+if(r.status==="executado")e++
+else p++
+}
+const elE=document.getElementById("indicadorExecutado")
+const elP=document.getElementById("indicadorPendente")
+if(elE)elE.innerText=e
+if(elP)elP.innerText=p
+}
 /* ====================================================028 – EXECUTAR TODOS==================================================== */
-async function executarTodos(pid){const d=obterDataSelecionada();const t=TURNO_ATUAL;const user=obterUsuarioLogado();let inserts=ROTINAS_CACHE.filter(r=>r.paciente_id==pid&&r.turno==t).map(r=>({paciente_id:r.paciente_id,rotina_id:r.rotina_id,data:d,turno:t,status:"executado",profissional_nome:user.nome,empresa_id:EMPRESA_ID}));await db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"});ROTINAS_CACHE.forEach(r=>{if(r.paciente_id==pid&&r.turno==t)r.status="executado"});renderizarRotinas(ROTINAS_CACHE);calcularIndicadores(ROTINAS_CACHE)}
+async function executarTodos(pid){
+if(!db)return
+const d=obterDataSelecionada()
+const t=(TURNO_ATUAL||"manha")
+const user=obterUsuarioLogado()
+let inserts=[]
+for(let i=0;i<ROTINAS_CACHE.length;i++){
+let r=ROTINAS_CACHE[i]
+if(r.paciente_id==pid&&r.turno==t){
+inserts.push({
+paciente_id:r.paciente_id,
+rotina_id:r.rotina_id,
+data:d,
+turno:t,
+status:"executado",
+profissional_nome:user.nome,
+empresa_id:EMPRESA_ID
+})
+}
+}
+if(inserts.length)await db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
+for(let i=0;i<ROTINAS_CACHE.length;i++){
+let r=ROTINAS_CACHE[i]
+if(r.paciente_id==pid&&r.turno==t){
+r.status="executado"
+r.profissional_nome=user.nome
+}
+}
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
+}
 /* ====================================================029 – EXECUTAR ROTINA TODOS==================================================== */
 async function executarRotinaTodos(rotinaId){const d=obterDataSelecionada();const t=TURNO_ATUAL;const user=obterUsuarioLogado();let pendentes=ROTINAS_CACHE.filter(r=>r.rotina_id==rotinaId&&r.turno==t&&r.status!="executado");let inserts=pendentes.map(r=>({paciente_id:r.paciente_id,rotina_id:r.rotina_id,data:d,turno:t,status:"executado",profissional_nome:user.nome,empresa_id:EMPRESA_ID}));await db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"});pendentes.forEach(r=>r.status="executado");renderizarRotinas(ROTINAS_CACHE);calcularIndicadores(ROTINAS_CACHE)}
 /* ====================================================031-043 – MANTIDOS==================================================== */
