@@ -112,7 +112,9 @@ else if(turno==="noite")noite+=el
 })
 let perc=total?Math.round((executadas/total)*100):0
 let ok=executadas===total
-html+=`<tr style="height:32px"><td style="font-size:12px;font-weight:600">${p.nome}</td><td style="font-size:11px"><b>${perc}% (${executadas}/${total})</b><br><button onclick="executarTodos('${pid}')" style="margin-top:3px;background:${ok?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">${ok?"✔":"Concluir"}</button></td><td style="font-size:11px"><div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">${manha}${tarde}${noite}</div></td></tr>`
+html+=`<tr style="height:32px"><td style="font-size:12px;font-weight:600">${p.nome}</td><td style="font-size:11px"><b>${perc}% (${executadas}/${total})</b><br><button onclick="executarTodos('${pid}')" style="margin-top:3px;background:${ok?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">${ok?"✔":"Concluir"}</button></td><td style="font-size:11px"><div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center">
+${manha}${tarde}${noite}
+</div></td></tr>`
 })
 t.innerHTML=html
 document.querySelectorAll(".badge-rotina").forEach(el=>{
@@ -127,40 +129,47 @@ if(executado){desfazerRotina(p,r)}else{executarRotina(p,r,this)}
 /* ====================================================024B – EXECUTAR ROTINA==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db)return
+if(botao){botao.style.opacity="0.6";botao.style.pointerEvents="none"}
 const d=obterDataSelecionada()
 const t=(TURNO_ATUAL||"manha")
 const user=obterUsuarioLogado()
-if(botao){botao.style.opacity="0.6";botao.style.pointerEvents="none";setTimeout(function(){botao.style.opacity="1";botao.style.pointerEvents="auto"},600)}
 const resp=await db.from("rotinas_execucao").select("status").eq("paciente_id",pacienteId).eq("rotina_id",rotinaId).eq("data",d).eq("turno",t).maybeSingle()
 const existe=resp.data
-if(existe&&existe.status==="executado")return
-await db.from("rotinas_execucao").upsert({paciente_id:pacienteId,rotina_id:rotinaId,data:d,turno:t,status:"executado",profissional_nome:user.nome,empresa_id:EMPRESA_ID},{onConflict:"paciente_id,rotina_id,data,turno"})
+if(existe&&existe.status==="executado"){if(botao){botao.style.opacity="1";botao.style.pointerEvents="auto"}return}
+const res=await db.from("rotinas_execucao").upsert({paciente_id:pacienteId,rotina_id:rotinaId,data:d,turno:t,status:"executado",profissional_nome:user.nome,empresa_id:EMPRESA_ID},{onConflict:"paciente_id,rotina_id,data,turno"})
+if(res.error){console.error("Erro salvar:",res.error);if(botao){botao.style.opacity="1";botao.style.pointerEvents="auto"}return}
 for(let i=0;i<ROTINAS_CACHE.length;i++){
 let r=ROTINAS_CACHE[i]
-if(r.paciente_id==pacienteId&&r.rotina_id==rotinaId){
+if(r.paciente_id==pacienteId&&r.rotina_id==rotinaId&&r.turno==t){
 r.status="executado"
 r.profissional_nome=user.nome
+break
 }
 }
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
+if(botao){botao.style.opacity="1";botao.style.pointerEvents="auto"}
 }
-/* ====================================================025A – BOTÕES==================================================== */
+/* ====================================================025A – BOTÕES ALINHADOS SIMPLES==================================================== */
 function renderizarBotoesRotinas(){
 const div=document.getElementById("acoesRotinas");if(!div)return
 const turno=(TURNO_ATUAL||"manha").toLowerCase()
-let html=""
-const unicas={}
+const ordem=["Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café","Medicação","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene (noite)","Troca de Fraldas (noite)"]
+const mapa={}
 for(let i=0;i<ROTINAS_CACHE.length;i++){
 let r=ROTINAS_CACHE[i]
 if((r.turno||"").toLowerCase()!==turno)continue
-unicas[r.rotina_id]=r.rotina
+mapa[r.rotina]=r.rotina_id
 }
-const ids=Object.keys(unicas)
-for(let i=0;i<ids.length;i++){
-let id=ids[i]
-html+=`<button onclick="executarRotinaTodos('${id}')" style="margin:3px;padding:4px 8px;border:none;border-radius:6px;background:#34495e;color:#fff;cursor:pointer">✔ ${unicas[id]}</button>`
+let html=`<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:6px">`
+for(let i=0;i<ordem.length;i++){
+let nome=ordem[i]
+let id=mapa[nome]
+if(id){
+html+=`<button onclick="executarRotinaTodos('${id}')" style="padding:6px 12px;border:none;border-radius:8px;background:#34495e;color:#fff;font-size:13px;min-width:120px">✔ ${nome}</button>`
 }
+}
+html+=`</div>`
 div.innerHTML=html
 }
 /* ====================================================027 – INDICADORES==================================================== */
