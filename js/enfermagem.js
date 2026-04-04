@@ -273,8 +273,18 @@ r.turno==t &&
 )
 
 if(!pendentes.length)return
+const {data:existentes}=await db
+.from("rotinas_execucao")
+.select("paciente_id,rotina_id")
+.eq("data",d)
+.eq("turno",t)
+.eq("empresa_id",EMPRESA_ID)
+.eq("paciente_id",pid)
+let mapaExistentes=new Set((existentes||[]).map(e=>e.paciente_id+"_"+e.rotina_id))
 
-let inserts=pendentes.map(r=>({
+let inserts=pendentes
+.filter(r=>!mapaExistentes.has(r.paciente_id+"_"+r.rotina_id))
+.map(r=>({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:d,
@@ -284,6 +294,7 @@ usuario_id:user.id,
 profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
 }))
+if(!inserts.length)return
 /* 🔥 UPSERT (NÃO INSERT) */
 let res=null
 try{
