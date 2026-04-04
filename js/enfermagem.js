@@ -691,7 +691,6 @@ if(!grade)return
 grade.innerHTML=html
 
 /* 🔥 POSICIONAMENTO INTELIGENTE */
-const pacienteId=document.getElementById("buscaPaciente")?.value
 const clinico=document.getElementById("dadosClinicosPaciente")
 const containerFinal=document.getElementById("rotinas")?.parentElement
 
