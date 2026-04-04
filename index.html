@@ -419,10 +419,10 @@ backdrop-filter:blur(4px);
 <button id="btnPDFMedicacaoPaciente" class="btn-primary" onclick="gerarPDFMedicacaoPaciente()">📄 PDF Paciente Medicação</button>
 <button id="btnPDFMedicacaoGeral" class="btn-primary" onclick="gerarPDFMedicacaoGeral()">📄 PDF Geral Medicação</button>
 <button id="btnAdmin" onclick="abrirPainel('painelAdmin')" class="btn-success">Admin</button>
-<button id="btnConcluirPendentes" class="btn-secondary">✔ Concluir Pendentes</button>
-<button onclick="executarRotinaTodosPaciente()"
-style="background:#e67e22;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-weight:600;cursor:pointer">
-Pendentes (Todos)
+<button id="btnPendentesTodos"
+class="btn-secondary"
+onclick="executarRotinaTodosPaciente()">
+✔ Pendentes
 </button>
 <button id="btnGerarPDF" onclick="gerarPDFGeral()" class="btn-primary">Gerar PDF</button>
 <button id="btnPDFPaciente" onclick="gerarPDFPaciente()" class="btn-primary">PDF do Paciente</button>
