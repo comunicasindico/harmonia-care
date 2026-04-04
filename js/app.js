@@ -287,7 +287,7 @@ if(el)el.style.display="inline-block"
 }
 /* 🔥 CONFIG POR PAINEL */
 if(painel==="enfermagem"){
-mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnGerarPDF","btnPDFPaciente","btnConcluirPendentes","btnSalvar"])
+mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnGerarPDF","btnPDFPaciente","btnPendentesTodos","btnSalvar"])
 document.getElementById("acoesClinico").style.display="none"
 }
 if(painel==="clinico"){
