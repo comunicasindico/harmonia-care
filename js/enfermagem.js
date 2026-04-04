@@ -684,39 +684,7 @@ if(p.dm)texto+=" | Controle glicêmico"
 if(p.has||p.cardiopatia)texto+=" | Monitorar PA"
 return texto
 }
-/* ====================================================
-044 EXECUTAR ROTINA TODOS
-==================================================== */
-async function executarRotinaTodos(rotinaId){
-if(!db||!rotinaId)return
-const d=obterDataSelecionada()
-const t=(TURNO_ATUAL||"manha")
-const user=obterUsuarioLogado()
 
-let pendentes=ROTINAS_CACHE.filter(r=>r.rotina_id==rotinaId&&r.turno==t&&r.status!=="executado")
-if(!pendentes.length)return
-
-let inserts=pendentes.map(r=>({
-paciente_id:r.paciente_id,
-rotina_id:r.rotina_id,
-data:d,
-turno:t,
-status:"executado",
-profissional_nome:user.nome,
-empresa_id:EMPRESA_ID
-}))
-
-const res=await db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
-if(res.error){console.error("Erro executarRotinaTodos:",res.error);return}
-
-pendentes.forEach(r=>{
-r.status="executado"
-r.profissional_nome=user.nome
-})
-
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
-}
 /* ====================================================999 – EXPORT==================================================== */
 window.executarRotina=executarRotina
 window.executarTodos=executarTodos
