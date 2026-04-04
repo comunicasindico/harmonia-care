@@ -164,8 +164,6 @@ const user=obterUsuarioLogado()
 if(botao&&botao.dataset.lock==="1")return
 if(botao)botao.dataset.lock="1"
 
-try{
-
 /* 🔥 UPSERT SEGURO */
 const payload={
 paciente_id:pacienteId,
@@ -178,7 +176,7 @@ profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
 }
 
-/* 🔥 FORÇA UPSERT CORRETO */
+/* 🔥 UPSERT CONTROLADO */
 let res=null
 try{
 res=await db.from("rotinas_execucao").upsert(payload,{
@@ -189,7 +187,7 @@ res={error:e}
 }
 
 if(res.error){
-console.warn("Offline ou erro → salvando na fila")
+console.warn("offline ou erro → fila")
 adicionarNaFila(payload)
 }
 
@@ -197,7 +195,6 @@ adicionarNaFila(payload)
 if(botao){
 botao.className=`badge-rotina rotina-ok-${t}`
 botao.innerHTML=`${botao.innerText.split("✔")[0]} <span style="font-weight:bold">✔ ${user.nome}</span>`
-}
 }
 await carregarRotinas()
 }
