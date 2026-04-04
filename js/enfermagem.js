@@ -317,7 +317,10 @@ empresa_id:EMPRESA_ID
 }))
 
 /* 🔥 INSERT (NÃO UPSERT) */
-const res=await db.from("rotinas_execucao").insert(inserts)
+const res=await db.from("rotinas_execucao").upsert(inserts,{
+onConflict:"paciente_id,rotina_id,data,turno",
+ignoreDuplicates:true
+})
 
 if(res.error){
 console.error("Erro executarTodos:",res.error)
