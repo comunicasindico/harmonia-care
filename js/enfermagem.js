@@ -685,7 +685,25 @@ html+=`<div style="margin-top:10px;font-size:11px">
 
 html+=`</div>`
 
-document.getElementById("gradePeriodo").innerHTML=html
+const grade=document.getElementById("gradePeriodo")
+if(!grade)return
+
+grade.innerHTML=html
+
+/* 🔥 POSICIONAMENTO INTELIGENTE */
+const pacienteId=document.getElementById("buscaPaciente")?.value
+const clinico=document.getElementById("dadosClinicosPaciente")
+const containerFinal=document.getElementById("rotinas")?.parentElement
+
+if(pacienteId && pacienteId!=="todos"){
+if(clinico){
+clinico.insertAdjacentElement("afterend",grade)
+}
+}else{
+if(containerFinal){
+containerFinal.appendChild(grade)
+}
+}
 }
 /* ====================================================
 037 – MOSTRAR PROGRESSO
