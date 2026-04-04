@@ -320,7 +320,7 @@ r.profissional_nome=user.nome
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 }
-/* ====================================================028B – EXECUTAR TODAS ROTINAS DE UM PACIENTE (COM PROGRESSO SEGURO)==================================================== */
+/* ====================================================028B – EXECUTAR TODAS ROTINAS DE UM PACIENTE==================================================== */
 async function executarRotinaTodosPaciente(pacienteId){
 mostrarProgresso()
 bloquearTela()
@@ -344,24 +344,27 @@ empresa_id:EMPRESA_ID
 }))
 
 const res=await db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
-if(res.error){console.error("Erro executarRotinaTodosPaciente:",res.error);return}
+if(res.error){
+console.error("Erro executarRotinaTodosPaciente:",res.error)
+return
+}
 
-/* 🔥 FEEDBACK PROGRESSIVO */
-for(let i=0;i<pendentes.length;i++){
-let p=pendentes[i]
-let perc=Math.round(((i+1)/pendentes.length)*100)
-atualizarProgresso(perc)
-
-/* atualiza cache */
-for(let j=0;j<ROTINAS_CACHE.length;j++){
-let r=ROTINAS_CACHE[j]
-if(r.paciente_id==p.paciente_id&&r.rotina_id==p.rotina_id&&r.turno==t){
+for(let i=0;i<ROTINAS_CACHE.length;i++){
+let r=ROTINAS_CACHE[i]
+if(r.paciente_id==pacienteId&&r.turno==t&&r.status!=="executado"){
 r.status="executado"
 r.profissional_nome=user.nome
-break
 }
 }
-}
+
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
+
+}catch(e){
+console.error("Erro geral executarRotinaTodosPaciente:",e)
+}finally{
+desbloquearTela()
+esconderProgresso()
 }
 }
 /* ====================================================
