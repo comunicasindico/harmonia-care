@@ -134,9 +134,7 @@ html+=`<tr style="height:32px">
 <button onclick="executarTodos('${pid}')" style="background:${ok?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">
 ${ok?"✔":"Paciente"}
 </button>
-<button onclick="executarRotinaTodosPaciente()" style="background:#9b59b6;color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">
-Pendentes
-</button>
+
 </div>
 </td>
 <td style="font-size:11px">${linha}</td>
@@ -294,14 +292,21 @@ if(elP)elP.innerText=p
 /* ====================================================028 – EXECUTAR TODOS==================================================== */
 async function executarTodos(pid){
 if(!db)return
+
 const d=obterDataSelecionada()
 const t=(TURNO_ATUAL||"manha")
 const user=obterUsuarioLogado()
-let inserts=[]
-for(let i=0;i<ROTINAS_CACHE.length;i++){
-let r=ROTINAS_CACHE[i]
-if(r.paciente_id==pid&&r.turno==t){
-inserts.push({
+
+/* 🔥 SOMENTE PENDENTES */
+let pendentes=ROTINAS_CACHE.filter(r=>
+r.paciente_id==pid &&
+r.turno==t &&
+(r.status||"")!=="executado"
+)
+
+if(!pendentes.length)return
+
+let inserts=pendentes.map(r=>({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:d,
@@ -309,17 +314,25 @@ turno:t,
 status:"executado",
 profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
-})
+}))
+
+/* 🔥 INSERT (NÃO UPSERT) */
+const res=await db.from("rotinas_execucao").insert(inserts)
+
+if(res.error){
+console.error("Erro executarTodos:",res.error)
+return
 }
-}
-if(inserts.length)await db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
+
+/* 🔄 ATUALIZA CACHE */
 for(let i=0;i<ROTINAS_CACHE.length;i++){
 let r=ROTINAS_CACHE[i]
-if(r.paciente_id==pid&&r.turno==t){
+if(r.paciente_id==pid && r.turno==t && (r.status||"")!=="executado"){
 r.status="executado"
 r.profissional_nome=user.nome
 }
 }
+
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 }
@@ -353,8 +366,10 @@ let atual=0
 let inserts=[]
 
 for(let i=0;i<pendentes.length;i++){
-if(i%10===0)await new Promise(r=>setTimeout(r,0))
 let r=pendentes[i]
+
+/* 🔒 NÃO SOBRESCREVE QUEM JÁ FOI EXECUTADO */
+if((r.status||"")==="executado")continue
 
 inserts.push({
 paciente_id:r.paciente_id,
@@ -365,6 +380,7 @@ status:"executado",
 profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
 })
+}
 
 atual++
 atualizarProgresso(Math.round((atual/total)*100))
@@ -372,8 +388,7 @@ atualizarProgresso(Math.round((atual/total)*100))
 
 /* 💾 UPSERT EM LOTE */
 const res=await db.from("rotinas_execucao")
-.upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
-
+.insert(inserts)
 if(res.error){
 console.error("Erro executar pendentes global:",res.error)
 return
