@@ -718,5 +718,6 @@ renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 }
 /* ====================================================999 – EXPORT==================================================== */
-window.executarRotina=executarRotina;window.executarTodos=executarTodos;window.executarRotinaTodos=executarRotinaTodos
-window.executarRotinaTodosPaciente = executarRotinaTodosPaciente
+window.executarRotina=executarRotina
+window.executarTodos=executarTodos
+window.executarRotinaTodosPaciente=executarRotinaTodosPaciente
