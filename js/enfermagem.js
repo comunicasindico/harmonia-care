@@ -94,7 +94,7 @@ let total=p.rotinas.length
 let executadas=p.rotinas.filter(r=>(r.status||"")==="executado").length
 let colunas={}
 p.rotinas.forEach(r=>{colunas[r.rotina_id]=r})
-let linha=`<div style="display:flex;width:100%">`
+let linha=`<div style="display:grid;grid-template-columns:repeat(${baseOrdem.length},1fr);gap:6px;width:100%">`
 let baseOrdem=[]
 for(let i=0;i<ROTINAS_CACHE.length;i++){
 let b=ROTINAS_CACHE[i]
@@ -103,7 +103,7 @@ if(b.turno===p.rotinas[0].turno&&!baseOrdem.includes(b.rotina_id)){baseOrdem.pus
 for(let i=0;i<baseOrdem.length;i++){
 let rid=baseOrdem[i]
 let r=colunas[rid]
-if(!r){linha+=`<div style="flex:1"></div>`;continue}
+if(!r){linha+=`<div></div>`;continue;}
 let turno=(r.turno||"").toLowerCase()
 let classe="rotina-pendente"
 if(r.status==="executado"){
@@ -115,7 +115,7 @@ let nomeProf=r.profissional_nome||""
 let corProf="#64748b"
 if(r.status==="executado"&&nomeProf)corProf=obterCorUsuario(nomeProf)
 let prof=r.status==="executado"&&nomeProf?` <span style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`:""
-linha+=`<div style="flex:1;display:flex;justify-content:center">
+linha+=`<div style="display:flex;justify-content:center">
 <div class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">
 ${r.rotina}${prof}
 </div>
@@ -153,7 +153,6 @@ if(executado){desfazerRotina(p,r)}else{executarRotina(p,r,this)}
 /* ====================================================024B – EXECUTAR ROTINA==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db)return
-if(botao){botao.style.opacity="0.6";botao.style.pointerEvents="none"}
 botao.style.boxShadow="0 0 0 2px #2ecc71"
 setTimeout(()=>{botao.style.boxShadow="none"},400)
 const d=obterDataSelecionada()
@@ -164,7 +163,11 @@ if(botao){
 botao.style.transform="scale(0.95)"
 botao.style.opacity="0.6"
 botao.style.pointerEvents="none"
-setTimeout(()=>{botao.style.transform="scale(1) ; botao.style.opacity="1";botao.style.pointerEvents="auto"},500)
+setTimeout(()=>{
+botao.style.transform="scale(1)"
+botao.style.opacity="1"
+botao.style.pointerEvents="auto"
+},500)
 }
 const resp=await db.from("rotinas_execucao").select("status").eq("paciente_id",pacienteId).eq("rotina_id",rotinaId).eq("data",d).eq("turno",t).maybeSingle()
 const existe=resp.data
@@ -179,45 +182,44 @@ r.profissional_nome=user.nome
 break
 }
 }
+/* 🔥 ATUALIZA SOMENTE O BOTÃO (SEM RE-RENDER PESADO) */
+if(botao){
+botao.classList.remove("rotina-pendente")
+botao.classList.add(`rotina-ok-${t}`)
+botao.innerHTML=botao.innerHTML.replace("✔","")+` ✔ ${user.nome}`
+}
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
-if(botao){botao.style.opacity="1";botao.style.pointerEvents="auto"}
+if(botao){
+botao.style.opacity="1"
+botao.style.pointerEvents="auto"
+botao.style.transform="scale(1)"
+}
 }
 /* ====================================================025A – BOTÕES ORDENADOS COM COR POR TURNO==================================================== */
 function renderizarBotoesRotinas(){
 const div=document.getElementById("acoesRotinas");if(!div)return
 const turno=(TURNO_ATUAL||"manha").toLowerCase()
-/* 🔥 COR POR TURNO (INSERIDO AQUI) */
+let ordem=[]
+ROTINAS_CACHE.forEach(r=>{
+if(r.turno!==turno)return
+if(!ordem.includes(r.rotina_id))ordem.push(r.rotina_id)
+})
 let cor="#34495e"
 if(turno==="manha")cor="#3498db"
 if(turno==="tarde")cor="#e67e22"
 if(turno==="noite")cor="#2c3e50"
-
-const mapa=new Map()
-
-for(let i=0;i<ROTINAS_CACHE.length;i++){
-let r=ROTINAS_CACHE[i]
-if((r.turno||"").toLowerCase()!==turno)continue
-if(!mapa.has(r.rotina_id)){
-mapa.set(r.rotina_id,r.rotina)
+let html=`<div style="display:grid;grid-template-columns:repeat(${ordem.length},1fr);gap:6px;width:100%">`
+for(let i=0;i<ordem.length;i++){
+let rid=ordem[i]
+let nome=ROTINAS_CACHE.find(r=>r.rotina_id==rid&&r.turno===turno)?.rotina||""
+html+=`<div style="display:flex;justify-content:center">
+<button onclick="executarRotinaTodos('${rid}')"
+style="background:${cor};color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer">
+✔ ${nome}
+</button>
+</div>`
 }
-}
-const ORDEM_ROTINAS=[
-"Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café",
-"Medicação","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene (noite)","Troca de Fraldas (noite)"
-]
-let html=`<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:6px">`
-
-ORDEM_ROTINAS.forEach(nome=>{
-mapa.forEach((nomeMapa,id)=>{
-if(nomeMapa===nome){
-html+=`<button onclick="executarRotinaTodos('${id}')" 
-onmouseover="this.style.opacity='0.8'" 
-onmouseout="this.style.opacity='1'"
-style="padding:8px 12px;border:none;border-radius:8px;background:${cor};color:#fff;font-size:13px;transition:all 0.2s ease">✔ ${nome}</button>`
-}
-})
-})
 html+=`</div>`
 div.innerHTML=html
 }
