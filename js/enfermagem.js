@@ -154,17 +154,30 @@ if(executado){desfazerRotina(p,r)}else{executarRotina(p,r,this)}
 }
 })
 }
-/* ====================================================024B – EXECUTAR ROTINA (FIX DEFINITIVO)==================================================== */
+/* ====================================================024B – EXECUTAR ROTINA (ULTRA STABLE FINAL)==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db)return
 const d=obterDataSelecionada()
 const t=(TURNO_ATUAL||"manha")
 const user=obterUsuarioLogado()
-
+/* 🔒 LOCK DUPLO CLICK */
 if(botao&&botao.dataset.lock==="1")return
 if(botao)botao.dataset.lock="1"
 
-/* 🔥 UPSERT SEGURO */
+try{
+/* 🔥 NÃO DUPLICA NO CACHE */
+let jaExecutado=ROTINAS_CACHE.some(r=>
+r.paciente_id==pacienteId &&
+r.rotina_id==rotinaId &&
+r.turno==t &&
+(r.status||"")==="executado"
+)
+
+if(jaExecutado){
+if(botao)botao.dataset.lock="0"
+return
+}
+/* 🔥 PAYLOAD */
 const payload={
 paciente_id:pacienteId,
 rotina_id:rotinaId,
@@ -175,8 +188,7 @@ usuario_id:user.id,
 profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
 }
-
-/* 🔥 UPSERT CONTROLADO */
+/* 🔥 UPSERT SEGURO */
 let res=null
 try{
 res=await db.from("rotinas_execucao").upsert(payload,{
@@ -185,18 +197,33 @@ onConflict:"paciente_id,rotina_id,data,turno,empresa_id"
 }catch(e){
 res={error:e}
 }
-
+/* 🔥 FALLBACK OFFLINE */
 if(res.error){
 console.warn("offline ou erro → fila")
 adicionarNaFila(payload)
 }
-
-/* 🔥 UI IMEDIATA */
+/* 🔄 ATUALIZA CACHE LOCAL (SEM RELOAD AINDA) */
+for(let i=0;i<ROTINAS_CACHE.length;i++){
+let r=ROTINAS_CACHE[i]
+if(r.paciente_id==pacienteId&&r.rotina_id==rotinaId&&r.turno==t){
+r.status="executado"
+r.profissional_nome=user.nome
+break
+}
+}
+/* 🔥 UI IMEDIATA (SEM ESPERAR BANCO) */
 if(botao){
 botao.className=`badge-rotina rotina-ok-${t}`
 botao.innerHTML=`${botao.innerText.split("✔")[0]} <span style="font-weight:bold">✔ ${user.nome}</span>`
 }
+/* 🔥 REFRESH CONTROLADO (CONSISTÊNCIA TOTAL) */
 await carregarRotinas()
+
+}catch(e){
+console.error("Erro executarRotina:",e)
+}finally{
+if(botao)botao.dataset.lock="0"
+}
 }
 /* ====================================================025A – BOTÕES ORDENADOS COM COR POR TURNO==================================================== */
 function renderizarBotoesRotinas(){
