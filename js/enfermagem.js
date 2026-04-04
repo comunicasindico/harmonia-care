@@ -102,10 +102,6 @@ baseOrdem.push(b.rotina_id)
 }
 
 let linha=`<div style="display:grid;grid-template-columns:repeat(${baseOrdem.length},1fr);gap:6px;width:100%">`
-for(let i=0;i<ROTINAS_CACHE.length;i++){
-let b=ROTINAS_CACHE[i]
-if(b.turno===p.rotinas[0].turno&&!baseOrdem.includes(b.rotina_id)){baseOrdem.push(b.rotina_id)}
-}
 for(let i=0;i<baseOrdem.length;i++){
 let rid=baseOrdem[i]
 let r=colunas[rid]
@@ -273,7 +269,7 @@ for(let i=0;i<ordem.length;i++){
 let rid=ordem[i]
 let nome=ROTINAS_CACHE.find(r=>r.rotina_id==rid&&r.turno===turno)?.rotina||""
 html+=`<div style="display:flex;justify-content:center">
-<button onclick="executarRotinaTodos('${rid}')"
+<button onclick="executarRotinaTodosPaciente()"
 style="background:${cor};color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer">
 ✔ ${nome}
 </button>
