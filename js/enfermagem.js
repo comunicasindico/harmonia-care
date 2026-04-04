@@ -209,9 +209,39 @@ renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 }
 /* ====================================================029 – EXECUTAR ROTINA TODOS==================================================== */
-async function executarRotinaTodos(rotinaId){const d=obterDataSelecionada();const t=TURNO_ATUAL;const user=obterUsuarioLogado();let pendentes=ROTINAS_CACHE.filter(r=>r.rotina_id==rotinaId&&r.turno==t&&r.status!="executado");let inserts=pendentes.map(r=>({paciente_id:r.paciente_id,rotina_id:r.rotina_id,data:d,turno:t,status:"executado",profissional_nome:user.nome,empresa_id:EMPRESA_ID}));await db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"});pendentes.forEach(r=>r.status="executado");renderizarRotinas(ROTINAS_CACHE);calcularIndicadores(ROTINAS_CACHE)}
-/* ====================================================031-043 – MANTIDOS==================================================== */
-/* (mantive seu bloco original completo sem alteração pois já estava correto) */
+async function executarRotinaTodos(rotinaId){
+if(!db||!rotinaId)return
+const d=obterDataSelecionada()
+const t=(TURNO_ATUAL||"manha")
+const user=obterUsuarioLogado()
+let inserts=[]
+for(let i=0;i<ROTINAS_CACHE.length;i++){
+let r=ROTINAS_CACHE[i]
+if(r.rotina_id==rotinaId&&r.turno==t&&r.status!=="executado"){
+inserts.push({
+paciente_id:r.paciente_id,
+rotina_id:r.rotina_id,
+data:d,
+turno:t,
+status:"executado",
+profissional_nome:user.nome,
+empresa_id:EMPRESA_ID
+})
+}
+}
+if(inserts.length){
+await db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
+}
+for(let i=0;i<ROTINAS_CACHE.length;i++){
+let r=ROTINAS_CACHE[i]
+if(r.rotina_id==rotinaId&&r.turno==t&&r.status!=="executado"){
+r.status="executado"
+r.profissional_nome=user.nome
+}
+}
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
+}
 /* ====================================================
 030 – GERAR ROTINAS DO DIA (BLINDADO FINAL)
 ==================================================== */
