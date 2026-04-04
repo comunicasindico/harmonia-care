@@ -1,4 +1,33 @@
 window.salvandoPendencias=false
+/* ====================================================068A – FILA OFFLINE TURBO==================================================== */
+window.FILA_ROTINAS=JSON.parse(localStorage.getItem("fila_rotinas")||"[]")
+function salvarFilaLocal(){localStorage.setItem("fila_rotinas",JSON.stringify(window.FILA_ROTINAS))}
+function adicionarNaFila(payload){
+window.FILA_ROTINAS.push({...payload,tentativas:0,ts:Date.now()})
+salvarFilaLocal()
+}
+/* ====================================================068B – SINCRONIZADOR TURBO==================================================== */
+async function sincronizarFila(){
+if(!db||!window.FILA_ROTINAS.length)return
+let fila=[...window.FILA_ROTINAS]
+let novaFila=[]
+for(let i=0;i<fila.length;i++){
+let item=fila[i]
+try{
+const res=await db.from("rotinas_execucao").upsert(item,{onConflict:"paciente_id,rotina_id,data,turno,empresa_id"})
+if(res.error){
+item.tentativas++
+if(item.tentativas<5)novaFila.push(item)
+}
+}catch(e){
+item.tentativas++
+if(item.tentativas<5)novaFila.push(item)
+}
+if(i%5===0)await new Promise(r=>setTimeout(r,0))
+}
+window.FILA_ROTINAS=novaFila
+salvarFilaLocal()
+}
 /* ====================================================
 010 – LOGIN (FINAL LIMPO E CORRETO)
 ==================================================== */
@@ -372,3 +401,7 @@ let html=`<div style="font-size:13px;color:#666;margin-bottom:18px;line-height:1
 const el=document.getElementById("dadosEmpresa")
 if(el)el.innerHTML=html
 }
+/* ====================================================068C – LOOP AUTO==================================================== */
+setInterval(function(){
+if(navigator.onLine){sincronizarFila()}
+},5000)
