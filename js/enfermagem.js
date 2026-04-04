@@ -200,6 +200,7 @@ botao.innerHTML=`${botao.innerText.split("✔")[0]} <span style="font-weight:bol
 }
 await carregarRotinas()
 }
+}
 /* ====================================================025A – BOTÕES ORDENADOS COM COR POR TURNO==================================================== */
 function renderizarBotoesRotinas(){
 const div=document.getElementById("acoesRotinas");if(!div)return
