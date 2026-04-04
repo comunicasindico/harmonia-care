@@ -50,7 +50,11 @@ const respPacientes=await db.from("pacientes").select("*").eq("empresa_id",EMPRE
 const pacs=respPacientes.data||[]
 const respRotinas=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
 const rotinas=respRotinas.data||[]
-const respExec=await db.from("rotinas_execucao").select("*").eq("data",dataHoje).eq("turno",turno)
+const respExec=await db.from("rotinas_execucao")
+.select("*")
+.eq("data",dataHoje)
+.eq("turno",turno)
+.eq("empresa_id",EMPRESA_ID)
 const exec=respExec.data||[]
 const mapa=new Map()
 for(let i=0;i<exec.length;i++){
@@ -150,71 +154,37 @@ if(executado){desfazerRotina(p,r)}else{executarRotina(p,r,this)}
 }
 })
 }
-/* ====================================================024B – EXECUTAR ROTINA==================================================== */
+/* ====================================================024B – EXECUTAR ROTINA (FIX DEFINITIVO)==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db)return
 const d=obterDataSelecionada()
 const t=(TURNO_ATUAL||"manha")
 const user=obterUsuarioLogado()
 
-/* 🔒 ANTI DUPLO CLIQUE */
 if(botao&&botao.dataset.lock==="1")return
 if(botao)botao.dataset.lock="1"
 
-/* 🔥 FEEDBACK VISUAL IMEDIATO */
-if(botao){
-botao.style.transition="all 0.2s ease"
-botao.style.transform="scale(0.95)"
-botao.style.opacity="0.6"
-botao.style.pointerEvents="none"
-botao.style.boxShadow="0 0 0 2px #2ecc71"
-setTimeout(()=>{
-botao.style.transform="scale(1)"
-botao.style.boxShadow="none"
-},200)
-}
+try{
 
-/* 🔎 VERIFICA SE JÁ EXISTE */
-const resp=await db
-.from("rotinas_execucao")
-.select("status")
-.eq("paciente_id",pacienteId)
-.eq("rotina_id",rotinaId)
-.eq("data",d)
-.eq("turno",t)
-.maybeSingle()
-
-const existe=resp.data
-
-if(existe&&existe.status==="executado"){
-if(botao){
-botao.style.opacity="1"
-botao.style.pointerEvents="auto"
-botao.dataset.lock="0"
-}
-return
-}
-
-/* 💾 SALVAR */
-const res=await db
-.from("rotinas_execucao")
-.upsert({
+/* 🔥 UPSERT SEGURO */
+const payload={
 paciente_id:pacienteId,
 rotina_id:rotinaId,
 data:d,
 turno:t,
 status:"executado",
+usuario_id:user.id,
 profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
-},{onConflict:"paciente_id,rotina_id,data,turno"})
+}
+
+/* 🔥 FORÇA UPSERT CORRETO */
+const res=await db.from("rotinas_execucao").upsert(payload,{
+onConflict:"paciente_id,rotina_id,data,turno,empresa_id"
+})
 
 if(res.error){
 console.error("Erro salvar:",res.error)
-if(botao){
-botao.style.opacity="1"
-botao.style.pointerEvents="auto"
-botao.dataset.lock="0"
-}
 return
 }
 
@@ -228,25 +198,19 @@ break
 }
 }
 
-/* ⚡ ATUALIZA SOMENTE O BOTÃO */
+/* 🔥 UI IMEDIATA */
 if(botao){
-botao.classList.remove("rotina-pendente")
-botao.classList.add(`rotina-ok-${t}`)
-
-let texto=botao.innerText.split("✔")[0].trim()
-botao.innerHTML=`${texto} <span style="font-weight:bold">✔ ${user.nome}</span>`
+botao.className=`badge-rotina rotina-ok-${t}`
+botao.innerHTML=`${botao.innerText.split("✔")[0]} <span style="font-weight:bold">✔ ${user.nome}</span>`
 }
 
-/* 🔄 RENDER SUAVE */
-setTimeout(()=>renderizarRotinas(ROTINAS_CACHE),50)
+renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 
-/* 🔓 LIBERA BOTÃO */
-if(botao){
-botao.style.opacity="1"
-botao.style.pointerEvents="auto"
-botao.style.transform="scale(1)"
-botao.dataset.lock="0"
+}catch(e){
+console.error("Erro geral:",e)
+}finally{
+if(botao)botao.dataset.lock="0"
 }
 }
 /* ====================================================025A – BOTÕES ORDENADOS COM COR POR TURNO==================================================== */
@@ -289,7 +253,7 @@ const elP=document.getElementById("indicadorPendente")
 if(elE)elE.innerText=e
 if(elP)elP.innerText=p
 }
-/* ====================================================028 – EXECUTAR TODOS==================================================== */
+/* ====================================================028 – EXECUTAR TODOS (FIX REAL)==================================================== */
 async function executarTodos(pid){
 if(!db)return
 
@@ -297,7 +261,6 @@ const d=obterDataSelecionada()
 const t=(TURNO_ATUAL||"manha")
 const user=obterUsuarioLogado()
 
-/* 🔥 SOMENTE PENDENTES */
 let pendentes=ROTINAS_CACHE.filter(r=>
 r.paciente_id==pid &&
 r.turno==t &&
@@ -312,14 +275,14 @@ rotina_id:r.rotina_id,
 data:d,
 turno:t,
 status:"executado",
+usuario_id:user.id,
 profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
 }))
 
-/* 🔥 INSERT (NÃO UPSERT) */
+/* 🔥 UPSERT (NÃO INSERT) */
 const res=await db.from("rotinas_execucao").upsert(inserts,{
-onConflict:"paciente_id,rotina_id,data,turno",
-ignoreDuplicates:true
+onConflict:"paciente_id,rotina_id,data,turno,empresa_id"
 })
 
 if(res.error){
@@ -327,14 +290,13 @@ console.error("Erro executarTodos:",res.error)
 return
 }
 
-/* 🔄 ATUALIZA CACHE */
-for(let i=0;i<ROTINAS_CACHE.length;i++){
-let r=ROTINAS_CACHE[i]
-if(r.paciente_id==pid && r.turno==t && (r.status||"")!=="executado"){
+/* 🔄 CACHE */
+ROTINAS_CACHE.forEach(r=>{
+if(r.paciente_id==pid && r.turno==t){
 r.status="executado"
 r.profissional_nome=user.nome
 }
-}
+})
 
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
@@ -393,7 +355,9 @@ if(i%10===0)await new Promise(res=>setTimeout(res,0))
 
 /* 💾 INSERT (NÃO SOBRESCREVE) */
 if(inserts.length){
-const res=await db.from("rotinas_execucao").insert(inserts)
+const res=await db.from("rotinas_execucao").upsert(inserts,{
+onConflict:"paciente_id,rotina_id,data,turno,empresa_id"
+})
 
 if(res.error){
 console.error("Erro executar pendentes global:",res.error)
