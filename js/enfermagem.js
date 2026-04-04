@@ -216,7 +216,8 @@ if(turno==="noite")cor="#2c3e50"
 let html=`<div style="display:grid;grid-template-columns:repeat(${ordem.length},1fr);gap:6px;width:100%">`
 for(let i=0;i<ordem.length;i++){
 let rid=ordem[i]
-let nome=ROTINAS_CACHE.find(r=>r.rotina_id==rid&&r.turno===turno)?.rotina||""
+const lista=ROTINAS_CACHE||[]
+let nome=lista.find(r=>r.rotina_id==rid&&r.turno===turno)?.rotina||""
 html+=`<div style="display:flex;justify-content:center">
 <button onclick="executarRotinaTodosPaciente()"
 style="background:${cor};color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer">
@@ -278,8 +279,6 @@ empresa_id:EMPRESA_ID
 }))
 if(!inserts.length){
 console.log("Nada novo para inserir — atualizando UI")
-await carregarRotinas()
-
 return
 }
 /* 🔥 UPSERT (NÃO INSERT) */
@@ -312,7 +311,6 @@ if(!db)return
 const d=obterDataSelecionada()
 const t=(TURNO_ATUAL||"manha")
 const user=obterUsuarioLogado()
-
 /* 🔥 PEGA TODOS PENDENTES */
 let pendentes=ROTINAS_CACHE.filter(r=>
 r.turno==t && (r.status||"")!=="executado"
@@ -330,7 +328,6 @@ let inserts=[]
 
 for(let i=0;i<pendentes.length;i++){
 let r=pendentes[i]
-
 /* 🔒 NÃO SOBRESCREVE */
 if((r.status||"")==="executado")continue
 
@@ -346,11 +343,9 @@ empresa_id:EMPRESA_ID
 
 atual++
 atualizarProgresso(Math.round((atual/total)*100))
-
 /* 🔥 EVITA TRAVAR UI */
 if(i%10===0)await new Promise(res=>setTimeout(res,0))
 }
-
 /* 💾 INSERT (NÃO SOBRESCREVE) */
 if(inserts.length){
 let res=null
