@@ -201,27 +201,25 @@ await montarGradePeriodo()
 }
 }
 })
-/* ====================================================
-015 – INIT
-==================================================== */
+/* ====================================================015 – INIT==================================================== */
 window.addEventListener("load",async()=>{
-while(!db){await new Promise(r=>setTimeout(r,50))}
+while(!db){await new Promise(function(r){setTimeout(r,50)})}
 const loginSalvo=localStorage.getItem("usuario_nome")
 if(loginSalvo){
 PROFISSIONAL_ID=localStorage.getItem("profissional_id")
 EMPRESA_ID=localStorage.getItem("empresa_id")
-document.getElementById("login").style.display="none"
-document.getElementById("app").style.display="block"
-if(typeof carregarEmpresa==="function"){await carregarEmpresa()}
-await iniciarSistema()
+const telaLogin=document.getElementById("login")
+const telaApp=document.getElementById("app")
+if(telaLogin)telaLogin.style.display="none"
+if(telaApp)telaApp.style.display="block"
+if(typeof carregarEmpresa==="function")await carregarEmpresa()
+if(typeof iniciarSistema==="function")await iniciarSistema()
 }else{
-if(typeof carregarEmpresa==="function"){await carregarEmpresa()}
+if(typeof carregarEmpresa==="function")await carregarEmpresa()
 }
 })
 window.addEventListener("pageshow",function(e){
-if(e.persisted){
-console.log("Página restaurada do cache")
-}
+if(e.persisted){console.log("Página restaurada do cache")}
 })
 /* ====================================================
 016 – DATA HOJE
