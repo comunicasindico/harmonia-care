@@ -266,7 +266,7 @@ const elP=document.getElementById("indicadorPendente")
 if(elE)elE.innerText=e
 if(elP)elP.innerText=p
 }
-/* ====================================================028 – EXECUTAR TODOS (FIX REAL)==================================================== */
+/* ====================================================028 – EXECUTAR PACIENTE (ULTRA FIX FINAL)==================================================== */
 async function executarTodos(pid){
 if(!db)return
 
@@ -274,25 +274,32 @@ const d=obterDataSelecionada()
 const t=(TURNO_ATUAL||"manha")
 const user=obterUsuarioLogado()
 
+/* 🔥 PEGA PENDENTES DO PACIENTE */
 let pendentes=ROTINAS_CACHE.filter(r=>
 r.paciente_id==pid &&
 r.turno==t &&
 (r.status||"")!=="executado"
 )
 
-if(!pendentes.length)return
-const {data:existentes}=await db
-.from("rotinas_execucao")
-.select("paciente_id,rotina_id")
-.eq("data",d)
-.eq("turno",t)
-.eq("empresa_id",EMPRESA_ID)
-.eq("paciente_id",pid)
-let mapaExistentes=new Set((existentes||[]).map(e=>e.paciente_id+"_"+e.rotina_id))
+/* 🔴 SE NÃO TEM NO CACHE → FORÇA CARREGAR */
+if(!pendentes.length){
+await carregarRotinas()
 
-let inserts=pendentes
-.filter(r=>!mapaExistentes.has(r.paciente_id+"_"+r.rotina_id))
-.map(r=>({
+pendentes=ROTINAS_CACHE.filter(r=>
+r.paciente_id==pid &&
+r.turno==t &&
+(r.status||"")!=="executado"
+)
+}
+
+/* 🔴 AINDA VAZIO → SAI */
+if(!pendentes.length){
+console.log("Paciente já está 100% executado")
+return
+}
+
+/* 🔥 MONTA INSERTS DIRETO (SEM BLOQUEIO ERRADO) */
+let inserts=pendentes.map(r=>({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:d,
@@ -302,11 +309,8 @@ usuario_id:user.id,
 profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
 }))
-if(!inserts.length){
-console.log("Nada novo para inserir — atualizando UI")
-return
-}
-/* 🔥 UPSERT (NÃO INSERT) */
+
+/* 🔥 UPSERT DIRETO (SEM FILTRO QUE QUEBRA) */
 let res=null
 try{
 res=await db.from("rotinas_execucao").upsert(inserts,{
@@ -315,12 +319,29 @@ onConflict:"paciente_id,rotina_id,data,turno,empresa_id"
 }catch(e){
 res={error:e}
 }
+
+/* 🔥 FALLBACK */
 if(res.error){
-console.warn("Erro → enviando para fila")
+console.warn("Erro → fila")
 for(let i=0;i<inserts.length;i++){
 adicionarNaFila(inserts[i])
 }
 }
+
+/* 🔥 ATUALIZA CACHE */
+for(let i=0;i<ROTINAS_CACHE.length;i++){
+let r=ROTINAS_CACHE[i]
+if(r.paciente_id==pid && r.turno==t){
+r.status="executado"
+r.profissional_nome=user.nome
+}
+}
+
+/* 🔥 UI IMEDIATA */
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
+
+/* 🔥 CONSISTÊNCIA FINAL */
 await carregarRotinas()
 }
 /* ====================================================
