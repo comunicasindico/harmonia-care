@@ -94,25 +94,16 @@ let total=p.rotinas.length
 let executadas=p.rotinas.filter(r=>(r.status||"")==="executado").length
 let colunas={}
 p.rotinas.forEach(r=>{colunas[r.rotina_id]=r})
-
 let linha=`<div style="display:flex;width:100%">`
-
 let baseOrdem=[]
 for(let i=0;i<ROTINAS_CACHE.length;i++){
 let b=ROTINAS_CACHE[i]
-if(b.turno===p.rotinas[0].turno&&!baseOrdem.includes(b.rotina_id)){
-baseOrdem.push(b.rotina_id)
+if(b.turno===p.rotinas[0].turno&&!baseOrdem.includes(b.rotina_id)){baseOrdem.push(b.rotina_id)}
 }
-}
-
 for(let i=0;i<baseOrdem.length;i++){
 let rid=baseOrdem[i]
 let r=colunas[rid]
-if(!r){
-linha+=`<div style="flex:1"></div>`
-continue
-}
-
+if(!r){linha+=`<div style="flex:1"></div>`;continue}
 let turno=(r.turno||"").toLowerCase()
 let classe="rotina-pendente"
 if(r.status==="executado"){
@@ -120,40 +111,34 @@ if(turno==="manha")classe="rotina-ok-manha"
 else if(turno==="tarde")classe="rotina-ok-tarde"
 else if(turno==="noite")classe="rotina-ok-noite"
 }
-
 let nomeProf=r.profissional_nome||""
 let corProf="#64748b"
 if(r.status==="executado"&&nomeProf)corProf=obterCorUsuario(nomeProf)
-
 let prof=r.status==="executado"&&nomeProf?` <span style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`:""
-
 linha+=`<div style="flex:1;display:flex;justify-content:center">
 <div class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">
 ${r.rotina}${prof}
 </div>
 </div>`
 }
-
 linha+=`</div>`
 let perc=total?Math.round((executadas/total)*100):0
 let ok=executadas===total
-html+=`<tr style="height:32px"><td style="font-size:12px;font-weight:600">${p.nome}</td><td style="font-size:11px"><b>${perc}% (${executadas}/${total})</b><br>
-
-<div style="display:flex;gap:4px;justify-content:center;margin-top:3px">
-
-<button onclick="executarTodos('${pid}')"
-style="background:${ok?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">
+html+=`<tr style="height:32px">
+<td style="font-size:12px;font-weight:600">${p.nome}</td>
+<td style="font-size:11px">
+<b>${perc}% (${executadas}/${total})</b><br>
+<div style="display:flex;gap:4px;justify-content:center;align-items:center;margin-top:3px">
+<button onclick="executarTodos('${pid}')" style="background:${ok?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">
 ${ok?"✔":"Paciente"}
 </button>
-
-<button onclick="executarRotinaTodosPaciente('${pid}')"
-style="background:#9b59b6;color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">
+<button onclick="executarRotinaTodosPaciente('${pid}')" style="background:#9b59b6;color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">
 Todas
 </button>
-
-</div> style="margin-top:3px;background:${ok?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">${ok?"✔":"Concluir"}</button></td><td style="font-size:11px">
-${linha}
-</td></tr>`
+</div>
+</td>
+<td style="font-size:11px">${linha}</td>
+</tr>`
 })
 t.innerHTML=html
 document.querySelectorAll(".badge-rotina").forEach(el=>{
@@ -174,6 +159,13 @@ setTimeout(()=>{botao.style.boxShadow="none"},400)
 const d=obterDataSelecionada()
 const t=(TURNO_ATUAL||"manha")
 const user=obterUsuarioLogado()
+/* 🔥 FEEDBACK VISUAL IMEDIATO */
+if(botao){
+botao.style.transform="scale(0.95)"
+botao.style.opacity="0.6"
+botao.style.pointerEvents="none"
+setTimeout(()=>{botao.style.transform="scale(1) ; botao.style.opacity="1";botao.style.pointerEvents="auto"},500)
+}
 const resp=await db.from("rotinas_execucao").select("status").eq("paciente_id",pacienteId).eq("rotina_id",rotinaId).eq("data",d).eq("turno",t).maybeSingle()
 const existe=resp.data
 if(existe&&existe.status==="executado"){if(botao){botao.style.opacity="1";botao.style.pointerEvents="auto"}return}
