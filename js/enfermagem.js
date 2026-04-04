@@ -193,30 +193,12 @@ console.warn("Offline ou erro → salvando na fila")
 adicionarNaFila(payload)
 }
 
-/* 🔄 ATUALIZA CACHE */
-for(let i=0;i<ROTINAS_CACHE.length;i++){
-let r=ROTINAS_CACHE[i]
-if(r.paciente_id==pacienteId&&r.rotina_id==rotinaId&&r.turno==t){
-r.status="executado"
-r.profissional_nome=user.nome
-break
-}
-}
-
 /* 🔥 UI IMEDIATA */
 if(botao){
 botao.className=`badge-rotina rotina-ok-${t}`
 botao.innerHTML=`${botao.innerText.split("✔")[0]} <span style="font-weight:bold">✔ ${user.nome}</span>`
 }
-
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
-
-}catch(e){
-console.error("Erro geral:",e)
-}finally{
-if(botao)botao.dataset.lock="0"
-}
+await carregarRotinas()
 }
 /* ====================================================025A – BOTÕES ORDENADOS COM COR POR TURNO==================================================== */
 function renderizarBotoesRotinas(){
@@ -296,8 +278,8 @@ empresa_id:EMPRESA_ID
 }))
 if(!inserts.length){
 console.log("Nada novo para inserir — atualizando UI")
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
+await carregarRotinas()
+
 return
 }
 /* 🔥 UPSERT (NÃO INSERT) */
@@ -388,16 +370,7 @@ adicionarNaFila(inserts[i])
 }
   
 }
-/* 🔄 ATUALIZA CACHE */
-for(let i=0;i<ROTINAS_CACHE.length;i++){
-let r=ROTINAS_CACHE[i]
-if(r.turno==t && (r.status||"")!=="executado"){
-r.status="executado"
-r.profissional_nome=user.nome
-}
-}
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
+await carregarRotinas()
 
 }catch(e){
 console.error("Erro geral executarRotinaTodosPaciente:",e)
