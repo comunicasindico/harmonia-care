@@ -198,8 +198,8 @@ if(botao){
 botao.className=`badge-rotina rotina-ok-${t}`
 botao.innerHTML=`${botao.innerText.split("✔")[0]} <span style="font-weight:bold">✔ ${user.nome}</span>`
 }
-await carregarRotinas()
 }
+await carregarRotinas()
 }
 /* ====================================================025A – BOTÕES ORDENADOS COM COR POR TURNO==================================================== */
 function renderizarBotoesRotinas(){
