@@ -731,23 +731,30 @@ renderizarMedicacoes(window.MEDICACOES_CACHE||[])
 },100)
 }
 /* ====================================================
-213 – EDITAR MEDICAÇÃO (COM OBRIGATÓRIO)
+213 – EDITAR MEDICAÇÃO (SYNC MODELO + PACIENTE FINAL)
 ==================================================== */
 async function editarMedicacao(nome,dose,pacienteId,obrigatorioAtual){
 if(!podeUsarMedicacao()){
 alert("Acesso restrito")
 return
 }
+
 let novoNome=prompt("Nome:",nome||"")
 if(novoNome===null)return
 novoNome=novoNome.trim()
 if(!novoNome){alert("Nome obrigatório");return}
+
 let novaDose=prompt("Dosagem:",dose||"")
 if(novaDose===null)return
 novaDose=novaDose.trim()
+
 let novoObrigatorio=confirm("Medicação obrigatória?\nOK = SIM\nCancelar = NÃO")
+
 try{
-const {error}=await db.from("medicacoes")
+
+/* 🔥 1. ATUALIZA PACIENTE */
+const {error:erroPaciente}=await db
+.from("medicacoes")
 .update({
 nome_medicamento:novoNome,
 dosagem:novaDose||null,
@@ -756,8 +763,28 @@ obrigatorio:novoObrigatorio
 .eq("paciente_id",pacienteId)
 .eq("nome_medicamento",nome)
 .eq("dosagem",dose||null)
-if(error){console.error(error);alert("Erro ao editar");return}
-carregarMedicacoes()
+
+if(erroPaciente){
+console.error(erroPaciente)
+alert("Erro ao editar paciente")
+return
+}
+
+/* 🔥 2. ATUALIZA MODELO (BASE PRINCIPAL) */
+const {error:erroModelo}=await db
+.from("medicacoes_modelo")
+.update({
+nome_medicamento:novoNome
+})
+.eq("nome_medicamento",nome)
+
+if(erroModelo){
+console.warn("Modelo não atualizado:",erroModelo)
+}
+
+/* 🔄 3. REFRESH TOTAL */
+await carregarMedicacoes()
+
 }catch(e){
 console.error(e)
 alert("Erro inesperado")
@@ -1181,24 +1208,29 @@ document.getElementById("obrigatorioMedicacao").value=obrigatorio?"true":"false"
 }
 })
 /* ====================================================
-241   503 – SALVAR AUTOMÁTICO OBRIGATÓRIO
+241 – SALVAR AUTOMÁTICO OBRIGATÓRIO (FIX)
 ==================================================== */
 document.addEventListener("change",async function(e){
 if(e.target.id==="obrigatorioMedicacao"){
+
 const select=document.getElementById("listaMedicacoesEditar")
 const nomeMedicamento=select.value
-if(!id)return
+
+if(!nomeMedicamento)return
+
 const obrigatorio=e.target.value==="true"
+
 const {error}=await db
 .from("medicacoes")
 .update({obrigatorio:obrigatorio})
 .eq("nome_medicamento",nomeMedicamento)
+
 if(error){
 console.error(error)
 alert("Erro ao atualizar")
 return
 }
-/* 🔥 ATUALIZA TEXTO VISUAL */
+
 const nomeBase=select.selectedOptions[0].textContent.replace(/✔|⚠/g,"").trim()
 select.selectedOptions[0].textContent=nomeBase+(obrigatorio?" ✔":" ⚠")
 }
