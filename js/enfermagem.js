@@ -750,6 +750,37 @@ desbloquearTela()
 esconderProgresso()
 }
 }
+/* ====================================================
+045 EXECUTAR ROTINA TODOS
+==================================================== */
+function executarRotinaTodos(rotinaId){
+if(!db)return
+const d=obterDataSelecionada()
+const t=(TURNO_ATUAL||"manha")
+const user=obterUsuarioLogado()
+
+let pendentes=ROTINAS_CACHE.filter(r=>r.rotina_id==rotinaId&&r.turno==t&&r.status!=="executado")
+
+let inserts=pendentes.map(r=>({
+paciente_id:r.paciente_id,
+rotina_id:r.rotina_id,
+data:d,
+turno:t,
+status:"executado",
+profissional_nome:user.nome,
+empresa_id:EMPRESA_ID
+}))
+
+db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
+
+pendentes.forEach(r=>{
+r.status="executado"
+r.profissional_nome=user.nome
+})
+
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
+}
 /* ====================================================999 – EXPORT==================================================== */
 window.executarRotina=executarRotina;window.executarTodos=executarTodos;window.executarRotinaTodos=executarRotinaTodos
 window.executarRotinaTodosPaciente = executarRotinaTodosPaciente
