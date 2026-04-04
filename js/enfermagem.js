@@ -11,7 +11,7 @@ async function mudarTurno(turno){TURNO_ATUAL=turno;localStorage.setItem("turno_a
 /* ====================================================022 – PACIENTES==================================================== */
 async function carregarPacientesBusca(){if(!db)return;const s=document.getElementById("buscaPaciente");if(!s)return;let usuarioId=localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null;let pacientes=[];if(usuarioId&&usuarioId!=="admin"){const{data:rel}=await db.from("pacientes_profissionais").select("paciente_id").eq("usuario_id",usuarioId).eq("ativo",true);const ids=rel?.map(r=>r.paciente_id)||[];if(ids.length){const{data}=await db.from("pacientes").select("id,nome_completo").in("id",ids).eq("empresa_id",EMPRESA_ID).eq("ativo",true);pacientes=data||[]}else{s.innerHTML='<option>SEM PACIENTES</option>';return}}else{const{data}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).eq("ativo",true);pacientes=data||[]}let html='<option value="todos">TODOS</option>';pacientes.forEach(p=>html+=`<option value="${p.id}">${p.nome_completo}</option>`);s.innerHTML=html}
 /* ====================================================023 – CARREGAR ROTINAS==================================================== */
-async function carregarRotinas(){if(!db||!EMPRESA_ID)return;const turno=(TURNO_ATUAL||"manha").toLowerCase();const dataHoje=obterDataSelecionada();const{data:pacs}=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true);const{data:rotinas}=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true);const{data:exec}=await db.from("rotinas_execucao").select("*").eq("data",dataHoje).eq("turno",turno);const mapa=new Map();(exec||[]).forEach(e=>mapa.set(`${e.paciente_id}_${e.rotina_id}`,e));let lista=[];(pacs||[]).forEach(p=>{(rotinas||[]).filter(r=>!r.turno||r.turno===turno).forEach(r=>{let e=mapa.get(`${p.id}_${r.id}`);lista.push({paciente_id:p.id,rotina_id:r.id,paciente:p.nome_completo,rotina:r.nome,turno:r.turno||turno,status:e&&e.status==="executado"?"executado":"pendente",profissional_nome:e?.profissional_nome||""})})});ROTINAS_CACHE=lista;renderizarRotinas(lista);renderizarBotoesRotinas();calcularIndicadores(lista)}
+async function carregarRotinas(){if(!db||!EMPRESA_ID)return;const turno=(TURNO_ATUAL||"manha").toLowerCase();const dataHoje=obterDataSelecionada();const{data:pacs}=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true);const{data:rotinas}=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true);const{data:exec}=await db.from("rotinas_execucao").select("*").eq("data",dataHoje).eq("turno",turno);const mapa=new Map();(exec||[]).forEach(e=>mapa.set(`${e.paciente_id}_${e.rotina_id}`,e));let lista=[];(pacs||[]).forEach(p=>{(rotinas||[]).filter(r=>!r.turno||r.turno===turno).forEach(r=>{let e=mapa.get(`${p.id}_${r.id}`);lista.push({paciente_id:p.id,rotina_id:r.id,paciente:p.nome_completo,rotina:r.nome,turno:r.turno||turno,status:e&&e.status==="executado"?"executado":"pendente",profissional_nome:e?.profissional_nome||""})})});ROTINAS_CACHE=lista;garantirContainerAcoesRotinas();renderizarRotinas(lista);renderizarBotoesRotinas();calcularIndicadores(lista)}
 /* ====================================================024 – RENDER==================================================== */
 function renderizarRotinas(lista){const t=document.getElementById("rotinas");if(!t)return;let html="";const map={};lista.forEach(r=>{if(!map[r.paciente_id])map[r.paciente_id]={nome:r.paciente,rotinas:[]};map[r.paciente_id].rotinas.push(r)});Object.keys(map).forEach(pid=>{const p=map[pid];let total=p.rotinas.length;let executadas=p.rotinas.filter(r=>r.status==="executado").length;let manha="",tarde="",noite="";p.rotinas.forEach(r=>{let classe=r.status==="executado"?`rotina-ok-${r.turno}`:"rotina-pendente";let prof=r.profissional_nome?` ✔ ${r.profissional_nome}`:"";let el=`<div class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">${r.rotina}${prof}</div>`;if(r.turno==="manha")manha+=el;else if(r.turno==="tarde")tarde+=el;else noite+=el});let perc=Math.round((executadas/total)*100)||0;let ok=executadas===total;html+=`<tr><td>${p.nome}</td><td><b>${perc}% (${executadas}/${total})</b><br><button onclick="executarTodos('${pid}')">${ok?"✔":"Concluir"}</button></td><td>${manha}${tarde}${noite}</td></tr>`});t.innerHTML=html;document.querySelectorAll(".badge-rotina").forEach(el=>el.onclick=function(){const p=this.dataset.paciente,r=this.dataset.rotina;this.classList.contains("rotina-ok-manha")||this.classList.contains("rotina-ok-tarde")||this.classList.contains("rotina-ok-noite")?desfazerRotina(p,r):executarRotina(p,r,this)})}
 /* ====================================================024B – EXECUTAR ROTINA==================================================== */
@@ -347,6 +347,25 @@ if(p.acamado)texto+=" | Prevenir LPP"
 if(p.dm)texto+=" | Controle glicêmico"
 if(p.has||p.cardiopatia)texto+=" | Monitorar PA"
 return texto
+}
+/* ====================================================
+026 – GARANTIR CONTAINER AÇÕES ROTINAS (ULTRA ROBUSTO)
+==================================================== */
+function garantirContainerAcoesRotinas(){
+let div=document.getElementById("acoesRotinas")
+if(div)return
+const tbody=document.getElementById("rotinas")
+if(!tbody)return
+const table=tbody.parentElement
+if(!table)return
+div=document.createElement("div")
+div.id="acoesRotinas"
+div.style.marginBottom="8px"
+div.style.display="flex"
+div.style.flexWrap="wrap"
+div.style.gap="6px"
+/* 🔥 INSERE ANTES DA TABELA */
+table.parentNode.insertBefore(div,table)
 }
 /* ====================================================999 – EXPORT==================================================== */
 window.executarRotina=executarRotina;window.executarTodos=executarTodos;window.executarRotinaTodos=executarRotinaTodos
