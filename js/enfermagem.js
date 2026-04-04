@@ -77,7 +77,6 @@ profissional_nome:e?e.profissional_nome||"":""
 }
 }
 ROTINAS_CACHE=lista
-garantirContainerAcoesRotinas()
 renderizarRotinas(lista)
 renderizarBotoesRotinas()
 calcularIndicadores(lista)
@@ -719,47 +718,16 @@ if(p.has||p.cardiopatia)texto+=" | Monitorar PA"
 return texto
 }
 /* ====================================================
-044   026 – GARANTIR CONTAINER AÇÕES ROTINAS (ULTRA ROBUSTO)
+044 EXECUTAR ROTINA TODOS
 ==================================================== */
-function garantirContainerAcoesRotinas(){
-let div=document.getElementById("acoesRotinas")
-if(div)return
-const tbody=document.getElementById("rotinas")
-if(!tbody)return
-const table=tbody.parentElement
-if(!table)return
-div=document.createElement("div")
-div.id="acoesRotinas"
-div.style.marginBottom="8px"
-div.style.display="flex"
-div.style.flexWrap="wrap"
-div.style.gap="6px"
-/* 🔥 INSERE ANTES DA TABELA */
-table.parentNode.insertBefore(div,table)
-}
-
-}
-
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
-
-}catch(e){
-console.error("Erro geral:",e)
-}finally{
-desbloquearTela()
-esconderProgresso()
-}
-}
-/* ====================================================
-045 EXECUTAR ROTINA TODOS
-==================================================== */
-function executarRotinaTodos(rotinaId){
-if(!db)return
+async function executarRotinaTodos(rotinaId){
+if(!db||!rotinaId)return
 const d=obterDataSelecionada()
 const t=(TURNO_ATUAL||"manha")
 const user=obterUsuarioLogado()
 
 let pendentes=ROTINAS_CACHE.filter(r=>r.rotina_id==rotinaId&&r.turno==t&&r.status!=="executado")
+if(!pendentes.length)return
 
 let inserts=pendentes.map(r=>({
 paciente_id:r.paciente_id,
@@ -771,7 +739,8 @@ profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
 }))
 
-db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
+const res=await db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
+if(res.error){console.error("Erro executarRotinaTodos:",res.error);return}
 
 pendentes.forEach(r=>{
 r.status="executado"
