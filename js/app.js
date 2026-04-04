@@ -257,14 +257,12 @@ if(typeof carregarPacientesMedicacao==="function")carregarPacientesMedicacao()
 if(typeof carregarMedicacoes==="function")carregarMedicacoes()
 },100)
 }
-/* 🔥 BOTÃO PENDENTES */
-const btnPendentes=document.getElementById("btnConcluirPendentes")
-const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+/* 🔥 BOTÃO PENDENTES (NOVO PADRÃO) */
+const btnPendentes=document.getElementById("btnPendentesTodos")
 if(btnPendentes){
-if((id==="painelEnfermagem"||id==="painelMedicacao")&&hierarquia===1){
+if(id==="painelEnfermagem"){
 btnPendentes.style.display="inline-block"
-if(id==="painelEnfermagem")btnPendentes.onclick=function(){window.concluirPendentes()}
-if(id==="painelMedicacao")btnPendentes.onclick=function(){window.concluirPendentesMedicacao()}
+btnPendentes.onclick=function(){executarRotinaTodosPaciente()}
 }else{
 btnPendentes.style.display="none"
 }
