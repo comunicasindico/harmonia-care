@@ -105,16 +105,18 @@ let nomeProf=r.profissional_nome||""
 let corProf="#64748b"
 if(r.status==="executado"&&nomeProf)corProf=obterCorUsuario(nomeProf)
 let prof=r.status==="executado"&&nomeProf?` <span style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`:""
-let el=`<div class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}" style="margin:3px">${r.rotina}${prof}</div>`
+let el=`<div style="flex:1;display:flex;justify-content:center"><div class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">${r.rotina}${prof}</div></div>`
 if(turno==="manha")manha+=el
 else if(turno==="tarde")tarde+=el
 else if(turno==="noite")noite+=el
 })
 let perc=total?Math.round((executadas/total)*100):0
 let ok=executadas===total
-html+=`<tr style="height:32px"><td style="font-size:12px;font-weight:600">${p.nome}</td><td style="font-size:11px"><b>${perc}% (${executadas}/${total})</b><br><button onclick="executarTodos('${pid}')" style="margin-top:3px;background:${ok?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">${ok?"✔":"Concluir"}</button></td><td style="font-size:11px"><div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center">
-${manha}${tarde}${noite}
-</div></td></tr>`
+html+=`<tr style="height:32px"><td style="font-size:12px;font-weight:600">${p.nome}</td><td style="font-size:11px"><b>${perc}% (${executadas}/${total})</b><br><button onclick="executarTodos('${pid}')" style="margin-top:3px;background:${ok?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">${ok?"✔":"Concluir"}</button></td><td style="font-size:11px">
+<div style="display:flex;gap:8px;width:100%">
+${[manha,tarde,noite].join("")}
+</div>
+</td></tr>`
 })
 t.innerHTML=html
 document.querySelectorAll(".badge-rotina").forEach(el=>{
