@@ -125,9 +125,44 @@ if(executado){desfazerRotina(p,r)}else{executarRotina(p,r,this)}
 })
 }
 /* ====================================================024B – EXECUTAR ROTINA==================================================== */
-async function executarRotina(pacienteId,rotinaId,botao){if(!db)return;const d=obterDataSelecionada();const t=(TURNO_ATUAL||"manha");const user=obterUsuarioLogado();if(botao){botao.style.opacity="0.6";botao.style.pointerEvents="none";setTimeout(()=>{botao.style.opacity="1";botao.style.pointerEvents="auto"},600)}const{data:existe}=await db.from("rotinas_execucao").select("status").eq("paciente_id",pacienteId).eq("rotina_id",rotinaId).eq("data",d).eq("turno",t).maybeSingle();if(existe?.status==="executado")return;await db.from("rotinas_execucao").upsert({paciente_id:pacienteId,rotina_id:rotinaId,data:d,turno:t,status:"executado",profissional_nome:user.nome,empresa_id:EMPRESA_ID},{onConflict:"paciente_id,rotina_id,data,turno"});ROTINAS_CACHE.forEach(r=>{if(r.paciente_id==pacienteId&&r.rotina_id==rotinaId)r.status="executado"});renderizarRotinas(ROTINAS_CACHE);calcularIndicadores(ROTINAS_CACHE)}
+async function executarRotina(pacienteId,rotinaId,botao){
+if(!db)return
+const d=obterDataSelecionada()
+const t=(TURNO_ATUAL||"manha")
+const user=obterUsuarioLogado()
+if(botao){botao.style.opacity="0.6";botao.style.pointerEvents="none";setTimeout(function(){botao.style.opacity="1";botao.style.pointerEvents="auto"},600)}
+const resp=await db.from("rotinas_execucao").select("status").eq("paciente_id",pacienteId).eq("rotina_id",rotinaId).eq("data",d).eq("turno",t).maybeSingle()
+const existe=resp.data
+if(existe&&existe.status==="executado")return
+await db.from("rotinas_execucao").upsert({paciente_id:pacienteId,rotina_id:rotinaId,data:d,turno:t,status:"executado",profissional_nome:user.nome,empresa_id:EMPRESA_ID},{onConflict:"paciente_id,rotina_id,data,turno"})
+for(let i=0;i<ROTINAS_CACHE.length;i++){
+let r=ROTINAS_CACHE[i]
+if(r.paciente_id==pacienteId&&r.rotina_id==rotinaId){
+r.status="executado"
+r.profissional_nome=user.nome
+}
+}
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
+}
 /* ====================================================025A – BOTÕES==================================================== */
-function renderizarBotoesRotinas(){const div=document.getElementById("acoesRotinas");if(!div)return;const turno=(TURNO_ATUAL||"manha");let html="";const unicas={};ROTINAS_CACHE.forEach(r=>{if(r.turno!==turno)return;unicas[r.rotina_id]=r.rotina});Object.keys(unicas).forEach(id=>html+=`<button onclick="executarRotinaTodos('${id}')">✔ ${unicas[id]}</button>`);div.innerHTML=html}
+function renderizarBotoesRotinas(){
+const div=document.getElementById("acoesRotinas");if(!div)return
+const turno=(TURNO_ATUAL||"manha").toLowerCase()
+let html=""
+const unicas={}
+for(let i=0;i<ROTINAS_CACHE.length;i++){
+let r=ROTINAS_CACHE[i]
+if((r.turno||"").toLowerCase()!==turno)continue
+unicas[r.rotina_id]=r.rotina
+}
+const ids=Object.keys(unicas)
+for(let i=0;i<ids.length;i++){
+let id=ids[i]
+html+=`<button onclick="executarRotinaTodos('${id}')" style="margin:3px;padding:4px 8px;border:none;border-radius:6px;background:#34495e;color:#fff;cursor:pointer">✔ ${unicas[id]}</button>`
+}
+div.innerHTML=html
+}
 /* ====================================================027 – INDICADORES==================================================== */
 function calcularIndicadores(lista){let e=0,p=0;lista.forEach(r=>r.status==="executado"?e++:p++);document.getElementById("indicadorExecutado")?.innerText=e;document.getElementById("indicadorPendente")?.innerText=p}
 /* ====================================================028 – EXECUTAR TODOS==================================================== */
