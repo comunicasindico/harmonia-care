@@ -153,27 +153,72 @@ if(executado){desfazerRotina(p,r)}else{executarRotina(p,r,this)}
 /* ====================================================024B – EXECUTAR ROTINA==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db)return
-botao.style.boxShadow="0 0 0 2px #2ecc71"
-setTimeout(()=>{botao.style.boxShadow="none"},400)
 const d=obterDataSelecionada()
 const t=(TURNO_ATUAL||"manha")
 const user=obterUsuarioLogado()
+
+/* 🔒 ANTI DUPLO CLIQUE */
+if(botao&&botao.dataset.lock==="1")return
+if(botao)botao.dataset.lock="1"
+
 /* 🔥 FEEDBACK VISUAL IMEDIATO */
 if(botao){
+botao.style.transition="all 0.2s ease"
 botao.style.transform="scale(0.95)"
 botao.style.opacity="0.6"
 botao.style.pointerEvents="none"
+botao.style.boxShadow="0 0 0 2px #2ecc71"
 setTimeout(()=>{
 botao.style.transform="scale(1)"
+botao.style.boxShadow="none"
+},200)
+}
+
+/* 🔎 VERIFICA SE JÁ EXISTE */
+const resp=await db
+.from("rotinas_execucao")
+.select("status")
+.eq("paciente_id",pacienteId)
+.eq("rotina_id",rotinaId)
+.eq("data",d)
+.eq("turno",t)
+.maybeSingle()
+
+const existe=resp.data
+
+if(existe&&existe.status==="executado"){
+if(botao){
 botao.style.opacity="1"
 botao.style.pointerEvents="auto"
-},500)
+botao.dataset.lock="0"
 }
-const resp=await db.from("rotinas_execucao").select("status").eq("paciente_id",pacienteId).eq("rotina_id",rotinaId).eq("data",d).eq("turno",t).maybeSingle()
-const existe=resp.data
-if(existe&&existe.status==="executado"){if(botao){botao.style.opacity="1";botao.style.pointerEvents="auto"}return}
-const res=await db.from("rotinas_execucao").upsert({paciente_id:pacienteId,rotina_id:rotinaId,data:d,turno:t,status:"executado",profissional_nome:user.nome,empresa_id:EMPRESA_ID},{onConflict:"paciente_id,rotina_id,data,turno"})
-if(res.error){console.error("Erro salvar:",res.error);if(botao){botao.style.opacity="1";botao.style.pointerEvents="auto"}return}
+return
+}
+
+/* 💾 SALVAR */
+const res=await db
+.from("rotinas_execucao")
+.upsert({
+paciente_id:pacienteId,
+rotina_id:rotinaId,
+data:d,
+turno:t,
+status:"executado",
+profissional_nome:user.nome,
+empresa_id:EMPRESA_ID
+},{onConflict:"paciente_id,rotina_id,data,turno"})
+
+if(res.error){
+console.error("Erro salvar:",res.error)
+if(botao){
+botao.style.opacity="1"
+botao.style.pointerEvents="auto"
+botao.dataset.lock="0"
+}
+return
+}
+
+/* 🔄 ATUALIZA CACHE */
 for(let i=0;i<ROTINAS_CACHE.length;i++){
 let r=ROTINAS_CACHE[i]
 if(r.paciente_id==pacienteId&&r.rotina_id==rotinaId&&r.turno==t){
@@ -182,18 +227,26 @@ r.profissional_nome=user.nome
 break
 }
 }
-/* 🔥 ATUALIZA SOMENTE O BOTÃO (SEM RE-RENDER PESADO) */
+
+/* ⚡ ATUALIZA SOMENTE O BOTÃO */
 if(botao){
 botao.classList.remove("rotina-pendente")
 botao.classList.add(`rotina-ok-${t}`)
-botao.innerHTML=botao.innerHTML.replace("✔","")+` ✔ ${user.nome}`
+
+let texto=botao.innerText.split("✔")[0].trim()
+botao.innerHTML=`${texto} <span style="font-weight:bold">✔ ${user.nome}</span>`
 }
-renderizarRotinas(ROTINAS_CACHE)
+
+/* 🔄 RENDER SUAVE */
+setTimeout(()=>renderizarRotinas(ROTINAS_CACHE),50)
 calcularIndicadores(ROTINAS_CACHE)
+
+/* 🔓 LIBERA BOTÃO */
 if(botao){
 botao.style.opacity="1"
 botao.style.pointerEvents="auto"
 botao.style.transform="scale(1)"
+botao.dataset.lock="0"
 }
 }
 /* ====================================================025A – BOTÕES ORDENADOS COM COR POR TURNO==================================================== */
