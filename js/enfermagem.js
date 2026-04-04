@@ -44,7 +44,47 @@ console.error("Erro geral pacientes:",e)
 /* ====================================================023 – CARREGAR ROTINAS==================================================== */
 async function carregarRotinas(){if(!db||!EMPRESA_ID)return;const turno=(TURNO_ATUAL||"manha").toLowerCase();const dataHoje=obterDataSelecionada();const{data:pacs}=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true);const{data:rotinas}=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true);const{data:exec}=await db.from("rotinas_execucao").select("*").eq("data",dataHoje).eq("turno",turno);const mapa=new Map();(exec||[]).forEach(e=>mapa.set(`${e.paciente_id}_${e.rotina_id}`,e));let lista=[];(pacs||[]).forEach(p=>{(rotinas||[]).filter(r=>!r.turno||r.turno===turno).forEach(r=>{let e=mapa.get(`${p.id}_${r.id}`);lista.push({paciente_id:p.id,rotina_id:r.id,paciente:p.nome_completo,rotina:r.nome,turno:r.turno||turno,status:e&&e.status==="executado"?"executado":"pendente",profissional_nome:e?.profissional_nome||""})})});ROTINAS_CACHE=lista;garantirContainerAcoesRotinas();renderizarRotinas(lista);renderizarBotoesRotinas();calcularIndicadores(lista)}
 /* ====================================================024 – RENDER==================================================== */
-function renderizarRotinas(lista){const t=document.getElementById("rotinas");if(!t)return;let html="";const map={};lista.forEach(r=>{if(!map[r.paciente_id])map[r.paciente_id]={nome:r.paciente,rotinas:[]};map[r.paciente_id].rotinas.push(r)});Object.keys(map).forEach(pid=>{const p=map[pid];let total=p.rotinas.length;let executadas=p.rotinas.filter(r=>r.status==="executado").length;let manha="",tarde="",noite="";p.rotinas.forEach(r=>{let classe=r.status==="executado"?`rotina-ok-${r.turno}`:"rotina-pendente";let prof=r.profissional_nome?` ✔ ${r.profissional_nome}`:"";let el=`<div class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">${r.rotina}${prof}</div>`;if(r.turno==="manha")manha+=el;else if(r.turno==="tarde")tarde+=el;else noite+=el});let perc=Math.round((executadas/total)*100)||0;let ok=executadas===total;html+=`<tr><td>${p.nome}</td><td><b>${perc}% (${executadas}/${total})</b><br><button onclick="executarTodos('${pid}')">${ok?"✔":"Concluir"}</button></td><td>${manha}${tarde}${noite}</td></tr>`});t.innerHTML=html;document.querySelectorAll(".badge-rotina").forEach(el=>el.onclick=function(){const p=this.dataset.paciente,r=this.dataset.rotina;this.classList.contains("rotina-ok-manha")||this.classList.contains("rotina-ok-tarde")||this.classList.contains("rotina-ok-noite")?desfazerRotina(p,r):executarRotina(p,r,this)})}
+function renderizarRotinas(lista){
+const t=document.getElementById("rotinas");if(!t)return
+let html=""
+const map={}
+lista.forEach(r=>{if(!map[r.paciente_id])map[r.paciente_id]={nome:r.paciente,rotinas:[]};map[r.paciente_id].rotinas.push(r)})
+Object.keys(map).forEach(pid=>{
+const p=map[pid]
+let total=p.rotinas.length
+let executadas=p.rotinas.filter(r=>(r.status||"")==="executado").length
+let manha="",tarde="",noite=""
+p.rotinas.forEach(r=>{
+let turno=(r.turno||"").toLowerCase()
+let classe="rotina-pendente"
+if(r.status==="executado"){
+if(turno==="manha")classe="rotina-ok-manha"
+else if(turno==="tarde")classe="rotina-ok-tarde"
+else if(turno==="noite")classe="rotina-ok-noite"
+}
+let nomeProf=r.profissional_nome||""
+let corProf="#64748b"
+if(r.status==="executado"&&nomeProf)corProf=obterCorUsuario(nomeProf)
+let prof=r.status==="executado"&&nomeProf?` <span style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`:""
+let el=`<div class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}" style="margin:3px">${r.rotina}${prof}</div>`
+if(turno==="manha")manha+=el
+else if(turno==="tarde")tarde+=el
+else if(turno==="noite")noite+=el
+})
+let perc=total?Math.round((executadas/total)*100):0
+let ok=executadas===total
+html+=`<tr style="height:32px"><td style="font-size:12px;font-weight:600">${p.nome}</td><td style="font-size:11px"><b>${perc}% (${executadas}/${total})</b><br><button onclick="executarTodos('${pid}')" style="margin-top:3px;background:${ok?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">${ok?"✔":"Concluir"}</button></td><td style="font-size:11px"><div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">${manha}${tarde}${noite}</div></td></tr>`
+})
+t.innerHTML=html
+document.querySelectorAll(".badge-rotina").forEach(el=>{
+el.onclick=function(){
+const p=this.dataset.paciente
+const r=this.dataset.rotina
+const executado=this.classList.contains("rotina-ok-manha")||this.classList.contains("rotina-ok-tarde")||this.classList.contains("rotina-ok-noite")
+if(executado){desfazerRotina(p,r)}else{executarRotina(p,r,this)}
+}
+})
+}
 /* ====================================================024B – EXECUTAR ROTINA==================================================== */
 async function executarRotina(pacienteId,rotinaId,botao){if(!db)return;const d=obterDataSelecionada();const t=(TURNO_ATUAL||"manha");const user=obterUsuarioLogado();if(botao){botao.style.opacity="0.6";botao.style.pointerEvents="none";setTimeout(()=>{botao.style.opacity="1";botao.style.pointerEvents="auto"},600)}const{data:existe}=await db.from("rotinas_execucao").select("status").eq("paciente_id",pacienteId).eq("rotina_id",rotinaId).eq("data",d).eq("turno",t).maybeSingle();if(existe?.status==="executado")return;await db.from("rotinas_execucao").upsert({paciente_id:pacienteId,rotina_id:rotinaId,data:d,turno:t,status:"executado",profissional_nome:user.nome,empresa_id:EMPRESA_ID},{onConflict:"paciente_id,rotina_id,data,turno"});ROTINAS_CACHE.forEach(r=>{if(r.paciente_id==pacienteId&&r.rotina_id==rotinaId)r.status="executado"});renderizarRotinas(ROTINAS_CACHE);calcularIndicadores(ROTINAS_CACHE)}
 /* ====================================================025A – BOTÕES==================================================== */
