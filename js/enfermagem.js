@@ -82,7 +82,7 @@ renderizarRotinas(lista)
 renderizarBotoesRotinas()
 calcularIndicadores(lista)
 }
-/* ====================================================024 – RENDER==================================================== */
+/* ====================================================024 – RENDERIZAR==================================================== */
 function renderizarRotinas(lista){
 const t=document.getElementById("rotinas");if(!t)return
 let html=""
@@ -137,7 +137,21 @@ ${r.rotina}${prof}
 linha+=`</div>`
 let perc=total?Math.round((executadas/total)*100):0
 let ok=executadas===total
-html+=`<tr style="height:32px"><td style="font-size:12px;font-weight:600">${p.nome}</td><td style="font-size:11px"><b>${perc}% (${executadas}/${total})</b><br><button onclick="executarTodos('${pid}')" style="margin-top:3px;background:${ok?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">${ok?"✔":"Concluir"}</button></td><td style="font-size:11px">
+html+=`<tr style="height:32px"><td style="font-size:12px;font-weight:600">${p.nome}</td><td style="font-size:11px"><b>${perc}% (${executadas}/${total})</b><br>
+
+<div style="display:flex;gap:4px;justify-content:center;margin-top:3px">
+
+<button onclick="executarTodos('${pid}')"
+style="background:${ok?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">
+${ok?"✔":"Paciente"}
+</button>
+
+<button onclick="executarRotinaTodosPaciente('${pid}')"
+style="background:#9b59b6;color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">
+Todas
+</button>
+
+</div> style="margin-top:3px;background:${ok?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">${ok?"✔":"Concluir"}</button></td><td style="font-size:11px">
 ${linha}
 </td></tr>`
 })
@@ -177,25 +191,41 @@ renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 if(botao){botao.style.opacity="1";botao.style.pointerEvents="auto"}
 }
-/* ====================================================025A – BOTÕES COLUNA FIXA==================================================== */
+/* ====================================================025A – BOTÕES ORDENADOS COM COR POR TURNO==================================================== */
 function renderizarBotoesRotinas(){
 const div=document.getElementById("acoesRotinas");if(!div)return
 const turno=(TURNO_ATUAL||"manha").toLowerCase()
-let rotinasOrdenadas=[]
+/* 🔥 COR POR TURNO (INSERIDO AQUI) */
+let cor="#34495e"
+if(turno==="manha")cor="#3498db"
+if(turno==="tarde")cor="#e67e22"
+if(turno==="noite")cor="#2c3e50"
+
+const mapa=new Map()
+
 for(let i=0;i<ROTINAS_CACHE.length;i++){
 let r=ROTINAS_CACHE[i]
 if((r.turno||"").toLowerCase()!==turno)continue
-if(!rotinasOrdenadas.find(x=>x.rotina_id==r.rotina_id)){
-rotinasOrdenadas.push({id:r.rotina_id,nome:r.rotina})
+if(!mapa.has(r.rotina_id)){
+mapa.set(r.rotina_id,r.rotina)
 }
 }
-let html=`<div style="display:flex;width:100%">`
-for(let i=0;i<rotinasOrdenadas.length;i++){
-let r=rotinasOrdenadas[i]
-html+=`<div style="flex:1;text-align:center">
-<button onclick="executarRotinaTodos('${r.id}')" style="padding:8px 10px;border:none;border-radius:8px;background:#34495e;color:#fff;font-size:13px;width:90%">✔ ${r.nome}</button>
-</div>`
+const ORDEM_ROTINAS=[
+"Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café",
+"Medicação","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene (noite)","Troca de Fraldas (noite)"
+]
+let html=`<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:6px">`
+
+ORDEM_ROTINAS.forEach(nome=>{
+mapa.forEach((nomeMapa,id)=>{
+if(nomeMapa===nome){
+html+=`<button onclick="executarRotinaTodos('${id}')" 
+onmouseover="this.style.opacity='0.8'" 
+onmouseout="this.style.opacity='1'"
+style="padding:8px 12px;border:none;border-radius:8px;background:${cor};color:#fff;font-size:13px;transition:all 0.2s ease">✔ ${nome}</button>`
 }
+})
+})
 html+=`</div>`
 div.innerHTML=html
 }
@@ -243,6 +273,47 @@ r.profissional_nome=user.nome
 }
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
+}
+/* ====================================================028B – EXECUTAR TODAS ROTINAS DE UM PACIENTE (COM PROGRESSO SEGURO)==================================================== */
+async function executarRotinaTodosPaciente(pacienteId){
+mostrarProgresso()
+bloquearTela()
+try{
+if(!db||!pacienteId)return
+const d=obterDataSelecionada()
+const t=(TURNO_ATUAL||"manha")
+const user=obterUsuarioLogado()
+
+let pendentes=ROTINAS_CACHE.filter(r=>r.paciente_id==pacienteId&&r.turno==t&&r.status!=="executado")
+if(!pendentes.length)return
+
+let inserts=pendentes.map(r=>({
+paciente_id:r.paciente_id,
+rotina_id:r.rotina_id,
+data:d,
+turno:t,
+status:"executado",
+profissional_nome:user.nome,
+empresa_id:EMPRESA_ID
+}))
+
+const res=await db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
+if(res.error){console.error("Erro executarRotinaTodosPaciente:",res.error);return}
+
+/* 🔥 FEEDBACK PROGRESSIVO */
+for(let i=0;i<pendentes.length;i++){
+let p=pendentes[i]
+let perc=Math.round(((i+1)/pendentes.length)*100)
+atualizarProgresso(perc)
+
+/* atualiza cache */
+for(let j=0;j<ROTINAS_CACHE.length;j++){
+let r=ROTINAS_CACHE[j]
+if(r.paciente_id==p.paciente_id&&r.rotina_id==p.rotina_id&&r.turno==t){
+r.status="executado"
+r.profissional_nome=user.nome
+break
+}
 }
 /* ====================================================029 – EXECUTAR ROTINA TODOS==================================================== */
 async function executarRotinaTodos(rotinaId){
@@ -601,7 +672,7 @@ if(p.has||p.cardiopatia)texto+=" | Monitorar PA"
 return texto
 }
 /* ====================================================
-026 – GARANTIR CONTAINER AÇÕES ROTINAS (ULTRA ROBUSTO)
+044   026 – GARANTIR CONTAINER AÇÕES ROTINAS (ULTRA ROBUSTO)
 ==================================================== */
 function garantirContainerAcoesRotinas(){
 let div=document.getElementById("acoesRotinas")
@@ -619,5 +690,19 @@ div.style.gap="6px"
 /* 🔥 INSERE ANTES DA TABELA */
 table.parentNode.insertBefore(div,table)
 }
+
+}
+
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
+
+}catch(e){
+console.error("Erro geral:",e)
+}finally{
+desbloquearTela()
+esconderProgresso()
+}
+}
 /* ====================================================999 – EXPORT==================================================== */
 window.executarRotina=executarRotina;window.executarTodos=executarTodos;window.executarRotinaTodos=executarRotinaTodos
+window.executarRotinaTodosPaciente = executarRotinaTodosPaciente
