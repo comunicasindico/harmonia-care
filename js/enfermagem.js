@@ -481,33 +481,45 @@ await processarSelecaoPaciente()
 async function processarSelecaoPaciente(){
 const select=document.getElementById("buscaPaciente")
 if(!select)return
+
 const pacienteId=select.value
+
 /* 🔄 CARREGA BASE */
 if(typeof carregarRotinas==="function")await carregarRotinas()
+
 /* 🔷 PACIENTE INDIVIDUAL */
 if(pacienteId!=="todos"){
+
 if(typeof carregarDadosClinicosPaciente==="function"){
 await carregarDadosClinicosPaciente(pacienteId)
 }
+
 if(typeof carregarClinico==="function"){
 await carregarClinico(pacienteId)
 }
-/* 🔥 MOVE GRADE PARA CIMA */
+
+/* 🔥 POSICIONAMENTO CORRETO */
 if(typeof montarGradePeriodo==="function"){
 await montarGradePeriodo()
+
 const grade=document.getElementById("gradePeriodo")
-const clinico=document.getElementById("quadroClinico")||document.getElementById("dadosClinicos")
+const clinico=document.getElementById("dadosClinicosPaciente")
+
 if(grade && clinico){
 clinico.insertAdjacentElement("afterend",grade)
 }
 }
+
 }else{
-/* 🔥 VOLTA PARA POSIÇÃO PADRÃO */
+
+/* 🔥 VOLTA PARA FINAL (PADRÃO) */
 const grade=document.getElementById("gradePeriodo")
-const containerFinal=document.getElementById("containerRotinas")||document.body
+const containerFinal=document.getElementById("rotinas")?.parentElement
+
 if(grade && containerFinal){
 containerFinal.appendChild(grade)
 }
+
 }
 }
 /* ====================================================
