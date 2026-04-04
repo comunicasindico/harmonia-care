@@ -42,7 +42,46 @@ console.error("Erro geral pacientes:",e)
 }
 }
 /* ====================================================023 – CARREGAR ROTINAS==================================================== */
-async function carregarRotinas(){if(!db||!EMPRESA_ID)return;const turno=(TURNO_ATUAL||"manha").toLowerCase();const dataHoje=obterDataSelecionada();const{data:pacs}=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true);const{data:rotinas}=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true);const{data:exec}=await db.from("rotinas_execucao").select("*").eq("data",dataHoje).eq("turno",turno);const mapa=new Map();(exec||[]).forEach(e=>mapa.set(`${e.paciente_id}_${e.rotina_id}`,e));let lista=[];(pacs||[]).forEach(p=>{(rotinas||[]).filter(r=>!r.turno||r.turno===turno).forEach(r=>{let e=mapa.get(`${p.id}_${r.id}`);lista.push({paciente_id:p.id,rotina_id:r.id,paciente:p.nome_completo,rotina:r.nome,turno:r.turno||turno,status:e&&e.status==="executado"?"executado":"pendente",profissional_nome:e?.profissional_nome||""})})});ROTINAS_CACHE=lista;garantirContainerAcoesRotinas();renderizarRotinas(lista);renderizarBotoesRotinas();calcularIndicadores(lista)}
+async function carregarRotinas(){
+if(!db||!EMPRESA_ID)return
+const turno=(TURNO_ATUAL||"manha").toLowerCase()
+const dataHoje=obterDataSelecionada()
+const respPacientes=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
+const pacs=respPacientes.data||[]
+const respRotinas=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
+const rotinas=respRotinas.data||[]
+const respExec=await db.from("rotinas_execucao").select("*").eq("data",dataHoje).eq("turno",turno)
+const exec=respExec.data||[]
+const mapa=new Map()
+for(let i=0;i<exec.length;i++){
+let e=exec[i]
+mapa.set(e.paciente_id+"_"+e.rotina_id,e)
+}
+let lista=[]
+for(let i=0;i<pacs.length;i++){
+let p=pacs[i]
+for(let j=0;j<rotinas.length;j++){
+let r=rotinas[j]
+if(r.turno&&r.turno!==turno)continue
+let chave=p.id+"_"+r.id
+let e=mapa.get(chave)
+lista.push({
+paciente_id:p.id,
+rotina_id:r.id,
+paciente:p.nome_completo,
+rotina:r.nome,
+turno:r.turno||turno,
+status:e&&e.status==="executado"?"executado":"pendente",
+profissional_nome:e?e.profissional_nome||"":""
+})
+}
+}
+ROTINAS_CACHE=lista
+garantirContainerAcoesRotinas()
+renderizarRotinas(lista)
+renderizarBotoesRotinas()
+calcularIndicadores(lista)
+}
 /* ====================================================024 – RENDER==================================================== */
 function renderizarRotinas(lista){
 const t=document.getElementById("rotinas");if(!t)return
