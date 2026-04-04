@@ -78,6 +78,37 @@ const paciente=(window.PACIENTES_CACHE||[]).find(p=>String(p.id)===String(pacien
 const meds=(window.MEDICACOES_CACHE||[]).filter(m=>String(m.paciente_id)===String(pacienteId))
 const agora=new Date()
 const dataGeracao=agora.toLocaleString()
+/* 🔥 DADOS EMPRESA + RESPONSÁVEL */
+let empresa=null
+let responsavel="Responsável Técnico"
+
+try{
+
+const {data:emp}=await db
+.from("empresas")
+.select("nome_fantasia,endereco,cidade,estado,telefone,email")
+.eq("id",EMPRESA_ID)
+.maybeSingle()
+
+empresa=emp||null
+
+const user=obterUsuarioLogado()
+
+if(user?.id){
+const {data:u}=await db
+.from("usuarios")
+.select("nome_completo")
+.eq("id",user.id)
+.maybeSingle()
+
+if(u?.nome_completo){
+responsavel=u.nome_completo
+}
+}
+
+}catch(e){
+console.warn("Erro dados empresa/responsável",e)
+}
 /* 🔷 CABEÇALHO */
 doc.setFillColor(30,64,175)
 doc.rect(0,0,210,20,"F")
@@ -142,15 +173,27 @@ y+=14
 if(y>265){doc.addPage();y=20}
 })
 /* 🔷 ASSINATURA */
-y+=10
+y+=12
+
 doc.setDrawColor(0)
 doc.line(14,y,100,y)
+
+doc.setFontSize(10)
+doc.text(responsavel,14,y+6)
+
 doc.setFontSize(9)
-doc.text("Responsável Técnico",14,y+5)
-/* 🔷 RODAPÉ */
+doc.text("Responsável Técnico",14,y+12)
+/* 🔷 RODAPÉ EMPRESA */
 doc.setFontSize(8)
 doc.setTextColor(120,120,120)
-doc.text("Harmonia-Care • Sistema de Gestão Clínica • Documento Auditável",14,285)
+
+if(empresa){
+doc.text(`${empresa.nome_fantasia||""}`,14,280)
+doc.text(`${empresa.endereco||""} - ${empresa.cidade||""}/${empresa.estado||""}`,14,284)
+doc.text(`Tel: ${empresa.telefone||""} | Email: ${empresa.email||""}`,14,288)
+}else{
+doc.text("Harmonia-Care • Sistema de Gestão Clínica",14,285)
+}
 const pacienteSelect=document.getElementById("buscaPacienteMedicacao")
 let nomePaciente="PACIENTE"
 
