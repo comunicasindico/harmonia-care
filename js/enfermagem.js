@@ -135,7 +135,7 @@ html+=`<tr style="height:32px">
 ${ok?"✔":"Paciente"}
 </button>
 <button onclick="executarRotinaTodosPaciente()" style="background:#9b59b6;color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">
-Todas
+Pendentes
 </button>
 </div>
 </td>
@@ -341,7 +341,11 @@ let pendentes=ROTINAS_CACHE.filter(r=>
 r.turno==t && r.status!=="executado"
 )
 
-if(!pendentes.length)return
+if(!pendentes.length){
+desbloquearTela()
+esconderProgresso()
+return
+}
 
 let total=pendentes.length
 let atual=0
@@ -349,6 +353,7 @@ let atual=0
 let inserts=[]
 
 for(let i=0;i<pendentes.length;i++){
+if(i%10===0)await new Promise(r=>setTimeout(r,0))
 let r=pendentes[i]
 
 inserts.push({
@@ -378,7 +383,7 @@ return
 for(let i=0;i<ROTINAS_CACHE.length;i++){
 let r=ROTINAS_CACHE[i]
 
-if(r.turno==t && r.status!=="executado"){
+if(r.turno==t && (r.status||"")!=="executado"){
 r.status="executado"
 r.profissional_nome=user.nome
 }
