@@ -93,8 +93,15 @@ let total=p.rotinas.length
 let executadas=p.rotinas.filter(r=>(r.status||"")==="executado").length
 let colunas={}
 p.rotinas.forEach(r=>{colunas[r.rotina_id]=r})
-let linha=`<div style="display:grid;grid-template-columns:repeat(${baseOrdem.length},1fr);gap:6px;width:100%">`
 let baseOrdem=[]
+for(let i=0;i<ROTINAS_CACHE.length;i++){
+let b=ROTINAS_CACHE[i]
+if(b.turno===p.rotinas[0].turno&&!baseOrdem.includes(b.rotina_id)){
+baseOrdem.push(b.rotina_id)
+}
+}
+
+let linha=`<div style="display:grid;grid-template-columns:repeat(${baseOrdem.length},1fr);gap:6px;width:100%">`
 for(let i=0;i<ROTINAS_CACHE.length;i++){
 let b=ROTINAS_CACHE[i]
 if(b.turno===p.rotinas[0].turno&&!baseOrdem.includes(b.rotina_id)){baseOrdem.push(b.rotina_id)}
@@ -131,7 +138,7 @@ html+=`<tr style="height:32px">
 <button onclick="executarTodos('${pid}')" style="background:${ok?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">
 ${ok?"✔":"Paciente"}
 </button>
-<button onclick="executarRotinaTodosPaciente('${pid}')" style="background:#9b59b6;color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">
+<button onclick="executarRotinaTodosPaciente()" style="background:#9b59b6;color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">
 Todas
 </button>
 </div>
@@ -320,20 +327,35 @@ r.profissional_nome=user.nome
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 }
-/* ====================================================028B – EXECUTAR TODAS ROTINAS DE UM PACIENTE==================================================== */
-async function executarRotinaTodosPaciente(pacienteId){
+/* ====================================================
+028B – EXECUTAR PENDENTES GLOBAL (CORRIGIDO)
+==================================================== */
+async function executarRotinaTodosPaciente(){
 mostrarProgresso()
 bloquearTela()
 try{
-if(!db||!pacienteId)return
+if(!db)return
+
 const d=obterDataSelecionada()
 const t=(TURNO_ATUAL||"manha")
 const user=obterUsuarioLogado()
 
-let pendentes=ROTINAS_CACHE.filter(r=>r.paciente_id==pacienteId&&r.turno==t&&r.status!=="executado")
+/* 🔥 PEGA TODOS PENDENTES (SEM FILTRO DE PACIENTE) */
+let pendentes=ROTINAS_CACHE.filter(r=>
+r.turno==t && r.status!=="executado"
+)
+
 if(!pendentes.length)return
 
-let inserts=pendentes.map(r=>({
+let total=pendentes.length
+let atual=0
+
+let inserts=[]
+
+for(let i=0;i<pendentes.length;i++){
+let r=pendentes[i]
+
+inserts.push({
 paciente_id:r.paciente_id,
 rotina_id:r.rotina_id,
 data:d,
@@ -341,17 +363,26 @@ turno:t,
 status:"executado",
 profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
-}))
+})
 
-const res=await db.from("rotinas_execucao").upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
+atual++
+atualizarProgresso(Math.round((atual/total)*100))
+}
+
+/* 💾 UPSERT EM LOTE */
+const res=await db.from("rotinas_execucao")
+.upsert(inserts,{onConflict:"paciente_id,rotina_id,data,turno"})
+
 if(res.error){
-console.error("Erro executarRotinaTodosPaciente:",res.error)
+console.error("Erro executar pendentes global:",res.error)
 return
 }
 
+/* 🔄 ATUALIZA CACHE (SEM SOBRESCREVER EXECUTADOS) */
 for(let i=0;i<ROTINAS_CACHE.length;i++){
 let r=ROTINAS_CACHE[i]
-if(r.paciente_id==pacienteId&&r.turno==t&&r.status!=="executado"){
+
+if(r.turno==t && r.status!=="executado"){
 r.status="executado"
 r.profissional_nome=user.nome
 }
@@ -624,9 +655,9 @@ if(!barra)return
 barra.style.width=p+"%"
 
 /* 🔥 CORES DINÂMICAS */
-if(p<60){
+if(p<40){
 barra.style.background="red"
-}else if(p<40){
+}else if(p<70){
 barra.style.background="orange"
 }else{
 barra.style.background="green"
