@@ -150,7 +150,7 @@ renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 if(botao){botao.style.opacity="1";botao.style.pointerEvents="auto"}
 }
-/* ====================================================025A – BOTÕES ALINHADOS SIMPLES==================================================== */
+/* ====================================================025A – BOTÕES ALINHADOS POR COLUNA==================================================== */
 function renderizarBotoesRotinas(){
 const div=document.getElementById("acoesRotinas");if(!div)return
 const turno=(TURNO_ATUAL||"manha").toLowerCase()
@@ -161,12 +161,14 @@ let r=ROTINAS_CACHE[i]
 if((r.turno||"").toLowerCase()!==turno)continue
 mapa[r.rotina]=r.rotina_id
 }
-let html=`<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:6px">`
+let html=`<div style="display:flex;gap:8px;justify-content:center;width:100%">`
 for(let i=0;i<ordem.length;i++){
 let nome=ordem[i]
 let id=mapa[nome]
 if(id){
-html+=`<button onclick="executarRotinaTodos('${id}')" style="padding:6px 12px;border:none;border-radius:8px;background:#34495e;color:#fff;font-size:13px;min-width:120px">✔ ${nome}</button>`
+html+=`<div style="flex:1;display:flex;justify-content:center">
+<button onclick="executarRotinaTodos('${id}')" style="padding:8px 12px;border:none;border-radius:8px;background:#34495e;color:#fff;font-size:13px;min-width:120px">✔ ${nome}</button>
+</div>`
 }
 }
 html+=`</div>`
