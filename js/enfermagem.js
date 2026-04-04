@@ -8,8 +8,39 @@ function obterUsuarioLogado(){let id=localStorage.getItem("usuario_id");let nome
 window.obterDataSelecionada=function(){const d=document.getElementById("dataInicio")?.value;if(d&&d.includes("/")){const[a,b,c]=d.split("/");return`${c}-${b.padStart(2,"0")}-${a.padStart(2,"0")}`}return d||new Date().toISOString().slice(0,10)}
 /* ====================================================021B – TURNO==================================================== */
 async function mudarTurno(turno){TURNO_ATUAL=turno;localStorage.setItem("turno_atual",turno);["btnManha","btnTarde","btnNoite"].forEach(id=>document.getElementById(id)?.classList.remove("turno-ativo"));if(turno==="manha")document.getElementById("btnManha")?.classList.add("turno-ativo");if(turno==="tarde")document.getElementById("btnTarde")?.classList.add("turno-ativo");if(turno==="noite")document.getElementById("btnNoite")?.classList.add("turno-ativo");await carregarRotinas();if(typeof montarGradePeriodo==="function")await montarGradePeriodo()}
-/* ====================================================022 – PACIENTES==================================================== */
-async function carregarPacientesBusca(){if(!db)return;const s=document.getElementById("buscaPaciente");if(!s)return;let usuarioId=localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null;let pacientes=[];if(usuarioId&&usuarioId!=="admin"){const{data:rel}=await db.from("pacientes_profissionais").select("paciente_id").eq("usuario_id",usuarioId).eq("ativo",true);const ids=rel?.map(r=>r.paciente_id)||[];if(ids.length){const{data}=await db.from("pacientes").select("id,nome_completo").in("id",ids).eq("empresa_id",EMPRESA_ID).eq("ativo",true);pacientes=data||[]}else{s.innerHTML='<option>SEM PACIENTES</option>';return}}else{const{data}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).eq("ativo",true);pacientes=data||[]}let html='<option value="todos">TODOS</option>';pacientes.forEach(p=>html+=`<option value="${p.id}">${p.nome_completo}</option>`);s.innerHTML=html}
+/* ====================================================022 – CARREGAR PACIENTES BUSCA (CORRIGIDO DEFINITIVO)==================================================== */
+async function carregarPacientesBusca(){
+if(!db)return
+const s=document.getElementById("buscaPaciente")
+if(!s)return
+try{
+let usuarioId=localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
+let pacientes=[]
+if(usuarioId&&usuarioId!=="admin"){
+const{data:rel}=await db.from("pacientes_profissionais").select("paciente_id").eq("usuario_id",usuarioId).eq("ativo",true)
+const ids=rel?rel.map(function(r){return r.paciente_id}):[]
+if(ids.length){
+const{data}=await db.from("pacientes").select("id,nome_completo").in("id",ids).eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo",{ascending:true})
+pacientes=data||[]
+}else{
+s.innerHTML='<option value="todos">SEM PACIENTES</option>'
+return
+}
+}else{
+const{data}=await db.from("pacientes").select("id,nome_completo").eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nome_completo",{ascending:true})
+pacientes=data||[]
+}
+let html='<option value="todos">TODOS</option>'
+for(let i=0;i<pacientes.length;i++){
+let p=pacientes[i]
+html+=`<option value="${p.id}">${p.nome_completo}</option>`
+}
+s.innerHTML=html
+s.value="todos"
+}catch(e){
+console.error("Erro geral pacientes:",e)
+}
+}
 /* ====================================================023 – CARREGAR ROTINAS==================================================== */
 async function carregarRotinas(){if(!db||!EMPRESA_ID)return;const turno=(TURNO_ATUAL||"manha").toLowerCase();const dataHoje=obterDataSelecionada();const{data:pacs}=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true);const{data:rotinas}=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true);const{data:exec}=await db.from("rotinas_execucao").select("*").eq("data",dataHoje).eq("turno",turno);const mapa=new Map();(exec||[]).forEach(e=>mapa.set(`${e.paciente_id}_${e.rotina_id}`,e));let lista=[];(pacs||[]).forEach(p=>{(rotinas||[]).filter(r=>!r.turno||r.turno===turno).forEach(r=>{let e=mapa.get(`${p.id}_${r.id}`);lista.push({paciente_id:p.id,rotina_id:r.id,paciente:p.nome_completo,rotina:r.nome,turno:r.turno||turno,status:e&&e.status==="executado"?"executado":"pendente",profissional_nome:e?.profissional_nome||""})})});ROTINAS_CACHE=lista;garantirContainerAcoesRotinas();renderizarRotinas(lista);renderizarBotoesRotinas();calcularIndicadores(lista)}
 /* ====================================================024 – RENDER==================================================== */
