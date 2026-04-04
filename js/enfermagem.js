@@ -337,11 +337,12 @@ renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 }
 /* ====================================================
-028B – EXECUTAR PENDENTES GLOBAL (CORRIGIDO)
+028B – EXECUTAR PENDENTES GLOBAL (CORRIGIDO FINAL)
 ==================================================== */
 async function executarRotinaTodosPaciente(){
 mostrarProgresso()
 bloquearTela()
+
 try{
 if(!db)return
 
@@ -349,9 +350,9 @@ const d=obterDataSelecionada()
 const t=(TURNO_ATUAL||"manha")
 const user=obterUsuarioLogado()
 
-/* 🔥 PEGA TODOS PENDENTES (SEM FILTRO DE PACIENTE) */
+/* 🔥 PEGA TODOS PENDENTES */
 let pendentes=ROTINAS_CACHE.filter(r=>
-r.turno==t && r.status!=="executado"
+r.turno==t && (r.status||"")!=="executado"
 )
 
 if(!pendentes.length){
@@ -362,13 +363,12 @@ return
 
 let total=pendentes.length
 let atual=0
-
 let inserts=[]
 
 for(let i=0;i<pendentes.length;i++){
 let r=pendentes[i]
 
-/* 🔒 NÃO SOBRESCREVE QUEM JÁ FOI EXECUTADO */
+/* 🔒 NÃO SOBRESCREVE */
 if((r.status||"")==="executado")continue
 
 inserts.push({
@@ -380,21 +380,25 @@ status:"executado",
 profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
 })
-}
 
 atual++
 atualizarProgresso(Math.round((atual/total)*100))
+
+/* 🔥 EVITA TRAVAR UI */
+if(i%10===0)await new Promise(res=>setTimeout(res,0))
 }
 
-/* 💾 UPSERT EM LOTE */
-const res=await db.from("rotinas_execucao")
-.insert(inserts)
+/* 💾 INSERT (NÃO SOBRESCREVE) */
+if(inserts.length){
+const res=await db.from("rotinas_execucao").insert(inserts)
+
 if(res.error){
 console.error("Erro executar pendentes global:",res.error)
 return
 }
+}
 
-/* 🔄 ATUALIZA CACHE (SEM SOBRESCREVER EXECUTADOS) */
+/* 🔄 ATUALIZA CACHE */
 for(let i=0;i<ROTINAS_CACHE.length;i++){
 let r=ROTINAS_CACHE[i]
 
