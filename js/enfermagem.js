@@ -294,7 +294,12 @@ usuario_id:user.id,
 profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
 }))
-if(!inserts.length)return
+if(!inserts.length){
+console.log("Nada novo para inserir — atualizando UI")
+renderizarRotinas(ROTINAS_CACHE)
+calcularIndicadores(ROTINAS_CACHE)
+return
+}
 /* 🔥 UPSERT (NÃO INSERT) */
 let res=null
 try{
@@ -310,16 +315,7 @@ for(let i=0;i<inserts.length;i++){
 adicionarNaFila(inserts[i])
 }
 }
-/* 🔄 CACHE */
-ROTINAS_CACHE.forEach(r=>{
-if(r.paciente_id==pid && r.turno==t){
-r.status="executado"
-r.profissional_nome=user.nome
-}
-})
-
-renderizarRotinas(ROTINAS_CACHE)
-calcularIndicadores(ROTINAS_CACHE)
+await carregarRotinas()
 }
 /* ====================================================
 028B – EXECUTAR PENDENTES GLOBAL (CORRIGIDO FINAL)
