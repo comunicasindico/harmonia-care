@@ -92,8 +92,27 @@ Object.keys(map).forEach(pid=>{
 const p=map[pid]
 let total=p.rotinas.length
 let executadas=p.rotinas.filter(r=>(r.status||"")==="executado").length
-let manha="",tarde="",noite=""
-p.rotinas.forEach(r=>{
+let colunas={}
+p.rotinas.forEach(r=>{colunas[r.rotina_id]=r})
+
+let linha=`<div style="display:flex;width:100%">`
+
+let baseOrdem=[]
+for(let i=0;i<ROTINAS_CACHE.length;i++){
+let b=ROTINAS_CACHE[i]
+if(b.turno===p.rotinas[0].turno&&!baseOrdem.includes(b.rotina_id)){
+baseOrdem.push(b.rotina_id)
+}
+}
+
+for(let i=0;i<baseOrdem.length;i++){
+let rid=baseOrdem[i]
+let r=colunas[rid]
+if(!r){
+linha+=`<div style="flex:1"></div>`
+continue
+}
+
 let turno=(r.turno||"").toLowerCase()
 let classe="rotina-pendente"
 if(r.status==="executado"){
@@ -101,21 +120,25 @@ if(turno==="manha")classe="rotina-ok-manha"
 else if(turno==="tarde")classe="rotina-ok-tarde"
 else if(turno==="noite")classe="rotina-ok-noite"
 }
+
 let nomeProf=r.profissional_nome||""
 let corProf="#64748b"
 if(r.status==="executado"&&nomeProf)corProf=obterCorUsuario(nomeProf)
+
 let prof=r.status==="executado"&&nomeProf?` <span style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`:""
-let el=`<div style="flex:1;display:flex;justify-content:center"><div class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">${r.rotina}${prof}</div></div>`
-if(turno==="manha")manha+=el
-else if(turno==="tarde")tarde+=el
-else if(turno==="noite")noite+=el
-})
+
+linha+=`<div style="flex:1;display:flex;justify-content:center">
+<div class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">
+${r.rotina}${prof}
+</div>
+</div>`
+}
+
+linha+=`</div>`
 let perc=total?Math.round((executadas/total)*100):0
 let ok=executadas===total
 html+=`<tr style="height:32px"><td style="font-size:12px;font-weight:600">${p.nome}</td><td style="font-size:11px"><b>${perc}% (${executadas}/${total})</b><br><button onclick="executarTodos('${pid}')" style="margin-top:3px;background:${ok?"#2ecc71":"#3498db"};color:#fff;border:none;border-radius:6px;padding:2px 6px;font-size:10px;cursor:pointer">${ok?"✔":"Concluir"}</button></td><td style="font-size:11px">
-<div style="display:flex;gap:8px;width:100%">
-${[manha,tarde,noite].join("")}
-</div>
+${linha}
 </td></tr>`
 })
 t.innerHTML=html
@@ -132,6 +155,8 @@ if(executado){desfazerRotina(p,r)}else{executarRotina(p,r,this)}
 async function executarRotina(pacienteId,rotinaId,botao){
 if(!db)return
 if(botao){botao.style.opacity="0.6";botao.style.pointerEvents="none"}
+botao.style.boxShadow="0 0 0 2px #2ecc71"
+setTimeout(()=>{botao.style.boxShadow="none"},400)
 const d=obterDataSelecionada()
 const t=(TURNO_ATUAL||"manha")
 const user=obterUsuarioLogado()
@@ -152,26 +177,24 @@ renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 if(botao){botao.style.opacity="1";botao.style.pointerEvents="auto"}
 }
-/* ====================================================025A – BOTÕES ALINHADOS POR COLUNA==================================================== */
+/* ====================================================025A – BOTÕES COLUNA FIXA==================================================== */
 function renderizarBotoesRotinas(){
 const div=document.getElementById("acoesRotinas");if(!div)return
 const turno=(TURNO_ATUAL||"manha").toLowerCase()
-const ordem=["Banho","Higiene (manhã)","Troca de Fraldas (manhã)","Oferta de Água","Café","Medicação","Almoço","Lanche","Higiene (tarde)","Jantar","Higiene (noite)","Troca de Fraldas (noite)"]
-const mapa={}
+let rotinasOrdenadas=[]
 for(let i=0;i<ROTINAS_CACHE.length;i++){
 let r=ROTINAS_CACHE[i]
 if((r.turno||"").toLowerCase()!==turno)continue
-mapa[r.rotina]=r.rotina_id
+if(!rotinasOrdenadas.find(x=>x.rotina_id==r.rotina_id)){
+rotinasOrdenadas.push({id:r.rotina_id,nome:r.rotina})
 }
-let html=`<div style="display:flex;gap:8px;justify-content:center;width:100%">`
-for(let i=0;i<ordem.length;i++){
-let nome=ordem[i]
-let id=mapa[nome]
-if(id){
-html+=`<div style="flex:1;display:flex;justify-content:center">
-<button onclick="executarRotinaTodos('${id}')" style="padding:8px 12px;border:none;border-radius:8px;background:#34495e;color:#fff;font-size:13px;min-width:120px">✔ ${nome}</button>
+}
+let html=`<div style="display:flex;width:100%">`
+for(let i=0;i<rotinasOrdenadas.length;i++){
+let r=rotinasOrdenadas[i]
+html+=`<div style="flex:1;text-align:center">
+<button onclick="executarRotinaTodos('${r.id}')" style="padding:8px 10px;border:none;border-radius:8px;background:#34495e;color:#fff;font-size:13px;width:90%">✔ ${r.nome}</button>
 </div>`
-}
 }
 html+=`</div>`
 div.innerHTML=html
