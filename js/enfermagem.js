@@ -725,4 +725,4 @@ return texto
 window.executarRotina=executarRotina
 window.executarTodos=executarTodos
 window.executarRotinaTodosPaciente=executarRotinaTodosPaciente
-}
+
