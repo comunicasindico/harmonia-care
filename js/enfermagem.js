@@ -179,13 +179,18 @@ empresa_id:EMPRESA_ID
 }
 
 /* 🔥 FORÇA UPSERT CORRETO */
-const res=await db.from("rotinas_execucao").upsert(payload,{
+let res=null
+try{
+res=await db.from("rotinas_execucao").upsert(payload,{
 onConflict:"paciente_id,rotina_id,data,turno,empresa_id"
 })
+}catch(e){
+res={error:e}
+}
 
 if(res.error){
-console.error("Erro salvar:",res.error)
-return
+console.warn("Offline ou erro → salvando na fila")
+adicionarNaFila(payload)
 }
 
 /* 🔄 ATUALIZA CACHE */
@@ -279,17 +284,21 @@ usuario_id:user.id,
 profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
 }))
-
 /* 🔥 UPSERT (NÃO INSERT) */
-const res=await db.from("rotinas_execucao").upsert(inserts,{
+let res=null
+try{
+res=await db.from("rotinas_execucao").upsert(inserts,{
 onConflict:"paciente_id,rotina_id,data,turno,empresa_id"
 })
-
-if(res.error){
-console.error("Erro executarTodos:",res.error)
-return
+}catch(e){
+res={error:e}
 }
-
+if(res.error){
+console.warn("Erro → enviando para fila")
+for(let i=0;i<inserts.length;i++){
+adicionarNaFila(inserts[i])
+}
+}
 /* 🔄 CACHE */
 ROTINAS_CACHE.forEach(r=>{
 if(r.paciente_id==pid && r.turno==t){
@@ -355,26 +364,31 @@ if(i%10===0)await new Promise(res=>setTimeout(res,0))
 
 /* 💾 INSERT (NÃO SOBRESCREVE) */
 if(inserts.length){
-const res=await db.from("rotinas_execucao").upsert(inserts,{
+let res=null
+try{
+res=await db.from("rotinas_execucao").upsert(inserts,{
 onConflict:"paciente_id,rotina_id,data,turno,empresa_id"
 })
+}catch(e){
+res={error:e}
+}
 
 if(res.error){
-console.error("Erro executar pendentes global:",res.error)
-return
+console.warn("Erro pendentes → fila ativada")
+for(let i=0;i<inserts.length;i++){
+adicionarNaFila(inserts[i])
 }
 }
-
+  
+}
 /* 🔄 ATUALIZA CACHE */
 for(let i=0;i<ROTINAS_CACHE.length;i++){
 let r=ROTINAS_CACHE[i]
-
 if(r.turno==t && (r.status||"")!=="executado"){
 r.status="executado"
 r.profissional_nome=user.nome
 }
 }
-
 renderizarRotinas(ROTINAS_CACHE)
 calcularIndicadores(ROTINAS_CACHE)
 
