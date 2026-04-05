@@ -236,9 +236,9 @@ let pid=(m.paciente_id||"").toString().trim()
 if(!pid)return
 
 if(!pacientes[pid]){
-let nome=(m.nome_paciente||"").trim()
+let nome=((m.nome_paciente||"")
 || (window.PACIENTES_CACHE||[]).find(p=>String(p.id)===String(pid))?.nome_completo
-|| "Paciente"
+|| "Paciente").trim().replace(/\s+/g," ")
 
 pacientes[pid]={id:pid,nome:nome,itens:[]}
 }
