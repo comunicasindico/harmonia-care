@@ -75,55 +75,77 @@ select.onchange=carregarMedicacoes
 /* ====================================================
 201 – CARREGAR MEDICAÇÕES
 ==================================================== */
+/* ====================================================
+100 – CARREGAR MEDICAÇÕES (BLINDADO DEFINITIVO)
+==================================================== */
 async function carregarMedicacoes(){
 if(!podeUsarMedicacao()){
 document.getElementById("listaMedicacoes").innerHTML="<div style='padding:20px;font-weight:bold;color:#ef4444'>⛔ Acesso restrito à medicação</div>"
 return
 }
 if(!db||!EMPRESA_ID)return
+
 let usuarioId=localStorage.getItem("usuario_id")
 let hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+
 if(!usuarioId){
 setTimeout(()=>carregarMedicacoes(),300)
 return
 }
+
 const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value||"todos"
-let pacientesPermitidos=null
-if(hierarquia!==1){
-const {data:rel}=await db.from("pacientes_profissionais").select("paciente_id").eq("usuario_id",usuarioId).eq("ativo",true)
+
+/* 🔒 PERMISSÃO REAL */
+let pacientesPermitidos=[]
+
+if(hierarquia===1){
+const {data}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
+pacientesPermitidos=data?.map(p=>p.id)||[]
+}else{
+const {data:rel}=await db.from("pacientes_profissionais")
+.select("paciente_id")
+.eq("usuario_id",usuarioId)
+.eq("ativo",true)
+
 pacientesPermitidos=rel?.map(r=>r.paciente_id)||[]
+
 if(!pacientesPermitidos.length){
 renderizarMedicacoes([])
 return
 }
 }
-let query=db.from("medicacoes").select(`
-*,
-medicacoes_modelo(nome_medicamento)
-`).eq("ativo",true)
-if(pacientesPermitidos)query=query.in("paciente_id",pacientesPermitidos)
+
+/* 🔒 QUERY SEM BRECHA */
+let query=db.from("medicacoes")
+.select(`*,medicacoes_modelo(nome_medicamento,tarja_preta)`)
+.eq("ativo",true)
+.in("paciente_id",pacientesPermitidos)
+
+/* 🔒 PACIENTE ESPECÍFICO */
 if(pacienteId!=="todos"){
-if(pacientesPermitidos && !pacientesPermitidos.map(String).includes(String(pacienteId))){
+if(!pacientesPermitidos.map(String).includes(String(pacienteId))){
 renderizarMedicacoes([])
 return
 }
 query=query.eq("paciente_id",pacienteId)
 }
-if(hierarquia!==1 && pacienteId!=="todos"){
-if(!pacientesPermitidos.map(String).includes(String(pacienteId))){
-console.warn("Acesso bloqueado ao paciente")
-renderizarMedicacoes([])
-return
-}
-}
+
 const {data,error}=await query
+
 if(error){
+console.error(error)
 renderizarMedicacoes([])
 return
 }
-renderizarMedicacoes(data||[])
+
+window.MEDICACOES_CACHE=data||[]
+
+await carregarStatusMedicacoes()
+
+renderizarMedicacoes(window.MEDICACOES_CACHE)
 carregarListaHorarios()
 montarHorariosMedicacao()
+
 if(typeof carregarListaMedicacoesEditar==="function"){
 carregarListaMedicacoesEditar()
 }
@@ -181,11 +203,14 @@ console.warn("⚠ filtro não aplicado (PACIENTES_CACHE vazio)")
 }
 
 window.MEDICACOES_CACHE=lista
-let mapaExec={};
+/* ====================================================
+202B – MAPA EXECUÇÃO CORRETO (DATA + ID + HORA)
+==================================================== */
+let mapaExec={}
 (window.EXEC_CACHE||[]).forEach(e=>{
-let chave=e.medicacao_id+"_"+e.horario
+let chave=e.data+"_"+e.medicacao_id+"_"+e.horario
 mapaExec[chave]=e
-});
+})
 
 const normalizarHora=h=>{
 if(!h)return""
@@ -311,7 +336,7 @@ let hHTML=horarios.map(h=>{
 
 let exec=null
 for(const id of m.ids){
-let chave=(document.getElementById("dataInicioMedicacao")?.value||obterDataHoje())+"_"+id+"_"+h
+let chave=(obterDataAtiva())+"_"+id+"_"+h
 if(mapaExec[chave]){
 exec=mapaExec[chave]
 break
@@ -385,7 +410,9 @@ html+=`</div></div>`
 
 div.innerHTML=html
 }
-/* =======================209 – ADMINISTRAR MEDICAÇÃO (CORRIGIDO + SEGURO)==================================================== */
+/* ====================================================
+209 110 – ADMINISTRAR MEDICAÇÃO (DATA FIX REAL)
+==================================================== */
 async function administrarMedicacao(medicacaoId,horario,botao){
 
 if(!podeUsarMedicacao()){
@@ -396,18 +423,16 @@ return
 if(!db||!medicacaoId||!horario)return
 
 const user=obterUsuarioLogado()||{}
-const dataHoje = obterDataAtiva()
+const dataHoje=obterDataAtiva() /* 🔥 CORREÇÃO */
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
 
-/* 🔒 EVITA DUPLO CLIQUE */
 if(botao && botao.dataset.loading==="1")return
 if(botao)botao.dataset.loading="1"
 
 try{
 
-/* 🔍 VERIFICA EXISTENTE */
-const {data:ja,error:erroBusca}=await db
+const {data:ja}=await db
 .from("medicacoes_execucao")
 .select("id")
 .eq("medicacao_id",medicacaoId)
@@ -416,33 +441,14 @@ const {data:ja,error:erroBusca}=await db
 .eq("horario",horario)
 .maybeSingle()
 
-if(erroBusca){
-console.error(erroBusca)
-return
-}
-
-/* 🔄 TOGGLE */
 if(ja){
-
-const {error}=await db
-.from("medicacoes_execucao")
-.delete()
-.eq("id",ja.id)
-
-if(error){
-console.error(error)
-alert("Erro ao remover")
-return
-}
-
+await db.from("medicacoes_execucao").delete().eq("id",ja.id)
 await carregarStatusMedicacoes()
+renderizarMedicacoes(window.MEDICACOES_CACHE)
 return
 }
 
-/* ➕ INSERT */
-const {error}=await db
-.from("medicacoes_execucao")
-.insert({
+await db.from("medicacoes_execucao").insert({
 medicacao_id:medicacaoId,
 data:dataHoje,
 horario:horario,
@@ -452,19 +458,13 @@ usuario_nome:nome,
 empresa_id:EMPRESA_ID
 })
 
-if(error){
-console.error(error)
-alert("Erro ao salvar")
-return
-}
-
-/* 🎯 FEEDBACK */
 if(botao){
 botao.classList.add("pulse-ok")
 setTimeout(()=>botao.classList.remove("pulse-ok"),400)
 }
 
 await carregarStatusMedicacoes()
+renderizarMedicacoes(window.MEDICACOES_CACHE)
 
 }finally{
 if(botao)botao.dataset.loading="0"
@@ -473,16 +473,27 @@ if(botao)botao.dataset.loading="0"
 /* ========================210 – CARREGAR STATUS==================================================== */
 async function carregarStatusMedicacoes(){
 
-const dataHoje = obterDataAtiva()
+if(!db)return
 
-const {data,error}=await db
-.from("medicacoes_execucao")
+const dataInicio=document.getElementById("dataInicioMedicacao")?.value
+const dataFim=document.getElementById("dataFimMedicacao")?.value
+
+let query=db.from("medicacoes_execucao")
 .select("*")
 .eq("empresa_id",EMPRESA_ID)
-.eq("data",dataHoje)
+
+if(dataInicio&&dataFim){
+query=query.gte("data",dataInicio).lte("data",dataFim)
+}else{
+const hoje=obterDataAtiva()
+query=query.eq("data",hoje)
+}
+
+const {data,error}=await query
 
 if(error){
 console.error(error)
+window.EXEC_CACHE=[]
 return
 }
 
