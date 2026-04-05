@@ -561,20 +561,24 @@ if(!db||!EMPRESA_ID)return
 function formatarTexto(txt){
 if(!txt)return""
 txt=txt.toString().toLowerCase()
-/* separa número e texto */
-txt=txt.replace(/(\d)([a-z])/g,"$1 $2")
-txt=txt.replace(/([a-z])(\d)/g,"$1 $2")
-/* corrige palavras */
-txt=txt.replace(/doses?/g," dose")
-txt=txt.replace(/comprimidos?/g," cp")
-/* unidades */
-txt=txt.replace(/mg/g," mg")
-txt=txt.replace(/ml/g," ml")
-txt=txt.replace(/cp/g," cp")
-/* limpa */
+/* 🔥 separa número de letra (somente isso) */
+txt=txt.replace(/(\d)([a-zA-Z])/g,"$1 $2")
+txt=txt.replace(/([a-zA-Z])(\d)/g,"$1 $2")
+/* 🔥 corrige palavras específicas */
+txt=txt.replace(/\bdoses?\b/g,"dose")
+txt=txt.replace(/\bcomprimidos?\b/g,"cp")
+/* 🔥 unidades (sem quebrar palavras) */
+txt=txt.replace(/\bmg\b/g,"mg")
+txt=txt.replace(/\bml\b/g,"ml")
+txt=txt.replace(/\bcp\b/g,"cp")
+/* 🔥 limpa espaços duplicados */
 txt=txt.replace(/\s+/g," ").trim()
+/* 🔥 MAIÚSCULO FINAL */
 return txt.toUpperCase()
 }
+/* ====================================================
+214B – CAPTURA
+==================================================== */
 /* 🔥 CAPTURA */
 let nomeRaw=document.getElementById("nomeMedicacao")?.value||""
 let doseRaw=document.getElementById("doseMedicacao")?.value||""
