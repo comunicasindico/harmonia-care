@@ -629,9 +629,15 @@ return
 /* 🔥 NOME PADRÃO */
 const nomeLimpo=nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim() .replace(/mg|cp|cps|ml|ui/g,"").trim()
 /* 🔍 EVITA DUPLICADO */
-const {data:existe}=await db.from("medicacoes").select("id").eq("empresa_id",EMPRESA_ID).eq("nome_padrao",nomeLimpo).eq("dosagem",dose||"").eq("paciente_id",pacienteId).maybeSingle()
+const {data:existe}=await db.from("medicacoes").select("id,horarios,nome_medicamento,dosagem").eq("empresa_id",EMPRESA_ID).eq("nome_padrao",nomeLimpo).eq("dosagem",dose||"").eq("paciente_id",pacienteId).maybeSingle()
 if(existe && existe.length){
 let medExistente=existe[0]
+
+if(!medExistente || !medExistente.id){
+console.error("ID inválido:",medExistente)
+alert("Erro interno: ID da medicação inválido")
+return
+}
 let antigos=(medExistente.horarios||"").split("|")
 let novos=(horarioFinal||"").split("|")
 let todos=[...new Set([...antigos,...novos])]
