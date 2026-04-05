@@ -242,7 +242,7 @@ return (txt||"")
 .toLowerCase()
 .normalize("NFD")
 .replace(/[\u0300-\u036f]/g,"")
-.replace(/\s+/g,"")
+.replace(/\s+/g," ").trim
 .replace(/mg|cp|cps|ml|ui/g,"")
 .trim()
 }
@@ -582,7 +582,7 @@ alert("Informe ao menos um horário")
 return
 }
 /* 🔥 NOME PADRÃO */
-const nomeLimpo=nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"").replace(/mg|cp|cps|ml|ui/g,"").trim()
+const nomeLimpo=nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim() .replace(/mg|cp|cps|ml|ui/g,"").trim()
 /* 🔍 EVITA DUPLICADO */
 const {data:existe}=await db.from("medicacoes").select("id").eq("empresa_id",EMPRESA_ID).eq("nome_padrao",nomeLimpo).eq("dosagem",dose||"").eq("paciente_id",pacienteId).maybeSingle()
 if(existe){
