@@ -179,7 +179,7 @@ window.MEDICACOES_CACHE=lista
 let mapaExec={};
 const execLista=(window.EXEC_CACHE||[]);
 execLista.forEach(e=>{
-let chave=e.medicacao_id+"_"+e.horario;
+let chave=e.data+"_"+e.medicacao_id+"_"+e.horario;
 mapaExec[chave]=e;
 });
 const normalizarHora=h=>{
@@ -306,7 +306,7 @@ let hHTML=horarios.map(h=>{
 
 let exec=null
 for(const id of m.ids){
-let chave=id+"_"+h
+let chave=(document.getElementById("dataInicioMedicacao")?.value||obterDataHoje())+"_"+id+"_"+h
 if(mapaExec[chave]){
 exec=mapaExec[chave]
 break
