@@ -116,7 +116,6 @@ renderizarMedicacoes([])
 return
 }
 renderizarMedicacoes(data||[])
-aplicarDataInteligente()
 carregarListaHorarios()
 montarHorariosMedicacao()
 if(typeof carregarListaMedicacoesEditar==="function"){
@@ -392,7 +391,7 @@ return
 if(!db||!medicacaoId||!horario)return
 
 const user=obterUsuarioLogado()||{}
-const dataHoje=obterDataHoje()
+const dataHoje = document.getElementById("dataInicioMedicacao")?.value || obterDataHoje()
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
 
@@ -750,8 +749,8 @@ const user=obterUsuarioLogado()||{}
 const d1=document.getElementById("dataInicioMedicacao")
 const d2=document.getElementById("dataFimMedicacao")
 
-let dataInicio=d1?.value
-let dataFim=d2?.value
+let dataInicio=d1?.value || obterDataHoje()
+let dataFim=d2?.value || dataInicio
 
 /* 🔥 GARANTE DATA SEM TRAVAR */
 if(!dataInicio||!dataFim){
