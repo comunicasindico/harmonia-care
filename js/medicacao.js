@@ -382,21 +382,16 @@ if(!db||!medicacaoId||!horario)return
 
 const user=obterUsuarioLogado()||{}
 
+/* 🔥 DATA PADRÃO GLOBAL */
 const dataHoje=obterDataHoje()
-const d=new Date()
-const ano=d.getFullYear()
-const mes=String(d.getMonth()+1).padStart(2,"0")
-const dia=String(d.getDate()).padStart(2,"0")
-return `${ano}-${mes}-${dia}`
-}
-
-const dataHoje=obterDataLocal()
 
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
 
-/* 🔍 VERIFICA EXISTENTE */
-const {data:ja}=await db
+/* ====================================================
+209A – VERIFICA EXISTENTE
+==================================================== */
+const {data:ja,error:erroBusca}=await db
 .from("medicacoes_execucao")
 .select("*")
 .eq("medicacao_id",medicacaoId)
@@ -405,8 +400,16 @@ const {data:ja}=await db
 .eq("horario",horario)
 .maybeSingle()
 
-/* 🔴 REMOVE */
+if(erroBusca){
+console.error(erroBusca)
+return
+}
+
+/* ====================================================
+209B – REMOVE (TOGGLE)
+==================================================== */
 if(ja){
+
 const {error}=await db
 .from("medicacoes_execucao")
 .delete()
@@ -422,7 +425,9 @@ await carregarStatusMedicacoes()
 return
 }
 
-/* 🟢 INSERE */
+/* ====================================================
+209C – INSERE
+==================================================== */
 const {error}=await db
 .from("medicacoes_execucao")
 .insert({
@@ -441,11 +446,17 @@ alert("Erro ao salvar")
 return
 }
 
+/* ====================================================
+209D – FEEDBACK VISUAL
+==================================================== */
 if(botao){
 botao.classList.add("pulse-ok")
 setTimeout(()=>botao.classList.remove("pulse-ok"),400)
 }
 
+/* ====================================================
+209E – ATUALIZA STATUS
+==================================================== */
 await carregarStatusMedicacoes()
 }
 /* ====================================================
