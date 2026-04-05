@@ -1,4 +1,23 @@
 /* ====================================================
+001 – FORMATAR TEXTO MEDICAÇÃO (INTELIGENTE)
+==================================================== */
+function formatarTextoMedicacao(txt){
+if(!txt)return""
+txt=txt.toString().toLowerCase()
+/* 🔥 separa número + letra */
+txt=txt.replace(/(\d)([a-zA-Z])/g,"$1 $2")
+/* 🔥 separa letra + número */
+txt=txt.replace(/([a-zA-Z])(\d)/g,"$1 $2")
+/* 🔥 padroniza unidades */
+txt=txt.replace(/mg/g," mg")
+txt=txt.replace(/ml/g," ml")
+txt=txt.replace(/cp/g," cp")
+/* 🔥 remove espaços duplicados */
+txt=txt.replace(/\s+/g," ").trim()
+/* 🔥 deixa padrão visual */
+return txt.toUpperCase()
+}
+/* ====================================================
 000 – DATA GLOBAL PADRÃO (BRASIL)
 ==================================================== */
 function obterDataHoje(){
@@ -528,7 +547,7 @@ inputHorario.value=modelo.horarios_padrao
 }
 }
 /* ====================================================
-214   207 – SALVAR NOVA MEDICAÇÃO (FINAL CORRIGIDO + HORÁRIO PADRÃO)
+214 – SALVAR NOVA MEDICAÇÃO (FINAL CORRIGIDO + HORÁRIO PADRÃO)
 ==================================================== */
 async function salvarNovaMedicacao(){
 if(!podeUsarMedicacao()){
@@ -536,11 +555,36 @@ alert("Acesso restrito")
 return
 }
 if(!db||!EMPRESA_ID)return
-let nomeRaw=(document.getElementById("nomeMedicacao").value||"").trim().toUpperCase()
-let doseRaw=(document.getElementById("doseMedicacao").value||"").trim().toUpperCase()
-/* 🔥 SEPARAÇÃO INTELIGENTE */
-let nome=nomeRaw
-let dose=doseRaw
+/* ====================================================
+214A – PADRONIZAÇÃO INTELIGENTE (NÍVEL HOSPITAL)
+==================================================== */
+function formatarTexto(txt){
+if(!txt)return""
+/* 🔥 base */
+txt=txt.toString().toLowerCase()
+/* 🔥 separa número + letra */
+txt=txt.replace(/(\d)([a-zA-Z])/g,"$1 $2")
+txt=txt.replace(/([a-zA-Z])(\d)/g,"$1 $2")
+/* 🔥 padroniza unidades */
+txt=txt.replace(/mg/g," mg")
+txt=txt.replace(/ml/g," ml")
+txt=txt.replace(/cp/g," cp")
+txt=txt.replace(/cps/g," cp")
+txt=txt.replace(/comprimidos?/g," cp")
+txt=txt.replace(/dose?s?/g," dose")
+/* 🔥 remove lixo comum */
+txt=txt.replace(/  +/g," ")
+txt=txt.trim()
+/* 🔥 MAIÚSCULO PADRÃO */
+return txt.toUpperCase()
+}
+/* 🔥 CAPTURA */
+let nomeRaw=document.getElementById("nomeMedicacao")?.value||""
+let doseRaw=document.getElementById("doseMedicacao")?.value||""
+/* 🔥 FORMATA */
+let nome=formatarTexto(nomeRaw)
+let dose=formatarTexto(doseRaw)
+  
 if(!doseRaw){
 let match=nomeRaw.match(/^(\d+)?\s*([A-ZÀ-Ú]+)(.*)$/)
 if(match){
