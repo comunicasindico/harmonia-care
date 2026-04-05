@@ -8,8 +8,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Harmonia Care</title>
 
 <link rel="icon" href="logo-harmonia.png">
@@ -37,8 +36,8 @@ padding:0;
 width:100%;
 height:100%;
 font-family:Arial,Helvetica,sans-serif;
-background:url("img/harmoniafrente.png") center center/cover no-repeat fixed;
-overflow-x:hidden;
+background:url("img/harmoniafrente.png") center center/cover no-repeat;
+overflow-x:auto;
 }
 /* ====================================================
 002 – LOGIN
@@ -410,8 +409,7 @@ backdrop-filter:blur(4px);
 007 – MENU PRINCIPAL + INDICADORES
 ==================================================== -->
 <div class="menu">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap">
 <div id="topoBotoes" style="display:flex;gap:10px;flex-wrap:wrap">
 <button id="btnEnfermagem" onclick="abrirPainel('painelEnfermagem')" class="btn-primary">Painel Enfermagem</button>
 <button id="btnClinico" onclick="abrirPainel('painelClinico')" class="btn-secondary">Painel Clínico</button>
@@ -433,7 +431,7 @@ backdrop-filter:blur(4px);
 
 </div>
 
-<div style="display:flex;gap:10px;font-weight:bold">
+<div style="display:flex;gap:10px;flex-wrap:wrap;font-weight:bold">
 <div id="indicadorExecutado" class="btn-topo" style="background:#2ecc71;color:#fff;padding:6px 10px;border-radius:8px">✔ 0</div>
 <div id="indicadorPendente" class="btn-topo" style="background:#f39c12;color:#fff;padding:6px 10px;border-radius:8px">🔴 0</div>
 <div id="indicadorAtrasado" class="btn-topo" style="background:#e74c3c;color:#fff;padding:6px 10px;border-radius:8px">⚠ 0</div>
