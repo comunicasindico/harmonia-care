@@ -1309,3 +1309,140 @@ const nomeBase=select.selectedOptions[0].textContent.replace(/✔|⚠/g,"").trim
 select.selectedOptions[0].textContent=nomeBase+(obrigatorio?" ✔":" ⚠")
 }
 })
+/* ====================================================
+300 – GERAR LISTA DE DATAS (PERÍODO)
+==================================================== */
+function gerarDatasPeriodo(inicio,fim){
+let datas=[]
+let atual=new Date(inicio+"T00:00:00")
+let final=new Date(fim+"T00:00:00")
+while(atual<=final){
+let ano=atual.getFullYear()
+let mes=String(atual.getMonth()+1).padStart(2,"0")
+let dia=String(atual.getDate()).padStart(2,"0")
+datas.push(`${ano}-${mes}-${dia}`)
+atual.setDate(atual.getDate()+1)
+}
+return datas
+}
+/* ====================================================
+301 – CARREGAR EXECUÇÕES PERÍODO
+==================================================== */
+async function carregarExecucoesPeriodo(dataInicio,dataFim){
+const {data,error}=await db
+.from("medicacoes_execucao")
+.select("*")
+.gte("data",dataInicio)
+.lte("data",dataFim)
+.eq("empresa_id",EMPRESA_ID)
+
+if(error){
+console.error(error)
+return []
+}
+
+return data||[]
+}
+/* ====================================================
+302 – MAPA EXECUÇÕES (DIA + HORÁRIO)
+==================================================== */
+function montarMapaExecucoes(lista){
+let mapa={}
+lista.forEach(e=>{
+let chave=e.data+"_"+e.medicacao_id+"_"+e.horario
+mapa[chave]=e
+})
+return mapa
+}
+/* ====================================================
+303 – RENDER CALENDÁRIO CLÍNICO
+==================================================== */
+async function renderCalendarioClinico(pacienteId,dataInicio,dataFim){
+
+const datas=gerarDatasPeriodo(dataInicio,dataFim)
+const execucoes=await carregarExecucoesPeriodo(dataInicio,dataFim)
+const mapa=montarMapaExecucoes(execucoes)
+
+/* 🔍 MEDICAÇÕES DO PACIENTE */
+const meds=(window.MEDICACOES_CACHE||[]).filter(m=>String(m.paciente_id)===String(pacienteId))
+
+let html=""
+
+/* 🔹 CABEÇALHO */
+html+=`<table style="width:100%;border-collapse:collapse;font-size:11px">`
+html+=`<thead><tr><th style="text-align:left">Medicação</th>`
+
+datas.forEach(d=>{
+let dia=d.split("-")[2]
+html+=`<th style="padding:4px">${dia}</th>`
+})
+
+html+=`</tr></thead><tbody>`
+
+/* 🔹 LINHAS */
+meds.forEach(m=>{
+
+let horarios=(m.horarios||"").split("|").filter(Boolean)
+
+horarios.forEach(h=>{
+
+html+=`<tr>`
+
+html+=`<td style="padding:4px;font-weight:600">${m.nome_medicamento}<br><span style="font-size:10px">${h}</span></td>`
+
+datas.forEach(d=>{
+
+let chave=d+"_"+m.id+"_"+h
+let exec=mapa[chave]
+
+let cor="#eee"
+let texto=""
+
+if(exec){
+if(exec.status==="executado"){
+cor="#22c55e"
+texto="✔"
+}else{
+cor="#ef4444"
+texto="✖"
+}
+}
+
+html+=`<td style="background:${cor};text-align:center;border-radius:4px">${texto}</td>`
+
+})
+
+html+=`</tr>`
+
+})
+
+})
+
+html+=`</tbody></table>`
+
+return html
+}
+/* ====================================================
+304 – MOSTRAR CALENDÁRIO
+==================================================== */
+async function abrirCalendarioPaciente(pacienteId){
+
+const inicio=document.getElementById("dataInicioMedicacao")?.value
+const fim=document.getElementById("dataFimMedicacao")?.value
+
+if(!inicio||!fim){
+alert("Selecione período")
+return
+}
+
+const html=await renderCalendarioClinico(pacienteId,inicio,fim)
+
+const div=document.createElement("div")
+div.style.background="#fff"
+div.style.padding="10px"
+div.style.marginTop="10px"
+div.style.borderRadius="10px"
+div.innerHTML=html
+
+document.querySelector(`[data-paciente-id="${pacienteId}"]`).appendChild(div)
+}
