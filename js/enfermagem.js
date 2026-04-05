@@ -91,7 +91,12 @@ const t=document.getElementById("rotinas");if(!t)return
 let html=""
 const map={}
 lista.forEach(r=>{if(!map[r.paciente_id])map[r.paciente_id]={nome:r.paciente,rotinas:[]};map[r.paciente_id].rotinas.push(r)})
-Object.keys(map).forEach(pid=>{
+let pacientesOrdenados = Object.keys(map).sort((a,b)=>{
+let na=(map[a].nome||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase()
+let nb=(map[b].nome||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase()
+return na.localeCompare(nb,"pt-BR")
+})
+pacientesOrdenados.forEach(pid=>{
 const p=map[pid]
 let total=p.rotinas.length
 let executadas=p.rotinas.filter(r=>(r.status||"")==="executado").length
