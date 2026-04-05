@@ -252,7 +252,6 @@ let na=(a.nome||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLow
 let nb=(b.nome||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase()
 return na.localeCompare(nb,"pt-BR")
 })
-
 let modo=window.MODO_MEDICACAO||""
 let mostrarAcoes=(hierarquia===1&&(modo==="editar"||modo==="excluir"))
 
