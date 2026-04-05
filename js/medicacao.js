@@ -249,7 +249,7 @@ const chave=nomeBase+"_"+doseBase
 
 if(!mapa[chave]){
 mapa[chave]={
-id:m.id,
+ids:new Set([m.id]),
 nome:nomeOriginal,
 dose:m.dosagem,
 paciente_id:p.id,
@@ -257,6 +257,8 @@ horarios:new Set(),
 obrigatorio:m.obrigatorio,
 tarja:m.medicacoes_modelo?.tarja_preta || false
 }
+}else{
+mapa[chave].ids.add(m.id)
 }
 
 let hs=(m.horarios||"").toString().split("|")
@@ -285,7 +287,7 @@ return(Number(p1)*60+Number(m1))-(Number(p2)*60+Number(m2))
 let hHTML=horarios.map(h=>{
 
 let exec=(window.EXEC_CACHE||[]).find(e=>
-String(e.medicacao_id)===String(m.id)&&
+[...m.ids].some(id=>String(e.medicacao_id)===String(id)) &&
 String(e.horario)===String(h)
 )
 
@@ -357,19 +359,33 @@ html+=`</div></div>`
 div.innerHTML=html
 }
 /* ====================================================
-209 – ADMINISTRAR MEDICAÇÃO (TOGGLE CORRETO POR HORÁRIO)
+209 – ADMINISTRAR MEDICAÇÃO (CORRIGIDO DATA LOCAL)
 ==================================================== */
 async function administrarMedicacao(medicacaoId,horario,botao){
+
 if(!podeUsarMedicacao()){
 alert("Acesso restrito")
 return
 }
+
 if(!db||!medicacaoId||!horario)return
+
 const user=obterUsuarioLogado()||{}
-const dataHoje=new Date().toISOString().slice(0,10)
+
+function obterDataLocal(){
+const d=new Date()
+const ano=d.getFullYear()
+const mes=String(d.getMonth()+1).padStart(2,"0")
+const dia=String(d.getDate()).padStart(2,"0")
+return `${ano}-${mes}-${dia}`
+}
+
+const dataHoje=obterDataLocal()
+
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
-/* 🔍 VERIFICA EXISTENTE EXATO */
+
+/* 🔍 VERIFICA EXISTENTE */
 const {data:ja}=await db
 .from("medicacoes_execucao")
 .select("*")
@@ -378,21 +394,25 @@ const {data:ja}=await db
 .eq("empresa_id",EMPRESA_ID)
 .eq("horario",horario)
 .maybeSingle()
-/* 🔴 SE EXISTE → REMOVE */
+
+/* 🔴 REMOVE */
 if(ja){
 const {error}=await db
 .from("medicacoes_execucao")
 .delete()
 .eq("id",ja.id)
+
 if(error){
 console.error(error)
 alert("Erro ao remover")
 return
 }
+
 await carregarStatusMedicacoes()
 return
 }
-/* 🟢 SE NÃO EXISTE → INSERE */
+
+/* 🟢 INSERE */
 const {error}=await db
 .from("medicacoes_execucao")
 .insert({
@@ -404,15 +424,18 @@ usuario_id:usuarioId,
 usuario_nome:nome,
 empresa_id:EMPRESA_ID
 })
+
 if(error){
 console.error(error)
 alert("Erro ao salvar")
 return
 }
+
 if(botao){
 botao.classList.add("pulse-ok")
 setTimeout(()=>botao.classList.remove("pulse-ok"),400)
 }
+
 await carregarStatusMedicacoes()
 }
 /* ====================================================
@@ -420,7 +443,13 @@ await carregarStatusMedicacoes()
 ==================================================== */
 async function carregarStatusMedicacoes(){
 if(!db)return
-const dataHoje=new Date().toISOString().slice(0,10)
+function obterDataLocal(){
+const d=new Date()
+const ano=d.getFullYear()
+const mes=String(d.getMonth()+1).padStart(2,"0")
+const dia=String(d.getDate()).padStart(2,"0")
+return `${ano}-${mes}-${dia}`
+}
 const {data}=await db.from("medicacoes_execucao").select("*").eq("data",dataHoje)
 window.EXEC_CACHE=data||[]
 if(typeof carregarMedicacoes==="function")carregarMedicacoes()
