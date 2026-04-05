@@ -560,22 +560,19 @@ if(!db||!EMPRESA_ID)return
 ==================================================== */
 function formatarTexto(txt){
 if(!txt)return""
-/* 🔥 base */
 txt=txt.toString().toLowerCase()
-/* 🔥 separa número + letra */
-txt=txt.replace(/(\d)([a-zA-Z])/g,"$1 $2")
-txt=txt.replace(/([a-zA-Z])(\d)/g,"$1 $2")
-/* 🔥 padroniza unidades */
+/* separa número e texto */
+txt=txt.replace(/(\d)([a-z])/g,"$1 $2")
+txt=txt.replace(/([a-z])(\d)/g,"$1 $2")
+/* corrige palavras */
+txt=txt.replace(/doses?/g," dose")
+txt=txt.replace(/comprimidos?/g," cp")
+/* unidades */
 txt=txt.replace(/mg/g," mg")
 txt=txt.replace(/ml/g," ml")
 txt=txt.replace(/cp/g," cp")
-txt=txt.replace(/cps/g," cp")
-txt=txt.replace(/comprimidos?/g," cp")
-txt=txt.replace(/dose?s?/g," dose")
-/* 🔥 remove lixo comum */
-txt=txt.replace(/  +/g," ")
-txt=txt.trim()
-/* 🔥 MAIÚSCULO PADRÃO */
+/* limpa */
+txt=txt.replace(/\s+/g," ").trim()
 return txt.toUpperCase()
 }
 /* 🔥 CAPTURA */
