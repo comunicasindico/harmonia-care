@@ -1,3 +1,8 @@
+/* ====================================================501 – CONTROLE PERMISSÃO MEDICAÇÃO==================================================== */
+function podeEditarMedicacao(){
+const h=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+return h===1||h===2
+}
 /* ====================================================
 000A – DATA ATIVA GLOBAL
 ==================================================== */
@@ -76,10 +81,7 @@ select.onchange=carregarMedicacoes
 201 – CARREGAR MEDICAÇÕES
 ==================================================== */
 async function carregarMedicacoes(){
-if(!podeUsarMedicacao()){
-document.getElementById("listaMedicacoes").innerHTML="<div style='padding:20px;font-weight:bold;color:#ef4444'>⛔ Acesso restrito à medicação</div>"
-return
-}
+
 if(!db||!EMPRESA_ID)return
 
 let usuarioId=localStorage.getItem("usuario_id")
@@ -146,6 +148,23 @@ montarHorariosMedicacao()
 
 if(typeof carregarListaMedicacoesEditar==="function"){
 carregarListaMedicacoesEditar()
+}
+/* ====================================================
+503 – BLOQUEIO COMPLETO POR HIERARQUIA
+==================================================== */
+if(!podeEditarMedicacao()){
+setTimeout(()=>{
+/* 🔒 BLOQUEIA INPUTS */
+document.querySelectorAll("#painelMedicacao input,#painelMedicacao select,#painelMedicacao textarea").forEach(el=>{
+if(el.id!=="buscaPacienteMedicacao")el.disabled=true
+})
+/* 🔒 ESCONDE BOTÕES CRUD */
+document.querySelectorAll("#painelMedicacao button").forEach(btn=>{
+if(btn.id==="btnSalvarMedicacao"||btn.innerText.includes("Excluir")||btn.innerText.includes("Editar")){
+btn.style.display="none"
+}
+})
+},120)
 }
 }
 /* ====================================================
