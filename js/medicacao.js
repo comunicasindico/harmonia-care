@@ -234,7 +234,9 @@ lista.forEach(m=>{
 let pid=(m.paciente_id||"").toString().trim()
 if(!pid)return
 if(!pacientes[pid]){
-let nome=(window.PACIENTES_CACHE||[]).find(p=>String(p.id)===String(pid))?.nome_completo||"Paciente"
+let nome = (m.nome_paciente||"").trim() 
+|| (window.PACIENTES_CACHE||[]).find(p=>String(p.id)===String(pid))?.nome_completo 
+|| "Paciente"
 pacientes[pid]={id:pid,nome:nome,itens:[]}
 }
 pacientes[pid].itens.push(m)
