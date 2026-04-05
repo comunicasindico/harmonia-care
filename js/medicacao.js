@@ -1044,13 +1044,12 @@ return datas
 ==================================================== */
 function aplicarDataInteligente(){
 
-const hoje=new Date()
-const inicio=hoje.obterDataHoje()().slice(0,10)
+const inicio=obterDataHoje()
 
 /* +7 dias */
 const fimDate=new Date()
 fimDate.setDate(fimDate.getDate()+7)
-const fim=fimDate.obterDataHoje()().slice(0,10)
+const fim= fimDate.getFullYear()+"-"+String(fimDate.getMonth()+1).padStart(2,"0")+"-"+String(fimDate.getDate()).padStart(2,"0")
 
 const d1=document.getElementById("dataInicioMedicacao")
 const d2=document.getElementById("dataFimMedicacao")
@@ -1063,13 +1062,12 @@ if(d2&&!d2.value)d2.value=fim
 ==================================================== */
 function setPeriodoDias(dias){
 
-const hoje=new Date()
-const inicio=hoje.obterDataHoje()().slice(0,10)
+const inicio=obterDataHoje()
 
 const fimDate=new Date()
 fimDate.setDate(fimDate.getDate()+dias-1)
-const fim=fimDate.obterDataHoje()().slice(0,10)
-
+const fim= fimDate.getFullYear()+"-"+String(fimDate.getMonth()+1).padStart(2,"0")+"-"+String(fimDate.getDate()).padStart(2,"0")
+  
 document.getElementById("dataInicioMedicacao").value=inicio
 document.getElementById("dataFimMedicacao").value=fim
 }
@@ -1078,7 +1076,7 @@ document.getElementById("dataFimMedicacao").value=fim
 ==================================================== */
 function forcarDataHoje(){
 
-const hoje=new Date().obterDataHoje()().slice(0,10)
+const hoje=obterDataHoje()
 
 const d1=document.getElementById("dataInicioMedicacao")
 const d2=document.getElementById("dataFimMedicacao")
@@ -1261,15 +1259,19 @@ box.style.display=(box.style.display==="none")?"block":"none"
 =================================================== */
 async function autoFinalizarNaoObrigatorios(){
 if(!db)return
-const hoje=new Date().obterDataHoje()().slice(0,10)
+const hoje=obterDataHoje()
 const {data:meds}=await db
 .from("medicacoes")
 .select("*")
 .eq("obrigatorio",false)
 .eq("ativo",true)
+if(error){
+console.error(error)
+return
+}
 if(!meds)return
 for(const m of meds){
-let horarios=(m.horarios||"").split("|")
+let horarios=(m.horarios||"").split("|").filter(Boolean)
 for(const h of horarios){
 const {data:ja}=await db
 .from("medicacoes_execucao")
@@ -1277,15 +1279,17 @@ const {data:ja}=await db
 .eq("medicacao_id",m.id)
 .eq("data",hoje)
 .eq("horario",h)
+.eq("empresa_id",EMPRESA_ID)
 .maybeSingle()
-if(!ja){
+if(!ja){continue
 await db.from("medicacoes_execucao").insert({
 medicacao_id:m.id,
 paciente_id:m.paciente_id,
 data:hoje,
 horario:h,
 status:"nao_obrigatorio",
-usuario_nome:"Sistema"
+usuario_nome:"Sistema",
+empresa_id:EMPRESA_ID
 })
 }
 }
