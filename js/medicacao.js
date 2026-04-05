@@ -351,7 +351,7 @@ texto=`${h} ${exec.usuario_nome||"Admin"} OK`
 return `<button
 data-hora="${h}"
 class="${exec ? 'executado' : ''}"
-onclick="${exec?"":`administrarMedicacao('${m.id}','${h}',this)`}"
+onclick="${exec?"":`administrarMedicacaoGrupo('${[...m.ids].join(",")}','${h}',this)`}"
 style="background:${cor};color:#000;border:none;border-radius:8px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:70px;box-shadow:0 2px 4px rgba(0,0,0,0.15);${bloqueado}">
 <span>${icone} ${texto}</span>
 </button>`
@@ -507,7 +507,7 @@ return
 window.EXEC_CACHE=data||[]
 }
 /* ====================================================
-211   205 – BUSCAR MODELO INTELIGENTE
+211 – BUSCAR MODELO INTELIGENTE
 ==================================================== */
 async function buscarModeloMedicacao(nome){
 if(!db||!nome)return null
@@ -520,19 +520,6 @@ const {data}=await db
 
 return data?.[0]||null
 }
-/* ====================================================
-212   205 – BUSCAR MODELO MEDICAÇÃO
-==================================================== */
-async function buscarModeloMedicacao(nome){
-if(!db||!nome)return null
-const {data}=await db
-.from("medicacoes_modelo")
-.select("*")
-.ilike("nome_medicamento",`%${nome}%`)
-.limit(1)
-return data?.[0]||null
-}
-
 /* ====================================================
 213   206 – APLICAR MODELO AUTOMÁTICO
 ==================================================== */
@@ -630,7 +617,7 @@ return
 const nomeLimpo=nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim() .replace(/mg|cp|cps|ml|ui/g,"").trim()
 /* 🔍 EVITA DUPLICADO */
 const {data:existe}=await db.from("medicacoes").select("id,horarios,nome_medicamento,dosagem").eq("empresa_id",EMPRESA_ID).eq("nome_padrao",nomeLimpo).eq("dosagem",dose||"").eq("paciente_id",pacienteId).maybeSingle()
-if(existe && existe.length){
+if(existe{
 let medExistente=existe[0]
 
 if(!medExistente || !medExistente.id){
@@ -765,7 +752,7 @@ carregarMedicacoes()
 }
 
 /* ====================================================
-220    212 – CONCLUIR MEDICAÇÃO POR PACIENTE (FINAL CORRETO)
+220 – CONCLUIR MEDICAÇÃO POR PACIENTE (FINAL CORRETO)
 ==================================================== */
 window.concluirPacienteMedicacao=async function(pacienteId){
 if(!db||!pacienteId)return
@@ -779,7 +766,7 @@ let dataFim=d2?.value
 
 /* 🔥 GARANTE DATA SEM TRAVAR */
 if(!dataInicio||!dataFim){
-const hoje=new Date().obterDataHoje()().slice(0,10)
+const hoje=obterDataHoje()
 dataInicio=hoje
 dataFim=hoje
 if(d1)d1.value=hoje
@@ -1063,7 +1050,7 @@ await db.from("medicacoes_execucao").insert(item)
 
 /* 🔥 ATIVA UI (BOTÃO VERDE) */
 const btn=document.querySelector(
-`[data-id="${item.medicacao_id}"][data-hora="${item.horario}"]`
+`[data-hora="${item.horario}"]`
 )
 
 if(btn){
@@ -1086,20 +1073,7 @@ finalizarBarra()
 
 await carregarStatusMedicacoes()
 }
-/* ====================================================
-224    223 GERAR DATAS MEDICACAO
-==================================================== */
-function gerarDatasPeriodo(inicio,fim){
-let datas=[]
-let atual=new Date(inicio)
-let final=new Date(fim)
 
-while(atual<=final){
-datas.push(atual.obterDataHoje()().slice(0,10))
-atual.setDate(atual.getDate()+1)
-}
-return datas
-}
 /* ====================================================
 225    230 – DATA INTELIGENTE
 ==================================================== */
@@ -1342,7 +1316,8 @@ const {data:ja}=await db
 .eq("horario",h)
 .eq("empresa_id",EMPRESA_ID)
 .maybeSingle()
-if(!ja){continue
+if(ja) continue
+
 await db.from("medicacoes_execucao").insert({
 medicacao_id:m.id,
 paciente_id:m.paciente_id,
@@ -1543,4 +1518,24 @@ div.style.borderRadius="10px"
 div.innerHTML=html
 
 document.querySelector(`[data-paciente-id="${pacienteId}"]`).appendChild(div)
+}
+/* ====================================================
+305   209F – ADMINISTRAR GRUPO MEDICAÇÕES (FIX DEFINITIVO)
+==================================================== */
+async function administrarMedicacaoGrupo(ids,horario,botao){
+if(!ids||!horario)return
+const lista=ids.split(",")
+
+for(const id of lista){
+await administrarMedicacao(id,horario,null)
+}
+
+/* feedback só no botão principal */
+if(botao){
+botao.classList.add("pulse-ok")
+setTimeout(()=>botao.classList.remove("pulse-ok"),400)
+}
+
+await carregarStatusMedicacoes()
+renderizarMedicacoes(window.MEDICACOES_CACHE||[])
 }
