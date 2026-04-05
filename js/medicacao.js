@@ -231,6 +231,9 @@ return p.padStart(2,"0")+":"+m.padStart(2,"0")
 /* ==============203 – AGRUPAMENTO POR PACIENTE================ */
 let pacientes={}
 lista.forEach(m=>{
+let pacientesOrdenados = Object.values(pacientes).sort((a,b)=>
+(a.nome||"").localeCompare(b.nome||"","pt-BR",{sensitivity:"base"})
+)
 let pid=(m.paciente_id||"").toString().trim()
 if(!pid)return
 if(!pacientes[pid]){
@@ -264,8 +267,9 @@ html+=`
 `
 
 /* =====205 – PACIENTES======================= */
-Object.values(pacientes).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR")).forEach(p=>{
-
+Object.values(pacientes)
+.sort((a,b)=>(a.nome||"").trim().localeCompare((b.nome||"").trim(),"pt-BR",{sensitivity:"base"}))
+.forEach(p=>{
 let corPaciente=gerarCor(p.nome,60,92)
 
 html+=`<div data-paciente-id="${p.id}" style="background:${corPaciente};padding:12px;margin-bottom:14px;border-radius:12px">
