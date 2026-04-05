@@ -489,13 +489,13 @@ window.EXEC_CACHE=data||[]
 async function buscarModeloMedicacao(nome){
 if(!db||!nome)return null
 
-const {data}=await db
+const {data,error}=await db
 .from("medicacoes_modelo")
 .select("*")
 .ilike("nome_medicamento",`%${nome}%`)
 .limit(1)
 
-return data?.[0]||null
+return (data && data[0]) ? data[0] : null
 }
 /* ====================================================
 213   206 – APLICAR MODELO AUTOMÁTICO
