@@ -122,7 +122,6 @@ renderizarMedicacoes([])
 return
 }
 renderizarMedicacoes(data||[])
-aplicarDataInteligente()
 carregarListaHorarios()
 montarHorariosMedicacao()
 if(typeof carregarListaMedicacoesEditar==="function"){
