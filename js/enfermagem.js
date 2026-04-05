@@ -46,8 +46,35 @@ async function carregarRotinas(){
 if(!db||!EMPRESA_ID)return
 const turno=(TURNO_ATUAL||"manha").toLowerCase()
 const dataHoje=obterDataSelecionada()
-const respPacientes=await db.from("pacientes").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
-const pacs=respPacientes.data||[]
+let usuarioId=localStorage.getItem("usuario_id")
+let hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
+let pacs=[]
+/* 🔥 ADMIN VÊ TODOS */
+if(hierarquia===1||hierarquia===2){
+const respPacientes=await db.from("pacientes")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+pacs=respPacientes.data||[]
+}
+/* 🔒 USUÁRIO NORMAL VÊ SOMENTE VINCULADOS */
+else{
+const{data:rel}=await db.from("pacientes_profissionais")
+.select("paciente_id")
+.eq("usuario_id",usuarioId)
+.eq("ativo",true)
+const ids=(rel||[]).map(r=>r.paciente_id)
+if(ids.length){
+const respPacientes=await db.from("pacientes")
+.select("*")
+.in("id",ids)
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+pacs=respPacientes.data||[]
+}else{
+pacs=[]
+}
+}
 const respRotinas=await db.from("rotina_modelos").select("*").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
 const rotinas=respRotinas.data||[]
 const respExec=await db.from("rotinas_execucao")
