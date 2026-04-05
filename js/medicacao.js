@@ -182,8 +182,15 @@ const dataEnfFim=document.getElementById("dataFim")?.value
 const dataMedInicio=document.getElementById("dataInicioMedicacao")
 const dataMedFim=document.getElementById("dataFimMedicacao")
 
-if(dataEnfInicio&&dataMedInicio)dataMedInicio.value=dataEnfInicio
-if(dataEnfFim&&dataMedFim)dataMedFim.value=dataEnfFim
+/* ====================================================
+202 – SINCRONIZA DATA (SEM SOBRESCREVER)
+==================================================== */
+if(dataEnfInicio&&dataMedInicio&&!dataMedInicio.value){
+dataMedInicio.value=dataEnfInicio
+}
+if(dataEnfFim&&dataMedFim&&!dataMedFim.value){
+dataMedFim.value=dataEnfFim
+}
 
 const div=document.getElementById("listaMedicacoes")
 if(!div)return
