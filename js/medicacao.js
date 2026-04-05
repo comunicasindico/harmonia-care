@@ -1071,23 +1071,7 @@ await carregarStatusMedicacoes()
 225    230 – DATA INTELIGENTE
 ==================================================== */
 function aplicarDataInteligente(){
-
-const d1=document.getElementById("dataInicioMedicacao")
-const d2=document.getElementById("dataFimMedicacao")
-
-/* 🔥 NÃO SOBRESCREVE SE JÁ EXISTE */
-if(d1 && d1.dataset.manual==="1")return
-if(d2 && d2.dataset.manual==="1")return
-
-if(d1 && !d1.value){
-d1.value=obterDataHoje()
-}
-
-if(d2 && !d2.value){
-const fimDate=new Date()
-fimDate.setDate(fimDate.getDate()+7)
-d2.value=fimDate.getFullYear()+"-"+String(fimDate.getMonth()+1).padStart(2,"0")+"-"+String(fimDate.getDate()).padStart(2,"0")
-}
+return
 }
 /* ====================================================
 226     231 – SET PERIODO DIAS - MEDICACAO
