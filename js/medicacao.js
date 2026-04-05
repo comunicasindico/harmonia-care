@@ -75,9 +75,6 @@ select.onchange=carregarMedicacoes
 /* ====================================================
 201 – CARREGAR MEDICAÇÕES
 ==================================================== */
-/* ====================================================
-100 – CARREGAR MEDICAÇÕES (BLINDADO DEFINITIVO)
-==================================================== */
 async function carregarMedicacoes(){
 if(!podeUsarMedicacao()){
 document.getElementById("listaMedicacoes").innerHTML="<div style='padding:20px;font-weight:bold;color:#ef4444'>⛔ Acesso restrito à medicação</div>"
@@ -98,7 +95,7 @@ const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value||"todo
 /* 🔒 PERMISSÃO REAL */
 let pacientesPermitidos=[]
 
-if(hierarquia===1){
+if(hierarquia===1 || hierarquia===2){
 const {data}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
 pacientesPermitidos=data?.map(p=>p.id)||[]
 }else{
@@ -110,6 +107,7 @@ const {data:rel}=await db.from("pacientes_profissionais")
 pacientesPermitidos=rel?.map(r=>r.paciente_id)||[]
 
 if(!pacientesPermitidos.length){
+console.warn("Usuário sem pacientes vinculados",usuarioId)
 renderizarMedicacoes([])
 return
 }
