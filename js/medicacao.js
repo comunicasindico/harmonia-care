@@ -1068,18 +1068,22 @@ await carregarStatusMedicacoes()
 ==================================================== */
 function aplicarDataInteligente(){
 
-const inicio=obterDataHoje()
-
-/* +7 dias */
-const fimDate=new Date()
-fimDate.setDate(fimDate.getDate()+7)
-const fim= fimDate.getFullYear()+"-"+String(fimDate.getMonth()+1).padStart(2,"0")+"-"+String(fimDate.getDate()).padStart(2,"0")
-
 const d1=document.getElementById("dataInicioMedicacao")
 const d2=document.getElementById("dataFimMedicacao")
 
-if(d1&&!d1.value)d1.value=inicio
-if(d2&&!d2.value)d2.value=fim
+/* 🔥 NÃO SOBRESCREVE SE JÁ EXISTE */
+if(d1 && d1.dataset.manual==="1")return
+if(d2 && d2.dataset.manual==="1")return
+
+if(d1 && !d1.value){
+d1.value=obterDataHoje()
+}
+
+if(d2 && !d2.value){
+const fimDate=new Date()
+fimDate.setDate(fimDate.getDate()+7)
+d2.value=fimDate.getFullYear()+"-"+String(fimDate.getMonth()+1).padStart(2,"0")+"-"+String(fimDate.getDate()).padStart(2,"0")
+}
 }
 /* ====================================================
 226     231 – SET PERIODO DIAS - MEDICACAO
@@ -1225,12 +1229,6 @@ btn.style.color="#fff"
 container.appendChild(btn)
 }
 }
-/* ====================================================
-231    236 – INIT HORÁRIOS (AUTOLOAD)
-==================================================== */
-document.addEventListener("DOMContentLoaded",()=>{
-montarHorariosMedicacao()
-})
 /* ====================================================
 232    237 – BARRA PROGRESSO MEDICAÇÃO
 ==================================================== */
@@ -1538,3 +1536,26 @@ setTimeout(()=>botao.classList.remove("pulse-ok"),400)
 await carregarStatusMedicacoes()
 renderizarMedicacoes(window.MEDICACOES_CACHE||[])
 }
+
+
+
+/* ====================================================
+306 – INIT HORÁRIOS + CONTROLE DATA MANUAL
+==================================================== */
+document.addEventListener("DOMContentLoaded",()=>{
+
+montarHorariosMedicacao()
+
+/* 🔥 PATCH 012 – TRAVA DATA MANUAL */
+const d1=document.getElementById("dataInicioMedicacao")
+const d2=document.getElementById("dataFimMedicacao")
+
+if(d1){
+d1.addEventListener("change",()=>d1.dataset.manual="1")
+}
+
+if(d2){
+d2.addEventListener("change",()=>d2.dataset.manual="1")
+}
+
+})
