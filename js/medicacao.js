@@ -176,12 +176,13 @@ console.warn("⚠ filtro não aplicado (PACIENTES_CACHE vazio)")
 }
 
 window.MEDICACOES_CACHE=lista
-/* 🔥 PATCH 008 – MAPA DE EXECUÇÕES (PERFORMANCE) */
-let mapaExec={}
-(window.EXEC_CACHE||[]).forEach(e=>{
-let chave=e.medicacao_id+"_"+e.horario
-mapaExec[chave]=e
-})
+/* 🔥 PATCH 010 – MAPA DE EXECUÇÕES (PERFORMANCE) */
+let mapaExec={};
+const execLista=(window.EXEC_CACHE||[]);
+execLista.forEach(e=>{
+let chave=e.medicacao_id+"_"+e.horario;
+mapaExec[chave]=e;
+});
 const normalizarHora=h=>{
 if(!h)return""
 h=h.toString().trim()
