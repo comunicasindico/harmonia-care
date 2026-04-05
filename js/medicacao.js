@@ -97,14 +97,14 @@ medicacoes_modelo(nome_medicamento)
 `).eq("ativo",true)
 if(pacientesPermitidos)query=query.in("paciente_id",pacientesPermitidos)
 if(pacienteId!=="todos"){
-if(pacientesPermitidos && !pacientesPermitidos.includes(pacienteId)){
+if(pacientesPermitidos && !pacientesPermitidos.map(String).includes(String(pacienteId))){
 renderizarMedicacoes([])
 return
 }
 query=query.eq("paciente_id",pacienteId)
 }
 if(hierarquia!==1 && pacienteId!=="todos"){
-if(!pacientesPermitidos.includes(pacienteId)){
+if(!pacientesPermitidos.map(String).includes(String(pacienteId))){
 console.warn("Acesso bloqueado ao paciente")
 renderizarMedicacoes([])
 return
@@ -146,9 +146,7 @@ ${m.nome_medicamento}
 </option>`
 })
 }
-/* ====================================================
-202 – RENDER MEDICAÇÕES (FINAL LIMPO PROFISSIONAL)
-==================================================== */
+/* =======================202 – RENDER MEDICAÇÕES (FINAL LIMPO PROFISSIONAL)==================================================== */
 function renderizarMedicacoes(lista){
 
 const dataEnfInicio=document.getElementById("dataInicio")?.value
@@ -164,9 +162,7 @@ const div=document.getElementById("listaMedicacoes")
 if(!div)return
 if(!lista)lista=[]
 
-/* ====================================================
-202A – FILTRO FINAL SEGURANÇA (MEDICAÇÃO)
-==================================================== */
+/* ========202A – FILTRO FINAL SEGURANÇA (MEDICAÇÃO)====================== */
 const usuarioId=localStorage.getItem("usuario_id")
 const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
 
@@ -180,7 +176,12 @@ console.warn("⚠ filtro não aplicado (PACIENTES_CACHE vazio)")
 }
 
 window.MEDICACOES_CACHE=lista
-
+/* 🔥 PATCH 008 – MAPA DE EXECUÇÕES (PERFORMANCE) */
+let mapaExec={}
+(window.EXEC_CACHE||[]).forEach(e=>{
+let chave=e.medicacao_id+"_"+e.horario
+mapaExec[chave]=e
+})
 const normalizarHora=h=>{
 if(!h)return""
 h=h.toString().trim()
@@ -189,9 +190,7 @@ let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
 
-/* ====================================================
-203 – AGRUPAMENTO POR PACIENTE
-==================================================== */
+/* ==============203 – AGRUPAMENTO POR PACIENTE================ */
 let pacientes={}
 lista.forEach(m=>{
 let pid=(m.paciente_id||"").toString().trim()
@@ -208,9 +207,7 @@ let mostrarAcoes=(hierarquia===1&&(modo==="editar"||modo==="excluir"))
 
 let html=""
 
-/* ====================================================
-204 – TOPO
-==================================================== */
+/* ==================204 – TOPO========================= */
 html+=`
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
 <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -226,9 +223,7 @@ html+=`
 </div>
 `
 
-/* ====================================================
-205 – PACIENTES
-==================================================== */
+/* =====205 – PACIENTES======================= */
 Object.values(pacientes).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR")).forEach(p=>{
 
 let corPaciente=gerarCor(p.nome,60,92)
@@ -252,9 +247,7 @@ ${hierarquia===1?`<button onclick="concluirPacienteMedicacao('${p.id}')" style="
 
 let mapa={}
 
-/* ====================================================
-206 – NORMALIZAÇÃO CHAVE
-==================================================== */
+/* ==========206 – NORMALIZAÇÃO CHAVE================= */
 const limpar=txt=>{
 return (txt||"")
 .toString()
@@ -266,9 +259,7 @@ return (txt||"")
 .trim()
 }
 
-/* ====================================================
-207 – AGRUPAMENTO MEDICAÇÕES
-==================================================== */
+/* =======207 – AGRUPAMENTO MEDICAÇÕES============= */
 p.itens.forEach(m=>{
 
 const nomeOriginal=m.medicacoes_modelo?.nome_medicamento || m.nome_medicamento
@@ -300,9 +291,7 @@ if(n)mapa[chave].horarios.add(n)
 
 let meds=Object.values(mapa).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR"))
 
-/* ====================================================
-208 – RENDER MEDICAÇÕES
-==================================================== */
+/* ====208 – RENDER MEDICAÇÕES=================== */
 meds.forEach(m=>{
 
 let corMedicacao = m.obrigatorio===false ? "#f1f5f9" : gerarCor(m.nome,50,96)
@@ -315,10 +304,14 @@ return(Number(p1)*60+Number(m1))-(Number(p2)*60+Number(m2))
 
 let hHTML=horarios.map(h=>{
 
-let exec=(window.EXEC_CACHE||[]).find(e=>
-[...m.ids].some(id=>String(e.medicacao_id)===String(id)) &&
-String(e.horario)===String(h)
-)
+let exec=null
+for(const id of m.ids){
+let chave=id+"_"+h
+if(mapaExec[chave]){
+exec=mapaExec[chave]
+break
+}
+}
 
 let hora=parseInt(h.split(":")[0])
 let corBase="#fde047"
@@ -387,9 +380,7 @@ html+=`</div></div>`
 
 div.innerHTML=html
 }
-/* ====================================================
-209 – ADMINISTRAR MEDICAÇÃO (CORRIGIDO DATA LOCAL)
-==================================================== */
+/* =======================209 – ADMINISTRAR MEDICAÇÃO (CORRIGIDO + SEGURO)==================================================== */
 async function administrarMedicacao(medicacaoId,horario,botao){
 
 if(!podeUsarMedicacao()){
@@ -400,19 +391,20 @@ return
 if(!db||!medicacaoId||!horario)return
 
 const user=obterUsuarioLogado()||{}
-
-/* 🔥 DATA PADRÃO GLOBAL */
 const dataHoje=obterDataHoje()
-
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
 
-/* ====================================================
-209A – VERIFICA EXISTENTE
-==================================================== */
+/* 🔒 EVITA DUPLO CLIQUE */
+if(botao && botao.dataset.loading==="1")return
+if(botao)botao.dataset.loading="1"
+
+try{
+
+/* 🔍 VERIFICA EXISTENTE */
 const {data:ja,error:erroBusca}=await db
 .from("medicacoes_execucao")
-.select("*")
+.select("id")
 .eq("medicacao_id",medicacaoId)
 .eq("data",dataHoje)
 .eq("empresa_id",EMPRESA_ID)
@@ -424,9 +416,7 @@ console.error(erroBusca)
 return
 }
 
-/* ====================================================
-209B – REMOVE (TOGGLE)
-==================================================== */
+/* 🔄 TOGGLE */
 if(ja){
 
 const {error}=await db
@@ -444,9 +434,7 @@ await carregarStatusMedicacoes()
 return
 }
 
-/* ====================================================
-209C – INSERE
-==================================================== */
+/* ➕ INSERT */
 const {error}=await db
 .from("medicacoes_execucao")
 .insert({
@@ -465,31 +453,20 @@ alert("Erro ao salvar")
 return
 }
 
-/* ====================================================
-209D – FEEDBACK VISUAL
-==================================================== */
+/* 🎯 FEEDBACK */
 if(botao){
 botao.classList.add("pulse-ok")
 setTimeout(()=>botao.classList.remove("pulse-ok"),400)
 }
 
-/* ====================================================
-209E – ATUALIZA STATUS
-==================================================== */
 await carregarStatusMedicacoes()
-}
-/* ====================================================
-210  203C – CARREGAR STATUS
-==================================================== */
-async function carregarStatusMedicacoes(){
 
-function obterDataLocal(){
-const d=new Date()
-const ano=d.getFullYear()
-const mes=String(d.getMonth()+1).padStart(2,"0")
-const dia=String(d.getDate()).padStart(2,"0")
-return `${ano}-${mes}-${dia}`
+}finally{
+if(botao)botao.dataset.loading="0"
 }
+}
+/* ========================210 – CARREGAR STATUS==================================================== */
+async function carregarStatusMedicacoes(){
 
 const dataHoje=obterDataHoje()
 
@@ -542,37 +519,27 @@ alert("Acesso restrito")
 return
 }
 if(!db||!EMPRESA_ID)return
-/* ====================================================
-214A – PADRONIZAÇÃO INTELIGENTE (NÍVEL HOSPITAL)
-==================================================== */
+
 function formatarTexto(txt){
 if(!txt)return""
 txt=txt.toString().toLowerCase()
-/* 🔥 separa número de letra (somente isso) */
 txt=txt.replace(/(\d)([a-zA-Z])/g,"$1 $2")
 txt=txt.replace(/([a-zA-Z])(\d)/g,"$1 $2")
-/* 🔥 corrige palavras específicas */
 txt=txt.replace(/\bdoses?\b/g,"dose")
 txt=txt.replace(/\bcomprimidos?\b/g,"cp")
-/* 🔥 unidades (sem quebrar palavras) */
 txt=txt.replace(/\bmg\b/g,"mg")
 txt=txt.replace(/\bml\b/g,"ml")
 txt=txt.replace(/\bcp\b/g,"cp")
-/* 🔥 limpa espaços duplicados */
 txt=txt.replace(/\s+/g," ").trim()
-/* 🔥 MAIÚSCULO FINAL */
 return txt.toUpperCase()
 }
-/* ====================================================
-214B – CAPTURA
-==================================================== */
-/* 🔥 CAPTURA */
+
 let nomeRaw=document.getElementById("nomeMedicacao")?.value||""
 let doseRaw=document.getElementById("doseMedicacao")?.value||""
-/* 🔥 FORMATA */
+
 let nome=formatarTexto(nomeRaw)
 let dose=formatarTexto(doseRaw)
-  
+
 if(!doseRaw){
 let match=nomeRaw.match(/^(\d+)?\s*([A-ZÀ-Ú]+)(.*)$/)
 if(match){
@@ -583,25 +550,30 @@ nome=(texto+" "+resto).trim()
 dose=numero||""
 }
 }
-/* 🔥 LIMPEZA FINAL */
+
 nome=nome.replace(/\s+/g," ").trim()
 nome=nome.replace(/([A-Z])([A-Z])/g,"$1 $2")
 dose=dose.replace(/\s+/g," ").trim()
 
 const obrigatorio=document.getElementById("obrigatorioMedicacao")?.value==="true"
+
 const selecionados=[...document.querySelectorAll("#horarioMedicacao .ativo")]
 .map(e=>e.dataset.valor)
+
 let horario=selecionados.join("|")
+
 if(!horario){
 alert("Selecione pelo menos um horário")
 return
 }
+
 const pacienteId=document.getElementById("buscaPacienteMedicacao")?.value
+
 if(!nome||!pacienteId||pacienteId==="todos"){
 alert("Informe paciente e nome")
 return
 }
-/* 🔥 NORMALIZA HORÁRIOS (ACEITA MULTIPLOS COM | ) */
+
 const horarioFinal=horario.split("|").map(h=>{
 h=h.trim()
 if(!h)return""
@@ -609,35 +581,49 @@ if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }).filter(h=>h).join("|")
+
 if(!horarioFinal){
 alert("Informe ao menos um horário")
 return
 }
-/* 🔥 NOME PADRÃO */
-const nomeLimpo=nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim() .replace(/mg|cp|cps|ml|ui/g,"").trim()
-/* 🔍 EVITA DUPLICADO */
-const {data:existe}=await db.from("medicacoes").select("id,horarios,nome_medicamento,dosagem").eq("empresa_id",EMPRESA_ID).eq("nome_padrao",nomeLimpo).eq("dosagem",dose||"").eq("paciente_id",pacienteId).maybeSingle()
-if(existe{
-let medExistente=existe[0]
 
-if(!medExistente || !medExistente.id){
-console.error("ID inválido:",medExistente)
-alert("Erro interno: ID da medicação inválido")
+const nomeLimpo=nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim().replace(/mg|cp|cps|ml|ui/g,"").trim()
+
+const {data:existe,error:erroBusca}=await db
+.from("medicacoes")
+.select("id,horarios")
+.eq("empresa_id",EMPRESA_ID)
+.eq("nome_padrao",nomeLimpo)
+.eq("dosagem",dose||"")
+.eq("paciente_id",pacienteId)
+.maybeSingle()
+
+if(erroBusca){
+console.error(erroBusca)
+alert("Erro ao verificar duplicidade")
 return
 }
+
+/* 🔥 CORREÇÃO DEFINITIVA */
+if(existe){
+
+let medExistente=existe
+
 let antigos=(medExistente.horarios||"").split("|")
 let novos=(horarioFinal||"").split("|")
+
 let todos=[...new Set([...antigos,...novos])]
+
 await db.from("medicacoes")
 .update({
 horarios:todos.join("|")
 })
 .eq("id",medExistente.id)
-console.log("Horários atualizados")
+
 await carregarMedicacoes()
 return
 }
-/* 💾 INSERT */
+
 const {error}=await db.from("medicacoes").insert({
 nome_medicamento:nome,
 dosagem:dose,
@@ -648,13 +634,15 @@ nome_padrao:nomeLimpo,
 paciente_id:pacienteId,
 ativo:true
 })
+
 if(error){
 console.error("Erro ao salvar:",error)
 alert("Erro ao salvar medicação")
 return
 }
-/* 🔄 RELOAD */
+
 carregarMedicacoes()
+
 document.getElementById("nomeMedicacao").value=""
 document.getElementById("doseMedicacao").value=""
 document.getElementById("horarioMedicacao").value=""
@@ -1290,24 +1278,32 @@ box.style.display=(box.style.display==="none")?"block":"none"
 }
 
 /* ====================================================
-234   239 – autofinalizar nao obrigatorios
+234 – autofinalizar nao obrigatorios (CORRIGIDO)
 =================================================== */
 async function autoFinalizarNaoObrigatorios(){
 if(!db)return
+
 const hoje=obterDataHoje()
-const {data:meds}=await db
+
+const {data:meds,error}=await db
 .from("medicacoes")
 .select("*")
 .eq("obrigatorio",false)
 .eq("ativo",true)
+
 if(error){
 console.error(error)
 return
 }
+
 if(!meds)return
+
 for(const m of meds){
+
 let horarios=(m.horarios||"").split("|").filter(Boolean)
+
 for(const h of horarios){
+
 const {data:ja}=await db
 .from("medicacoes_execucao")
 .select("id")
@@ -1316,7 +1312,8 @@ const {data:ja}=await db
 .eq("horario",h)
 .eq("empresa_id",EMPRESA_ID)
 .maybeSingle()
-if(ja) continue
+
+if(ja)continue
 
 await db.from("medicacoes_execucao").insert({
 medicacao_id:m.id,
@@ -1327,6 +1324,7 @@ status:"nao_obrigatorio",
 usuario_nome:"Sistema",
 empresa_id:EMPRESA_ID
 })
+
 }
 }
 }
@@ -1519,22 +1517,23 @@ div.innerHTML=html
 document.querySelector(`[data-paciente-id="${pacienteId}"]`).appendChild(div)
 }
 /* ====================================================
-305   209F – ADMINISTRAR GRUPO MEDICAÇÕES (FIX DEFINITIVO)
+305 – ADMINISTRAR GRUPO MEDICAÇÕES (OTIMIZADO)
 ==================================================== */
 async function administrarMedicacaoGrupo(ids,horario,botao){
 if(!ids||!horario)return
+
 const lista=ids.split(",")
 
-for(const id of lista){
-await administrarMedicacao(id,horario,null)
-}
+/* 🔥 EXECUÇÃO EM PARALELO */
+await Promise.all(lista.map(id=>administrarMedicacao(id,horario,null)))
 
-/* feedback só no botão principal */
+/* 🔥 FEEDBACK VISUAL */
 if(botao){
 botao.classList.add("pulse-ok")
 setTimeout(()=>botao.classList.remove("pulse-ok"),400)
 }
 
+/* 🔥 ATUALIZA UMA VEZ */
 await carregarStatusMedicacoes()
 renderizarMedicacoes(window.MEDICACOES_CACHE||[])
 }
