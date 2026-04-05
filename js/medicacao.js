@@ -1,4 +1,14 @@
-/* ==240 – PERMISSÃO REAL MEDICAÇÃO==================================================== */
+/* ====================================================
+000 – DATA GLOBAL PADRÃO (BRASIL)
+==================================================== */
+function obterDataHoje(){
+const d=new Date()
+const ano=d.getFullYear()
+const mes=String(d.getMonth()+1).padStart(2,"0")
+const dia=String(d.getDate()).padStart(2,"0")
+return `${ano}-${mes}-${dia}`
+}
+/* ==240 – PERMISSÃO REAL MEDICAÇÃO== */
 window.podeUsarMedicacao=function(){
 const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
 const perfil=(localStorage.getItem("usuario_perfil")||"").toLowerCase().trim()
@@ -372,7 +382,7 @@ if(!db||!medicacaoId||!horario)return
 
 const user=obterUsuarioLogado()||{}
 
-function obterDataLocal(){
+const dataHoje=obterDataHoje()
 const d=new Date()
 const ano=d.getFullYear()
 const mes=String(d.getMonth()+1).padStart(2,"0")
@@ -442,7 +452,7 @@ await carregarStatusMedicacoes()
 210  203C – CARREGAR STATUS
 ==================================================== */
 async function carregarStatusMedicacoes(){
-if(!db)return
+
 function obterDataLocal(){
 const d=new Date()
 const ano=d.getFullYear()
@@ -450,9 +460,21 @@ const mes=String(d.getMonth()+1).padStart(2,"0")
 const dia=String(d.getDate()).padStart(2,"0")
 return `${ano}-${mes}-${dia}`
 }
-const {data}=await db.from("medicacoes_execucao").select("*").eq("data",dataHoje)
+
+const dataHoje=obterDataHoje()
+
+const {data,error}=await db
+.from("medicacoes_execucao")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.eq("data",dataHoje)
+
+if(error){
+console.error(error)
+return
+}
+
 window.EXEC_CACHE=data||[]
-if(typeof carregarMedicacoes==="function")carregarMedicacoes()
 }
 /* ====================================================
 211   205 – BUSCAR MODELO INTELIGENTE
@@ -685,7 +707,7 @@ let dataFim=d2?.value
 
 /* 🔥 GARANTE DATA SEM TRAVAR */
 if(!dataInicio||!dataFim){
-const hoje=new Date().toISOString().slice(0,10)
+const hoje=new Date().obterDataHoje()().slice(0,10)
 dataInicio=hoje
 dataFim=hoje
 if(d1)d1.value=hoje
@@ -1001,7 +1023,7 @@ let atual=new Date(inicio)
 let final=new Date(fim)
 
 while(atual<=final){
-datas.push(atual.toISOString().slice(0,10))
+datas.push(atual.obterDataHoje()().slice(0,10))
 atual.setDate(atual.getDate()+1)
 }
 return datas
@@ -1012,12 +1034,12 @@ return datas
 function aplicarDataInteligente(){
 
 const hoje=new Date()
-const inicio=hoje.toISOString().slice(0,10)
+const inicio=hoje.obterDataHoje()().slice(0,10)
 
 /* +7 dias */
 const fimDate=new Date()
 fimDate.setDate(fimDate.getDate()+7)
-const fim=fimDate.toISOString().slice(0,10)
+const fim=fimDate.obterDataHoje()().slice(0,10)
 
 const d1=document.getElementById("dataInicioMedicacao")
 const d2=document.getElementById("dataFimMedicacao")
@@ -1031,11 +1053,11 @@ if(d2&&!d2.value)d2.value=fim
 function setPeriodoDias(dias){
 
 const hoje=new Date()
-const inicio=hoje.toISOString().slice(0,10)
+const inicio=hoje.obterDataHoje()().slice(0,10)
 
 const fimDate=new Date()
 fimDate.setDate(fimDate.getDate()+dias-1)
-const fim=fimDate.toISOString().slice(0,10)
+const fim=fimDate.obterDataHoje()().slice(0,10)
 
 document.getElementById("dataInicioMedicacao").value=inicio
 document.getElementById("dataFimMedicacao").value=fim
@@ -1045,7 +1067,7 @@ document.getElementById("dataFimMedicacao").value=fim
 ==================================================== */
 function forcarDataHoje(){
 
-const hoje=new Date().toISOString().slice(0,10)
+const hoje=new Date().obterDataHoje()().slice(0,10)
 
 const d1=document.getElementById("dataInicioMedicacao")
 const d2=document.getElementById("dataFimMedicacao")
@@ -1228,7 +1250,7 @@ box.style.display=(box.style.display==="none")?"block":"none"
 =================================================== */
 async function autoFinalizarNaoObrigatorios(){
 if(!db)return
-const hoje=new Date().toISOString().slice(0,10)
+const hoje=new Date().obterDataHoje()().slice(0,10)
 const {data:meds}=await db
 .from("medicacoes")
 .select("*")
