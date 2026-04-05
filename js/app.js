@@ -28,110 +28,50 @@ if(i%5===0)await new Promise(r=>setTimeout(r,0))
 window.FILA_ROTINAS=novaFila
 salvarFilaLocal()
 }
-/* ====================================================
-010 – LOGIN (FINAL LIMPO E CORRETO)
-==================================================== */
+/* ====================================================010 – LOGIN (FINAL CORRIGIDO DEFINITIVO)==================================================== */
 async function login(){
-/* 🔥 EFEITO BOTÃO */
 const btn=document.getElementById("btnEntrar")
-if(btn){
-btn.innerText="Entrando..."
-btn.style.opacity="0.7"
-btn.style.transform="scale(0.97)"
-btn.disabled=true
-}
-/* 🔥 VALIDA SISTEMA */
+if(btn){btn.innerText="Entrando...";btn.style.opacity="0.7";btn.style.transform="scale(0.97)";btn.disabled=true}
 if(!db){
-if(btn){
-btn.innerText="Entrar"
-btn.style.opacity="1"
-btn.style.transform="scale(1)"
-btn.disabled=false
-}
+if(btn){btn.innerText="Entrar";btn.style.opacity="1";btn.style.transform="scale(1)";btn.disabled=false}
 alert("Sistema carregando")
 return
 }
-/* 🔥 INPUTS */
 const loginInput=document.getElementById("usuario")?.value?.trim().toLowerCase()
 const senha=document.getElementById("senha")?.value?.trim()
-
 if(!loginInput||!senha){
-if(btn){
-btn.innerText="Entrar"
-btn.style.opacity="1"
-btn.style.transform="scale(1)"
-btn.disabled=false
-}
+if(btn){btn.innerText="Entrar";btn.style.opacity="1";btn.style.transform="scale(1)";btn.disabled=false}
 alert("Informe usuário e senha")
 return
 }
-/* 🔥 BUSCA USUÁRIOS */
-const {data,error}=await db
-.from("usuarios")
-.select("*")
-.eq("ativo",true)
-
+const {data,error}=await db.from("usuarios").select("*").eq("ativo",true)
 if(error){
 console.error(error)
-if(btn){
-btn.innerText="Entrar"
-btn.style.opacity="1"
-btn.style.transform="scale(1)"
-btn.disabled=false
-}
+if(btn){btn.innerText="Entrar";btn.style.opacity="1";btn.style.transform="scale(1)";btn.disabled=false}
 alert("Erro no login")
 return
 }
-/* 🔍 LOCALIZA USUÁRIO */
-const user=(data||[]).find(u=>
-(
-(u.nome_apelido||"").toLowerCase()===loginInput||
-(u.email||"").toLowerCase()===loginInput||
-(u.nome_completo||"").toLowerCase()===loginInput
-)
-&& String(u.senha_hash)===senha
-)
-
+const user=(data||[]).find(u=>((u.nome_apelido||"").toLowerCase()===loginInput||(u.email||"").toLowerCase()===loginInput||(u.nome_completo||"").toLowerCase()===loginInput)&&String(u.senha_hash)===senha)
 if(!user){
-if(btn){
-btn.innerText="Entrar"
-btn.style.opacity="1"
-btn.style.transform="scale(1)"
-btn.disabled=false
-}
+if(btn){btn.innerText="Entrar";btn.style.opacity="1";btn.style.transform="scale(1)";btn.disabled=false}
 alert("Usuário ou senha inválidos")
 return
 }
-if((user.perfil||"").toLowerCase()==="admin"){
-localStorage.setItem("painelAtual","painelAdmin")
-}else{
-localStorage.setItem("painelAtual","painelEnfermagem")
-}
-localStorage.setItem("usuario_id",user.id||"")
+/* ====================================================011 – LOGIN OK (DEFINITIVO SEM DUPLICIDADE)==================================================== */
+if((user.perfil||"").toLowerCase()==="admin"){localStorage.setItem("painelAtual","painelAdmin")}else{localStorage.setItem("painelAtual","painelEnfermagem")}
+if(user&&user.id){localStorage.setItem("usuario_id",String(user.id))}else{console.error("ERRO: usuário sem ID",user)}
 localStorage.setItem("usuario_nome",user.nome_completo||user.nome_apelido||"")
-localStorage.setItem("usuario_hierarquia",user.hierarquia||1)
-localStorage.setItem("empresa_id",user.empresa_id||"")
-
-/* ====================================================
-011 – LOGIN OK (UNIFICADO DEFINITIVO)
-==================================================== */
-/* 🔐 SALVAR SESSÃO */
-localStorage.setItem("usuario_id",user.id)
-localStorage.setItem("usuario_nome",user.nome_apelido||user.nome_completo||"")
 localStorage.setItem("usuario_hierarquia",user.hierarquia||1)
 localStorage.setItem("perfil",user.perfil||"cuidador")
 localStorage.setItem("usuario_perfil",(user.perfil||"cuidador").toLowerCase())
-/* 🔥 EMPRESA PADRÃO */
 const EMPRESA_FIXA="d9f678e5-6c7a-485e-895c-cb4791db840e"
 localStorage.setItem("empresa_id",EMPRESA_FIXA)
 EMPRESA_ID=EMPRESA_FIXA
-/* 🔥 UI LOGIN → APP */
+console.log("LOGIN OK:",localStorage.getItem("usuario_id"))
 const telaLogin=document.getElementById("login")
 const telaApp=document.getElementById("app")
-
 if(telaLogin)telaLogin.style.display="none"
 if(telaApp)telaApp.style.display="block"
-/* 🔥 INICIALIZA SISTEMA */
 if(typeof definirDataHoje==="function")definirDataHoje()
 if(typeof carregarPacientesBusca==="function")carregarPacientesBusca()
 if(typeof carregarRotinas==="function")carregarRotinas()
