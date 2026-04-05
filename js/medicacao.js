@@ -228,21 +228,29 @@ let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
 
-/* ==============203 – AGRUPAMENTO POR PACIENTE================ */
+/* =================203 – AGRUPAMENTO POR PACIENTE (CORRIGIDO)================= */
 let pacientes={}
+
 lista.forEach(m=>{
-let pacientesOrdenados = Object.values(pacientes).sort((a,b)=>
-(a.nome||"").localeCompare(b.nome||"","pt-BR",{sensitivity:"base"})
-)
 let pid=(m.paciente_id||"").toString().trim()
 if(!pid)return
+
 if(!pacientes[pid]){
-let nome = (m.nome_paciente||"").trim() 
-|| (window.PACIENTES_CACHE||[]).find(p=>String(p.id)===String(pid))?.nome_completo 
+let nome=(m.nome_paciente||"").trim()
+|| (window.PACIENTES_CACHE||[]).find(p=>String(p.id)===String(pid))?.nome_completo
 || "Paciente"
+
 pacientes[pid]={id:pid,nome:nome,itens:[]}
 }
+
 pacientes[pid].itens.push(m)
+})
+
+/* 🔥 ORDENAÇÃO CORRETA */
+let pacientesOrdenados=Object.values(pacientes).sort((a,b)=>{
+let na=(a.nome||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase()
+let nb=(b.nome||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase()
+return na.localeCompare(nb,"pt-BR")
 })
 
 let modo=window.MODO_MEDICACAO||""
@@ -267,9 +275,7 @@ html+=`
 `
 
 /* =====205 – PACIENTES======================= */
-Object.values(pacientes)
-.sort((a,b)=>(a.nome||"").trim().localeCompare((b.nome||"").trim(),"pt-BR",{sensitivity:"base"}))
-.forEach(p=>{
+pacientesOrdenados.forEach(p=>{
 let corPaciente=gerarCor(p.nome,60,92)
 
 html+=`<div data-paciente-id="${p.id}" style="background:${corPaciente};padding:12px;margin-bottom:14px;border-radius:12px">
