@@ -337,7 +337,7 @@ cor="#22c55e"
 }
 }
 
-let bloqueado=exec?"pointer-events:none;opacity:0.65;cursor:not-allowed;":""
+let bloqueado = exec && false ? "pointer-events:none..." : ""
 
 let texto=h
 if(exec){
@@ -630,8 +630,18 @@ return
 const nomeLimpo=nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim() .replace(/mg|cp|cps|ml|ui/g,"").trim()
 /* 🔍 EVITA DUPLICADO */
 const {data:existe}=await db.from("medicacoes").select("id").eq("empresa_id",EMPRESA_ID).eq("nome_padrao",nomeLimpo).eq("dosagem",dose||"").eq("paciente_id",pacienteId).maybeSingle()
-if(existe){
-alert("Medicação já cadastrada")
+if(existe && existe.length){
+let medExistente=existe[0]
+let antigos=(medExistente.horarios||"").split("|")
+let novos=(horarioFinal||"").split("|")
+let todos=[...new Set([...antigos,...novos])]
+await db.from("medicacoes")
+.update({
+horarios:todos.join("|")
+})
+.eq("id",medExistente.id)
+console.log("Horários atualizados")
+await carregarMedicacoes()
 return
 }
 /* 💾 INSERT */
