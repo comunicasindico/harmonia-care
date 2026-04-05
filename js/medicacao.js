@@ -1,4 +1,10 @@
 /* ====================================================
+000A – DATA ATIVA GLOBAL
+==================================================== */
+function obterDataAtiva(){
+return document.getElementById("dataInicioMedicacao")?.value || obterDataHoje()
+}
+/* ====================================================
 001 – FORMATAR TEXTO MEDICAÇÃO (INTELIGENTE)
 ==================================================== */
 function formatarTextoMedicacao(txt){
@@ -116,6 +122,7 @@ renderizarMedicacoes([])
 return
 }
 renderizarMedicacoes(data||[])
+aplicarDataInteligente()
 carregarListaHorarios()
 montarHorariosMedicacao()
 if(typeof carregarListaMedicacoesEditar==="function"){
@@ -175,13 +182,12 @@ console.warn("⚠ filtro não aplicado (PACIENTES_CACHE vazio)")
 }
 
 window.MEDICACOES_CACHE=lista
-/* 🔥 PATCH 010 – MAPA DE EXECUÇÕES (PERFORMANCE) */
 let mapaExec={};
-const execLista=(window.EXEC_CACHE||[]);
-execLista.forEach(e=>{
-let chave=e.data+"_"+e.medicacao_id+"_"+e.horario;
-mapaExec[chave]=e;
+(window.EXEC_CACHE||[]).forEach(e=>{
+let chave=e.medicacao_id+"_"+e.horario
+mapaExec[chave]=e
 });
+
 const normalizarHora=h=>{
 if(!h)return""
 h=h.toString().trim()
@@ -391,7 +397,7 @@ return
 if(!db||!medicacaoId||!horario)return
 
 const user=obterUsuarioLogado()||{}
-const dataHoje = document.getElementById("dataInicioMedicacao")?.value || obterDataHoje()
+const dataHoje = obterDataAtiva()
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
 
@@ -468,7 +474,7 @@ if(botao)botao.dataset.loading="0"
 /* ========================210 – CARREGAR STATUS==================================================== */
 async function carregarStatusMedicacoes(){
 
-const dataHoje=obterDataHoje()
+const dataHoje = obterDataAtiva()
 
 const {data,error}=await db
 .from("medicacoes_execucao")
