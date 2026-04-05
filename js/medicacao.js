@@ -206,8 +206,9 @@ window.MEDICACOES_CACHE=lista
 /* ====================================================
 202B – MAPA EXECUÇÃO CORRETO (DATA + ID + HORA)
 ==================================================== */
-let mapaExec={}
-(window.EXEC_CACHE||[]).forEach(e=>{
+let mapaExec={};
+const execLista=(window.EXEC_CACHE||[])
+execLista.forEach(e=>{
 let chave=e.data+"_"+e.medicacao_id+"_"+e.horario
 mapaExec[chave]=e
 })
