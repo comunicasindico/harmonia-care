@@ -345,3 +345,16 @@ if(el)el.innerHTML=html
 setInterval(function(){
 if(navigator.onLine){sincronizarFila()}
 },5000)
+/* =======================FUNCTION MOSTRAR STATUS E ESCONDER SATUTS================================================= */
+function mostrarStatusSync(texto){
+const el=document.getElementById("statusSync")
+if(!el)return
+el.innerText=texto||"⏳ Salvando..."
+el.style.display="block"
+}
+
+function esconderStatusSync(){
+const el=document.getElementById("statusSync")
+if(!el)return
+el.style.display="none"
+}
