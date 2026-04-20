@@ -1041,17 +1041,27 @@ datas.forEach(function(dataHoje){
 
 lista.forEach(function(m){
 
-let horarios=(m.horarios||"").toString().split("|");
+/* 🔥 VALIDAÇÃO */
+if(!m.id || !m.paciente_id) return
+
+let horarios=(m.horarios||"").toString().split("|")
 
 horarios.forEach(function(h){
 
-if(!h)return;
+if(!h)return
 
-h=h.toString().trim();
+h=h.toString().trim()
+
+/* 🔥 IGNORA LIXO */
+if(!h || h.length<3) return
+if(h.toLowerCase().includes("jejum")) return
 
 if(!h.includes(":")){
-h=h.padStart(2,"0")+":00";
+h=h.padStart(2,"0")+":00"
 }
+
+/* 🔥 VALIDA FINAL */
+if(!/^\d{2}:\d{2}$/.test(h)) return
 
 adicionarFilaMedicacao({
 medicacao_id:m.id,
@@ -1062,13 +1072,13 @@ status:"executado",
 usuario_id:user.id||null,
 usuario_nome:user.nome||"Admin",
 empresa_id:EMPRESA_ID
-});
+})
 
-});
+})
 
-});
+})
 
-});
+})
 
 /* dispara envio */
 sincronizarFilaMedicacao()
