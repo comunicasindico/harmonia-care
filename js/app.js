@@ -256,19 +256,19 @@ if(el)el.style.display="inline-block"
 }
 /* 🔥 CONFIG POR PAINEL */
 if(painel==="enfermagem"){
-mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnGerarPDF","btnPDFPaciente","btnPendentesTodos","btnSalvar"])
+mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnMedicacaoHora","btnGerarPDF","btnPDFPaciente","btnPendentesTodos","btnSalvar"])
 document.getElementById("acoesClinico").style.display="none"
 }
 if(painel==="clinico"){
-mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnSalvar"])
+mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnMedicacaoHora","btnSalvar"])
 document.getElementById("acoesClinico").style.display="flex"
 }
 if(painel==="admin"){
-mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnBackup"])
+mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnMedicacaoHora","btnBackup"])
 document.getElementById("acoesClinico").style.display="none"
 }
 if(painel==="medicacao"){
-mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnPDFMedicacaoPaciente","btnPDFMedicacaoGeral"])
+mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnMedicacaoHora","btnPDFMedicacaoPaciente","btnPDFMedicacaoGeral"])
 document.getElementById("acoesClinico").style.display="none"
 }
 /* 🔥 DESTACA ATIVO */
