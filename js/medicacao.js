@@ -410,7 +410,7 @@ texto=`${h} ${exec.usuario_nome||"Admin"} OK`
 return `<button
 data-hora="${h}"
 class="${exec ? 'executado' : ''}"
-onclick="${exec?"":`administrarMedicacaoGrupo('${[...m.ids].join(",")}','${h}',this)`}"
+onclick="administrarMedicacaoGrupo('${[...m.ids].join(",")}','${h}',this)"
 style="background:${cor};color:#000;border:none;border-radius:8px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:70px;box-shadow:0 2px 4px rgba(0,0,0,0.15);${bloqueado}">
 <span>${icone} ${texto}</span>
 </button>`
@@ -455,17 +455,41 @@ if(!podeUsarMedicacao()){
 alert("Acesso restrito")
 return
 }
-
-if(!db||!medicacaoId||!horario)return
-
+if(!medicacaoId||!horario)return
 const user=obterUsuarioLogado()||{}
-const dataHoje=obterDataAtiva() /* 🔥 CORREÇÃO */
+const dataHoje=obterDataAtiva()
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
-
-if(botao && botao.dataset.loading==="1")return
-if(botao)botao.dataset.loading="1"
-
+/* ====================================================
+🔥 1 – UI IMEDIATA (SEM ESPERAR BANCO)
+==================================================== */
+if(botao){
+botao.style.background="#22c55e"
+botao.style.color="#fff"
+botao.innerHTML=`${horario} ${nome} OK`
+botao.classList.add("executado","pulse-ok")
+setTimeout(()=>botao.classList.remove("pulse-ok"),300)
+}
+/* ====================================================
+🔥 2 – CACHE LOCAL (SIMULA OFFLINE)
+==================================================== */
+if(!window.EXEC_CACHE)window.EXEC_CACHE=[]
+window.EXEC_CACHE.push({
+medicacao_id:medicacaoId,
+data:dataHoje,
+horario:horario,
+status:"executado",
+usuario_id:usuarioId,
+usuario_nome:nome,
+empresa_id:EMPRESA_ID
+})
+/* ====================================================
+🔥 3 – SALVA NO BANCO (SEM TRAVAR UI)
+==================================================== */
+try{
+if(!db)return
+/* 🔥 NÃO BLOQUEIA MAIS A UI */
+setTimeout(async()=>{
 try{
 
 const {data:ja}=await db
@@ -479,8 +503,6 @@ const {data:ja}=await db
 
 if(ja){
 await db.from("medicacoes_execucao").delete().eq("id",ja.id)
-await carregarStatusMedicacoes()
-renderizarMedicacoes(window.MEDICACOES_CACHE)
 return
 }
 
@@ -494,16 +516,26 @@ usuario_nome:nome,
 empresa_id:EMPRESA_ID
 })
 
-if(botao){
-botao.classList.add("pulse-ok")
-setTimeout(()=>botao.classList.remove("pulse-ok"),400)
+}catch(e){
+console.error(e)
 }
-
-await carregarStatusMedicacoes()
-renderizarMedicacoes(window.MEDICACOES_CACHE)
-
-}finally{
-if(botao)botao.dataset.loading="0"
+},0)
+await db.from("medicacoes_execucao").insert({
+medicacao_id:medicacaoId,
+data:dataHoje,
+horario:horario,
+status:"executado",
+usuario_id:usuarioId,
+usuario_nome:nome,
+empresa_id:EMPRESA_ID
+})
+}catch(e){
+console.error("Erro ao salvar:",e)
+/* 🔥 rollback UI se falhar */
+if(botao){
+botao.style.background="#ef4444"
+botao.innerHTML="ERRO"
+}
 }
 }
 /* ========================210 – CARREGAR STATUS==================================================== */
@@ -1554,26 +1586,25 @@ document.querySelector(`[data-paciente-id="${pacienteId}"]`).appendChild(div)
 305 – ADMINISTRAR GRUPO MEDICAÇÕES (OTIMIZADO)
 ==================================================== */
 async function administrarMedicacaoGrupo(ids,horario,botao){
+
 if(!ids||!horario)return
 
 const lista=ids.split(",")
 
-/* 🔥 EXECUÇÃO EM PARALELO */
-await Promise.all(lista.map(id=>administrarMedicacao(id,horario,null)))
-
-/* 🔥 FEEDBACK VISUAL */
+/* 🔥 UI IMEDIATA */
 if(botao){
+botao.style.background="#22c55e"
+botao.style.color="#fff"
 botao.classList.add("pulse-ok")
-setTimeout(()=>botao.classList.remove("pulse-ok"),400)
+setTimeout(()=>botao.classList.remove("pulse-ok"),300)
 }
 
-/* 🔥 ATUALIZA UMA VEZ */
-await carregarStatusMedicacoes()
-renderizarMedicacoes(window.MEDICACOES_CACHE||[])
+/* 🔥 EXECUÇÃO SEM BLOQUEIO */
+lista.forEach(id=>{
+administrarMedicacao(id,horario,null)
+})
+
 }
-
-
-
 /* ====================================================
 306 – INIT HORÁRIOS + CONTROLE DATA MANUAL
 ==================================================== */
