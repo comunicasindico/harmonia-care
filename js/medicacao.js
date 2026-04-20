@@ -1124,9 +1124,14 @@ empresa_id:EMPRESA_ID
 
 try{
 
-const {error}=await db.from("medicacoes_execucao").upsert(payload,{
-onConflict:"medicacao_id,data,horario,empresa_id,paciente_id"
-})
+const {error}=await db
+.from("medicacoes_execucao")
+.insert(payload)
+
+if(error && error.code!=="23505"){
+console.error("Erro real:",error)
+adicionarFilaMedicacao(payload)
+}
 
 if(error){
 if(typeof adicionarFilaMedicacao==="function"){
