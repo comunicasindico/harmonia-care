@@ -372,13 +372,19 @@ window.FILA_MEDICACAO=JSON.parse(localStorage.getItem("fila_medicacao")||"[]")
 function salvarFilaMedicacao(){
 localStorage.setItem("fila_medicacao",JSON.stringify(window.FILA_MEDICACAO))
 }
-
+/* ====================================================
+070 – Adicionar FILA MEDICACAO
+==================================================== */
 function adicionarFilaMedicacao(payload){
-window.FILA_MEDICACAO.push({
-...payload,
-tentativas:0,
-ts:Date.now()
-})
+
+const existe=window.FILA_MEDICACAO.find(x=>
+x.medicacao_id===payload.medicacao_id &&
+x.data===payload.data &&
+x.horario===payload.horario &&
+x.paciente_id===payload.paciente_id
+)
+if(existe) return
+window.FILA_MEDICACAO.push({...payload,tentativas:0,ts:Date.now()})
 salvarFilaMedicacao()
 }
 /* ====================================================
@@ -393,7 +399,7 @@ mostrarStatusSync("🔄 Sincronizando medicações...")
 let fila=[...window.FILA_MEDICACAO]
 let novaFila=[]
 
-for(let i=0;i<fila.length;i++){
+for(let i=0;i<Math.min(fila.length,50);i++){
 
 let item=fila[i]
 
@@ -404,6 +410,7 @@ onConflict:"medicacao_id,data,horario,empresa_id,paciente_id"
 })
 
 if(error){
+console.error("ERRO REAL:",error)
 item.tentativas++
 if(item.tentativas<5)novaFila.push(item)
 }
