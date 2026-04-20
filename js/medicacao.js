@@ -362,10 +362,18 @@ meds.forEach(m=>{
 
 let corMedicacao = m.obrigatorio===false ? "#f1f5f9" : gerarCor(m.nome,50,96)
 
-let horarios=[...m.horarios].sort((a,b)=>{
-let[p1,m1]=a.split(":")
-let[p2,m2]=b.split(":")
-return(Number(p1)*60+Number(m1))-(Number(p2)*60+Number(m2))
+let horarios=[...m.horarios]
+.filter(Boolean)
+.map(h=>{
+h=h.toString().trim()
+if(!h.includes(":"))return h.padStart(2,"0")+":00"
+let[p,m]=h.split(":")
+return p.padStart(2,"0")+":"+m.padStart(2,"0")
+})
+.sort((a,b)=>{
+const [ha,ma]=a.split(":").map(Number)
+const [hb,mb]=b.split(":").map(Number)
+return (ha*60+ma)-(hb*60+mb)
 })
 
 let hHTML=horarios.map(h=>{
