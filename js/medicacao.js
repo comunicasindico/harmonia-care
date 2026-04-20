@@ -1070,44 +1070,59 @@ alert("Erro inesperado")
 }
 }
 /* ====================================================
-223   222 – CONCLUIR PENDENTES MEDICACAO (FINAL TURBO)
+223 – CONCLUIR PENDENTES MEDICACAO (FINAL TURBO)
 ==================================================== */
 window.concluirPendentesMedicacao=async function(){
+
 mostrarStatusSync("⏳ Salvando...")
+
 if(!db)return
+
 const user=obterUsuarioLogado()||{}
+
 const dataInicio=document.getElementById("dataInicioMedicacao")?.value
 const dataFim=document.getElementById("dataFimMedicacao")?.value
+
 if(!dataInicio||!dataFim){
 alert("Informe período")
 return
 }
+
 const datas=gerarDatasPeriodo(dataInicio,dataFim)
+
 const lista=window.MEDICACOES_CACHE||[]
+
 if(!lista.length){
 alert("Nenhuma medicação encontrada")
 return
 }
+
 /* 🔥 BASE */
 let base=[]
+
 lista.forEach(m=>{
 let horarios=(m.horarios||"").toString().split("|")
+
 horarios.forEach(h=>{
 if(!h)return
-h=h.toString().trim()
+
+h=h.trim()
 if(!h.includes(":"))h=h.padStart(2,"0")+":00"
+
 base.push({
 medicacao_id:m.id,
 horario:h,
 empresa_id:EMPRESA_ID
 })
+
 })
 })
+
 if(!base.length){
 alert("Nada para concluir")
 return
 }
-}
+
 /* ====================================================
 🔥 1 – UI IMEDIATA (TUDO VERDE)
 ==================================================== */
@@ -1180,14 +1195,16 @@ await sincronizarFila()
 setTimeout(()=>esconderStatusSync(),800)
 
 },200)
+
+}
 /* ====================================================
-225    230 – DATA INTELIGENTE
+225  – DATA INTELIGENTE
 ==================================================== */
 function aplicarDataInteligente(){
 return
 }
 /* ====================================================
-226     231 – SET PERIODO DIAS - MEDICACAO
+226  – SET PERIODO DIAS - MEDICACAO
 ==================================================== */
 function setPeriodoDias(dias){
 
