@@ -1037,13 +1037,21 @@ btn.innerText=`OK`
 })
 
 /* FILA */
-datas.forEach(dataHoje=>{
-lista.forEach(m=>{
-let horarios=(m.horarios||"").split("|")
+datas.forEach(function(dataHoje){
 
-horarios.forEach(h=>{
-if(!h)return
-if(!h.includes(":"))h=h.padStart(2,"0")+":00
+lista.forEach(function(m){
+
+let horarios=(m.horarios||"").toString().split("|");
+
+horarios.forEach(function(h){
+
+if(!h)return;
+
+h=h.toString().trim();
+
+if(!h.includes(":")){
+h=h.padStart(2,"0")+":00";
+}
 
 adicionarFilaMedicacao({
 medicacao_id:m.id,
@@ -1054,11 +1062,13 @@ status:"executado",
 usuario_id:user.id||null,
 usuario_nome:user.nome||"Admin",
 empresa_id:EMPRESA_ID
-})
+});
 
-})
-})
-})
+});
+
+});
+
+});
 
 /* dispara envio */
 sincronizarFilaMedicacao()
