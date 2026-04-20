@@ -101,15 +101,6 @@ html+=`</div></div>`
 div.innerHTML=html
 }
 /* ====================================================
-004 – CLASSIFICAR TURNO
-==================================================== */
-function classificarTurno(h){
-const hora=parseInt(h.split(":")[0])
-if(hora<12)return "manha"
-if(hora<18)return "tarde"
-return "noite"
-}
-/* ====================================================
 999 – GARANTIR BOTÃO MEDICAÇÃO POR HORA
 ==================================================== */
 function garantirBotaoMedicacaoHora(){
