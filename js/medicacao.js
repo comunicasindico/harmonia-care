@@ -469,93 +469,39 @@ html+=`</div></div>`
 div.innerHTML=html
 }
 /* ====================================================
-209 110 – ADMINISTRAR MEDICAÇÃO (DATA FIX REAL)
+209  ADMINISTRAR MEDICAÇÃO (DATA FIX REAL)
 ==================================================== */
 async function administrarMedicacao(medicacaoId,horario,botao){
 
-if(!podeUsarMedicacao()){
-alert("Acesso restrito")
-return
-}
-
-if(!medicacaoId||!horario)return
-
 const user=obterUsuarioLogado()||{}
 const dataHoje=obterDataAtiva()
-const usuarioId=user.id||null
-const nome=user.nome||"Administrador"
 
-/* ====================================================
-🔥 1 – UI IMEDIATA
-==================================================== */
+const med=(window.MEDICACOES_CACHE||[]).find(m=>String(m.id)===String(medicacaoId))
+const paciente_id=med?.paciente_id||null
+
+let payload={
+medicacao_id:medicacaoId,
+paciente_id,
+data:dataHoje,
+horario,
+status:"executado",
+usuario_id:user.id||null,
+usuario_nome:user.nome||"Admin",
+empresa_id:EMPRESA_ID
+}
+
+/* UI IMEDIATA */
 if(botao){
 botao.style.background="#22c55e"
 botao.style.color="#fff"
-botao.innerHTML=`${horario} ${nome} OK`
-botao.classList.add("executado","pulse-ok")
-setTimeout(()=>botao.classList.remove("pulse-ok"),300)
+botao.innerHTML=`${horario} ${user.nome||"Admin"} OK`
 }
 
-/* ====================================================
-🔥 2 – CACHE LOCAL
-==================================================== */
-if(!window.EXEC_CACHE)window.EXEC_CACHE=[]
-window.EXEC_CACHE.push({
-medicacao_id:medicacaoId,
-data:dataHoje,
-horario:horario,
-status:"executado",
-usuario_id:usuarioId,
-usuario_nome:nome,
-empresa_id:EMPRESA_ID
-})
+/* 🔥 SALVA NA FILA */
+adicionarFilaMedicacao(payload)
 
-/* ====================================================
-🔥 3 – BANCO (ASSÍNCRONO)
-==================================================== */
-try{
-
-if(!db)return
-
-setTimeout(async()=>{
-
-try{
-
-const {data:ja}=await db
-.from("medicacoes_execucao")
-.select("id")
-.eq("medicacao_id",medicacaoId)
-.eq("data",dataHoje)
-.eq("empresa_id",EMPRESA_ID)
-.eq("horario",horario)
-.maybeSingle()
-
-if(ja){
-await db.from("medicacoes_execucao").delete().eq("id",ja.id)
-return
-}
-
-await db.from("medicacoes_execucao").upsert({
-medicacao_id:medicacaoId,
-data:dataHoje,
-horario:horario,
-status:"executado",
-usuario_id:usuarioId,
-usuario_nome:nome,
-empresa_id:EMPRESA_ID
-},{
-onConflict:"medicacao_id,data,horario,empresa_id,paciente_id"
-})
-
-}catch(e){
-console.error("Erro interno:",e)
-}
-
-},0)
-
-}catch(e){
-console.error("Erro externo:",e)
-}
+/* 🔥 tenta enviar na hora */
+sincronizarFilaMedicacao()
 
 }
 /* ========================210 – CARREGAR STATUS==================================================== */
@@ -1076,127 +1022,48 @@ window.concluirPendentesMedicacao=async function(){
 
 mostrarStatusSync("⏳ Salvando...")
 
-if(!db)return
-
 const user=obterUsuarioLogado()||{}
-
-const dataInicio=document.getElementById("dataInicioMedicacao")?.value
-const dataFim=document.getElementById("dataFimMedicacao")?.value
-
-if(!dataInicio||!dataFim){
-alert("Informe período")
-return
-}
-
-const datas=gerarDatasPeriodo(dataInicio,dataFim)
+const datas=gerarDatasPeriodo(
+document.getElementById("dataInicioMedicacao").value,
+document.getElementById("dataFimMedicacao").value
+)
 
 const lista=window.MEDICACOES_CACHE||[]
 
-if(!lista.length){
-alert("Nenhuma medicação encontrada")
-return
-}
+/* UI */
+document.querySelectorAll("#painelMedicacao button[data-hora]").forEach(btn=>{
+btn.style.background="#22c55e"
+btn.innerText=`OK`
+})
 
-/* 🔥 BASE */
-let base=[]
-
+/* FILA */
+datas.forEach(dataHoje=>{
 lista.forEach(m=>{
-let horarios=(m.horarios||"").toString().split("|")
+let horarios=(m.horarios||"").split("|")
 
 horarios.forEach(h=>{
 if(!h)return
+if(!h.includes(":"))h=h.padStart(2,"0")+":00
 
-h=h.trim()
-if(!h.includes(":"))h=h.padStart(2,"0")+":00"
-
-base.push({
+adicionarFilaMedicacao({
 medicacao_id:m.id,
 paciente_id:m.paciente_id,
+data:dataHoje,
 horario:h,
-empresa_id:EMPRESA_ID
-})
-
-})
-})
-
-if(!base.length){
-alert("Nada para concluir")
-return
-}
-
-/* ====================================================
-🔥 1 – UI IMEDIATA (TUDO VERDE)
-==================================================== */
-document.querySelectorAll("#painelMedicacao button[data-hora]").forEach(btn=>{
-const hora=btn.dataset.hora
-
-btn.classList.add("executado")
-btn.style.background="#22c55e"
-btn.style.color="#fff"
-btn.innerText=`${hora} ${user.nome||"Admin"} OK`
-})
-
-/* ====================================================
-🔥 2 – FILA OFFLINE
-==================================================== */
-datas.forEach(dataHoje=>{
-base.forEach(itemBase=>{
-
-let payload={
-medicacao_id:itemBase.medicacao_id,
-paciente_id:itemBase.paciente_id||null,
-data:dataHoje,
-horario:itemBase.horario,
-status:"executado",
-usuario_id:user.id||null,
-usuario_nome:user.nome||"Admin",
-empresa_id:EMPRESA_ID
-}
-
-if(typeof adicionarNaFila==="function"){
-adicionarNaFila(payload)
-}
-
-})
-})
-
-/* ====================================================
-🔥 3 – CACHE IMEDIATO
-==================================================== */
-if(!window.EXEC_CACHE)window.EXEC_CACHE=[]
-
-datas.forEach(dataHoje=>{
-base.forEach(itemBase=>{
-window.EXEC_CACHE.push({
-...itemBase,
-data:dataHoje,
 status:"executado",
 usuario_id:user.id||null,
 usuario_nome:user.nome||"Admin",
 empresa_id:EMPRESA_ID
 })
+
 })
 })
+})
 
-/* ====================================================
-🔥 4 – RE-RENDER
-==================================================== */
-setTimeout(()=>{
-renderizarMedicacoes(window.MEDICACOES_CACHE||[])
-},50)
-
-/* ====================================================
-🔥 5 – BACKGROUND SAVE
-==================================================== */
-setTimeout(async()=>{
-
-if(typeof sincronizarFila==="function"){
-await sincronizarFila()
-}
+/* dispara envio */
+sincronizarFilaMedicacao()
 
 setTimeout(()=>esconderStatusSync(),800)
-
-},200)
 
 }
 /* ====================================================
