@@ -21,6 +21,7 @@
 
 <script src="js/enfermagem.js?v=5"></script>
 <script src="js/medicacao.js?v=2"></script>
+<script src="js/medicacaohora.js?v=1"></script>
 <script src="js/admin.js?v=3"></script>
 <script src="js/app.js"></script>
 <!-- ====================================================
@@ -184,6 +185,7 @@ body{overflow-x:auto;}
 <button id="btnEnfermagem" onclick="abrirPainel('painelEnfermagem')" class="btn-primary">Painel Enfermagem</button>
 <button id="btnClinico" onclick="abrirPainel('painelClinico')" class="btn-secondary">Painel Clínico</button>
 <button id="btnMedicacao" onclick="abrirPainel('painelMedicacao');abrirPainelMedicacao()" class="btn-primary">💊 Medicação</button>
+<button onclick="abrirPainelMedicacaoHora()" class="btn-secondary">⏰ Medicação p/Hora</button>
 <button id="btnPDFMedicacaoPaciente" class="btn-primary" onclick="gerarPDFMedicacaoPaciente()">📄 PDF Paciente Medicação</button>
 <button id="btnPDFMedicacaoGeral" class="btn-primary" onclick="gerarPDFMedicacaoGeral()">📄 PDF Geral Medicação</button>
 <button id="btnAdmin" onclick="abrirPainel('painelAdmin')" class="btn-success">Admin</button>
@@ -284,6 +286,13 @@ Salvar
 <div id="barraProgresso" style="width:0%;height:100%;background:#22c55e;transition:width 0.2s"></div>
 </div>
 <div id="listaMedicacoes"></div>
+</div>
+<!-- ====================================================
+009 – PAINEL MEDICAÇÃO p/HORA
+==================================================== -->
+<div id="painelMedicacaoHora" class="box" style="display:none">
+<h3>⏰ Medicação por Hora</h3>
+<div id="listaMedicacoesHora"></div>
 </div>
 <!-- ====================================================
 010 – PAINEL ENFERMAGEM
