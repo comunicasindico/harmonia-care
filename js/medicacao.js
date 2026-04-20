@@ -455,13 +455,16 @@ if(!podeUsarMedicacao()){
 alert("Acesso restrito")
 return
 }
+
 if(!medicacaoId||!horario)return
+
 const user=obterUsuarioLogado()||{}
 const dataHoje=obterDataAtiva()
 const usuarioId=user.id||null
 const nome=user.nome||"Administrador"
+
 /* ====================================================
-🔥 1 – UI IMEDIATA (SEM ESPERAR BANCO)
+🔥 1 – UI IMEDIATA
 ==================================================== */
 if(botao){
 botao.style.background="#22c55e"
@@ -470,8 +473,9 @@ botao.innerHTML=`${horario} ${nome} OK`
 botao.classList.add("executado","pulse-ok")
 setTimeout(()=>botao.classList.remove("pulse-ok"),300)
 }
+
 /* ====================================================
-🔥 2 – CACHE LOCAL (SIMULA OFFLINE)
+🔥 2 – CACHE LOCAL
 ==================================================== */
 if(!window.EXEC_CACHE)window.EXEC_CACHE=[]
 window.EXEC_CACHE.push({
@@ -483,13 +487,16 @@ usuario_id:usuarioId,
 usuario_nome:nome,
 empresa_id:EMPRESA_ID
 })
+
 /* ====================================================
-🔥 3 – SALVA NO BANCO (SEM TRAVAR UI)
+🔥 3 – BANCO (ASSÍNCRONO)
 ==================================================== */
 try{
+
 if(!db)return
-/* 🔥 NÃO BLOQUEIA MAIS A UI */
+
 setTimeout(async()=>{
+
 try{
 
 const {data:ja}=await db
@@ -519,11 +526,15 @@ onConflict:"medicacao_id,data,horario,empresa_id"
 })
 
 }catch(e){
-console.error(e)
+console.error("Erro interno:",e)
 }
+
 },0)
 
+}catch(e){
+console.error("Erro externo:",e)
 }
+
 }
 /* ========================210 – CARREGAR STATUS==================================================== */
 async function carregarStatusMedicacoes(){
