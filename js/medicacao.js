@@ -544,7 +544,7 @@ usuario_id:usuarioId,
 usuario_nome:nome,
 empresa_id:EMPRESA_ID
 },{
-onConflict:"medicacao_id,data,horario,empresa_id"
+onConflict:"medicacao_id,data,horario,empresa_id,paciente_id"
 })
 
 }catch(e){
@@ -1111,6 +1111,7 @@ if(!h.includes(":"))h=h.padStart(2,"0")+":00"
 
 base.push({
 medicacao_id:m.id,
+paciente_id:m.paciente_id,
 horario:h,
 empresa_id:EMPRESA_ID
 })
@@ -1143,6 +1144,7 @@ base.forEach(itemBase=>{
 
 let payload={
 medicacao_id:itemBase.medicacao_id,
+paciente_id:itemBase.paciente_id||null,
 data:dataHoje,
 horario:itemBase.horario,
 status:"executado",
