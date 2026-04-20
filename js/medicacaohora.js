@@ -94,3 +94,37 @@ html+=`</div></div>`
 
 div.innerHTML=html
 }
+
+/* ====================================================
+999 – GARANTIR BOTÃO MEDICAÇÃO POR HORA
+==================================================== */
+function garantirBotaoMedicacaoHora(){
+
+const topo=document.getElementById("topoBotoes")
+if(!topo)return
+
+/* já existe? */
+if(document.getElementById("btnMedicacaoHora"))return
+
+const btn=document.createElement("button")
+btn.id="btnMedicacaoHora"
+btn.className="btn-secondary"
+btn.innerHTML="⏰ Medicação p/Hora"
+btn.onclick=abrirPainelMedicacaoHora
+
+topo.appendChild(btn)
+}
+
+/* 🔄 OBSERVA MUDANÇAS NO DOM */
+const observer=new MutationObserver(()=>{
+garantirBotaoMedicacaoHora()
+})
+
+window.addEventListener("load",()=>{
+garantirBotaoMedicacaoHora()
+
+const topo=document.getElementById("topoBotoes")
+if(topo){
+observer.observe(topo,{childList:true})
+}
+})
