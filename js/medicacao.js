@@ -1073,6 +1073,7 @@ alert("Erro inesperado")
 223   222 – CONCLUIR PENDENTES MEDICACAO (FINAL TURBO)
 ==================================================== */
 window.concluirPendentesMedicacao=async function(){
+
 if(!db)return
 
 const user=obterUsuarioLogado()||{}
@@ -1085,8 +1086,8 @@ return
 }
 
 const datas=gerarDatasPeriodo(dataInicio,dataFim)
-
 const lista=window.MEDICACOES_CACHE||[]
+
 if(!lista.length){
 alert("Nenhuma medicação encontrada")
 return
@@ -1097,10 +1098,12 @@ let base=[]
 
 lista.forEach(m=>{
 let horarios=(m.horarios||"").toString().split("|")
+
 horarios.forEach(h=>{
 if(!h)return
 h=h.toString().trim()
 if(!h.includes(":"))h=h.padStart(2,"0")+":00"
+
 base.push({
 medicacao_id:m.id,
 horario:h,
@@ -1114,65 +1117,76 @@ alert("Nada para concluir")
 return
 }
 
-/* 🔥 CONTROLE */
-let total=base.length * datas.length
-let atual=0
+/* ====================================================
+🔥 1 – UI IMEDIATA (TUDO VERDE)
+==================================================== */
+document.querySelectorAll("#painelMedicacao button[data-hora]").forEach(btn=>{
+const hora=btn.dataset.hora
 
-iniciarBarra(total)
+btn.classList.add("executado")
+btn.style.background="#22c55e"
+btn.style.color="#fff"
+btn.innerText=`${hora} ${user.nome||"Admin"} OK`
+})
 
-/* 🔥 LOOP */
-for(const dataHoje of datas){
+/* ====================================================
+🔥 2 – FILA OFFLINE
+==================================================== */
+datas.forEach(dataHoje=>{
+base.forEach(itemBase=>{
 
-for(const itemBase of base){
+let payload={
+medicacao_id:itemBase.medicacao_id,
+data:dataHoje,
+horario:itemBase.horario,
+status:"executado",
+usuario_id:user.id||null,
+usuario_nome:user.nome||"Admin",
+empresa_id:EMPRESA_ID
+}
 
-let item={
+if(typeof adicionarNaFila==="function"){
+adicionarNaFila(payload)
+}
+
+})
+})
+
+/* ====================================================
+🔥 3 – CACHE IMEDIATO
+==================================================== */
+if(!window.EXEC_CACHE)window.EXEC_CACHE=[]
+
+datas.forEach(dataHoje=>{
+base.forEach(itemBase=>{
+window.EXEC_CACHE.push({
 ...itemBase,
 data:dataHoje,
 status:"executado",
 usuario_id:user.id||null,
-usuario_nome:user.nome||"Admin"
+usuario_nome:user.nome||"Admin",
+empresa_id:EMPRESA_ID
+})
+})
+})
+
+/* ====================================================
+🔥 4 – RE-RENDER
+==================================================== */
+setTimeout(()=>{
+renderizarMedicacoes(window.MEDICACOES_CACHE||[])
+},50)
+
+/* ====================================================
+🔥 5 – BACKGROUND SAVE
+==================================================== */
+setTimeout(()=>{
+if(typeof sincronizarFila==="function"){
+sincronizarFila()
 }
-
-/* 🔒 VERIFICA */
-const {data:existe}=await db
-.from("medicacoes_execucao")
-.select("id")
-.eq("medicacao_id",item.medicacao_id)
-.eq("data",item.data)
-.eq("horario",item.horario)
-.eq("empresa_id",item.empresa_id)
-.maybeSingle()
-
-if(!existe){
-
-await db.from("medicacoes_execucao").insert(item)
-
-/* 🔥 ATIVA UI (BOTÃO VERDE) */
-const btn=document.querySelector(
-`[data-hora="${item.horario}"]`
-)
-
-if(btn){
-btn.classList.add("ok")
-btn.style.background="#22c55e"
-btn.style.color="#fff"
-btn.innerText=`${item.horario} ${user.nome||"Admin"} OK`
-}
+},200)
 
 }
-
-atual++
-atualizarBarra(atual,total)
-
-}
-}
-
-/* 🔥 FINAL */
-finalizarBarra()
-
-await carregarStatusMedicacoes()
-}
-
 /* ====================================================
 225    230 – DATA INTELIGENTE
 ==================================================== */
