@@ -355,7 +355,21 @@ if(n)mapa[chave].horarios.add(n)
 
 })
 
-let meds=Object.values(mapa).sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR"))
+let meds=Object.values(mapa).sort((a,b)=>{
+
+const getMinHora=(arr)=>{
+if(!arr || !arr.size)return 9999
+return Math.min(...[...arr].map(h=>{
+h=h.toString().trim()
+if(!h.includes(":"))h=h.padStart(2,"0")+":00"
+const [hh,mm]=h.split(":").map(Number)
+return hh*60+mm
+}))
+}
+
+return getMinHora(a.horarios) - getMinHora(b.horarios)
+
+})
 
 /* ====208 – RENDER MEDICAÇÕES=================== */
 meds.forEach(m=>{
