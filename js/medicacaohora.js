@@ -30,7 +30,13 @@ let mapa={}
 /* 🔥 MONTA MAPA POR HORA */
 lista.forEach(m=>{
 let paciente=(m.nome_paciente||"Paciente").trim()
-let horarios=(m.horarios||"").split("|")
+let horarios=(m.horarios||"").split("|").filter(Boolean)
+/* 🔥 ORDENA HORÁRIOS CORRETAMENTE */
+horarios=horarios.sort((a,b)=>{
+const [ha,ma]=a.split(":").map(Number)
+const [hb,mb]=b.split(":").map(Number)
+return (ha*60+ma)-(hb*60+mb)
+})
 
 horarios.forEach(h=>{
 h=h.trim()
@@ -94,7 +100,15 @@ html+=`</div></div>`
 
 div.innerHTML=html
 }
-
+/* ====================================================
+004 – CLASSIFICAR TURNO
+==================================================== */
+function classificarTurno(h){
+const hora=parseInt(h.split(":")[0])
+if(hora<12)return "manha"
+if(hora<18)return "tarde"
+return "noite"
+}
 /* ====================================================
 999 – GARANTIR BOTÃO MEDICAÇÃO POR HORA
 ==================================================== */
