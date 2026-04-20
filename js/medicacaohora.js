@@ -87,7 +87,7 @@ texto=`${item.paciente} - ${item.nome} ✔`
 }
 
 html+=`
-<button onclick="administrarMedicacao(${item.id},'${h}',this)"
+<button onclick="administrarMedicacao('${item.id}','${h}',this)"
 style="background:${cor};border:none;border-radius:8px;padding:8px;text-align:left">
 ${texto}
 </button>
