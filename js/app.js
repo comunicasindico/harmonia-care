@@ -364,3 +364,66 @@ const el=document.getElementById("statusSync")
 if(!el)return
 el.style.display="none"
 }
+/* ====================================================
+070 – FILA MEDICACAO (CORRETA)
+==================================================== */
+window.FILA_MEDICACAO=JSON.parse(localStorage.getItem("fila_medicacao")||"[]")
+
+function salvarFilaMedicacao(){
+localStorage.setItem("fila_medicacao",JSON.stringify(window.FILA_MEDICACAO))
+}
+
+function adicionarFilaMedicacao(payload){
+window.FILA_MEDICACAO.push({
+...payload,
+tentativas:0,
+ts:Date.now()
+})
+salvarFilaMedicacao()
+}
+/* ====================================================
+071 – SINCRONIZAR FILA MEDICACAO
+==================================================== */
+async function sincronizarFilaMedicacao(){
+
+if(!db||!window.FILA_MEDICACAO.length)return
+
+mostrarStatusSync("🔄 Sincronizando medicações...")
+
+let fila=[...window.FILA_MEDICACAO]
+let novaFila=[]
+
+for(let i=0;i<fila.length;i++){
+
+let item=fila[i]
+
+try{
+
+const {error}=await db.from("medicacoes_execucao").upsert(item,{
+onConflict:"medicacao_id,data,horario,empresa_id,paciente_id"
+})
+
+if(error){
+item.tentativas++
+if(item.tentativas<5)novaFila.push(item)
+}
+
+}catch(e){
+item.tentativas++
+if(item.tentativas<5)novaFila.push(item)
+}
+
+if(i%5===0)await new Promise(r=>setTimeout(r,0))
+
+}
+
+window.FILA_MEDICACAO=novaFila
+salvarFilaMedicacao()
+
+esconderStatusSync()
+}
+setInterval(()=>{
+if(navigator.onLine){
+sincronizarFilaMedicacao()
+}
+},4000)
