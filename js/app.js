@@ -376,15 +376,12 @@ localStorage.setItem("fila_medicacao",JSON.stringify(window.FILA_MEDICACAO))
 070 – Adicionar FILA MEDICACAO
 ==================================================== */
 function adicionarFilaMedicacao(payload){
-
-const existe=window.FILA_MEDICACAO.find(x=>
-x.medicacao_id===payload.medicacao_id &&
-x.data===payload.data &&
-x.horario===payload.horario &&
-x.paciente_id===payload.paciente_id
-)
-if(existe) return
-window.FILA_MEDICACAO.push({...payload,tentativas:0,ts:Date.now()})
+if(!window.FILA_MEDICACAO)window.FILA_MEDICACAO=[]
+window.FILA_MEDICACAO.push({
+...payload,
+tentativas:0,
+ts:Date.now()
+})
 salvarFilaMedicacao()
 }
 /* ====================================================
@@ -403,34 +400,43 @@ for(let i=0;i<Math.min(fila.length,50);i++){
 
 let item=fila[i]
 
+/* 🔥 LIMPA PAYLOAD (CRÍTICO) */
+const payload={
+medicacao_id:item.medicacao_id,
+paciente_id:item.paciente_id,
+data:item.data,
+horario:item.horario,
+status:item.status,
+usuario_id:item.usuario_id,
+usuario_nome:item.usuario_nome,
+empresa_id:item.empresa_id
+}
+
 try{
 
-const {error}=await db.from("medicacoes_execucao").upsert(item,{
+const {error}=await db.from("medicacoes_execucao").upsert(payload,{
 onConflict:"medicacao_id,data,horario,empresa_id,paciente_id"
 })
 
 if(error){
 console.error("ERRO REAL:",error)
-item.tentativas++
+item.tentativas=(item.tentativas||0)+1
 if(item.tentativas<5)novaFila.push(item)
 }
 
 }catch(e){
-item.tentativas++
+item.tentativas=(item.tentativas||0)+1
 if(item.tentativas<5)novaFila.push(item)
 }
 
+/* 🔥 NÃO TRAVAR UI */
 if(i%5===0)await new Promise(r=>setTimeout(r,0))
 
 }
 
+/* 🔥 ATUALIZA FILA */
 window.FILA_MEDICACAO=novaFila
 salvarFilaMedicacao()
 
 esconderStatusSync()
 }
-setInterval(()=>{
-if(navigator.onLine){
-sincronizarFilaMedicacao()
-}
-},4000)
