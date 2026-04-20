@@ -114,17 +114,4 @@ btn.onclick=abrirPainelMedicacaoHora
 
 topo.appendChild(btn)
 }
-
-/* 🔄 OBSERVA MUDANÇAS NO DOM */
-const observer=new MutationObserver(()=>{
-garantirBotaoMedicacaoHora()
-})
-
-window.addEventListener("load",()=>{
-garantirBotaoMedicacaoHora()
-
-const topo=document.getElementById("topoBotoes")
-if(topo){
-observer.observe(topo,{childList:true})
-}
-})
+window.addEventListener("load",garantirBotaoMedicacaoHora)
