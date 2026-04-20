@@ -860,7 +860,14 @@ let base=[]
 let totalAplicacoes=0
 let totalJaExistentes=0
 meds.forEach(m=>{
-let horarios=(m.horarios||"").toString().split("|")
+let horarios=(m.horarios||"").split("|").filter(Boolean)
+
+/* 🔥 ORDENA HORÁRIOS CORRETAMENTE */
+horarios=horarios.sort((a,b)=>{
+const [ha,ma]=a.split(":").map(Number)
+const [hb,mb]=b.split(":").map(Number)
+return (ha*60+ma)-(hb*60+mb)
+})
 
 horarios.forEach(h=>{
 if(!h)return
@@ -1602,6 +1609,15 @@ lista.forEach(id=>{
 administrarMedicacao(id,horario,null)
 })
 
+}
+/* ====================================================
+004 – CLASSIFICAR TURNO
+==================================================== */
+function classificarTurno(h){
+const hora=parseInt(h.split(":")[0])
+if(hora<12)return "manha"
+if(hora<18)return "tarde"
+return "noite"
 }
 /* ====================================================
 306 – INIT HORÁRIOS + CONTROLE DATA MANUAL
