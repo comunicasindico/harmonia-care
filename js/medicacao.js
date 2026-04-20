@@ -1162,15 +1162,46 @@ if(typeof sincronizarFilaMedicacao==="function"){
 setTimeout(()=>sincronizarFilaMedicacao(),200)
 }
 
-/* ====================================================
-🔥 5 – FINALIZAÇÃO
-==================================================== */
 finalizarBarra()
 
+/* ====================================================
+🔥 ATUALIZA TUDO (SEM F5)
+==================================================== */
+try{
+
+/* 🔥 RECARREGA STATUS */
+if(typeof carregarStatusMedicacoes==="function"){
+await carregarStatusMedicacoes()
+}
+
+/* 🔥 RECARREGA ROTINAS */
+if(typeof carregarRotinas==="function"){
+await carregarRotinas()
+}
+
+/* 🔥 RECALCULA INDICADORES */
+if(typeof atualizarIndicadores==="function"){
+await atualizarIndicadores()
+}
+
+/* 🔥 ATUALIZA BOTÕES TOPO */
+if(typeof atualizarBotoesTopo==="function"){
+atualizarBotoesTopo("enfermagem")
+}
+
+/* 🔥 RE-RENDER FINAL */
+if(typeof render==="function"){
+render()
+}
+
+}catch(e){
+console.warn("Erro ao atualizar UI:",e)
+}
+
+/* FINALIZA */
 setTimeout(()=>{
 esconderStatusSync()
 },800)
-
 }
 /* ====================================================
 225  – DATA INTELIGENTE
