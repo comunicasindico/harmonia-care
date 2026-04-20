@@ -9,7 +9,11 @@ salvarFilaLocal()
 /* ====================================================068B – SINCRONIZADOR TURBO==================================================== */
 async function sincronizarFila(){
 mostrarStatusSync("🔄 Sincronizando...")
-if(!db||!window.FILA_ROTINAS.length)return
+
+if(!db||!window.FILA_ROTINAS.length){
+esconderStatusSync()
+return
+}
 let fila=[...window.FILA_ROTINAS]
 let novaFila=[]
 for(let i=0;i<fila.length;i++){
@@ -212,7 +216,7 @@ if(fim && !fim.value)fim.value=dataLocal
 }
 /* ====================================================017 – NAVEGAÇÃO PAINÉIS (FINAL CORRIGIDO)==================================================== */
 function abrirPainel(id){
-if(!podeUsarMedicacao()){const btn=document.getElementById("btnMedicacao");if(btn)btn.style.display="none"}
+if(typeof podeUsarMedicacao==="function" && !podeUsarMedicacao()){const btn=document.getElementById("btnMedicacao");if(btn)btn.style.display="none"}
 if(window.salvandoPendencias){alert("Aguarde finalizar o salvamento das pendências.");return}
 localStorage.setItem("painelAtual",id)
 const paineis=["painelEnfermagem","painelClinico","painelAdmin","painelMedicacao"]
