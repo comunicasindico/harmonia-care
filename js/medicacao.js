@@ -1016,54 +1016,102 @@ alert("Erro inesperado")
 }
 }
 /* ====================================================
-223 – CONCLUIR PENDENTES MEDICACAO (FINAL TURBO)
+223 – CONCLUIR PENDENTES MEDICACAO (FINAL TURBO CORRIGIDO)
+==================================================== */
+/* ====================================================
+223 – CONCLUIR PENDENTES MEDICACAO (COM BARRA + FILA + SALVAMENTO DIRETO)
 ==================================================== */
 window.concluirPendentesMedicacao=async function(){
 
 mostrarStatusSync("⏳ Salvando...")
 
-const user=obterUsuarioLogado()||{}
-const datas=gerarDatasPeriodo(
-document.getElementById("dataInicioMedicacao").value,
-document.getElementById("dataFimMedicacao").value
-)
+if(!db){
+alert("Banco não conectado")
+esconderStatusSync()
+return
+}
 
+const user=obterUsuarioLogado()||{}
+const dataInicio=document.getElementById("dataInicioMedicacao")?.value
+const dataFim=document.getElementById("dataFimMedicacao")?.value
+
+if(!dataInicio||!dataFim){
+alert("Informe período")
+esconderStatusSync()
+return
+}
+
+const datas=gerarDatasPeriodo(dataInicio,dataFim)
 const lista=window.MEDICACOES_CACHE||[]
 
-/* UI */
+if(!lista.length){
+alert("Nenhuma medicação encontrada")
+esconderStatusSync()
+return
+}
+
+/* ====================================================
+🔥 1 – UI IMEDIATA
+==================================================== */
 document.querySelectorAll("#painelMedicacao button[data-hora]").forEach(btn=>{
+const hora=btn.dataset.hora
+btn.classList.add("executado")
 btn.style.background="#22c55e"
-btn.innerText=`OK`
+btn.style.color="#fff"
+btn.innerText=`${hora} ${user.nome||"Admin"} OK`
 })
 
-/* FILA */
-datas.forEach(function(dataHoje){
+/* ====================================================
+🔥 2 – CALCULAR TOTAL PARA BARRA
+==================================================== */
+let total=0
 
-lista.forEach(function(m){
+lista.forEach(m=>{
+if(!m.id || !m.paciente_id)return
+let hs=(m.horarios||"").toString().split("|")
+hs.forEach(h=>{
+if(!h)return
+if(h.toLowerCase().includes("jejum"))return
+total+=datas.length
+})
+})
 
-/* 🔥 VALIDAÇÃO */
-if(!m.id || !m.paciente_id) return
+if(total===0){
+esconderStatusSync()
+return
+}
+
+iniciarBarra(total)
+
+let progresso=0
+
+/* ====================================================
+🔥 3 – PROCESSAMENTO
+==================================================== */
+for(const dataHoje of datas){
+
+for(const m of lista){
+
+if(!m.id || !m.paciente_id) continue
 
 let horarios=(m.horarios||"").toString().split("|")
 
-horarios.forEach(function(h){
+for(let h of horarios){
 
-if(!h)return
+if(!h) continue
 
 h=h.toString().trim()
 
-/* 🔥 IGNORA LIXO */
-if(!h || h.length<3) return
-if(h.toLowerCase().includes("jejum")) return
+if(!h || h.length<3) continue
+if(h.toLowerCase().includes("jejum")) continue
 
 if(!h.includes(":")){
 h=h.padStart(2,"0")+":00"
 }
 
-/* 🔥 VALIDA FINAL */
-if(!/^\d{2}:\d{2}$/.test(h)) return
+if(!/^\d{2}:\d{2}$/.test(h)) continue
 
-adicionarFilaMedicacao({
+const payload={
 medicacao_id:m.id,
 paciente_id:m.paciente_id,
 data:dataHoje,
@@ -1072,18 +1120,51 @@ status:"executado",
 usuario_id:user.id||null,
 usuario_nome:user.nome||"Admin",
 empresa_id:EMPRESA_ID
+}
+
+try{
+
+const {error}=await db.from("medicacoes_execucao").upsert(payload,{
+onConflict:"medicacao_id,data,horario,empresa_id,paciente_id"
 })
 
-})
+if(error){
+if(typeof adicionarFilaMedicacao==="function"){
+adicionarFilaMedicacao(payload)
+}
+}
 
-})
+}catch(e){
+if(typeof adicionarFilaMedicacao==="function"){
+adicionarFilaMedicacao(payload)
+}
+}
 
-})
+/* 🔥 PROGRESSO */
+progresso++
+atualizarBarra()
 
-/* dispara envio */
-sincronizarFilaMedicacao()
+}
 
-setTimeout(()=>esconderStatusSync(),800)
+}
+
+}
+
+/* ====================================================
+🔥 4 – SINCRONIZA FILA
+==================================================== */
+if(typeof sincronizarFilaMedicacao==="function"){
+setTimeout(()=>sincronizarFilaMedicacao(),200)
+}
+
+/* ====================================================
+🔥 5 – FINALIZAÇÃO
+==================================================== */
+finalizarBarra()
+
+setTimeout(()=>{
+esconderStatusSync()
+},800)
 
 }
 /* ====================================================
