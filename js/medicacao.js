@@ -506,7 +506,7 @@ await db.from("medicacoes_execucao").delete().eq("id",ja.id)
 return
 }
 
-await db.from("medicacoes_execucao").insert({
+await db.from("medicacoes_execucao").upsert({
 medicacao_id:medicacaoId,
 data:dataHoje,
 horario:horario,
@@ -514,28 +514,15 @@ status:"executado",
 usuario_id:usuarioId,
 usuario_nome:nome,
 empresa_id:EMPRESA_ID
+},{
+onConflict:"medicacao_id,data,horario,empresa_id"
 })
 
 }catch(e){
 console.error(e)
 }
 },0)
-await db.from("medicacoes_execucao").insert({
-medicacao_id:medicacaoId,
-data:dataHoje,
-horario:horario,
-status:"executado",
-usuario_id:usuarioId,
-usuario_nome:nome,
-empresa_id:EMPRESA_ID
-})
-}catch(e){
-console.error("Erro ao salvar:",e)
-/* 🔥 rollback UI se falhar */
-if(botao){
-botao.style.background="#ef4444"
-botao.innerHTML="ERRO"
-}
+
 }
 }
 /* ========================210 – CARREGAR STATUS==================================================== */
