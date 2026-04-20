@@ -8,6 +8,7 @@ salvarFilaLocal()
 }
 /* ====================================================068B – SINCRONIZADOR TURBO==================================================== */
 async function sincronizarFila(){
+mostrarStatusSync("🔄 Sincronizando...")
 if(!db||!window.FILA_ROTINAS.length)return
 let fila=[...window.FILA_ROTINAS]
 let novaFila=[]
@@ -27,6 +28,7 @@ if(i%5===0)await new Promise(r=>setTimeout(r,0))
 }
 window.FILA_ROTINAS=novaFila
 salvarFilaLocal()
+esconderStatusSync()
 }
 /* ====================================================010 – LOGIN (FINAL CORRIGIDO DEFINITIVO)==================================================== */
 async function login(){
