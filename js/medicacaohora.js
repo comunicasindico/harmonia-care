@@ -1,28 +1,27 @@
 /* ====================================================
-000 – ABRIR PAINEL MEDICAÇÃO POR HORA
+000 – ABRIR PAINEL MEDICAÇÃO POR HORA (SOMENTE LEITURA)
 ==================================================== */
 function abrirPainelMedicacaoHora(){
 document.getElementById("painelMedicacao").style.display="none"
 document.getElementById("painelMedicacaoHora").style.display="block"
-if(typeof carregarMedicacoesHora==="function"){
 carregarMedicacoesHora()
 }
-/* 🔥 PATCH 3 – FORÇA CONTADOR ATUALIZAR */
-setTimeout(()=>{
-if(window.MEDICACOES_CACHE){
-renderizarMedicacoesHora(window.MEDICACOES_CACHE)
-}
-},200)
-}
+
 /* ====================================================
-001 – CARREGAR MEDICAÇÕES (REAPROVEITA CACHE)
+001 – CARREGAR MEDICAÇÕES
 ==================================================== */
 async function carregarMedicacoesHora(){
+
+/* garante cache atualizado */
+await carregarStatusMedicacoes()
+
 if(!window.MEDICACOES_CACHE || !window.MEDICACOES_CACHE.length){
 await carregarMedicacoes()
 }
+
 renderizarMedicacoesHora(window.MEDICACOES_CACHE||[])
 }
+
 /* ====================================================
 002 – RENDER POR HORA (REFLEXO REAL DO BANCO)
 ==================================================== */
@@ -69,7 +68,7 @@ html+=`<div style="margin-bottom:12px">
 
 agrupado[h].forEach(m=>{
 
-/* 🔥 VERIFICA EXECUÇÃO REAL */
+/* 🔥 VERIFICA EXECUÇÃO REAL (BANCO) */
 let executado=false
 
 for(const e of execLista){
@@ -107,25 +106,26 @@ html+=`</div>`
 
 div.innerHTML=html
 
-/* 🔥 CONTADOR FINAL (BANCO REAL) */
+/* ====================================================
+🔥 CONTADOR IGUAL AO PAINEL MEDICAÇÃO
+==================================================== */
 const a=document.getElementById("countNaoMed")
 const b=document.getElementById("countSimMed")
 
 if(a)a.innerText=totalNao
 if(b)b.innerText=totalSim
 
-console.log("CONTADOR REAL:",totalNao,totalSim)
+console.log("MEDICAÇÃO HORA:",totalNao,totalSim)
 
 }
+
 /* ====================================================
-003 –  BOTÃO MEDICAÇÃO POR HORA
+003 – BOTÃO
 ==================================================== */
 function garantirBotaoMedicacaoHora(){
 
 const topo=document.getElementById("topoBotoes")
 if(!topo)return
-
-/* já existe? */
 if(document.getElementById("btnMedicacaoHora"))return
 
 const btn=document.createElement("button")
@@ -136,79 +136,5 @@ btn.onclick=abrirPainelMedicacaoHora
 
 topo.appendChild(btn)
 }
+
 window.addEventListener("load",garantirBotaoMedicacaoHora)
-/* ====================================================
-004 – CONTADOR TEMPO REAL (BASEADO NA TELA)
-==================================================== */
-function atualizarContadorMedicacaoHora(){
-let totalSim=0
-let totalNao=0
-document.querySelectorAll("#listaMedicacoesHora .itemHora").forEach(el=>{
-const cor=el.style.background
-if(cor.includes("34,197,94") || cor.includes("#22c55e")){
-totalSim++
-}else{
-totalNao++
-}
-})
-const a=document.getElementById("countNaoMed")
-const b=document.getElementById("countSimMed")
-if(a)a.innerText=totalNao
-if(b)b.innerText=totalSim
-}
-/* ====================================================
-005 – CLICK MEDICAÇÃO (TEMPO REAL)
-==================================================== */
-function marcarMedicacaoHora(el){
-/* alterna cor */
-if(el.style.background.includes("22c55e") || el.style.background.includes("34,197,94")){
-el.style.background="#fde047"
-}else{
-el.style.background="#22c55e"
-}
-/* 🔥 ATUALIZA CONTADOR IMEDIATO */
-atualizarContadorMedicacaoHora()
-}
-/* ====================================================
-006 – TOGGLE MEDICAÇÃO
-==================================================== */
-function toggleMedicacaoHora(el){
-
-let status=el.getAttribute("data-status")
-
-if(status==="sim"){
-el.setAttribute("data-status","nao")
-el.style.background="#fde047"
-}else{
-el.setAttribute("data-status","sim")
-el.style.background="#22c55e"
-}
-
-/* 🔥 ATUALIZA CONTADOR NA HORA */
-atualizarContadorMedicacaoHora()
-
-}
-/* ====================================================
-007 – CONTADOR REAL
-==================================================== */
-function atualizarContadorMedicacaoHora(){
-
-let totalSim=0
-let totalNao=0
-
-document.querySelectorAll("#listaMedicacoesHora .itemHora").forEach(el=>{
-let status=el.getAttribute("data-status")
-if(status==="sim"){
-totalSim++
-}else{
-totalNao++
-}
-})
-
-const a=document.getElementById("countNaoMed")
-const b=document.getElementById("countSimMed")
-
-if(a)a.innerText=totalNao
-if(b)b.innerText=totalSim
-
-}
