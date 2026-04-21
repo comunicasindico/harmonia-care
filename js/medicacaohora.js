@@ -22,84 +22,49 @@ setTimeout(atualizarLegendaMedicacao,100)
 002 – RENDER POR HORA
 ==================================================== */
 function renderizarMedicacoesHora(lista){
-
 const div=document.getElementById("listaMedicacoesHora")
 if(!div)return
-
-let mapa={}
-
-/* 🔥 MONTA MAPA POR HORA */
-lista.forEach(m=>{
-let paciente=(m.nome_paciente||"Paciente").trim()
-let horarios=(m.horarios||"").split("|").filter(Boolean)
-/* 🔥 ORDENA HORÁRIOS CORRETAMENTE */
-horarios=horarios.sort((a,b)=>{
-const [ha,ma]=a.split(":").map(Number)
-const [hb,mb]=b.split(":").map(Number)
-return (ha*60+ma)-(hb*60+mb)
+if(!lista)lista=[]
+let mapaExec={}
+const execLista=(window.EXEC_CACHE||[])
+execLista.forEach(e=>{
+let chave=e.data+"_"+e.medicacao_id+"_"+e.horario
+mapaExec[chave]=e
 })
-
-horarios.forEach(h=>{
-h=h.trim()
-if(!h)return
-
-if(!mapa[h])mapa[h]=[]
-
-mapa[h].push({
-paciente:paciente,
-nome:m.nome_medicamento,
-id:m.id
-})
-
-})
-})
-
-/* 🔥 ORDENA HORÁRIOS */
-let horas=Object.keys(mapa).sort()
-
+let totalSim=0
+let totalNao=0
 let html=""
-
-/* ====================================================
-003 – LOOP HORAS
-==================================================== */
-horas.forEach(h=>{
-
-html+=`
-<div style="background:#f1f5f9;padding:10px;border-radius:10px;margin-bottom:10px">
-
-<div style="font-weight:bold;font-size:16px;margin-bottom:8px">
-⏰ ${h}
-</div>
-
-<div style="display:flex;flex-direction:column;gap:6px">
-`
-
-mapa[h].forEach(item=>{
-
-let chave=obterDataAtiva()+"_"+item.id+"_"+h
-let exec=(window.EXEC_CACHE||[]).find(e=>e.data+"_"+e.medicacao_id+"_"+e.horario===chave)
-
+let agrupado={}
+lista.forEach(m=>{
+let h=(m.horario||"").trim()
+if(!agrupado[h])agrupado[h]=[]
+agrupado[h].push(m)
+})
+let horarios=Object.keys(agrupado).sort()
+horarios.forEach(h=>{
+html+=`<div style="margin-bottom:10px"><div style="font-weight:bold;margin-bottom:6px">⏰ ${h}</div>`
+agrupado[h].forEach(m=>{
+let chave=(obterDataAtiva())+"_"+m.id+"_"+h
+let exec=mapaExec[chave]
 let cor="#fde047"
-let texto=`${item.paciente} - ${item.nome}`
-
 if(exec){
 cor="#22c55e"
-texto=`${item.paciente} - ${item.nome} ✔`
+totalSim++
+}else{
+totalNao++
 }
-
-html+=`
-<button onclick="administrarMedicacao('${item.id}','${h}',this)"
-style="background:${cor};border:none;border-radius:8px;padding:8px;text-align:left">
-${texto}
-</button>
-`
-
+html+=`<div style="background:${cor};padding:8px;border-radius:8px;margin-bottom:6px">${m.nome_paciente} - ${m.nome_medicamento}</div>`
 })
-
-html+=`</div></div>`
+html+=`</div>`
 })
-
 div.innerHTML=html
+/* 🔥 CONTADOR FUNCIONANDO */
+setTimeout(function(){
+const a=document.getElementById("countNaoMed")
+const b=document.getElementById("countSimMed")
+if(a)a.innerText=totalNao
+if(b)b.innerText=totalSim
+},100)
 }
 /* ====================================================
 999 – GARANTIR BOTÃO MEDICAÇÃO POR HORA
