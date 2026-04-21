@@ -96,6 +96,14 @@ return
 /* ====================================================011 – LOGIN OK (DEFINITIVO SEM DUPLICIDADE)==================================================== */
 if((user.perfil||"").toLowerCase()==="admin"){localStorage.setItem("painelAtual","painelAdmin")}else{localStorage.setItem("painelAtual","painelEnfermagem")}
 if(user&&user.id){localStorage.setItem("usuario_id",String(user.id))}else{console.error("ERRO: usuário sem ID",user)}
+
+if(user.tipo==="familiar"){
+localStorage.setItem("tipo_usuario","familiar")
+localStorage.setItem("paciente_id",user.paciente_id)
+}else{
+localStorage.setItem("tipo_usuario","enfermagem")
+}
+
 localStorage.setItem("usuario_nome",user.nome_completo||user.nome_apelido||"")
 localStorage.setItem("usuario_hierarquia",user.hierarquia||1)
 localStorage.setItem("perfil",user.perfil||"cuidador")
