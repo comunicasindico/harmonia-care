@@ -55,7 +55,7 @@ for(const e of execLista){
 if(
 String(e.data)===String(dataHoje) &&
 normalizarHora(e.horario)===h &&
-String(e.medicacao_id)===String(m.medicacao_id || m.id)
+String(e.medicacao_id)===String(m.id)
 ){
 exec=e
 break
