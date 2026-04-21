@@ -34,104 +34,42 @@ await carregarMedicacoes()
 
 renderizarMedicacoesHora(window.MEDICACOES_CACHE||[])
 }
-
-/* ====================================================
-002 – RENDER POR HORA (REFLEXO REAL DO BANCO)
-==================================================== */
+/* ====================================================002 – RENDER POR HORA (REFLEXO REAL DO BANCO)==================================================== */
 function renderizarMedicacoesHora(lista){
-
 const div=document.getElementById("listaMedicacoesHora")
 if(!div)return
 if(!lista)lista=[]
-
 const execLista=(window.EXEC_CACHE||[])
 const dataHoje=obterDataAtiva()
-
 let totalSim=0
 let totalNao=0
 let html=""
 let agrupado={}
-
-/* NORMALIZA HORA */
-const normalizarHora=h=>{
-if(!h)return""
-h=h.toString().trim()
-if(!h.includes(":"))return h.padStart(2,"0")+":00"
-let[p,m]=h.split(":")
-return p.padStart(2,"0")+":"+m.padStart(2,"0")
-}
-
-/* AGRUPA POR HORA */
-lista.forEach(m=>{
-let horarios=(m.horarios||"").split("|")
-horarios.forEach(h=>{
-h=normalizarHora(h)
-if(!h)return
-if(!agrupado[h])agrupado[h]=[]
-agrupado[h].push(m)
-})
-})
-
+const normalizarHora=h=>{if(!h)return"";h=h.toString().trim();if(!h.includes(":"))return h.padStart(2,"0")+":00";let[p,m]=h.split(":");return p.padStart(2,"0")+":"+m.padStart(2,"0")}
+lista.forEach(m=>{let horarios=(m.horarios||"").split("|");horarios.forEach(h=>{h=normalizarHora(h);if(!h)return;if(!agrupado[h])agrupado[h]=[];agrupado[h].push(m)})})
 let horariosOrdenados=Object.keys(agrupado).sort()
-
 horariosOrdenados.forEach(h=>{
-
-html+=`<div style="margin-bottom:12px">
-<div style="font-weight:bold;margin-bottom:6px">⏰ ${h}</div>`
-
-agrupado[h].forEach(m=>{
-
-/* 🔥 VERIFICA EXECUÇÃO REAL (BANCO) */
+html+=`<div style="margin-bottom:12px"><div style="font-weight:bold;margin-bottom:6px">⏰ ${h}</div>`
+const listaOrdenada=agrupado[h].slice().sort((a,b)=>{let na=(a.nome_paciente||"").toLowerCase().trim();let nb=(b.nome_paciente||"").toLowerCase().trim();return na.localeCompare(nb,"pt-BR")})
+html+=`<div style="display:grid;grid-template-columns:50% 50%;gap:6px;margin-bottom:6px;font-weight:600;font-size:12px;padding:4px 6px"><div>Paciente</div><div>Medicação</div></div>`
+listaOrdenada.forEach(m=>{
 let executado=false
-
 for(const e of execLista){
-if(
-String(e.data)===String(dataHoje) &&
-String(e.medicacao_id)===String(m.id) &&
-normalizarHora(e.horario)===h
-){
-executado=true
-break
+if(String(e.data)===String(dataHoje)&&String(e.medicacao_id)===String(m.id)&&normalizarHora(e.horario)===h){executado=true;break}
 }
-}
-
-/* 🔥 COR + CONTADOR */
 let cor="#fde047"
-
-if(executado){
-cor="#22c55e"
-totalSim++
-}else{
-totalNao++
-}
-
-html+=`
-<div style="background:${cor};padding:10px;border-radius:10px;margin-bottom:6px;font-weight:500">
-${m.nome_paciente} - ${m.nome_medicamento}
-</div>
-`
-
+if(executado){cor="#22c55e";totalSim++}else{totalNao++}
+html+=`<div style="display:grid;grid-template-columns:50% 50%;gap:6px;background:${cor};padding:10px;border-radius:10px;margin-bottom:6px;font-weight:500;align-items:center"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.nome_paciente||"-"}</div><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.nome_medicamento||"-"}</div></div>`
 })
-
 html+=`</div>`
-
 })
-
 div.innerHTML=html
-
-/* 🔥 ESPELHA CONTADOR DO PAINEL MEDICAÇÃO */
-const origemNao=document.getElementById("countNaoMed")
-const origemSim=document.getElementById("countSimMed")
-
-const destinoNao=document.getElementById("countNaoMedHora")
-const destinoSim=document.getElementById("countSimMedHora")
-
-if(origemNao && destinoNao)destinoNao.innerText=origemNao.innerText
-if(origemSim && destinoSim)destinoSim.innerText=origemSim.innerText
-
-console.log("MEDICAÇÃO HORA OK")
+const a=document.getElementById("countNaoMed")
+const b=document.getElementById("countSimMed")
+if(a)a.innerText=totalNao
+if(b)b.innerText=totalSim
+console.log("MEDICAÇÃO HORA OK",totalNao,totalSim)
 }
-
 /* ====================================================
 003 – BOTÃO
 ==================================================== */
