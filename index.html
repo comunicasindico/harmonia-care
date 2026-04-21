@@ -36,7 +36,12 @@ width:100%;
 height:100%;
 font-family:Arial,Helvetica,sans-serif;
 background:url("img/harmoniafrente.png") center center/cover no-repeat;
-overflow-x:hidden; /* 🔥 evita estouro lateral */
+overflow-x:hidden;
+-webkit-text-size-adjust:100%;
+}
+
+*{
+box-sizing:border-box;
 }
 
 /* 🔥 CONTROLE GLOBAL DE LAYOUT */
@@ -78,6 +83,8 @@ border-radius:12px;
 box-shadow:0 2px 8px rgba(0,0,0,0.08);
 margin-bottom:10px;
 width:100%;
+max-width:100%;
+overflow:hidden;
 }
 
 /* ====================================================006–TOPO==================================================== */
@@ -144,9 +151,10 @@ padding:6px;
 }
 
 .grid-medicacoes{
-display:flex; /* 🔥 trocado de grid */
-flex-wrap:wrap; /* 🔥 ESSENCIAL */
+display:flex;
+flex-wrap:wrap;
 gap:8px;
+width:100%;
 }
 
 .card-medicacao{
@@ -156,7 +164,14 @@ border-radius:10px;
 padding:10px;
 box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
-
+.rotinas,
+#gradePeriodo,
+.box > div{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+width:100%;
+}
 /* ====================================================200 – BADGE ROTINA==================================================== */
 .badge-rotina{
 display:inline-flex;
@@ -211,9 +226,66 @@ padding:6px;
 /* 🔥 NÃO usar zoom no CSS — deixa o navegador controlar */
 
 /* ====================================================FIM==================================================== */
+@media(max-width:768px){
 
+#app{
+padding:6px;
+}
 
+.topo-sistema{
+flex-direction:column;
+align-items:flex-start;
+gap:8px;
+}
 
+.btn-topo{
+width:100%;
+justify-content:center;
+}
+
+.grid-medicacoes{
+flex-direction:column;
+}
+
+.badge-rotina{
+font-size:13px;
+padding:6px 10px;
+}
+
+table{
+display:block;
+overflow-x:auto;
+white-space:nowrap;
+}
+
+}
+@media (orientation: landscape){
+
+#app{
+padding:6px;
+}
+
+.grid-medicacoes{
+flex-direction:row;
+flex-wrap:wrap;
+}
+
+.badge-rotina{
+max-width:100%;
+}
+
+}
+button:active{
+transform:scale(0.96);
+}
+
+.badge-rotina{
+transition:all .12s ease;
+}
+
+.badge-rotina:active{
+transform:scale(0.95);
+}
 
 </style>
 </head>
