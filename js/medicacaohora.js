@@ -36,16 +36,21 @@ let totalNao=0
 let html=""
 let agrupado={}
 lista.forEach(m=>{
-let h=(m.horario||"").trim()
+let horarios=(m.horarios||"").split("|")
+horarios.forEach(h=>{
+h=h.trim()
+if(!h)return
 if(!agrupado[h])agrupado[h]=[]
 agrupado[h].push(m)
 })
-let horarios=Object.keys(agrupado).sort()
-horarios.forEach(h=>{
-html+=`<div style="margin-bottom:10px"><div style="font-weight:bold;margin-bottom:6px">⏰ ${h}</div>`
+})
+let horariosOrdenados=Object.keys(agrupado).sort()
+horariosOrdenados.forEach(h=>{
+html+=`<div style="margin-bottom:12px"><div style="font-weight:bold;margin-bottom:6px">⏰ ${h}</div>`
 agrupado[h].forEach(m=>{
+let exec=null
 let chave=(obterDataAtiva())+"_"+m.id+"_"+h
-let exec=mapaExec[chave]
+if(mapaExec[chave])exec=mapaExec[chave]
 let cor="#fde047"
 if(exec){
 cor="#22c55e"
@@ -53,12 +58,12 @@ totalSim++
 }else{
 totalNao++
 }
-html+=`<div style="background:${cor};padding:8px;border-radius:8px;margin-bottom:6px">${m.nome_paciente} - ${m.nome_medicamento}</div>`
+html+=`<div style="background:${cor};padding:10px;border-radius:10px;margin-bottom:6px;font-weight:500">${m.nome_paciente} - ${m.nome_medicamento}</div>`
 })
 html+=`</div>`
 })
 div.innerHTML=html
-/* 🔥 CONTADOR FUNCIONANDO */
+/* 🔥 CONTADOR IGUAL AO MEDICAÇÃO */
 setTimeout(function(){
 const a=document.getElementById("countNaoMed")
 const b=document.getElementById("countSimMed")
