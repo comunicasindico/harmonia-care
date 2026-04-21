@@ -24,14 +24,23 @@ await carregarMedicacoes()
 renderizarMedicacoesHora(window.MEDICACOES_CACHE||[])
 }
 /* ====================================================
-002 – RENDER POR HORA (CONTAGEM VISUAL SIMPLES)
+002 – RENDER POR HORA (REFLEXO REAL DO BANCO)
 ==================================================== */
 function renderizarMedicacoesHora(lista){
+
 const div=document.getElementById("listaMedicacoesHora")
 if(!div)return
 if(!lista)lista=[]
+
+const execLista=(window.EXEC_CACHE||[])
+const dataHoje=obterDataAtiva()
+
+let totalSim=0
+let totalNao=0
 let html=""
 let agrupado={}
+
+/* NORMALIZA HORA */
 const normalizarHora=h=>{
 if(!h)return""
 h=h.toString().trim()
@@ -39,7 +48,8 @@ if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
-/* 🔥 AGRUPAR */
+
+/* AGRUPA POR HORA */
 lista.forEach(m=>{
 let horarios=(m.horarios||"").split("|")
 horarios.forEach(h=>{
@@ -49,37 +59,63 @@ if(!agrupado[h])agrupado[h]=[]
 agrupado[h].push(m)
 })
 })
+
 let horariosOrdenados=Object.keys(agrupado).sort()
+
 horariosOrdenados.forEach(h=>{
-html+=`<div style="margin-bottom:12px"><div style="font-weight:bold;margin-bottom:6px">⏰ ${h}</div>`
+
+html+=`<div style="margin-bottom:12px">
+<div style="font-weight:bold;margin-bottom:6px">⏰ ${h}</div>`
+
 agrupado[h].forEach(m=>{
-/* 🔥 DEFINE COR APENAS VISUAL (SEM CACHE) */
+
+/* 🔥 VERIFICA EXECUÇÃO REAL */
+let executado=false
+
+for(const e of execLista){
+if(
+String(e.data)===String(dataHoje) &&
+String(e.medicacao_id)===String(m.id) &&
+normalizarHora(e.horario)===h
+){
+executado=true
+break
+}
+}
+
+/* 🔥 COR + CONTADOR */
 let cor="#fde047"
-/* 🔥 REGRA SIMPLES: se já tiver execução salva */
-const execExiste=(window.EXEC_CACHE||[]).some(e=>String(e.medicacao_id)===String(m.id)&&normalizarHora(e.horario)===h&&String(e.data)===String(obterDataAtiva()))
-if(execExiste){cor="#22c55e"}
-html+=`<div class="itemHora" 
-onclick="marcarMedicacaoHora(this)"
-style="background:${cor};padding:10px;border-radius:10px;margin-bottom:6px;font-weight:500;cursor:pointer">
+
+if(executado){
+cor="#22c55e"
+totalSim++
+}else{
+totalNao++
+}
+
+html+=`
+<div style="background:${cor};padding:10px;border-radius:10px;margin-bottom:6px;font-weight:500">
 ${m.nome_paciente} - ${m.nome_medicamento}
-</div>`
+</div>
+`
+
 })
+
 html+=`</div>`
+
 })
+
 div.innerHTML=html
-/* 🔥 CONTAGEM VISUAL REAL (DOM) */
-let totalSim=0
-let totalNao=0
-document.querySelectorAll("#listaMedicacoesHora .itemHora").forEach(el=>{
-let cor=el.getAttribute("data-cor")
-if(cor==="#22c55e"){totalSim++}else{totalNao++}
-})
+
+/* 🔥 CONTADOR FINAL (BANCO REAL) */
 const a=document.getElementById("countNaoMed")
 const b=document.getElementById("countSimMed")
+
 if(a)a.innerText=totalNao
 if(b)b.innerText=totalSim
-console.log("CONTADOR VISUAL:",totalNao,totalSim)
-atualizarContadorMedicacaoHora()
+
+console.log("CONTADOR REAL:",totalNao,totalSim)
+
 }
 /* ====================================================
 003 –  BOTÃO MEDICAÇÃO POR HORA
@@ -132,4 +168,47 @@ el.style.background="#22c55e"
 }
 /* 🔥 ATUALIZA CONTADOR IMEDIATO */
 atualizarContadorMedicacaoHora()
+}
+/* ====================================================
+006 – TOGGLE MEDICAÇÃO
+==================================================== */
+function toggleMedicacaoHora(el){
+
+let status=el.getAttribute("data-status")
+
+if(status==="sim"){
+el.setAttribute("data-status","nao")
+el.style.background="#fde047"
+}else{
+el.setAttribute("data-status","sim")
+el.style.background="#22c55e"
+}
+
+/* 🔥 ATUALIZA CONTADOR NA HORA */
+atualizarContadorMedicacaoHora()
+
+}
+/* ====================================================
+007 – CONTADOR REAL
+==================================================== */
+function atualizarContadorMedicacaoHora(){
+
+let totalSim=0
+let totalNao=0
+
+document.querySelectorAll("#listaMedicacoesHora .itemHora").forEach(el=>{
+let status=el.getAttribute("data-status")
+if(status==="sim"){
+totalSim++
+}else{
+totalNao++
+}
+})
+
+const a=document.getElementById("countNaoMed")
+const b=document.getElementById("countSimMed")
+
+if(a)a.innerText=totalNao
+if(b)b.innerText=totalSim
+
 }
