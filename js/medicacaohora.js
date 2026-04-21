@@ -4,7 +4,9 @@
 function abrirPainelMedicacaoHora(){
 document.getElementById("painelMedicacao").style.display="none"
 document.getElementById("painelMedicacaoHora").style.display="block"
-
+if(obterTipoUsuario()==="familiar"){
+console.log("🔒 LGPD ativo: modo familiar")
+}
 carregarMedicacoesHora()
 
 /* 🔥 FORÇA ESPELHO DO CONTADOR */
