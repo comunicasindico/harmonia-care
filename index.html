@@ -28,7 +28,9 @@
 002 – ESTILOS GLOBAIS (FINAL LIMPO + OTIMIZADO)
 ==================================================== -->
 <style>
-html,body{margin:0;padding:0;width:100%;height:100%;font-family:Arial,Helvetica,sans-serif;background:url("img/harmoniafrente.png") center center/cover no-repeat;overflow-x:hidden;-webkit-text-size-adjust:100%;}
+html,body{margin:0;padding:0;width:100%;height:100%;font-family:Arial,Helvetica,sans-serif;background:url("img/harmoniafrente.png") center top no-repeat;
+background-size:cover;
+background-attachment:fixed;overflow-x:hidden;-webkit-text-size-adjust:100%;}
 *{box-sizing:border-box;}
 #login,.login-container{display:flex;justify-content:center;align-items:center;height:100vh;width:100%;}
 .login-box,.login-card{background:rgba(255,255,255,0.92);border-radius:14px;padding:30px;width:340px;box-shadow:0 15px 40px rgba(0,0,0,0.25);}
@@ -72,8 +74,11 @@ table{display:block;overflow-x:auto;white-space:nowrap;}
 }
 button:active{transform:scale(0.96);}
 .badge-rotina:active{transform:scale(0.95);}
+@media(max-width:768px){html,body{background-position:center top;background-size:cover;background-attachment:scroll;}}
+img{max-width:100%;height:auto;}
 
 
+  
 </style>
 </head>
 <body>
