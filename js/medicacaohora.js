@@ -4,7 +4,20 @@
 function abrirPainelMedicacaoHora(){
 document.getElementById("painelMedicacao").style.display="none"
 document.getElementById("painelMedicacaoHora").style.display="block"
+
 carregarMedicacoesHora()
+
+/* 🔥 FORÇA ESPELHO DO CONTADOR */
+setTimeout(()=>{
+const origemNao=document.getElementById("countNaoMed")
+const origemSim=document.getElementById("countSimMed")
+
+const destinoNao=document.getElementById("countNaoMedHora")
+const destinoSim=document.getElementById("countSimMedHora")
+
+if(origemNao && destinoNao)destinoNao.innerText=origemNao.innerText
+if(origemSim && destinoSim)destinoSim.innerText=origemSim.innerText
+},100)
 }
 
 /* ====================================================
@@ -116,8 +129,7 @@ const destinoSim=document.getElementById("countSimMedHora")
 if(origemNao && destinoNao)destinoNao.innerText=origemNao.innerText
 if(origemSim && destinoSim)destinoSim.innerText=origemSim.innerText
 
-console.log("MEDICAÇÃO HORA:",totalNao,totalSim)
-
+console.log("MEDICAÇÃO HORA OK")
 }
 
 /* ====================================================
