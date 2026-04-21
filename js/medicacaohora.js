@@ -22,21 +22,31 @@ if(!window.MEDICACOES_CACHE || !window.MEDICACOES_CACHE.length){
 await carregarMedicacoes()
 }
 renderizarMedicacoesHora(window.MEDICACOES_CACHE||[])
-setTimeout(atualizarLegendaMedicacao,100)
 }
 /* ====================================================
-002 – RENDER POR HORA (CORRIGIDO DEFINITIVO)
+002 – RENDER POR HORA (PADRÃO IGUAL MEDICAÇÃO)
 ==================================================== */
 function renderizarMedicacoesHora(lista){
+
 const div=document.getElementById("listaMedicacoesHora")
 if(!div)return
 if(!lista)lista=[]
-const execLista=(window.EXEC_CACHE||[])
+
 const dataHoje=obterDataAtiva()
+
+/* 🔥 MAPA EXEC IGUAL AO MEDICAÇÃO */
+let mapaExec={}
+;(window.EXEC_CACHE||[]).forEach(e=>{
+let chave=e.data+"_"+e.medicacao_id+"_"+e.horario
+mapaExec[chave]=e
+})
+
 let totalSim=0
 let totalNao=0
 let html=""
 let agrupado={}
+
+/* 🔥 NORMALIZAÇÃO PADRÃO */
 const normalizarHora=h=>{
 if(!h)return""
 h=h.toString().trim()
@@ -44,6 +54,8 @@ if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
+
+/* 🔥 AGRUPAMENTO POR HORA */
 lista.forEach(m=>{
 let horarios=(m.horarios||"").split("|")
 horarios.forEach(h=>{
@@ -53,33 +65,46 @@ if(!agrupado[h])agrupado[h]=[]
 agrupado[h].push(m)
 })
 })
+
 let horariosOrdenados=Object.keys(agrupado).sort()
+
 horariosOrdenados.forEach(h=>{
-html+=`<div style="margin-bottom:12px"><div style="font-weight:bold;margin-bottom:6px">⏰ ${h}</div>`
+
+html+=`<div style="margin-bottom:12px">
+<div style="font-weight:bold;margin-bottom:6px">⏰ ${h}</div>`
+
 agrupado[h].forEach(m=>{
-let exec=null
-for(const e of execLista){
-if(String(e.data)===String(dataHoje) && normalizarHora(e.horario)===h && String(e.medicacao_id)===String(m.id)){
-exec=e
-break
-}
-}
+
+/* 🔥 CHAVE IGUAL AO MEDICAÇÃO */
+let chave=dataHoje+"_"+m.id+"_"+h
+let exec=mapaExec[chave]
+
 let cor="#fde047"
+
+/* 🔥 CONTAGEM CORRETA */
 if(exec){
 cor="#22c55e"
 totalSim++
 }else{
 totalNao++
 }
-html+=`<div style="background:${cor};padding:10px;border-radius:10px;margin-bottom:6px;font-weight:500">${m.nome_paciente} - ${m.nome_medicamento}</div>`
+
+html+=`<div style="background:${cor};padding:10px;border-radius:10px;margin-bottom:6px;font-weight:500">
+${m.nome_paciente} - ${m.nome_medicamento}
+</div>`
+
 })
+
 html+=`</div>`
+
 })
+
 div.innerHTML=html
 
-/* 🔥 ATUALIZA CONTADOR IMEDIATO (SEM setTimeout) */
+/* 🔥 CONTADOR IGUAL AO MEDICAÇÃO */
 const a=document.getElementById("countNaoMed")
 const b=document.getElementById("countSimMed")
+
 if(a)a.innerText=totalNao
 if(b)b.innerText=totalSim
 
