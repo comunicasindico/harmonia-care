@@ -1,3 +1,6 @@
+let EMPRESA_ID=null
+let PROFISSIONAL_ID=null
+
 window.salvandoPendencias=false
 if(!window.db){
 console.error("🔥 ERRO CRÍTICO: Supabase (db) NÃO inicializado")
@@ -14,7 +17,7 @@ salvarFilaLocal()
 async function sincronizarFila(){
 mostrarStatusSync("🔄 Sincronizando...")
 
-if(!db||!window.FILA_ROTINAS.length){
+if(!window.db||!window.FILA_ROTINAS.length){
 esconderStatusSync()
 return
 }
@@ -94,8 +97,9 @@ async function iniciarSistema(){
 definirDataHoje()
 while(!db){await new Promise(r=>setTimeout(r,50))}
 /* 🔥 AGUARDA EMPRESA_ID */
-while(!EMPRESA_ID){
-await new Promise(r=>setTimeout(r,50))
+if(!EMPRESA_ID){
+console.warn("EMPRESA_ID não definido — usando fallback")
+EMPRESA_ID=localStorage.getItem("empresa_id")
 }
 if(typeof carregarPacientesBusca==="function"){
 await carregarPacientesBusca()
