@@ -106,14 +106,15 @@ html+=`</div>`
 
 div.innerHTML=html
 
-/* ====================================================
-🔥 CONTADOR IGUAL AO PAINEL MEDICAÇÃO
-==================================================== */
-const a=document.getElementById("countNaoMed")
-const b=document.getElementById("countSimMed")
+/* 🔥 ESPELHA CONTADOR DO PAINEL MEDICAÇÃO */
+cconst origemNao=document.getElementById("countNaoMed")
+const origemSim=document.getElementById("countSimMed")
 
-if(a)a.innerText=totalNao
-if(b)b.innerText=totalSim
+const destinoNao=document.getElementById("countNaoMedHora")
+const destinoSim=document.getElementById("countSimMedHora")
+
+if(origemNao && destinoNao)destinoNao.innerText=origemNao.innerText
+if(origemSim && destinoSim)destinoSim.innerText=origemSim.innerText
 
 console.log("MEDICAÇÃO HORA:",totalNao,totalSim)
 
