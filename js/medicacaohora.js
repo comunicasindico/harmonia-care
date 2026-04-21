@@ -24,29 +24,14 @@ await carregarMedicacoes()
 renderizarMedicacoesHora(window.MEDICACOES_CACHE||[])
 }
 /* ====================================================
-002 – RENDER POR HORA (PADRÃO IGUAL MEDICAÇÃO)
+002 – RENDER POR HORA (CONTAGEM VISUAL SIMPLES)
 ==================================================== */
 function renderizarMedicacoesHora(lista){
-
 const div=document.getElementById("listaMedicacoesHora")
 if(!div)return
 if(!lista)lista=[]
-
-const dataHoje=obterDataAtiva()
-
-/* 🔥 MAPA EXEC IGUAL AO MEDICAÇÃO */
-let mapaExec={}
-;(window.EXEC_CACHE||[]).forEach(e=>{
-let chave=e.data+"_"+e.medicacao_id+"_"+e.horario
-mapaExec[chave]=e
-})
-
-let totalSim=0
-let totalNao=0
 let html=""
 let agrupado={}
-
-/* 🔥 NORMALIZAÇÃO PADRÃO */
 const normalizarHora=h=>{
 if(!h)return""
 h=h.toString().trim()
@@ -54,8 +39,7 @@ if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
-
-/* 🔥 AGRUPAMENTO POR HORA */
+/* 🔥 AGRUPAR */
 lista.forEach(m=>{
 let horarios=(m.horarios||"").split("|")
 horarios.forEach(h=>{
@@ -65,53 +49,35 @@ if(!agrupado[h])agrupado[h]=[]
 agrupado[h].push(m)
 })
 })
-
 let horariosOrdenados=Object.keys(agrupado).sort()
-
 horariosOrdenados.forEach(h=>{
-
-html+=`<div style="margin-bottom:12px">
-<div style="font-weight:bold;margin-bottom:6px">⏰ ${h}</div>`
-
+html+=`<div style="margin-bottom:12px"><div style="font-weight:bold;margin-bottom:6px">⏰ ${h}</div>`
 agrupado[h].forEach(m=>{
-
-/* 🔥 CHAVE IGUAL AO MEDICAÇÃO */
-let chave=dataHoje+"_"+m.id+"_"+h
-let exec=mapaExec[chave]
-
+/* 🔥 DEFINE COR APENAS VISUAL (SEM CACHE) */
 let cor="#fde047"
-
-/* 🔥 CONTAGEM CORRETA */
-if(exec){
-cor="#22c55e"
-totalSim++
-}else{
-totalNao++
-}
-
-html+=`<div style="background:${cor};padding:10px;border-radius:10px;margin-bottom:6px;font-weight:500">
-${m.nome_paciente} - ${m.nome_medicamento}
-</div>`
-
+/* 🔥 REGRA SIMPLES: se já tiver execução salva */
+const execExiste=(window.EXEC_CACHE||[]).some(e=>String(e.medicacao_id)===String(m.id)&&normalizarHora(e.horario)===h&&String(e.data)===String(obterDataAtiva()))
+if(execExiste){cor="#22c55e"}
+html+=`<div class="itemHora" data-cor="${cor}" style="background:${cor};padding:10px;border-radius:10px;margin-bottom:6px;font-weight:500">${m.nome_paciente} - ${m.nome_medicamento}</div>`
 })
-
 html+=`</div>`
-
 })
-
 div.innerHTML=html
-
-/* 🔥 CONTADOR IGUAL AO MEDICAÇÃO */
+/* 🔥 CONTAGEM VISUAL REAL (DOM) */
+let totalSim=0
+let totalNao=0
+document.querySelectorAll("#listaMedicacoesHora .itemHora").forEach(el=>{
+let cor=el.getAttribute("data-cor")
+if(cor==="#22c55e"){totalSim++}else{totalNao++}
+})
 const a=document.getElementById("countNaoMed")
 const b=document.getElementById("countSimMed")
-
 if(a)a.innerText=totalNao
 if(b)b.innerText=totalSim
-
-console.log("CONTADOR HORA:",totalNao,totalSim)
+console.log("CONTADOR VISUAL:",totalNao,totalSim)
 }
 /* ====================================================
-999 – GARANTIR BOTÃO MEDICAÇÃO POR HORA
+003 –  BOTÃO MEDICAÇÃO POR HORA
 ==================================================== */
 function garantirBotaoMedicacaoHora(){
 
