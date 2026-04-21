@@ -26,6 +26,10 @@ if(!div)return
 if(!lista)lista=[]
 const execLista=(window.EXEC_CACHE||[])
 const dataHoje=obterDataAtiva()
+let totalSim=0
+let totalNao=0
+let html=""
+let agrupado={}
 const normalizarHora=h=>{
 if(!h)return""
 h=h.toString().trim()
@@ -33,10 +37,6 @@ if(!h.includes(":"))return h.padStart(2,"0")+":00"
 let[p,m]=h.split(":")
 return p.padStart(2,"0")+":"+m.padStart(2,"0")
 }
-let totalSim=0
-let totalNao=0
-let html=""
-let agrupado={}
 lista.forEach(m=>{
 let horarios=(m.horarios||"").split("|")
 horarios.forEach(h=>{
@@ -52,11 +52,7 @@ html+=`<div style="margin-bottom:12px"><div style="font-weight:bold;margin-botto
 agrupado[h].forEach(m=>{
 let exec=null
 for(const e of execLista){
-if(
-String(e.data)===String(dataHoje) &&
-normalizarHora(e.horario)===h &&
-String(e.medicacao_id)===String(m.id)
-){
+if(String(e.data)===String(dataHoje) && normalizarHora(e.horario)===h && String(e.medicacao_id)===String(m.id)){
 exec=e
 break
 }
@@ -73,13 +69,14 @@ html+=`<div style="background:${cor};padding:10px;border-radius:10px;margin-bott
 html+=`</div>`
 })
 div.innerHTML=html
-/* 🔥 CONTADOR CORRETO */
-setTimeout(function(){
+
+/* 🔥 ATUALIZA CONTADOR IMEDIATO (SEM setTimeout) */
 const a=document.getElementById("countNaoMed")
 const b=document.getElementById("countSimMed")
 if(a)a.innerText=totalNao
 if(b)b.innerText=totalSim
-},50)
+
+console.log("CONTADOR HORA:",totalNao,totalSim)
 }
 /* ====================================================
 999 – GARANTIR BOTÃO MEDICAÇÃO POR HORA
