@@ -120,7 +120,7 @@ html+=`</div>`
 div.innerHTML=html
 
 /* 🔥 ESPELHA CONTADOR DO PAINEL MEDICAÇÃO */
-cconst origemNao=document.getElementById("countNaoMed")
+const origemNao=document.getElementById("countNaoMed")
 const origemSim=document.getElementById("countSimMed")
 
 const destinoNao=document.getElementById("countNaoMedHora")
