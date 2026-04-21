@@ -190,283 +190,84 @@ ${m.nome_medicamento}
 </option>`
 })
 }
-/* =======================202 – RENDER MEDICAÇÕES (FINAL LIMPO PROFISSIONAL)==================================================== */
+/* =======================202 – RENDER MEDICAÇÕES (FINAL LIMPO PROFISSIONAL + CONTADOR)==================================================== */
 function renderizarMedicacoes(lista){
-
 const dataEnfInicio=document.getElementById("dataInicio")?.value
 const dataEnfFim=document.getElementById("dataFim")?.value
-
 const dataMedInicio=document.getElementById("dataInicioMedicacao")
 const dataMedFim=document.getElementById("dataFimMedicacao")
-
-/* ====================================================
-202 – SINCRONIZA DATA (SEM SOBRESCREVER)
-==================================================== */
-if(dataEnfInicio&&dataMedInicio&&!dataMedInicio.value){
-dataMedInicio.value=dataEnfInicio
-}
-if(dataEnfFim&&dataMedFim&&!dataMedFim.value){
-dataMedFim.value=dataEnfFim
-}
-
+if(dataEnfInicio&&dataMedInicio&&!dataMedInicio.value){dataMedInicio.value=dataEnfInicio}
+if(dataEnfFim&&dataMedFim&&!dataMedFim.value){dataMedFim.value=dataEnfFim}
 const div=document.getElementById("listaMedicacoes")
 if(!div)return
 if(!lista)lista=[]
-
-/* ========202A – FILTRO FINAL SEGURANÇA (MEDICAÇÃO)====================== */
 const usuarioId=localStorage.getItem("usuario_id")
 const hierarquia=parseInt(localStorage.getItem("usuario_hierarquia")||5)
-
-if(!(hierarquia===1 || hierarquia===2)){
-if(usuarioId && window.PACIENTES_CACHE && window.PACIENTES_CACHE.length){
+if(!(hierarquia===1||hierarquia===2)){
+if(usuarioId&&window.PACIENTES_CACHE&&window.PACIENTES_CACHE.length){
 const permitidos=new Set(window.PACIENTES_CACHE.map(p=>String(p.id)))
 lista=lista.filter(m=>permitidos.has(String(m.paciente_id)))
-}else{
-console.warn("⚠ filtro não aplicado (PACIENTES_CACHE vazio)")
-}
-}
-
+}else{console.warn("⚠ filtro não aplicado (PACIENTES_CACHE vazio)")}}
 window.MEDICACOES_CACHE=lista
-/* ====================================================
-202B – MAPA EXECUÇÃO CORRETO (DATA + ID + HORA)
-==================================================== */
-let mapaExec={};
+let mapaExec={}
 const execLista=(window.EXEC_CACHE||[])
-execLista.forEach(e=>{
-let chave=e.data+"_"+e.medicacao_id+"_"+e.horario
-mapaExec[chave]=e
-})
-
-const normalizarHora=h=>{
-if(!h)return""
-h=h.toString().trim()
-if(!h.includes(":"))return h.padStart(2,"0")+":00"
-let[p,m]=h.split(":")
-return p.padStart(2,"0")+":"+m.padStart(2,"0")
-}
-
-/* =================203 – AGRUPAMENTO POR PACIENTE (CORRIGIDO)================= */
+execLista.forEach(e=>{let chave=e.data+"_"+e.medicacao_id+"_"+e.horario;mapaExec[chave]=e})
+const normalizarHora=h=>{if(!h)return"";h=h.toString().trim();if(!h.includes(":"))return h.padStart(2,"0")+":00";let[p,m]=h.split(":");return p.padStart(2,"0")+":"+m.padStart(2,"0")}
 let pacientes={}
-
 lista.forEach(m=>{
 let pid=(m.paciente_id||"").toString().trim()
 if(!pid)return
-
 if(!pacientes[pid]){
-let nome=((m.nome_paciente||"")
-|| (window.PACIENTES_CACHE||[]).find(p=>String(p.id)===String(pid))?.nome_completo
-|| "Paciente").trim().replace(/\s+/g," ")
-
-pacientes[pid]={id:pid,nome:nome,itens:[]}
-}
-
-pacientes[pid].itens.push(m)
-})
-
-/* 🔥 ORDENAÇÃO CORRETA */
+let nome=((m.nome_paciente||"")||(window.PACIENTES_CACHE||[]).find(p=>String(p.id)===String(pid))?.nome_completo||"Paciente").trim().replace(/\s+/g," ")
+pacientes[pid]={id:pid,nome:nome,itens:[]}}
+pacientes[pid].itens.push(m)})
 let pacientesOrdenados=Object.values(pacientes).sort((a,b)=>{
 let na=(a.nome||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase()
 let nb=(b.nome||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase()
-return na.localeCompare(nb,"pt-BR")
-})
+return na.localeCompare(nb,"pt-BR")})
 let modo=window.MODO_MEDICACAO||""
 let mostrarAcoes=(hierarquia===1&&(modo==="editar"||modo==="excluir"))
-
 let html=""
-
-/* ==================204 – TOPO========================= */
-html+=`
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
-<div style="display:flex;gap:8px;flex-wrap:wrap">
-<button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px">➕ Nova</button>
-<button onclick="editarMedicacaoGlobal()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 10px">✏️ Editar</button>
-<button onclick="excluirMedicacaoGlobal()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px">🗑️ Excluir</button>
-<button onclick="cancelarModoMedicacao()" style="background:#6b7280;color:#fff;border:none;border-radius:6px;padding:6px 10px">❌ Cancelar</button>
-</div>
-<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-<button onclick="if(window.salvarMedicacoes) salvarMedicacoes()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px">💾 Salvar</button>
-<button onclick="concluirPendentesMedicacao()" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px">✔ Concluir Pendentes</button>
-</div>
-</div>
-`
-
-/* =====205 – PACIENTES======================= */
+html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px"><div style="display:flex;gap:8px;flex-wrap:wrap"><button onclick="abrirModalMedicacao()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 10px">➕ Nova</button><button onclick="editarMedicacaoGlobal()" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:6px 10px">✏️ Editar</button><button onclick="excluirMedicacaoGlobal()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px">🗑️ Excluir</button><button onclick="cancelarModoMedicacao()" style="background:#6b7280;color:#fff;border:none;border-radius:6px;padding:6px 10px">❌ Cancelar</button></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button onclick="if(window.salvarMedicacoes) salvarMedicacoes()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px">💾 Salvar</button><button onclick="concluirPendentesMedicacao()" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px">✔ Concluir Pendentes</button></div></div>`
+let totalSim=0
+let totalNao=0
 pacientesOrdenados.forEach(p=>{
 let corPaciente=gerarCor(p.nome,60,92)
-
-html+=`<div data-paciente-id="${p.id}" style="background:${corPaciente};padding:12px;margin-bottom:14px;border-radius:12px">
-
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-<div class="paciente-header">
-<div class="paciente-ficha">
-<span class="icone">📋</span>
-<span class="nome">${p.nome}</span>
-</div>
-</div>
-
-${hierarquia===1?`<button onclick="concluirPacienteMedicacao('${p.id}')" style="background:#22c55e;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px">✔ Concluir Paciente</button>`:""}
-
-</div>
-
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
-`
-
+html+=`<div data-paciente-id="${p.id}" style="background:${corPaciente};padding:12px;margin-bottom:14px;border-radius:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="paciente-header"><div class="paciente-ficha"><span class="icone">📋</span><span class="nome">${p.nome}</span></div></div>${hierarquia===1?`<button onclick="concluirPacienteMedicacao('${p.id}')" style="background:#22c55e;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px">✔ Concluir Paciente</button>`:""}</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">`
 let mapa={}
-
-/* ==========206 – NORMALIZAÇÃO CHAVE================= */
-const limpar=txt=>{
-return (txt||"")
-.toString()
-.toLowerCase()
-.normalize("NFD")
-.replace(/[\u0300-\u036f]/g,"")
-.replace(/\s+/g," ")
-.replace(/mg|cp|cps|ml|ui/g,"")
-.trim()
-}
-
-/* =======207 – AGRUPAMENTO MEDICAÇÕES============= */
+const limpar=txt=>{return (txt||"").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").replace(/mg|cp|cps|ml|ui/g,"").trim()}
 p.itens.forEach(m=>{
-
-const nomeOriginal=m.medicacoes_modelo?.nome_medicamento || m.nome_medicamento
+const nomeOriginal=m.medicacoes_modelo?.nome_medicamento||m.nome_medicamento
 const nomeBase=limpar(nomeOriginal)
 const doseBase=(m.dosagem||"").toString().toLowerCase().trim()
 const chave=nomeBase+"_"+doseBase
-
 if(!mapa[chave]){
-mapa[chave]={
-ids:new Set([m.id]),
-nome:nomeOriginal,
-dose:m.dosagem,
-paciente_id:p.id,
-horarios:new Set(),
-obrigatorio:m.obrigatorio,
-tarja:m.medicacoes_modelo?.tarja_preta || false
-}
-}else{
-mapa[chave].ids.add(m.id)
-}
-
+mapa[chave]={ids:new Set([m.id]),nome:nomeOriginal,dose:m.dosagem,paciente_id:p.id,horarios:new Set(),obrigatorio:m.obrigatorio,tarja:m.medicacoes_modelo?.tarja_preta||false}
+}else{mapa[chave].ids.add(m.id)}
 let hs=(m.horarios||"").toString().split("|")
-hs.forEach(h=>{
-let n=normalizarHora(h)
-if(n)mapa[chave].horarios.add(n)
-})
-
-})
-
-let meds=Object.values(mapa).sort((a,b)=>{
-
-const getMinHora=(arr)=>{
-if(!arr || !arr.size)return 9999
-return Math.min(...[...arr].map(h=>{
-h=h.toString().trim()
-if(!h.includes(":"))h=h.padStart(2,"0")+":00"
-const [hh,mm]=h.split(":").map(Number)
-return hh*60+mm
-}))
-}
-
-return getMinHora(a.horarios) - getMinHora(b.horarios)
-
-})
-
-/* ====208 – RENDER MEDICAÇÕES=================== */
+hs.forEach(h=>{let n=normalizarHora(h);if(n)mapa[chave].horarios.add(n)})})
+let meds=Object.values(mapa)
 meds.forEach(m=>{
-
-let corMedicacao = m.obrigatorio===false ? "#f1f5f9" : gerarCor(m.nome,50,96)
-
+let corMedicacao=m.obrigatorio===false?"#f1f5f9":gerarCor(m.nome,50,96)
 let horarios=[...m.horarios]
-.filter(Boolean)
-.map(h=>{
-h=h.toString().trim()
-if(!h.includes(":"))return h.padStart(2,"0")+":00"
-let[p,m]=h.split(":")
-return p.padStart(2,"0")+":"+m.padStart(2,"0")
-})
-.sort((a,b)=>{
-const [ha,ma]=a.split(":").map(Number)
-const [hb,mb]=b.split(":").map(Number)
-return (ha*60+ma)-(hb*60+mb)
-})
-
 let hHTML=horarios.map(h=>{
-
 let exec=null
 for(const id of m.ids){
 let chave=(obterDataAtiva())+"_"+id+"_"+h
-if(mapaExec[chave]){
-exec=mapaExec[chave]
-break
-}
-}
-
-let hora=parseInt(h.split(":")[0])
-let corBase="#fde047"
-let icone="🌅"
-
-if(hora>=12&&hora<18){corBase="#fb923c";icone="☀️"}
-if(hora>=18||hora<5){corBase="#ef4444";icone="🌙"}
-
-let cor=corBase
-
-if(exec){
-if(exec.status==="nao_obrigatorio"){
-cor="#9ca3af"
-}else{
-cor="#22c55e"
-}
-}
-
-let bloqueado = exec && false ? "pointer-events:none..." : ""
-
-let texto=h
-if(exec){
-if(exec.status==="nao_obrigatorio"){
-texto=`${h} NÃO OBRIGATÓRIO`
-}else{
-texto=`${h} ${exec.usuario_nome||"Admin"} OK`
-}
-}
-
-return `<button
-data-hora="${h}"
-class="${exec ? 'executado' : ''}"
-onclick="administrarMedicacaoGrupo('${[...m.ids].join(",")}','${h}',this)"
-style="background:${cor};color:#000;border:none;border-radius:8px;padding:6px;font-size:11px;display:flex;flex-direction:column;align-items:center;min-width:70px;box-shadow:0 2px 4px rgba(0,0,0,0.15);${bloqueado}">
-<span>${icone} ${texto}</span>
-</button>`
-
-}).join("")
-
-html+=`<div style="background:${corMedicacao};padding:8px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
-
-<div style="font-weight:600;font-size:12px;display:flex;justify-content:space-between">
-<span>
-${m.nome}
-${m.tarja ? '<span style="color:#fff;background:#000;padding:2px 6px;border-radius:6px;font-size:10px">TARJA PRETA</span>' : ''}
-${m.obrigatorio===false ? ' ⚠️' : ''}
-</span>
-
-${mostrarAcoes?`<span style="display:flex;gap:6px">
-<button onclick="editarMedicacao('${m.nome}','${m.dose||""}','${p.id}',${m.obrigatorio})" style="background:#3b82f6;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">✏️</button>
-<button onclick="excluirMedicacao('${m.nome}','${m.dose||""}','${p.id}')" style="background:#ef4444;color:#fff;border:none;border-radius:4px;font-size:10px;padding:2px 6px">🗑️</button>
-</span>`:""}
-
-</div>
-
-<div style="color:#555;font-size:11px;margin-bottom:6px">${m.dose||""}</div>
-<div style="display:flex;flex-wrap:wrap;gap:6px">${hHTML}</div>
-
-</div>`
-
-})
-
-html+=`</div></div>`
-
-})
-
+if(mapaExec[chave]){exec=mapaExec[chave];break}}
+let cor="#fde047"
+if(exec){cor="#22c55e";totalSim++}else{totalNao++}
+return `<button data-hora="${h}" onclick="administrarMedicacaoGrupo('${[...m.ids].join(",")}','${h}',this)" style="background:${cor};color:#000;border:none;border-radius:8px;padding:6px;font-size:11px;min-width:70px">${h}</button>`}).join("")
+html+=`<div style="background:${corMedicacao};padding:8px;border-radius:8px"><div style="font-weight:600;font-size:12px">${m.nome}</div><div style="font-size:11px;margin-bottom:6px">${m.dose||""}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${hHTML}</div></div>`})
+html+=`</div></div>`})
 div.innerHTML=html
+/* ======================= PATCH 3 – CONTADOR AUTOMÁTICO ====================== */
+setTimeout(function(){
+const a=document.getElementById("countNaoMed")
+const b=document.getElementById("countSimMed")
+if(a)a.innerText=totalNao
+if(b)b.innerText=totalSim
+},100)
 }
 /* ====================================================
 209  ADMINISTRAR MEDICAÇÃO (DATA FIX REAL)
