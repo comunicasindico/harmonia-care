@@ -1,4 +1,8 @@
 window.salvandoPendencias=false
+if(!window.db){
+console.error("🔥 ERRO CRÍTICO: Supabase (db) NÃO inicializado")
+alert("Erro de conexão com banco de dados. Recarregue a página.")
+}
 /* ====================================================068A – FILA OFFLINE TURBO==================================================== */
 window.FILA_ROTINAS=JSON.parse(localStorage.getItem("fila_rotinas")||"[]")
 function salvarFilaLocal(){localStorage.setItem("fila_rotinas",JSON.stringify(window.FILA_ROTINAS))}
