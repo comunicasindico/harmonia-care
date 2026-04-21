@@ -17,20 +17,22 @@ await carregarMedicacoes()
 renderizarMedicacoesHora(window.MEDICACOES_CACHE||[])
 setTimeout(atualizarLegendaMedicacao,100)
 }
-
 /* ====================================================
-002 – RENDER POR HORA
+002 – RENDER POR HORA (CORRIGIDO DEFINITIVO)
 ==================================================== */
 function renderizarMedicacoesHora(lista){
 const div=document.getElementById("listaMedicacoesHora")
 if(!div)return
 if(!lista)lista=[]
-let mapaExec={}
 const execLista=(window.EXEC_CACHE||[])
-execLista.forEach(e=>{
-let chave=e.data+"_"+e.medicacao_id+"_"+e.horario
-mapaExec[chave]=e
-})
+const dataHoje=obterDataAtiva()
+const normalizarHora=h=>{
+if(!h)return""
+h=h.toString().trim()
+if(!h.includes(":"))return h.padStart(2,"0")+":00"
+let[p,m]=h.split(":")
+return p.padStart(2,"0")+":"+m.padStart(2,"0")
+}
 let totalSim=0
 let totalNao=0
 let html=""
@@ -38,7 +40,7 @@ let agrupado={}
 lista.forEach(m=>{
 let horarios=(m.horarios||"").split("|")
 horarios.forEach(h=>{
-h=h.trim()
+h=normalizarHora(h)
 if(!h)return
 if(!agrupado[h])agrupado[h]=[]
 agrupado[h].push(m)
@@ -49,8 +51,19 @@ horariosOrdenados.forEach(h=>{
 html+=`<div style="margin-bottom:12px"><div style="font-weight:bold;margin-bottom:6px">⏰ ${h}</div>`
 agrupado[h].forEach(m=>{
 let exec=null
-let chave=(obterDataAtiva())+"_"+m.id+"_"+h
-if(mapaExec[chave])exec=mapaExec[chave]
+for(const e of execLista){
+if(
+String(e.data)===String(dataHoje) &&
+normalizarHora(e.horario)===h &&
+(
+String(e.medicacao_id)===String(m.id) ||
+String(e.paciente_id)===String(m.paciente_id)
+)
+){
+exec=e
+break
+}
+}
 let cor="#fde047"
 if(exec){
 cor="#22c55e"
@@ -63,13 +76,13 @@ html+=`<div style="background:${cor};padding:10px;border-radius:10px;margin-bott
 html+=`</div>`
 })
 div.innerHTML=html
-/* 🔥 CONTADOR IGUAL AO MEDICAÇÃO */
+/* 🔥 CONTADOR CORRETO */
 setTimeout(function(){
 const a=document.getElementById("countNaoMed")
 const b=document.getElementById("countSimMed")
 if(a)a.innerText=totalNao
 if(b)b.innerText=totalSim
-},100)
+},50)
 }
 /* ====================================================
 999 – GARANTIR BOTÃO MEDICAÇÃO POR HORA
