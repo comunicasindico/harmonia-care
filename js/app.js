@@ -448,3 +448,19 @@ salvarFilaMedicacao()
 
 esconderStatusSync()
 }
+function atualizarContadorMedicacao(){
+const lista=document.querySelectorAll("#listaMedicacoes .card-medicacao")
+let sim=0
+let nao=0
+lista.forEach(el=>{
+if(el.innerHTML.includes("✔")||el.classList.contains("ok")||el.classList.contains("medicado")){
+sim++
+}else{
+nao++
+}
+})
+const a=document.getElementById("countNaoMed")
+const b=document.getElementById("countSimMed")
+if(a)a.innerText=nao
+if(b)b.innerText=sim
+}
