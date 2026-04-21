@@ -58,7 +58,11 @@ let cor="#fde047"
 /* 🔥 REGRA SIMPLES: se já tiver execução salva */
 const execExiste=(window.EXEC_CACHE||[]).some(e=>String(e.medicacao_id)===String(m.id)&&normalizarHora(e.horario)===h&&String(e.data)===String(obterDataAtiva()))
 if(execExiste){cor="#22c55e"}
-html+=`<div class="itemHora" data-cor="${cor}" style="background:${cor};padding:10px;border-radius:10px;margin-bottom:6px;font-weight:500">${m.nome_paciente} - ${m.nome_medicamento}</div>`
+html+=`<div class="itemHora" 
+onclick="marcarMedicacaoHora(this)"
+style="background:${cor};padding:10px;border-radius:10px;margin-bottom:6px;font-weight:500;cursor:pointer">
+${m.nome_paciente} - ${m.nome_medicamento}
+</div>`
 })
 html+=`</div>`
 })
@@ -75,6 +79,7 @@ const b=document.getElementById("countSimMed")
 if(a)a.innerText=totalNao
 if(b)b.innerText=totalSim
 console.log("CONTADOR VISUAL:",totalNao,totalSim)
+atualizarContadorMedicacaoHora()
 }
 /* ====================================================
 003 –  BOTÃO MEDICAÇÃO POR HORA
@@ -96,3 +101,35 @@ btn.onclick=abrirPainelMedicacaoHora
 topo.appendChild(btn)
 }
 window.addEventListener("load",garantirBotaoMedicacaoHora)
+/* ====================================================
+004 – CONTADOR TEMPO REAL (BASEADO NA TELA)
+==================================================== */
+function atualizarContadorMedicacaoHora(){
+let totalSim=0
+let totalNao=0
+document.querySelectorAll("#listaMedicacoesHora .itemHora").forEach(el=>{
+const cor=el.style.background
+if(cor.includes("34,197,94") || cor.includes("#22c55e")){
+totalSim++
+}else{
+totalNao++
+}
+})
+const a=document.getElementById("countNaoMed")
+const b=document.getElementById("countSimMed")
+if(a)a.innerText=totalNao
+if(b)b.innerText=totalSim
+}
+/* ====================================================
+005 – CLICK MEDICAÇÃO (TEMPO REAL)
+==================================================== */
+function marcarMedicacaoHora(el){
+/* alterna cor */
+if(el.style.background.includes("22c55e") || el.style.background.includes("34,197,94")){
+el.style.background="#fde047"
+}else{
+el.style.background="#22c55e"
+}
+/* 🔥 ATUALIZA CONTADOR IMEDIATO */
+atualizarContadorMedicacaoHora()
+}
