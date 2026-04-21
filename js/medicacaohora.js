@@ -4,9 +4,16 @@
 function abrirPainelMedicacaoHora(){
 document.getElementById("painelMedicacao").style.display="none"
 document.getElementById("painelMedicacaoHora").style.display="block"
+if(typeof carregarMedicacoesHora==="function"){
 carregarMedicacoesHora()
 }
-
+/* 🔥 PATCH 3 – FORÇA CONTADOR ATUALIZAR */
+setTimeout(()=>{
+if(window.MEDICACOES_CACHE){
+renderizarMedicacoesHora(window.MEDICACOES_CACHE)
+}
+},200)
+}
 /* ====================================================
 001 – CARREGAR MEDICAÇÕES (REAPROVEITA CACHE)
 ==================================================== */
