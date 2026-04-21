@@ -105,25 +105,3 @@ btn.onclick=abrirPainelMedicacaoHora
 topo.appendChild(btn)
 }
 window.addEventListener("load",garantirBotaoMedicacaoHora)
-
-function atualizarLegendaMedicacao(){
-const itens=document.querySelectorAll("#listaMedicacoesHora .item-medicacao")
-let medicado=0
-let nao=0
-itens.forEach(el=>{
-if(el.classList.contains("ok")||el.classList.contains("medicado")){
-medicado++
-}else{
-nao++
-}
-})
-const c1=document.getElementById("countNao")
-const c2=document.getElementById("countSim")
-if(c1)c1.innerText=nao
-if(c2)c2.innerText=medicado
-}
-const observer=new MutationObserver(()=>atualizarLegendaMedicacao())
-const alvo=document.getElementById("listaMedicacoesHora")
-if(alvo){
-observer.observe(alvo,{childList:true,subtree:true})
-}
