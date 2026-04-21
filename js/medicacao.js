@@ -925,9 +925,25 @@ empresa_id:EMPRESA_ID
 
 try{
 
+/* 🔒 VERIFICA SE JÁ EXISTE */
+const {data:existe}=await db
+.from("medicacoes_execucao")
+.select("id")
+.eq("medicacao_id",payload.medicacao_id)
+.eq("data",payload.data)
+.eq("horario",payload.horario)
+.eq("empresa_id",payload.empresa_id)
+.maybeSingle()
+
+if(!existe){
 const {error}=await db
 .from("medicacoes_execucao")
 .insert(payload)
+
+if(error){
+console.error("Erro ao inserir:",error)
+}
+}
 
 if(error && error.code!=="23505"){
 console.error("Erro real:",error)
