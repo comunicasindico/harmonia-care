@@ -138,6 +138,14 @@ background:linear-gradient(45deg,#16a085,#2ecc71);
 /* ==================================================== – REDUZIR IMAGEM CABEÇALHO==================================================== */
 .topo-sistema img{max-height:45px!important;}
 @media(max-width:768px){.topo-sistema img{max-height:40px!important;}}
+/* ====================================================996 – ESCONDER CONTADORES NOS PAINÉIS DE MEDICAÇÃO==================================================== */
+#painelMedicacao #indicadorExecutado,
+#painelMedicacao #indicadorPendente,
+#painelMedicacao #indicadorAtrasado,
+#painelMedicacaoHora #indicadorExecutado,
+#painelMedicacaoHora #indicadorPendente,
+#painelMedicacaoHora #indicadorAtrasado{display:none!important;}
+
 
   
 </style>
@@ -226,7 +234,19 @@ background:linear-gradient(45deg,#16a085,#2ecc71);
 ==================================================== -->
 <div id="painelMedicacao" class="box" style="display:none">
 
-<h3>💊 Controle de Medicação</h3>
+<h3 style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+<span>💊 Controle de Medicação</span>
+<span style="font-size:13px;display:flex;gap:12px;align-items:center;">
+<span style="display:flex;align-items:center;gap:4px;">
+<span style="width:10px;height:10px;background:#facc15;border-radius:50%;display:inline-block;"></span>
+Não medicado: <b id="countNaoMed">0</b>
+</span>
+<span style="display:flex;align-items:center;gap:4px;">
+<span style="width:10px;height:10px;background:#22c55e;border-radius:50%;display:inline-block;"></span>
+Medicado: <b id="countSimMed">0</b>
+</span>
+</span>
+</h3>
 
 <select id="buscaPacienteMedicacao"></select>
 
