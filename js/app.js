@@ -1,5 +1,28 @@
 let EMPRESA_ID=null
 let PROFISSIONAL_ID=null
+let LGPD_MODO_ATIVO=true
+let LGPD_OCULTAR_MEDICACAO_SENSIVEL=true
+let LGPD_OCULTAR_NOME_COMPLETO=true
+/* =========================================FUNCTION OBTER TIPO USUARIO============================================= */
+function obterTipoUsuario(){
+return localStorage.getItem("tipo_usuario")||"enfermagem"
+}
+/* =========================================FUNCTION ============================================= */
+function nomeProtegido(nome){
+if(!LGPD_MODO_ATIVO)return nome
+if(!LGPD_OCULTAR_NOME_COMPLETO)return nome
+if(!nome)return ""
+let partes=nome.split(" ")
+return partes[0]+" "+(partes[1]?partes[1][0]+".":"")
+}
+/* =========================================FUNCTION ============================================= */
+function nomeProtegido(nome){
+if(!LGPD_MODO_ATIVO)return nome
+if(!LGPD_OCULTAR_NOME_COMPLETO)return nome
+if(!nome)return ""
+let partes=nome.split(" ")
+return partes[0]+" "+(partes[1]?partes[1][0]+".":"")
+}
 
 window.salvandoPendencias=false
 if(!window.db){
