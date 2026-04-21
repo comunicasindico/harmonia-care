@@ -46,7 +46,20 @@ let totalNao=0
 let html=""
 let agrupado={}
 const normalizarHora=h=>{if(!h)return"";h=h.toString().trim();if(!h.includes(":"))return h.padStart(2,"0")+":00";let[p,m]=h.split(":");return p.padStart(2,"0")+":"+m.padStart(2,"0")}
-lista.forEach(m=>{let horarios=(m.horarios||"").split("|");horarios.forEach(h=>{h=normalizarHora(h);if(!h)return;if(!agrupado[h])agrupado[h]=[];agrupado[h].push(m)})})
+const tipo=obterTipoUsuario()
+lista.forEach(m=>{
+if(tipo==="familiar"){
+const pacientePermitido=localStorage.getItem("paciente_id")
+if(!pacientePermitido||String(m.paciente_id)!==String(pacientePermitido))return
+}
+let horarios=(m.horarios||"").split("|")
+horarios.forEach(h=>{
+h=normalizarHora(h)
+if(!h)return
+if(!agrupado[h])agrupado[h]=[]
+agrupado[h].push(m)
+})
+})
 let horariosOrdenados=Object.keys(agrupado).sort()
 horariosOrdenados.forEach(h=>{
 html+=`<div style="margin-bottom:12px"><div style="font-weight:bold;margin-bottom:6px">⏰ ${h}</div>`
@@ -59,7 +72,8 @@ if(String(e.data)===String(dataHoje)&&String(e.medicacao_id)===String(m.id)&&nor
 }
 let cor="#fde047"
 if(executado){cor="#22c55e";totalSim++}else{totalNao++}
-html+=`<div style="display:grid;grid-template-columns:50% 50%;gap:6px;background:${cor};padding:10px;border-radius:10px;margin-bottom:6px;font-weight:500;align-items:center"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.nome_paciente||"-"}</div><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.nome_medicamento||"-"}</div></div>`
+html+=`<div style="display:grid;grid-template-columns:50% 50%;gap:6px;background:${cor};padding:10px;border-radius:10px;margin-bottom:6px;font-weight:500;align-items:center"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nomeProtegido(m.nome_paciente||"-")}</div><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${medicacaoProtegida(m.nome_medicamento||"-")}</div></div>`
+})
 })
 html+=`</div>`
 })
