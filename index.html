@@ -76,8 +76,11 @@ button:active{transform:scale(0.96);}
 .badge-rotina:active{transform:scale(0.95);}
 @media(max-width:768px){html,body{background-position:center top;background-size:cover;background-attachment:scroll;}}
 img{max-width:100%;height:auto;}
-
-
+.badge-rotina{cursor:pointer;transition:all .15s;}
+.badge-rotina.ativo{background:#22c55e!important;color:#fff!important;}
+img[src*="harmonia"]{max-width:180px!important;width:100%!important;height:auto!important;display:block;margin:0 auto;}
+@media(max-width:768px){img[src*="harmonia"]{max-width:140px!important;}}
+@media(max-width:768px){#painelMedicacaoHora .nome-paciente,#painelMedicacaoHora strong,#painelMedicacaoHora b{color:#000!important;}}
   
 </style>
 </head>
@@ -468,6 +471,14 @@ btnPendentes.style.display=(hierarquia===1)?"inline-block":"none"
 btnPendentes.onclick=function(){executarRotinaTodosPaciente()}
 }})
 
+document.addEventListener("click",function(e){
+const btn=e.target.closest(".badge-rotina")
+if(!btn)return
+btn.classList.toggle("ativo")
+})
+
+
+  
 </script>
 <div id="barraProgresso" style="display:none;position:fixed;top:0;left:0;width:100%;height:10px;background:#e5e7eb;z-index:9999">
 <div id="barraInterna" style="width:0%;height:100%;background:#22c55e;transition:width 0.3s"></div>
