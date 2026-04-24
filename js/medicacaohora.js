@@ -36,6 +36,25 @@ await carregarMedicacoes()
 
 renderizarMedicacoesHora(window.MEDICACOES_CACHE||[])
 }
+/* ====================================================011 – PROTEGER NOME MEDICAÇÃO (LGPD)==================================================== */
+function medicacaoProtegida(nome){
+const tipo=obterTipoUsuario()
+if(!nome)return"-"
+if(tipo==="familiar"){
+return nome.charAt(0)+"***"
+}
+return nome
+}
+/* ====================================================012 – PROTEGER NOME PACIENTE==================================================== */
+function nomeProtegido(nome){
+const tipo=obterTipoUsuario()
+if(!nome)return"-"
+if(tipo==="familiar"){
+let partes=nome.split(" ")
+return partes[0]+" "+(partes[1]?partes[1].charAt(0)+"***":"")
+}
+return nome
+}
 /* ====================================================002 – RENDER POR HORA (REFLEXO REAL DO BANCO)==================================================== */
 function renderizarMedicacoesHora(lista){
 const div=document.getElementById("listaMedicacoesHora")
