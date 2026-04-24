@@ -78,7 +78,7 @@ html+=`<div style="display:grid;grid-template-columns:50% 50%;gap:6px;background
 })
 })
 html+=`</div>`
-})
+
 div.innerHTML=html
 const a=document.getElementById("countNaoMed")
 const b=document.getElementById("countSimMed")
