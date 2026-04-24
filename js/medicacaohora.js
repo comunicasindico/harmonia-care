@@ -64,9 +64,12 @@ agrupado[h].push(m)
 })
 let horariosOrdenados=Object.keys(agrupado).sort()
 horariosOrdenados.forEach(h=>{
-html+=`<div style="margin-bottom:12px"><div style="font-weight:bold;margin-bottom:6px">⏰ ${h}</div>`
+html+=`<div style="margin-bottom:12px">
+<div style="font-weight:bold;margin-bottom:6px">⏰ ${h}</div>
+<div style="display:grid;grid-template-columns:50% 50%;gap:6px;margin-bottom:6px;font-weight:600;font-size:12px;padding:4px 6px">
+<div>Paciente</div><div>Medicação</div>
+</div>`
 const listaOrdenada=agrupado[h].slice().sort((a,b)=>{let na=(a.nome_paciente||"").toLowerCase().trim();let nb=(b.nome_paciente||"").toLowerCase().trim();return na.localeCompare(nb,"pt-BR")})
-html+=`<div style="display:grid;grid-template-columns:50% 50%;gap:6px;margin-bottom:6px;font-weight:600;font-size:12px;padding:4px 6px"><div>Paciente</div><div>Medicação</div></div>`
 listaOrdenada.forEach(m=>{
 let executado=false
 for(const e of execLista){
@@ -74,11 +77,13 @@ if(String(e.data)===String(dataHoje)&&String(e.medicacao_id)===String(m.id)&&nor
 }
 let cor="#fde047"
 if(executado){cor="#22c55e";totalSim++}else{totalNao++}
-html+=`<div style="display:grid;grid-template-columns:50% 50%;gap:6px;background:${cor};padding:10px;border-radius:10px;margin-bottom:6px;font-weight:500;align-items:center"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nomeProtegido(m.nome_paciente||"-")}</div><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${medicacaoProtegida(m.nome_medicamento||"-")}</div></div>`
-})
+html+=`<div style="display:grid;grid-template-columns:50% 50%;gap:6px;background:${cor};padding:10px;border-radius:10px;margin-bottom:6px;font-weight:500;align-items:center">
+<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nomeProtegido(m.nome_paciente||"-")}</div>
+<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${medicacaoProtegida(m.nome_medicamento||"-")}</div>
+</div>`
 })
 html+=`</div>`
-
+})
 div.innerHTML=html
 const a=document.getElementById("countNaoMed")
 const b=document.getElementById("countSimMed")
