@@ -258,7 +258,7 @@ function abrirPainel(id){
 if(typeof podeUsarMedicacao==="function" && !podeUsarMedicacao()){const btn=document.getElementById("btnMedicacao");if(btn)btn.style.display="none"}
 if(window.salvandoPendencias){alert("Aguarde finalizar o salvamento das pendências.");return}
 localStorage.setItem("painelAtual",id)
-const paineis=["painelEnfermagem","painelClinico","painelAdmin","painelMedicacao"]
+const paineis=["painelEnfermagem","painelClinico","painelAdmin","painelMedicacao","painelMedicacaoHora"]
 for(let i=0;i<paineis.length;i++){const el=document.getElementById(paineis[i]);if(el)el.style.display="none"}
 const alvo=document.getElementById(id);if(alvo)alvo.style.display="block"
 /* 🔥 CARREGAMENTO */
@@ -269,6 +269,11 @@ setTimeout(function(){
 if(typeof carregarStatusMedicacoes==="function")carregarStatusMedicacoes()
 if(typeof carregarPacientesMedicacao==="function")carregarPacientesMedicacao()
 if(typeof carregarMedicacoes==="function")carregarMedicacoes()
+},100)
+}
+if(id==="painelMedicacaoHora" && typeof carregarMedicacoesHora==="function"){
+setTimeout(function(){
+carregarMedicacoesHora()
 },100)
 }
 /* 🔥 BOTÃO PENDENTES (NOVO PADRÃO) */
@@ -286,6 +291,7 @@ if(id==="painelEnfermagem")atualizarBotoesTopo("enfermagem")
 if(id==="painelClinico")atualizarBotoesTopo("clinico")
 if(id==="painelAdmin")atualizarBotoesTopo("admin")
 if(id==="painelMedicacao")atualizarBotoesTopo("medicacao")
+if(id==="painelMedicacaoHora")atualizarBotoesTopo("medicacaohora")
 }
 /* ====================================================
 018 – CONTROLE VISUAL DOS BOTÕES
@@ -322,7 +328,12 @@ const mapa={
 enfermagem:"btnEnfermagem",
 clinico:"btnClinico",
 admin:"btnAdmin",
-medicacao:"btnMedicacao"
+medicacao:"btnMedicacao",
+medicacaohora:"btnMedicacaoHora"
+}
+if(painel==="medicacaohora"){
+mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnMedicacaoHora"])
+document.getElementById("acoesClinico").style.display="none"
 }
 const ativo=document.getElementById(mapa[painel])
 if(ativo)ativo.classList.add("ativo")
