@@ -49,6 +49,79 @@ if(perfil==="medico")return true
 return false
 }
 /* ====================================================
+🔥 FILA LOCAL MEDICAÇÃO (PERSISTENTE)
+==================================================== */
+function obterFilaMedicacao(){
+return JSON.parse(localStorage.getItem("fila_medicacao")||"[]")
+}
+
+function salvarFilaMedicacao(fila){
+localStorage.setItem("fila_medicacao",JSON.stringify(fila))
+}
+
+function adicionarFilaMedicacao(item){
+let fila=obterFilaMedicacao()
+
+/* 🔒 evita duplicidade */
+let existe=fila.find(f=>
+f.medicacao_id===item.medicacao_id &&
+f.data===item.data &&
+f.horario===item.horario &&
+f.empresa_id===item.empresa_id
+)
+
+if(!existe){
+fila.push(item)
+salvarFilaMedicacao(fila)
+}
+}
+/* ====================================================
+🔥 SINCRONIZAÇÃO COM SUPABASE (CORE)
+==================================================== */
+async function sincronizarFilaMedicacao(modoUrgente=false){
+
+if(!db)return
+
+let fila=obterFilaMedicacao()
+
+if(!fila.length)return
+
+let lote=modoUrgente ? fila.slice(0,50) : fila.slice(0,20)
+
+let enviados=[]
+
+for(const item of lote){
+
+try{
+
+const {error}=await db
+.from("medicacoes_execucao")
+.upsert(item,{
+onConflict:"medicacao_id,data,horario,empresa_id"
+})
+
+if(!error){
+enviados.push(item)
+}
+
+}catch(e){
+console.warn("erro sync",e)
+}
+
+}
+
+/* 🔥 remove enviados */
+fila=fila.filter(f=>!enviados.includes(f))
+salvarFilaMedicacao(fila)
+
+}
+/* ====================================================
+🔥 AUTO SYNC LOOP (TIPO WHATSAPP)
+==================================================== */
+setInterval(()=>{
+sincronizarFilaMedicacao()
+},3000)
+/* ====================================================
 200 – CARREGAR PACIENTES MEDICAÇÃO
 ==================================================== */
 async function carregarPacientesMedicacao(){
@@ -902,11 +975,13 @@ renderizarMedicacoes(window.MEDICACOES_CACHE)
 /* ====================================================
 🔥 5 – SINCRONIZA EM BACKGROUND
 ==================================================== */
-setTimeout(()=>{
 if(typeof sincronizarFilaMedicacao==="function"){
-sincronizarFilaMedicacao()
+await sincronizarFilaMedicacao(true) // 🔥 modo urgente
 }
-},100)
+/* 🔥 BACKGROUND CONTINUA */
+setTimeout(()=>{
+sincronizarFilaMedicacao()
+},300)
 
 /* ====================================================
 🔥 6 – FINALIZA
@@ -1217,6 +1292,16 @@ select.selectedOptions[0].textContent=nomeBase+(obrigatorio?" ✔":" ⚠")
 }
 })
 /* ====================================================
+300A – proteçao CONTRA F5
+==================================================== */
+window.addEventListener("beforeunload",function(e){
+let fila=obterFilaMedicacao()
+if(fila.length>0){
+e.preventDefault()
+e.returnValue="Salvando dados..."
+}
+})
+/* ====================================================
 300 – GERAR LISTA DE DATAS (PERÍODO)
 ==================================================== */
 function gerarDatasPeriodo(inicio,fim){
@@ -1391,6 +1476,8 @@ return "noite"
 document.addEventListener("DOMContentLoaded",()=>{
 
 montarHorariosMedicacao()
+sincronizarFilaMedicacao(true)
+
 
 /* 🔥 PATCH 012 – TRAVA DATA MANUAL */
 const d1=document.getElementById("dataInicioMedicacao")
