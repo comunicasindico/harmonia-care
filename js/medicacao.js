@@ -816,21 +816,9 @@ console.error(e)
 alert("Erro inesperado")
 }
 }
-/* ====================================================
-223 – CONCLUIR PENDENTES MEDICACAO (FINAL TURBO CORRIGIDO)
-==================================================== */
-/* ====================================================
-223 – CONCLUIR PENDENTES MEDICACAO (COM BARRA + FILA + SALVAMENTO DIRETO)
-==================================================== */
 window.concluirPendentesMedicacao=async function(){
 
 mostrarStatusSync("⏳ Salvando...")
-
-if(!db){
-alert("Banco não conectado")
-esconderStatusSync()
-return
-}
 
 const user=obterUsuarioLogado()||{}
 const dataInicio=document.getElementById("dataInicioMedicacao")?.value
@@ -846,73 +834,39 @@ const datas=gerarDatasPeriodo(dataInicio,dataFim)
 const lista=window.MEDICACOES_CACHE||[]
 
 if(!lista.length){
-alert("Nenhuma medicação encontrada")
 esconderStatusSync()
 return
 }
 
 /* ====================================================
-🔥 1 – UI IMEDIATA
+🔥 1 – UI IMEDIATA (IGUAL ENFERMAGEM)
 ==================================================== */
 document.querySelectorAll("#painelMedicacao button[data-hora]").forEach(btn=>{
 const hora=btn.dataset.hora
-btn.classList.add("executado")
 btn.style.background="#22c55e"
 btn.style.color="#fff"
-btn.innerText=`${hora} ${user.nome||"Admin"} OK`
+btn.classList.add("executado")
 })
 
 /* ====================================================
-🔥 2 – CALCULAR TOTAL PARA BARRA
+🔥 2 – GERAR FILA (SEM TRAVAR)
 ==================================================== */
-let total=0
+let fila=[]
 
 lista.forEach(m=>{
-if(!m.id || !m.paciente_id)return
-let hs=(m.horarios||"").toString().split("|")
-hs.forEach(h=>{
+if(!m.id||!m.paciente_id)return
+
+let horarios=(m.horarios||"").split("|")
+
+horarios.forEach(h=>{
 if(!h)return
-if(h.toLowerCase().includes("jejum"))return
-total+=datas.length
-})
-})
-
-if(total===0){
-esconderStatusSync()
-return
-}
-
-iniciarBarra(total)
-
-let progresso=0
-
-/* ====================================================
-🔥 3 – PROCESSAMENTO
-==================================================== */
-for(const dataHoje of datas){
-
-for(const m of lista){
-
-if(!m.id || !m.paciente_id) continue
-
-let horarios=(m.horarios||"").toString().split("|")
-
-for(let h of horarios){
-
-if(!h) continue
 
 h=h.toString().trim()
+if(!h.includes(":"))h=h.padStart(2,"0")+":00"
 
-if(!h || h.length<3) continue
-if(h.toLowerCase().includes("jejum")) continue
+datas.forEach(dataHoje=>{
 
-if(!h.includes(":")){
-h=h.padStart(2,"0")+":00"
-}
-
-if(!/^\d{2}:\d{2}$/.test(h)) continue
-
-const payload={
+fila.push({
 medicacao_id:m.id,
 paciente_id:m.paciente_id,
 data:dataHoje,
@@ -921,105 +875,48 @@ status:"executado",
 usuario_id:user.id||null,
 usuario_nome:user.nome||"Admin",
 empresa_id:EMPRESA_ID
-}
+})
 
-try{
+})
 
-/* 🔒 VERIFICA SE JÁ EXISTE */
-const {data:existe}=await db
-.from("medicacoes_execucao")
-.select("id")
-.eq("medicacao_id",payload.medicacao_id)
-.eq("data",payload.data)
-.eq("horario",payload.horario)
-.eq("empresa_id",payload.empresa_id)
-.maybeSingle()
+})
 
-if(!existe){
-const {error}=await db
-.from("medicacoes_execucao")
-.insert(payload)
-
-if(error){
-console.error("Erro ao inserir:",error)
-}
-}
-
-if(error && error.code!=="23505"){
-console.error("Erro real:",error)
-adicionarFilaMedicacao(payload)
-}
-
-if(error){
-if(typeof adicionarFilaMedicacao==="function"){
-adicionarFilaMedicacao(payload)
-}
-}
-
-}catch(e){
-if(typeof adicionarFilaMedicacao==="function"){
-adicionarFilaMedicacao(payload)
-}
-}
-
-/* 🔥 PROGRESSO */
-progresso++
-atualizarBarra()
-
-}
-
-}
-
-}
+})
 
 /* ====================================================
-🔥 4 – SINCRONIZA FILA
+🔥 3 – SALVA NA FILA LOCAL (INSTANTÂNEO)
 ==================================================== */
+fila.forEach(item=>{
+adicionarFilaMedicacao(item)
+
+/* 🔥 ATUALIZA CACHE LOCAL (SEM ESPERAR BANCO) */
+if(!window.EXEC_CACHE)window.EXEC_CACHE=[]
+window.EXEC_CACHE.push(item)
+})
+
+/* ====================================================
+🔥 4 – RENDER IMEDIATO (ZERO DELAY)
+==================================================== */
+renderizarMedicacoes(window.MEDICACOES_CACHE)
+
+/* ====================================================
+🔥 5 – SINCRONIZA EM BACKGROUND
+==================================================== */
+setTimeout(()=>{
 if(typeof sincronizarFilaMedicacao==="function"){
-setTimeout(()=>sincronizarFilaMedicacao(),200)
+sincronizarFilaMedicacao()
 }
-
-finalizarBarra()
+},100)
 
 /* ====================================================
-🔥 ATUALIZA TUDO (SEM F5)
+🔥 6 – FINALIZA
 ==================================================== */
-try{
-
-/* 🔥 RECARREGA STATUS */
-if(typeof carregarStatusMedicacoes==="function"){
-await carregarStatusMedicacoes()
-}
-
-/* 🔥 RECARREGA ROTINAS */
-if(typeof carregarRotinas==="function"){
-await carregarRotinas()
-}
-
-/* 🔥 RECALCULA INDICADORES */
-if(typeof atualizarIndicadores==="function"){
-await atualizarIndicadores()
-}
-
-/* 🔥 ATUALIZA BOTÕES TOPO */
-if(typeof atualizarBotoesTopo==="function"){
-atualizarBotoesTopo("enfermagem")
-}
-
-/* 🔥 RE-RENDER FINAL */
-if(typeof render==="function"){
-render()
-}
-
-}catch(e){
-console.warn("Erro ao atualizar UI:",e)
-}
-
-/* FINALIZA */
 setTimeout(()=>{
 esconderStatusSync()
-},800)
+},500)
+
 }
+
 /* ====================================================
 225  – DATA INTELIGENTE
 ==================================================== */
