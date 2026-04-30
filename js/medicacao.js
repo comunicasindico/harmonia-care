@@ -891,7 +891,10 @@ alert("Erro inesperado")
 }
 window.concluirPendentesMedicacao=async function(){
 
-mostrarStatusSync("⏳ Salvando...")
+if(!db){
+alert("Banco não conectado")
+return
+}
 
 const user=obterUsuarioLogado()||{}
 const dataInicio=document.getElementById("dataInicioMedicacao")?.value
@@ -899,30 +902,30 @@ const dataFim=document.getElementById("dataFimMedicacao")?.value
 
 if(!dataInicio||!dataFim){
 alert("Informe período")
-esconderStatusSync()
 return
 }
 
 const datas=gerarDatasPeriodo(dataInicio,dataFim)
 const lista=window.MEDICACOES_CACHE||[]
 
-if(!lista.length){
-esconderStatusSync()
-return
-}
+if(!lista.length)return
 
 /* ====================================================
-🔥 1 – UI IMEDIATA (IGUAL ENFERMAGEM)
+🔥 1 – BLOQUEIA TELA
+==================================================== */
+abrirModalSalvando()
+
+/* ====================================================
+🔥 2 – UI IMEDIATA
 ==================================================== */
 document.querySelectorAll("#painelMedicacao button[data-hora]").forEach(btn=>{
-const hora=btn.dataset.hora
 btn.style.background="#22c55e"
 btn.style.color="#fff"
 btn.classList.add("executado")
 })
 
 /* ====================================================
-🔥 2 – GERAR FILA (SEM TRAVAR)
+🔥 3 – MONTA FILA
 ==================================================== */
 let fila=[]
 
@@ -938,7 +941,6 @@ h=h.toString().trim()
 if(!h.includes(":"))h=h.padStart(2,"0")+":00"
 
 datas.forEach(dataHoje=>{
-
 fila.push({
 medicacao_id:m.id,
 paciente_id:m.paciente_id,
@@ -949,46 +951,50 @@ usuario_id:user.id||null,
 usuario_nome:user.nome||"Admin",
 empresa_id:EMPRESA_ID
 })
-
+})
+})
 })
 
-})
-
-})
+let total=fila.length
+let atual=0
 
 /* ====================================================
-🔥 3 – SALVA NA FILA LOCAL (INSTANTÂNEO)
+🔥 4 – SALVA DIRETO (SEM FILA LOCAL)
 ==================================================== */
-fila.forEach(item=>{
-adicionarFilaMedicacao(item)
+for(const item of fila){
 
-/* 🔥 ATUALIZA CACHE LOCAL (SEM ESPERAR BANCO) */
-if(!window.EXEC_CACHE)window.EXEC_CACHE=[]
-window.EXEC_CACHE.push(item)
+try{
+
+await db
+.from("medicacoes_execucao")
+.upsert(item,{
+onConflict:"medicacao_id,data,horario,empresa_id"
 })
 
-/* ====================================================
-🔥 4 – RENDER IMEDIATO (ZERO DELAY)
-==================================================== */
-renderizarMedicacoes(window.MEDICACOES_CACHE)
-
-/* ====================================================
-🔥 5 – SINCRONIZA EM BACKGROUND
-==================================================== */
-if(typeof sincronizarFilaMedicacao==="function"){
-await sincronizarFilaMedicacao(true) // 🔥 modo urgente
+}catch(e){
+console.error("erro salvar:",e)
 }
-/* 🔥 BACKGROUND CONTINUA */
-setTimeout(()=>{
-sincronizarFilaMedicacao()
-},300)
+
+/* progresso */
+atual++
+atualizarModalSalvando(atual,total)
+
+/* 🔥 NÃO TRAVA UI */
+if(atual%10===0){
+await new Promise(r=>setTimeout(r,0))
+}
+
+}
 
 /* ====================================================
-🔥 6 – FINALIZA
+🔥 5 – FINALIZA
 ==================================================== */
+await carregarStatusMedicacoes()
+renderizarMedicacoes(window.MEDICACOES_CACHE||[])
+
 setTimeout(()=>{
-esconderStatusSync()
-},500)
+fecharModalSalvando()
+},300)
 
 }
 
@@ -1492,3 +1498,28 @@ d2.addEventListener("change",()=>d2.dataset.manual="1")
 }
 
 })
+/* ====================================================
+🔥 MODAL BLOQUEIO TOTAL
+==================================================== */
+function abrirModalSalvando(){
+const m=document.getElementById("modalSalvando")
+if(m)m.style.display="flex"
+document.body.style.pointerEvents="none"
+}
+
+function fecharModalSalvando(){
+const m=document.getElementById("modalSalvando")
+if(m)m.style.display="none"
+document.body.style.pointerEvents="auto"
+}
+
+function atualizarModalSalvando(atual,total){
+const barra=document.getElementById("barraSalvando")
+const texto=document.getElementById("textoSalvando")
+
+let p=Math.round((atual/total)*100)
+
+if(barra)barra.style.width=p+"%"
+if(texto)texto.innerText=p+"%"
+
+}
