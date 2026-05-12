@@ -57,18 +57,18 @@ else if(key==="vegetariana")vegetariana++
 else if(key==="liquida")liquida++
 else dietaLivre++
 let dietaHTML=MODO_EDICAO_CLINICO?renderSelectDieta(key):formatarDieta(p)
-html+=`<tr data-id="${p.id}">
-<td>${p.nome_apelido||p.nome_completo||""}</td>
-<td>${calcularIdade(p.data_nascimento)}</td>
-<td>${p.has?"✔":""}</td>
-<td>${p.dm?"✔":""}</td>
-<td>${p.da||p.demencia?"✔":""}</td>
-<td>${p.cardiopatia||p.cardio?"✔":""}</td>
-<td>${p.acamado||p.restrito_leito?"✔":""}</td>
-<td>${p.pressao_arterial||""}</td>
-<td>${dietaHTML}</td>
-<td>${p.grau_risco||""}</td>
-<td>${montarColunaOutras(p)}</td>
+html+=`<tr data-id="${p?.id||""}">
+<td>${p?.nome_apelido||p?.nome_completo||""}</td>
+<td>${calcularIdade(p?.data_nascimento)||""}</td>
+<td>${p?.has?"✔":""}</td>
+<td>${p?.dm?"✔":""}</td>
+<td>${p?.da||p?.demencia?"✔":""}</td>
+<td>${p?.cardiopatia||p?.cardio?"✔":""}</td>
+<td>${p?.acamado||p?.restrito_leito?"✔":""}</td>
+<td>${p?.pressao_arterial||""}</td>
+<td>${dietaHTML||""}</td>
+<td>${p?.grau_risco||""}</td>
+<td>${montarColunaOutras(p)||""}</td>
 </tr>`
 })
 tabela.innerHTML=html
@@ -94,19 +94,34 @@ return"livre"
 ==================================================== */
 function montarColunaOutras(p){
 
+if(!p)return""
+
 let lista=[]
 
 if(p.has)lista.push("HAS")
 if(p.dm)lista.push("DM")
-if(p.da)lista.push("DEMÊNCIA")
-if(p.cardiopatia)lista.push("CARDIO")
-if(p.acamado)lista.push("ACAMADO")
+if(p.da||p.demencia)lista.push("DEMÊNCIA")
+if(p.cardiopatia||p.cardio)lista.push("CARDIO")
+if(p.acamado||p.restrito_leito)lista.push("ACAMADO")
 
-let outras=(p.outras_comorbidades??"").toString().trim()
+if(p.alzheimer)lista.push("ALZHEIMER")
+if(p.parkinson)lista.push("PARKINSON")
+if(p.avc)lista.push("AVC")
+if(p.depressao)lista.push("DEPRESSÃO")
 
-if(outras && outras!=="-" && outras.toLowerCase()!=="null"){
+let outras=(p.outras_comorbidades||"")
+.toString()
+.trim()
+
+if(
+outras &&
+outras!=="-" &&
+outras.toLowerCase()!=="null"
+){
 lista.push(outras)
 }
+
+lista=[...new Set(lista)]
 
 if(lista.length===0)return"Não tem"
 
