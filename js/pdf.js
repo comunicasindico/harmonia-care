@@ -203,13 +203,15 @@ doc.text(`DM: ${paciente.dm?"SIM":"—"}`,55,dy)
 doc.text(`DA: ${paciente.da||paciente.demencia?"SIM":"—"}`,95,dy)
 doc.text(`PA: ${paciente.pressao_arterial||"—"}`,130,dy)
 
-let cardioTxt=paciente.cardiopatia||paciente.cardio?"SIM":"—"
-
-doc.text(`Cardio: ${cardioTxt}`,165,dy)
-
+let cardioTxt=(paciente.cardiopatia||paciente.cardio)?"SIM":"—"
+doc.text("Cardio: "+cardioTxt,165,dy)
 dy+=5
 
-doc.text(`Dieta: ${paciente.dieta_especial?"SIM - "+(paciente.dieta_texto||""):"NÃO"}`,12,dy)
+let dietaTxt=paciente.dieta_especial
+?"SIM - "+(paciente.dieta_texto||"")
+:"NÃO"
+
+doc.text(`Dieta: ${dietaTxt}`,12,dy)
 doc.text(`Risco: ${paciente.grau_risco||"—"}`,120,dy)
 
 dy+=5
@@ -218,9 +220,9 @@ let comorbidades=[]
 
 if(paciente.has)comorbidades.push("HAS")
 if(paciente.dm)comorbidades.push("DM")
-if(paciente.da||paciente.demencia)comorbidades.push("DEMÊNCIA")
-if(paciente.cardiopatia||paciente.cardio)comorbidades.push("CARDIO")
-if(paciente.acamado||paciente.restrito_leito)comorbidades.push("ACAMADO")
+if((paciente.da||paciente.demencia))comorbidades.push("DEMÊNCIA")
+if((paciente.cardiopatia||paciente.cardio))comorbidades.push("CARDIO")
+if((paciente.acamado||paciente.restrito_leito))comorbidades.push("ACAMADO")
 if(paciente.alzheimer)comorbidades.push("ALZHEIMER")
 if(paciente.parkinson)comorbidades.push("PARKINSON")
 if(paciente.avc)comorbidades.push("AVC")
