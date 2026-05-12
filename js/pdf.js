@@ -199,10 +199,13 @@ doc.text(`Idade: ${calcularIdade(paciente.data_nascimento)||"-"}`,120,dy)
 dy+=5
 
 doc.text(`HAS: ${paciente.has?"SIM":"—"}`,12,dy)
-doc.text(`DM: ${paciente.dm?"SIM":"—"}`,60,dy)
-doc.text(`DA: ${paciente.da||paciente.demencia?"SIM":"—"}`,100,dy)
-doc.text(`PA: ${paciente.pressao_arterial||"—"}`,140,dy)
-doc.text(`Cardio: ${paciente.cardiopatia||paciente.cardio?"SIM":"—"}`,170,dy)
+doc.text(`DM: ${paciente.dm?"SIM":"—"}`,55,dy)
+doc.text(`DA: ${paciente.da||paciente.demencia?"SIM":"—"}`,95,dy)
+doc.text(`PA: ${paciente.pressao_arterial||"—"}`,130,dy)
+
+let cardioTxt=paciente.cardiopatia||paciente.cardio?"SIM":"—"
+
+doc.text(`Cardio: ${cardioTxt}`,165,dy)
 
 dy+=5
 
