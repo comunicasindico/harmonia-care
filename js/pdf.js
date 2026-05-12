@@ -24,7 +24,15 @@ return`${dia}-${mes}-${ano}`
 ==================================================== */
 async function gerarPDFPaciente(){
 if(!db)return
-const pacienteId=document.getElementById("buscaPaciente")?.value
+const selectEnf=document.getElementById("buscaPaciente")
+const selectMed=document.getElementById("buscaPacienteMedicacao")
+
+const pacienteId=
+(selectEnf&&selectEnf.value&&selectEnf.value!=="todos")
+?selectEnf.value
+:(selectMed&&selectMed.value&&selectMed.value!=="todos")
+?selectMed.value
+:null
 const dataInicio=normalizarDataISO(document.getElementById("dataInicio")?.value)
 const dataFim=normalizarDataISO(document.getElementById("dataFim")?.value)
 const turnoAtual=(TURNO_ATUAL||"manha").toLowerCase().trim()
@@ -54,13 +62,40 @@ doc.text(`Idade: ${calcularIdade(paciente.data_nascimento)}`,120,dy)
 dy+=5
 doc.text(`HAS: ${paciente.has?"SIM":"—"}`,12,dy)
 doc.text(`DM: ${paciente.dm?"SIM":"—"}`,60,dy)
-doc.text(`DA: ${paciente.da?"SIM":"—"}`,100,dy)
+doc.text(`DA: ${paciente.da||paciente.demencia?"SIM":"—"}`,100,dy)
 doc.text(`PA: ${paciente.pressao_arterial||"—"}`,140,dy)
+doc.text(`Cardio: ${paciente.cardiopatia||paciente.cardio?"SIM":"—"}`,170,dy)
 dy+=5
 doc.text(`Dieta: ${paciente.dieta_especial?"SIM - "+(paciente.dieta_texto||""):"NÃO"}`,12,dy)
 doc.text(`Risco: ${paciente.grau_risco||"—"}`,120,dy)
 dy+=5
-doc.text(`Comorbidades: ${paciente.outras_comorbidades||"—"}`,12,dy)
+let comorbidades=[]
+
+if(paciente.has)comorbidades.push("HAS")
+if(paciente.dm)comorbidades.push("DM")
+if(paciente.da||paciente.demencia)comorbidades.push("DEMÊNCIA")
+if(paciente.cardiopatia||paciente.cardio)comorbidades.push("CARDIO")
+if(paciente.acamado||paciente.restrito_leito)comorbidades.push("ACAMADO")
+if(paciente.alzheimer)comorbidades.push("ALZHEIMER")
+if(paciente.parkinson)comorbidades.push("PARKINSON")
+if(paciente.avc)comorbidades.push("AVC")
+if(paciente.depressao)comorbidades.push("DEPRESSÃO")
+
+if(
+paciente.outras_comorbidades &&
+paciente.outras_comorbidades!=="-" &&
+paciente.outras_comorbidades!=="null"
+){
+comorbidades.push(paciente.outras_comorbidades)
+}
+
+comorbidades=[...new Set(comorbidades)]
+
+doc.text(
+`Comorbidades: ${comorbidades.join(" / ")||"—"}`,
+12,
+dy
+)
 y = Math.max(y, dy) + 10
 
 /* ====================================================
@@ -78,15 +113,15 @@ if(p.dm){
 analise.push("Diabetes: Controle rigoroso de glicemia, atenção a hipoglicemia, fracionar alimentação e evitar açúcares simples.")
 }
 /* 🟣 DEMÊNCIA (DA) */
-if(p.da){
+if(p.da||p.demencia){
 analise.push("Demência: Manter ambiente seguro, evitar quedas, orientar equipe para reorientação frequente e supervisão contínua.")
 }
 /* ❤️ CARDIOPATIA */
-if(p.cardiopatia){
+if(p.cardiopatia||p.cardio){
 analise.push("Cardiopatia: Observar sinais de dispneia, edema e fadiga. Evitar esforços e monitorar sinais vitais.")
 }
 /* 🛏️ ACAMADO */
-if(p.acamado){
+if(p.acamado||p.restrito_leito){
 analise.push("Paciente acamado: Realizar mudança de decúbito a cada 2h, prevenir lesão por pressão e manter hidratação adequada.")
 }
 /* 🍽️ DIETA */
@@ -306,30 +341,130 @@ doc.save(`Relatorio_${paciente.nome_completo}.pdf`)
 081 – PDF GERAL
 ==================================================== */
 async function gerarPDFGeral(){
-const { jsPDF } = window.jspdf
-const doc=new jsPDF()
-doc.text("Relatório Geral de Rotinas",20,20)
-const linhas=[]
-ROTINAS_CACHE.forEach(r=>{
-linhas.push([
-r.paciente,
-r.rotina,
-r.turno,
-r.status
-])
+
+if(!db)return
+
+const {data,error}=await db
+.from("pacientes")
+.select("*")
+.eq("empresa_id",EMPRESA_ID)
+.eq("ativo",true)
+.order("nome_completo")
+
+if(error||!data){
+alert("Erro ao gerar PDF")
+return
+}
+
+const {jsPDF}=window.jspdf
+const doc=new jsPDF("p","mm","a4")
+
+await carregarFonteRoboto(doc)
+
+doc.setFont("Roboto","bold")
+doc.setFontSize(16)
+
+doc.text(
+"RELATÓRIO GERAL DE PACIENTES",
+105,
+15,
+{align:"center"}
+)
+
+let y=28
+
+data.forEach((p,i)=>{
+
+if(y>260){
+doc.addPage()
+y=20
+}
+
+doc.setFont("Roboto","bold")
+doc.setFontSize(11)
+
+doc.text(
+`${i+1}. ${p.nome_completo||"-"}`,
+10,
+y
+)
+
+y+=5
+
+doc.setFont("Roboto","normal")
+doc.setFontSize(9)
+
+let com=[]
+
+if(p.has)com.push("HAS")
+if(p.dm)com.push("DM")
+if(p.da||p.demencia)com.push("DEMÊNCIA")
+if(p.cardiopatia||p.cardio)com.push("CARDIO")
+if(p.acamado||p.restrito_leito)com.push("ACAMADO")
+
+if(p.outras_comorbidades){
+com.push(p.outras_comorbidades)
+}
+
+doc.text(
+`Idade: ${calcularIdade(p.data_nascimento)}`,
+12,
+y
+)
+
+y+=4
+
+doc.text(
+`PA: ${p.pressao_arterial||"-"}`,
+12,
+y
+)
+
+y+=4
+
+doc.text(
+`Dieta: ${p.dieta_texto||"Livre"}`,
+12,
+y
+)
+
+y+=4
+
+doc.text(
+`Risco: ${p.grau_risco||"-"}`,
+12,
+y
+)
+
+y+=4
+
+doc.text(
+`Comorbidades: ${com.join(" / ")||"Nenhuma"}`,
+12,
+y,
+{maxWidth:180}
+)
+
+y+=10
+
 })
-doc.autoTable({
-head:[["Paciente","Rotina","Turno","Status"]],
-body:linhas,
-startY:30
-})
-/* NUMERAÇÃO DE PÁGINAS */
+
 const totalPages=doc.getNumberOfPages()
+
 for(let i=1;i<=totalPages;i++){
 doc.setPage(i)
 doc.setFontSize(8)
 doc.setTextColor(120)
-doc.text(`Relatório Clínico do Lar Harmonia | Página ${i}/${totalPages}`,200,290,{align:"right"})}
+doc.text(
+`Página ${i}/${totalPages}`,
+200,
+290,
+{align:"right"}
+)
+}
+
 doc.setTextColor(0)
-doc.save("relatorio_rotinas.pdf")
+
+doc.save("relatorio_geral_pacientes.pdf")
+
 }
