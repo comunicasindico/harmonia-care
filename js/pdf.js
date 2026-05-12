@@ -207,7 +207,14 @@ paciente.outras_comorbidades!=="null"
 comorbidades.push(paciente.outras_comorbidades)
 }
 comorbidades=[...new Set(comorbidades)]
-doc.text("Comorbidades: "+(comorbidades.join(" / ")||"—"),12,dy,{maxWidth:180})
+let textoComorbidades="Comorbidades: "+(comorbidades.join(" / ")||"—")
+
+doc.text(
+textoComorbidades,
+12,
+dy,
+{maxWidth:180}
+)
 y=Math.max(y,dy)+10
 let atual=new Date(dataInicio+"T00:00:00")
 const fim=new Date(dataFim+"T00:00:00")
@@ -413,7 +420,7 @@ if(error||!data){
 alert("Erro ao gerar PDF")
 return
 }
-const {jsPDF}=window.jspdf
+const jsPDF=window.jspdf.jsPDF
 const doc=new jsPDF("p","mm","a4")
 await carregarFonteRoboto(doc)
 doc.setFont("Roboto","bold")
