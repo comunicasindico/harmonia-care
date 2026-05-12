@@ -19,6 +19,9 @@ const mes=String(d.getMonth()+1).padStart(2,"0")
 const ano=d.getFullYear()
 return`${dia}-${mes}-${ano}`
 }
+function normalizar(txt){
+return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim()
+}
 /* ====================================================
 080 – PDF PACIENTE (FINAL CORRIGIDO DEFINITIVO)
 ==================================================== */
@@ -37,7 +40,16 @@ const dataInicio=normalizarDataISO(document.getElementById("dataInicio")?.value)
 const dataFim=normalizarDataISO(document.getElementById("dataFim")?.value)
 const turnoAtual=(TURNO_ATUAL||"manha").toLowerCase().trim()
 if(!pacienteId||pacienteId==="todos"){alert("Selecione um paciente");return}
-const {data:paciente}=await db.from("pacientes").select("*").eq("id",pacienteId).single()
+const {data:paciente,error:erroPaciente}=await db
+.from("pacientes")
+.select("*")
+.eq("id",pacienteId)
+.single()
+
+if(erroPaciente||!paciente){
+alert("Paciente não encontrado")
+return
+}
 const {data:rotinasExec}=await db.from("rotinas_execucao").select("*,rotina_modelos(nome)").eq("paciente_id",pacienteId).gte("data",dataInicio).lte("data",dataFim)
 
 const {jsPDF}=window.jspdf
@@ -313,9 +325,7 @@ doc.text("• "+item,10,y,{maxWidth:180})
 y+=5
 if(y>250){doc.addPage();y=20}
 })
-function normalizar(txt){
-return (txt||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim()
-}
+
 doc.text("Responsável:",10,y)
 y+=5
 let nome="Sistema"
