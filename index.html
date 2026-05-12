@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- ====================================================001 – HEAD CONFIGURAÇÕES GERAIS (CORRIGIDO PROFISSIONAL)==================================================== -->
+<!-- ====================================================
+001 – HEAD CONFIGURAÇÕES GERAIS
+==================================================== -->
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -10,25 +12,33 @@
 <title>Harmonia Care</title>
 <link rel="icon" href="logo-harmonia.png">
 
-<!-- 🔥 LIBS (sempre primeiro) -->
+<!-- ====================================================
+002 – LIBS PRINCIPAIS
+==================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
+<!-- ====================================================
+003 – TURNO AUTOMÁTICO
+==================================================== -->
 <script>
-const h=new Date().getHours();
-window.TURNO_ATUAL=h<12?"manha":h<18?"tarde":"noite";
+const h=new Date().getHours()
+window.TURNO_ATUAL=h<12?"manha":h<18?"tarde":"noite"
 </script>
 
-<script defer src="js/supabase.js?v=1"></script>
-<!-- 🔥 APP JS (com defer e versão única) -->
-<script defer src="js/enfermagem.js?v=6"></script>
-<script defer src="js/medicacao.js?v=3"></script>
-<script defer src="js/medicacaohora.js?v=2"></script>
-<script defer src="js/admin.js?v=4"></script>
-<script defer src="js/app.js?v=2"></script>
+<!-- ====================================================
+004 – SISTEMA
+==================================================== -->
+<script defer src="js/supabase.js?cache=20260512"></script>
+<script defer src="js/pdf.js?cache=20260512"></script>
+<script defer src="js/enfermagem.js?cache=20260512"></script>
+<script defer src="js/medicacao.js?cache=20260512"></script>
+<script defer src="js/medicacaohora.js?cache=20260512"></script>
+<script defer src="js/admin.js?cache=20260512"></script>
+<script defer src="js/app.js?cache=20260512"></script>
 <!-- ====================================================
 002 – ESTILOS GLOBAIS (FINAL LIMPO + OTIMIZADO)
 ==================================================== -->
