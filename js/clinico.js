@@ -45,8 +45,8 @@ const tabela=document.getElementById("quadroClinico")
 if(!tabela)return
 let html=""
 let dietaLivre=0,hipossodica=0,diabetica=0,pastosa=0,vegetariana=0,liquida=0
-data.forEach(p=>{
-let txt=(p.dieta_texto??"").toString().trim()
+(data||[]).forEach(p=>{
+let txt=((p&&p.dieta_texto)||"").toString().trim()
 if(!txt||txt==="-"||txt.toLowerCase()==="normal")txt="Livre"
 p.dieta_texto=txt
 let key=getDietaKey(txt)
@@ -62,9 +62,9 @@ html+=`<tr data-id="${p.id}">
 <td>${calcularIdade(p.data_nascimento)}</td>
 <td>${p.has?"✔":""}</td>
 <td>${p.dm?"✔":""}</td>
-<td>${p.da?"✔":""}</td>
-<td>${p.cardiopatia?"✔":""}</td>
-<td>${p.acamado?"✔":""}</td>
+<td>${p.da||p.demencia?"✔":""}</td>
+<td>${p.cardiopatia||p.cardio?"✔":""}</td>
+<td>${p.acamado||p.restrito_leito?"✔":""}</td>
 <td>${p.pressao_arterial||""}</td>
 <td>${dietaHTML}</td>
 <td>${p.grau_risco||""}</td>
