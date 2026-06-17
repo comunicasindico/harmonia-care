@@ -44,8 +44,13 @@ const {data}=await query.eq("empresa_id",EMPRESA_ID).eq("ativo",true).order("nom
 const tabela=document.getElementById("quadroClinico")
 if(!tabela)return
 let html=""
-let dietaLivre=0,hipossodica=0,diabetica=0,pastosa=0,vegetariana=0,liquida=0
-(data||[]).forEach(p=>{
+let dietaLivre=0
+let hipossodica=0
+let diabetica=0
+let pastosa=0
+let vegetariana=0
+let liquida=0
+for(const p of (data||[])){
 let txt=((p&&p.dieta_texto)||"").toString().trim()
 if(!txt||txt==="-"||txt.toLowerCase()==="normal")txt="Livre"
 p.dieta_texto=txt
@@ -70,7 +75,7 @@ html+=`<tr data-id="${p?.id||""}">
 <td>${p?.grau_risco||""}</td>
 <td>${montarColunaOutras(p)||""}</td>
 </tr>`
-})
+}
 tabela.innerHTML=html
 atualizarIndicadoresDieta(dietaLivre,hipossodica,diabetica,pastosa,vegetariana,liquida)
 ativarEventosClinico()
