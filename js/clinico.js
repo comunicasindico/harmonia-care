@@ -1,3 +1,8 @@
+/* ====================================================
+000 – VARIÁVEIS GLOBAIS CLÍNICO
+==================================================== */
+window.MODO_EDICAO_CLINICO=false
+
 function normalizar(txt){
 return (txt||"")
 .toString()
@@ -61,7 +66,9 @@ else if(key==="pastosa")pastosa++
 else if(key==="vegetariana")vegetariana++
 else if(key==="liquida")liquida++
 else dietaLivre++
-let dietaHTML=MODO_EDICAO_CLINICO?renderSelectDieta(key):formatarDieta(p)
+let dietaHTML=window.MODO_EDICAO_CLINICO
+?renderSelectDieta(key)
+:formatarDieta(p)
 html+=`<tr data-id="${p?.id||""}">
 <td>${p?.nome_apelido||p?.nome_completo||""}</td>
 <td>${calcularIdade(p?.data_nascimento)||""}</td>
@@ -238,7 +245,10 @@ const m=hoje.getMonth()-nascimento.getMonth()
 if(m<0||(m===0&&hoje.getDate()<nascimento.getDate()))idade--
 return idade
 }
-function editarClinicoGlobal(){MODO_EDICAO_CLINICO=true;carregarClinico()}
+function editarClinicoGlobal(){
+window.MODO_EDICAO_CLINICO=true
+carregarClinico()
+}
 async function salvarClinicoGlobal(){
 if(!db)return
 if(!pode("salvar_clinico")){
@@ -304,7 +314,7 @@ atualizarBarraProgresso(p)
 }
 }
 /* 🔒 RESET LIMPO */
-MODO_EDICAO_CLINICO=false
+window.MODO_EDICAO_CLINICO=false
 await carregarClinico()
 alert("Dados salvos com sucesso!")
 }
