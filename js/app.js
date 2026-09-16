@@ -322,8 +322,9 @@ mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnMedicacaoHor
 document.getElementById("acoesClinico").style.display="none"
 }
 if(painel==="clinico"){
-mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnMedicacaoHora","btnSalvar"])
-document.getElementById("acoesClinico").style.display="flex"
+const edita=window.HarmoniaPaciente?.allowed();
+mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnMedicacaoHora",...(edita?["btnEditarClinico"]:[])])
+document.getElementById("acoesClinico").style.display=edita?"flex":"none"
 }
 if(painel==="admin"){
 mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnMedicacaoHora","btnBackup"])
@@ -519,4 +520,3 @@ const b=document.getElementById("countSimMed")
 if(a)a.innerText=nao
 if(b)b.innerText=sim
 }
-

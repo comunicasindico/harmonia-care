@@ -62,7 +62,8 @@
   color: #173e43;
   white-space: nowrap;
 }
-#app #tabelaClinica .clin-nutricao {
+#app #tabelaClinica .clin-nutricao,
+#app #tabelaClinica .clin-editar {
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
@@ -78,7 +79,8 @@
   white-space: nowrap !important;
   box-shadow: none !important;
 }
-#app #tabelaClinica .clin-nutricao:focus-visible {
+#app #tabelaClinica .clin-nutricao:focus-visible,
+#app #tabelaClinica .clin-editar:focus-visible {
   outline: 2px solid #087f78;
   outline-offset: 2px;
 }
@@ -107,3 +109,30 @@
   #app #tabelaClinica th,
   #app #tabelaClinica td { padding-left: 4px !important; padding-right: 4px !important; }
 }
+#app #tabelaClinica .clin-paciente-acoes { display: inline-flex; gap: 4px; flex: 0 0 auto; }
+#app #tabelaClinica .clin-editar { color: #2359a5; background: #edf4ff; border-color: #cdddf5; }
+#clinPacienteEditor { width: min(760px,94vw); max-height: 92vh; padding: 0; border: 1px solid #d4e5df; border-radius: 16px; background: #fff; color: #173e43; box-shadow: 0 20px 70px #12372b40; }
+#clinPacienteEditor::backdrop { background: #123c3866; }
+#clinPacienteEditor * { box-sizing: border-box; }
+#clinPacienteEditor [hidden] { display: none !important; }
+#clinPacienteEditor form { margin: 0 !important; }
+#clinPacienteEditor .ce-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 22px; border-bottom: 1px solid #dce9e4; background: #eff8f5; }
+#clinPacienteEditor .ce-heading small { font-size: 10px; font-weight: 800; letter-spacing: 1px; color: #087f78; }
+#clinPacienteEditor h2 { margin: 5px 0 0 !important; font-size: 20px; }
+#clinPacienteEditor h3 { margin: 20px 0 12px !important; font-size: 14px; }
+#clinPacienteEditor .ce-content { padding: 18px 22px; }
+#clinPacienteEditor fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+#clinPacienteEditor .ce-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+#clinPacienteEditor label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; }
+#clinPacienteEditor input,#clinPacienteEditor select,#clinPacienteEditor textarea { width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid #c8dad3; border-radius: 7px !important; font: inherit; font-weight: 400; color: #173e43; background: #fff; margin: 0 !important; }
+#clinPacienteEditor textarea { resize: vertical; line-height: 1.5; }
+#clinPacienteEditor output { font-size: 11px; color: #607e76; }
+#clinPacienteEditor .ce-wide { grid-column: 1/-1; margin-top: 12px; }
+#ceMessage { padding: 12px 0; font-size: 12px; min-height: 40px; color: #087f78; }
+#ceMessage[data-error=true] { color: #a02f32; }
+#clinPacienteEditor .ce-footer { position: sticky; bottom: 0; display: flex; justify-content: flex-end; gap: 10px; padding: 12px 22px; background: #fff; border-top: 1px solid #dce9e4; }
+#clinPacienteEditor button { padding: 9px 14px; border: 1px solid #d0e1dc; background: #f3f8f6; color: #315b57; font-size: 13px; }
+#clinPacienteEditor #ceSave { background: #087f78; border-color: #087f78; color: #fff; }
+#clinPacienteEditor button:disabled { opacity: .55; cursor: wait; }
+@media (max-width: 600px) { #clinPacienteEditor .ce-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } #clinPacienteEditor .ce-heading,#clinPacienteEditor .ce-content,#clinPacienteEditor .ce-footer { padding: 14px; } }
+@media (max-width: 400px) { #clinPacienteEditor .ce-grid { grid-template-columns: 1fr; } }

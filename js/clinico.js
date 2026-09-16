@@ -84,11 +84,25 @@ html+=`<tr data-id="${p?.id||""}">
 </tr>`
 }
 tabela.innerHTML=html
+window.HarmoniaPaciente?.setPatients(data||[]);
 const pacientesPorId=new Map((data||[]).map(p=>[String(p.id),p]));
 tabela.querySelectorAll('tr[data-id]').forEach(tr=>{
 const p=pacientesPorId.get(tr.dataset.id);
 const nome=p?.nome_apelido||p?.nome_completo||"";
 tr.querySelector('.clin-nome').textContent=nome;
+const acoes=document.createElement('span');
+acoes.className='clin-paciente-acoes';
+tr.querySelector('.clin-paciente').appendChild(acoes);
+if(window.HarmoniaPaciente?.allowed()){
+const editar=document.createElement('button');
+editar.type='button';
+editar.className='clin-editar';
+editar.textContent='Editar';
+editar.title='Editar nascimento e comorbidades';
+editar.setAttribute('aria-label','Editar dados de '+nome);
+editar.onclick=()=>window.HarmoniaPaciente.open(tr.dataset.id);
+acoes.appendChild(editar);
+}
 if(!window.HarmoniaNutricao?.allowed())return;
 const b=document.createElement('button');
 b.type='button';
@@ -97,7 +111,7 @@ b.textContent='Nutrição ↗';
 b.title='Nutrição e evolução do paciente';
 b.setAttribute('aria-label','Abrir nutrição e evolução de '+nome);
 b.onclick=()=>{window.HarmoniaNutricao.target=tr.dataset.id;abrirPainel('painelNutricao');};
-tr.querySelector('.clin-paciente').appendChild(b);
+acoes.appendChild(b);
 });
 atualizarIndicadoresDieta(dietaLivre,hipossodica,diabetica,pastosa,vegetariana,liquida)
 ativarEventosClinico()
@@ -252,86 +266,24 @@ setTimeout(()=>{linha.style.background=""},800)
 047 – CALCULAR IDADE
 ==================================================== */
 function calcularIdade(data){
-if(!data)return""
-const nascimento=new Date(data)
+if(!data)return ""
+const partes=String(data).slice(0,10).split("-").map(Number)
+if(partes.length!==3||partes.some(v=>!v))return ""
+const [ano,mes,dia]=partes
+const nascimento=new Date(ano,mes-1,dia)
+if(nascimento.getFullYear()!==ano||nascimento.getMonth()!==mes-1||nascimento.getDate()!==dia)return ""
 const hoje=new Date()
-let idade=hoje.getFullYear()-nascimento.getFullYear()
-const m=hoje.getMonth()-nascimento.getMonth()
-if(m<0||(m===0&&hoje.getDate()<nascimento.getDate()))idade--
+if(nascimento>hoje)return ""
+let idade=hoje.getFullYear()-ano
+if(hoje.getMonth()<mes-1||(hoje.getMonth()===mes-1&&hoje.getDate()<dia))idade--
 return idade
 }
 function editarClinicoGlobal(){
-window.MODO_EDICAO_CLINICO=true
-carregarClinico()
+return window.HarmoniaPaciente?.open(document.getElementById("buscaPaciente")?.value)
 }
 async function salvarClinicoGlobal(){
-if(!db)return
-if(!pode("salvar_clinico")){
-alert("Sem permissão para salvar alterações clínicas")
-return
-}
-const linhas=document.querySelectorAll("#quadroClinico tr[data-id]")
-const DIETAS={
-normal:{nome:"Livre",icone:"🍽️"},
-hipossodica:{nome:"Hipossódica",icone:"🧂"},
-diabetica:{nome:"Diabética",icone:"🩸"},
-pastosa:{nome:"Pastosa",icone:"🥣"},
-liquida:{nome:"Líquida",icone:"🧃"},
-vegetariana:{nome:"Vegetariana",icone:"🥗"}
-}
-const bool=v=>v==="1"||v==="true"||v==="sim"
-const getVal=(linha,cls)=>linha.querySelector(cls)?.value||""
-let total=linhas.length
-let atual=0
-for(const linha of linhas){
-const id=linha.dataset.id
-if(!id)continue
-const dietaKey=(getVal(linha,".clin_dieta")||"").toLowerCase().trim()
-const dietaObj=DIETAS[dietaKey]||null
-let dados={}
-const vHas=getVal(linha,".clin_has")
-if(vHas!=="")dados.has=bool(vHas)
-const vDm=getVal(linha,".clin_dm")
-if(vDm!=="")dados.dm=bool(vDm)
-const vDa=getVal(linha,".clin_da")
-if(vDa!=="")dados.da=bool(vDa)
-const vCardio=getVal(linha,".clin_cardio")
-if(vCardio!=="")dados.cardiopatia=bool(vCardio)
-const vAcamado=getVal(linha,".clin_acamado")
-if(vAcamado!=="")dados.acamado=bool(vAcamado)
-/* 🔥 NORMALIZA PA */
-const pa=(getVal(linha,".clin_pa")||"").replace(/\s/g,"").trim()
-if(pa!=="")dados.pressao_arterial=pa
-/* 🔥 DIETA PADRONIZADA */
-if(dietaKey!==""){
-dados.dieta_especial=true
-dados.dieta_texto=dietaObj?dietaObj.nome:null
-}
-/* 🔥 RISCO SEGURO */
-const risco=getVal(linha,".clin_risco")
-if(risco!==""&&!isNaN(risco))dados.grau_risco=parseInt(risco)
-/* 🔥 OUTRAS LIMPO */
-const outras=(getVal(linha,".clin_outros")||"").trim()
-if(outras!=="")dados.outras_comorbidades=outras
-/* 🔒 PATCH SELETIVO */
-if(Object.keys(dados).length===0)continue
-try{
-const {error}=await db.from("pacientes").update(dados).eq("id",id).eq("empresa_id",EMPRESA_ID)
-if(error)console.error("Erro ao salvar paciente:",id,error)
-}catch(e){
-console.error("Erro inesperado:",id,e)
-}
-atual++
-/* 🔄 PROGRESSO SUAVE */
-if(window.atualizarBarraProgresso){
-let p=Math.round((atual/total)*100)
-atualizarBarraProgresso(p)
-}
-}
-/* 🔒 RESET LIMPO */
-window.MODO_EDICAO_CLINICO=false
-await carregarClinico()
-alert("Dados salvos com sucesso!")
+if(window.HarmoniaPaciente?.isOpen())return window.HarmoniaPaciente.save()
+return editarClinicoGlobal()
 }
 /* ====================================================
 048 – CARREGAR DADOS CLÍNICOS DO PACIENTE
@@ -375,5 +327,4 @@ if(!confirmar)return
 await db.from("pacientes").update({ativo:false}).eq("id",id).eq("empresa_id",EMPRESA_ID)
 await carregarClinico()
 }
-
 

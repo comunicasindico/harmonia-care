@@ -36,11 +36,12 @@ window.TURNO_ATUAL=h<12?"manha":h<18?"tarde":"noite"
 <script defer src="js/login-fix.js?cache=20260917admin1"></script>
 <script defer src="js/pdf.js?cache=20260512"></script>
 <script defer src="js/enfermagem.js?cache=20260917admin1"></script>
-<script defer src="js/clinico.js?cache=20260917compact1"></script>
+<script defer src="js/clinico.js?cache=20260917paciente1"></script>
+<script defer src="js/paciente-editor.js?v=20260917paciente1"></script>
 <script defer src="js/medicacao.js?cache=20260512"></script>
 <script defer src="js/medicacaohora.js?cache=20260512"></script>
 <script defer src="js/admin.js?cache=20260917admin1"></script>
-<script defer src="js/app.js?cache=20260917admin1"></script>
+<script defer src="js/app.js?cache=20260917paciente1"></script>
 <!-- ====================================================
 002 – ESTILOS GLOBAIS (FINAL LIMPO + OTIMIZADO)
 ==================================================== -->
@@ -165,7 +166,7 @@ background:linear-gradient(45deg,#16a085,#2ecc71);
   
 </style>
 <link rel="stylesheet" href="css/nutricao.css?v=20260916n1">
-<link rel="stylesheet" href="css/clinico.css?v=20260917compact1">
+<link rel="stylesheet" href="css/clinico.css?v=20260917paciente1">
 <script defer src="js/nutricao.js?v=20260916n1"></script>
 <script defer src="js/equipe.js?v=20260916n1"></script>
 </head>
@@ -236,7 +237,7 @@ background:linear-gradient(45deg,#16a085,#2ecc71);
 <button id="btnPDFPaciente" onclick="gerarPDFPaciente()" class="btn-primary">PDF do Paciente</button>
 <button id="btnBackup" onclick="backupCompleto()" style="background:#6c5ce7;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer">💾 Backup Completo</button>
 <div id="acoesClinico" style="display:none;gap:8px;margin-left:10px" class="grupo-clinico">
-<button id="btnEditarClinico" onclick="editarClinicoGlobal()" class="btn-secondary">Editar Clínico</button>
+<button id="btnEditarClinico" onclick="editarClinicoGlobal()" class="btn-secondary">Editar paciente</button>
 <button id="btnSalvar" onclick="salvarClinicoGlobal()" class="btn-success">Salvar</button>
 
 </div>
