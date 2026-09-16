@@ -71,16 +71,25 @@
     if(id){const el=document.getElementById(id);if(el)el.classList.add('ativo');}
   }
 
-  function iniciar(){
-    ajustarLogin();
-    ajustarTopo();
-    ajustarBotoes();
-    marcarAtivo();
-    const menu=document.getElementById('topoBotoes');
-    if(menu)menu.addEventListener('click',()=>setTimeout(marcarAtivo,80));
-  }
+ function iniciar(){
+  ajustarLogin();
+  ajustarTopo();
+  ajustarBotoes();
+  marcarAtivo();
 
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar); else iniciar();
+  const menu=document.getElementById('topoBotoes');
+  if(menu)menu.addEventListener('click',()=>setTimeout(marcarAtivo,80));
+
+  // novos ajustes de layout
+  setTimeout(aplicarAjustesBasicosHarmonia,300);
+  setTimeout(aplicarAjustesBasicosHarmonia,1200);
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',iniciar);
+}else{
+  iniciar();
+}
 })();
 /* =========================================================
 AJUSTES BÁSICOS DE LAYOUT
