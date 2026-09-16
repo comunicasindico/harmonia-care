@@ -1,7 +1,24 @@
 /* ====================================================005 – ABRIR PAINEL MEDICAÇÃO==================================================== */
 async function abrirPainelMedicacao(){await carregarPacientesMedicacao();await carregarStatusMedicacoes();await carregarMedicacoes()}
 /* ====================================================020 – CORES POR USUÁRIO==================================================== */
-function obterCorUsuario(nome){if(!nome)return"#64748b";let hash=0;for(let i=0;i<nome.length;i++){hash=nome.charCodeAt(i)+((hash<<5)-hash)}let cor="#";for(let i=0;i<3;i++){let value=(hash>>(i*8))&255;cor+=("00"+value.toString(16)).slice(-2)}return cor}
+function obterCorUsuario(nome){
+if(!nome)return"#e5e7eb"
+const cores=[
+"#fde68a", // amarelo
+"#fca5a5", // vermelho claro
+"#93c5fd", // azul claro
+"#86efac", // verde claro
+"#c4b5fd", // roxo claro
+"#f9a8d4", // rosa claro
+"#67e8f9", // ciano
+"#fdba74"  // laranja claro
+]
+let hash=0
+for(let i=0;i<nome.length;i++){
+hash=nome.charCodeAt(i)+((hash<<5)-hash)
+}
+return cores[Math.abs(hash)%cores.length]
+}
 /* ====================================================020A – USUARIO LOGADO==================================================== */
 function obterUsuarioLogado(){let id=localStorage.getItem("usuario_id");let nome=localStorage.getItem("usuario_nome");let hierarquia=localStorage.getItem("usuario_hierarquia");let perfil=(localStorage.getItem("usuario_perfil")||"admin").toLowerCase();if(!nome||nome==="null"||nome==="")nome="Administrador";if(!hierarquia||hierarquia==="null"){hierarquia="1";localStorage.setItem("usuario_hierarquia","1")}return{id:id||null,nome:nome,hierarquia:Number(hierarquia),perfil:perfil}}
 /* ====================================================020B – FINALIZAÇÃO AUTOMÁTICA APÓS 2 DIAS==================================================== */
@@ -196,15 +213,16 @@ else if(turno==="tarde")classe="rotina-ok-tarde"
 else if(turno==="noite")classe="rotina-ok-noite"
 }
 let nomeProf=r.profissional_nome||""
+let corProf=obterCorUsuario(nomeProf)
 let prof=""
 if(r.status==="automatico"){
 prof=` <span class="nome-profissional automatico">● Automático</span>`
 }else if(r.status==="executado"&&nomeProf){
-prof=` <span class="nome-profissional manual">✔ ${nomeProf}</span>`
+prof=` <span class="nome-profissional manual" style="color:${corProf}">✔ ${nomeProf}</span>`
 }
 linha+=`<div style="display:flex;justify-content:center">
 <div class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">
-${nomeRotinaCompacto(r.rotina)}${prof}
+<span class="rotina-texto">${nomeRotinaCompacto(r.rotina)}</span>${prof}
 </div>
 </div>`
 }
@@ -212,7 +230,7 @@ linha+=`</div>`
 let perc=total?Math.round((executadas/total)*100):0
 let ok=executadas===total
 html+=`<tr style="height:32px">
-<td style="font-size:12px;font-weight:600">${p.nome}</td>
+<td style="font-size:12px;font-weight:400">${p.nome}</td>
 <td style="font-size:11px">
 <b>${perc}% (${executadas}/${total})</b><br>
 <div style="display:flex;gap:4px;justify-content:center;align-items:center;margin-top:3px">
@@ -297,7 +315,6 @@ break
 /* 🔥 UI IMEDIATA (SEM ESPERAR BANCO) */
 if(botao){
 botao.className=`badge-rotina rotina-ok-${t}`
-botao.innerHTML=`${botao.innerText.split("✔")[0]} <span style="font-weight:bold">✔ ${user.nome}</span>`
 }
 /* 🔥 REFRESH CONTROLADO (CONSISTÊNCIA TOTAL) */
 await carregarRotinas()
