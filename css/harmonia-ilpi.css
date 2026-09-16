@@ -444,3 +444,178 @@ select:focus,input:focus,textarea:focus{
   th,td{padding:7px 6px!important;}
   .hc-backup-actions button{width:100%;}
 }
+
+/* =========================================================
+HARMONIA CARE — AJUSTE GLOBAL DE ESPAÇAMENTO DOS PAINÉIS
+========================================================= */
+
+/* área geral */
+#app{
+  padding:10px !important;
+}
+
+/* todos os painéis */
+#painelEnfermagem,
+#painelClinico,
+#painelMedicacao,
+#painelMedicacaoHora,
+#painelAdmin{
+  padding:8px !important;
+  margin:0 !important;
+  display:block !important;
+}
+
+/* blocos internos principais */
+#painelEnfermagem > *,
+#painelClinico > *,
+#painelMedicacao > *,
+#painelMedicacaoHora > *,
+#painelAdmin > *{
+  margin-top:0 !important;
+  margin-bottom:10px !important;
+}
+
+/* cards e caixas */
+.card,
+.box,
+.card-medicacao,
+.turnos,
+.hc-backup-card,
+#painelEnfermagem > div,
+#painelClinico > div,
+#painelMedicacao > div,
+#painelMedicacaoHora > div,
+#painelAdmin > div{
+  margin-bottom:10px !important;
+  padding:12px !important;
+}
+
+/* títulos */
+h1,h2,h3,h4,h5,h6{
+  margin-top:0 !important;
+  margin-bottom:8px !important;
+}
+
+.hc-section-title{
+  margin:0 0 8px 0 !important;
+}
+
+/* campos e grupos de formulário */
+label{
+  margin-bottom:4px !important;
+}
+
+input,
+select,
+textarea{
+  margin-bottom:6px !important;
+}
+
+form,
+.form-group,
+.campo,
+.grupo,
+.linha,
+.row,
+.col{
+  margin-top:0 !important;
+  margin-bottom:8px !important;
+  gap:8px !important;
+}
+
+/* botões */
+button,
+.btn-topo,
+.btn-primary,
+.btn-secondary,
+.btn-success,
+.btn-danger{
+  margin-top:4px !important;
+  margin-bottom:4px !important;
+}
+
+/* barra superior de botões */
+#topoBotoes{
+  gap:8px !important;
+  padding:8px !important;
+  margin-bottom:10px !important;
+}
+
+/* tabelas */
+table{
+  margin-bottom:8px !important;
+}
+
+th,td{
+  padding:7px 8px !important;
+}
+
+/* turnos */
+.turnos{
+  gap:8px !important;
+  margin-bottom:10px !important;
+}
+
+/* medicação */
+#painelMedicacao{
+  display:block !important;
+}
+
+#listaMedicacoes,
+.grid-medicacoes{
+  gap:10px !important;
+  margin-top:8px !important;
+  align-items:flex-start !important;
+  align-content:flex-start !important;
+}
+
+.card-medicacao{
+  margin-bottom:8px !important;
+}
+
+/* evita espaços gigantes em colunas/lados */
+#painelMedicacao *,
+#painelEnfermagem *,
+#painelClinico *,
+#painelMedicacaoHora *,
+#painelAdmin *{
+  align-content:flex-start !important;
+}
+
+/* se houver containers flex ou grid */
+.row,
+.linha,
+.grid,
+.grid-medicacoes{
+  justify-content:flex-start !important;
+  align-items:flex-start !important;
+}
+
+/* mobile */
+@media(max-width:768px){
+  #app{
+    padding:8px !important;
+  }
+
+  #painelEnfermagem,
+  #painelClinico,
+  #painelMedicacao,
+  #painelMedicacaoHora,
+  #painelAdmin{
+    padding:6px !important;
+  }
+
+  .card,
+  .box,
+  .card-medicacao,
+  .turnos,
+  .hc-backup-card{
+    padding:10px !important;
+    margin-bottom:8px !important;
+  }
+
+  #topoBotoes{
+    gap:6px !important;
+    padding:6px !important;
+  }
+}
