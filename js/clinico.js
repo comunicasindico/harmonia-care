@@ -84,6 +84,7 @@ html+=`<tr data-id="${p?.id||""}">
 </tr>`
 }
 tabela.innerHTML=html
+if(window.HarmoniaNutricao?.allowed())tabela.querySelectorAll('tr[data-id]').forEach(tr=>{const b=document.createElement('button');b.type='button';b.textContent='Nutrição / evolução';b.style.cssText='display:block;margin-top:6px;font-size:11px;background:#e0f2ed;color:#087f78';b.onclick=()=>{window.HarmoniaNutricao.target=tr.dataset.id;abrirPainel('painelNutricao');};tr.children[0].appendChild(b);});
 atualizarIndicadoresDieta(dietaLivre,hipossodica,diabetica,pastosa,vegetariana,liquida)
 ativarEventosClinico()
 }
@@ -324,7 +325,7 @@ alert("Dados salvos com sucesso!")
 async function carregarDadosClinicosPaciente(pacienteId){
 const box=document.getElementById("dadosClinicosPaciente")
 if(!box)return
-if(!pacienteId||pacienteId==="todos"){box.innerHTML="";return}
+if(!pacienteId||pacienteId==="todos"){box.innerHTML="";window.HarmoniaNutricao?.summary(null);return}
 if(!db){console.error("Supabase ainda não carregou");return}
 const {data,error}=await db.from("pacientes").select("*").eq("id",pacienteId).single()
 if(error){console.error("Erro clínico paciente",error);return}
@@ -347,6 +348,7 @@ ${data.outras_comorbidades&&data.outras_comorbidades.trim()!==""?data.outras_com
 </tr>
 </table></div>`
 box.innerHTML=html
+window.HarmoniaNutricao?.summary(pacienteId)
 }
 /* ====================================================
 049 – EXCLUIR PACIENTE (COM CONTROLE)
@@ -359,5 +361,6 @@ if(!confirmar)return
 await db.from("pacientes").update({ativo:false}).eq("id",id).eq("empresa_id",EMPRESA_ID)
 await carregarClinico()
 }
+
 
 

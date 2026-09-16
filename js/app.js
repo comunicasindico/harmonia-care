@@ -255,12 +255,19 @@ if(fim && !fim.value)fim.value=dataLocal
 }
 /* ====================================================017 – NAVEGAÇÃO PAINÉIS (FINAL CORRIGIDO)==================================================== */
 function abrirPainel(id){
+if(id==='painelEquipe'&&!window.HarmoniaEquipe?.allowed()){alert('Gestão disponível ao nível 1.');return;}
+if(id!=='painelEquipe'&&window.HarmoniaEquipe?.hasUnsaved()&&!window.HarmoniaEquipe.discard())return;
+if(id==='painelNutricao'&&!window.HarmoniaNutricao?.allowed()){alert('Painel disponível para nutricionista e nível 1.');return;}
+if(id!=='painelNutricao'&&window.HarmoniaNutricao?.hasUnsaved()){if(!confirm('Descartar alterações não salvas na Nutrição?'))return;window.HarmoniaNutricao.discard();}
+
 if(typeof podeUsarMedicacao==="function" && !podeUsarMedicacao()){const btn=document.getElementById("btnMedicacao");if(btn)btn.style.display="none"}
 if(window.salvandoPendencias){alert("Aguarde finalizar o salvamento das pendências.");return}
 localStorage.setItem("painelAtual",id)
-const paineis=["painelEnfermagem","painelClinico","painelAdmin","painelMedicacao","painelMedicacaoHora"]
+const paineis=["painelEquipe","painelNutricao","painelEnfermagem","painelClinico","painelAdmin","painelMedicacao","painelMedicacaoHora"]
 for(let i=0;i<paineis.length;i++){const el=document.getElementById(paineis[i]);if(el)el.style.display="none"}
 const alvo=document.getElementById(id);if(alvo)alvo.style.display="block"
+if(id==='painelEquipe'){window.HarmoniaEquipe.open();atualizarBotoesTopo('equipe');}
+if(id==='painelNutricao'){const target=window.HarmoniaNutricao.target;window.HarmoniaNutricao.open(target);atualizarBotoesTopo('nutricao');}
 /* 🔥 CARREGAMENTO */
 if(id==="painelEnfermagem"&&typeof carregarRotinas==="function")carregarRotinas()
 if(id==="painelClinico"&&typeof carregarClinico==="function")carregarClinico()
@@ -300,11 +307,14 @@ function atualizarBotoesTopo(painel){
 
 const mostrar=(ids)=>{
 document.querySelectorAll("#topoBotoes button").forEach(b=>b.style.display="none")
+if(window.HarmoniaNutricao?.allowed())ids.push("btnNutricao")
+if(window.HarmoniaEquipe?.allowed())ids.push("btnEquipe")
 ids.forEach(id=>{
 const el=document.getElementById(id)
 if(el)el.style.display="inline-block"
 })
 }
+if(painel==='nutricao'||painel==='equipe'){mostrar(['btnEnfermagem','btnClinico','btnAdmin','btnMedicacao','btnMedicacaoHora']);document.getElementById('acoesClinico').style.display='none';}
 /* 🔥 CONFIG POR PAINEL */
 if(painel==="enfermagem"){
 mostrar(["btnEnfermagem","btnClinico","btnAdmin","btnMedicacao","btnMedicacaoHora","btnGerarPDF","btnPDFPaciente","btnPendentesTodos","btnSalvar"])
@@ -325,6 +335,8 @@ document.getElementById("acoesClinico").style.display="none"
 /* 🔥 DESTACA ATIVO */
 document.querySelectorAll("#topoBotoes button").forEach(b=>b.classList.remove("ativo"))
 const mapa={
+nutricao:"btnNutricao",
+equipe:"btnEquipe",
 enfermagem:"btnEnfermagem",
 clinico:"btnClinico",
 admin:"btnAdmin",
@@ -506,3 +518,4 @@ const b=document.getElementById("countSimMed")
 if(a)a.innerText=nao
 if(b)b.innerText=sim
 }
+

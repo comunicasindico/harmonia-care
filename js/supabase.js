@@ -57,7 +57,8 @@ const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
   window.addEventListener("DOMContentLoaded",()=>{
     css("harmonia-ilpi-css","css/harmonia-ilpi.css?v=20260916b");
-    carregar("harmonia-visual-ilpi","js/visual-ilpi.js?v=20260916b");
+    carregar("harmonia-visual-ilpi","js/visual-ilpi.js?v=20260916n1");
     carregar("harmonia-backup-recuperacao","js/backup-recuperacao.js?v=20260916b");
   },{once:true});
 })();
+

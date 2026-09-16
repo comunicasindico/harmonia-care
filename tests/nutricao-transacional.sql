@@ -1,0 +1,29 @@
+begin;
+do $test$
+declare uid uuid; cid uuid; pid uuid; eid uuid; tok text; ctok text; r jsonb; t jsonb; saved jsonb; bad boolean; original_count bigint;
+begin
+ select id,empresa_id into uid,eid from public.usuarios where lower(nome_apelido)='luannanutri';
+ if not exists(select 1 from public.usuarios where id=uid and perfil='nutricionista' and hierarquia=1) then raise exception 'Perfil Luanna incorreto';end if;
+ select id into pid from public.pacientes where empresa_id=eid limit 1;
+ select id into cid from public.usuarios where empresa_id=eid and perfil='cuidador' and hierarquia<>1 and ativo=true limit 1;
+ tok:=gen_random_uuid()::text;ctok:=gen_random_uuid()::text;
+ insert into harmonia_nutri_private.sessions values(encode(sha256(convert_to(tok,'UTF8')),'hex'),uid,now()+interval '1 minute'),(encode(sha256(convert_to(ctok,'UTF8')),'hex'),cid,now()+interval '1 minute');
+ bad:=false;begin perform public.nutricao_api('list','invalid','{}');exception when insufficient_privilege then bad:=true;end;if not bad then raise exception 'Token inválido aceito';end if;
+ bad:=false;begin perform public.nutricao_api('list',ctok,'{}');exception when insufficient_privilege then bad:=true;end;if not bad then raise exception 'Cuidador acessou nutrição';end if;
+ if has_table_privilege('anon','public.nutricao_avaliacoes','SELECT') or has_table_privilege('authenticated','public.nutricao_avaliacoes','UPDATE') then raise exception 'Tabela com acesso direto';end if;
+ select count(*) into original_count from public.nutricao_avaliacoes;
+ r:=public.nutricao_api('save',tok,jsonb_build_object('paciente_id',pid,'data_avaliacao',current_date,'profissional_nome','TESTE TRANSACIONAL','peso_kg',64,'altura_cm',160,'cp_cm',32,'cb_cm',26,'ficha',jsonb_build_object('orientacoes','Teste que será revertido'),'medidas_extras','[]'::jsonb));
+ if not exists(select 1 from public.nutricao_avaliacoes where id=(r->>'id')::uuid and imc=25 and criado_por=uid) then raise exception 'Falha IMC/criação';end if;
+ saved:=r;r:=public.nutricao_api('save',tok,jsonb_build_object('id',r->>'id','versao',1,'paciente_id',pid,'data_avaliacao',current_date,'profissional_nome','TESTE TRANSACIONAL','peso_kg',60,'altura_cm',160,'ficha','{}'::jsonb));
+ if (r->>'versao')::int<>2 then raise exception 'Versão não incrementou';end if;
+ bad:=false;begin perform public.nutricao_api('save',tok,jsonb_build_object('id',r->>'id','versao',1));exception when others then bad:=true;end;if not bad then raise exception 'Edição obsoleta aceita';end if;
+ bad:=false;begin perform public.nutricao_api('save',tok,jsonb_build_object('paciente_id',gen_random_uuid(),'data_avaliacao',current_date,'profissional_nome','TESTE'));exception when others then bad:=true;end;if not bad then raise exception 'Paciente inválido aceito';end if;
+ perform public.nutricao_api('delete',tok,jsonb_build_object('id',r->>'id','versao',2,'motivo','Teste revertido'));
+ if not exists(select 1 from public.nutricao_avaliacoes where id=(r->>'id')::uuid and excluido_em is not null) then raise exception 'Falha exclusão';end if;
+ if (select count(*) from harmonia_nutri_private.audit where avaliacao_id=(r->>'id')::uuid)<>3 then raise exception 'Falha auditoria';end if;
+ t:=public.nutricao_api('team_list',tok,'{}');
+ select value into r from jsonb_array_elements(t->'users') where value->>'id'=cid::text;
+ perform public.nutricao_api('team_save',tok,r||jsonb_build_object('links',coalesce((select jsonb_agg(value-'usuario_id') from jsonb_array_elements(t->'links') where value->>'usuario_id'=cid::text),'[]')));
+ if (select count(*) from public.nutricao_avaliacoes)<>original_count+1 then raise exception 'Contagem inesperada';end if;
+end $test$;
+rollback;

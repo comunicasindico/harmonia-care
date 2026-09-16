@@ -38,7 +38,8 @@ const mapaPerfil={
 "Enfermeiro(a)":"enfermeiro",
 "Cuidador(a)":"cuidador",
 "Fisioterapeuta":"fisioterapeuta",
-"Estagiário(a)":"estagiario"
+"Estagiário(a)":"estagiario",
+"Nutricionista":"nutricionista"
 }
 let perfil=mapaPerfil[perfilUI]||"cuidador"
 const novo={
@@ -121,6 +122,7 @@ html+=`<tr data-id="${u.id}" style="background:${cor}">
 <option value="cuidador"${u.perfil==="cuidador"?" selected":""}>Cuidador</option>
 <option value="fisioterapeuta"${u.perfil==="fisioterapeuta"?" selected":""}>Fisioterapeuta</option>
 <option value="estagiario"${u.perfil==="estagiario"?" selected":""}>Estagiário</option>
+<option value="nutricionista"${u.perfil==="nutricionista"?" selected":""}>Nutricionista</option>
 </select></td>
 <td><select class="u_hierarquia">
 <option value="1"${u.hierarquia==1?" selected":""}>1</option>
@@ -592,3 +594,4 @@ el.style.display=nome.includes(txt)?"flex":"none"
 999 – EXPORT GLOBAL ADMIN
 ==================================================== */
 window.concluirPendentes = concluirPendentes
+

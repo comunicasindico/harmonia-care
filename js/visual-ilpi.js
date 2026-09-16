@@ -3,6 +3,8 @@
 if(window.__HC_VISUAL_ILPI_V3__)return;
 window.__HC_VISUAL_ILPI_V3__=true;
 const nomes={
+btnEquipe:"Cuidadores e vínculos",
+btnNutricao:"🥗 Nutrição",
 btnEnfermagem:"🩺 Painel Enfermagem",
 btnClinico:"🧑‍⚕️ Painel Clínico",
 btnMedicacao:"💊 Medicação",
@@ -38,6 +40,8 @@ if(el&&el.textContent!==nome)el.textContent=nome;
 function marcarAtivo(){
 const painel=localStorage.getItem("painelAtual")||"painelEnfermagem";
 const mapa={
+painelEquipe:"btnEquipe",
+painelNutricao:"btnNutricao",
 painelEnfermagem:"btnEnfermagem",
 painelClinico:"btnClinico",
 painelMedicacao:"btnMedicacao",
@@ -90,7 +94,7 @@ let marcados=[...document.querySelectorAll("[data-hc-kpi-original='1']")];
 if(marcados.length>=3)return marcados.slice(0,3);
 const app=document.getElementById("app");
 if(!app)return[];
-const paineis="#painelEnfermagem,#painelClinico,#painelMedicacao,#painelMedicacaoHora,#painelAdmin";
+const paineis="#painelEquipe,#painelNutricao,#painelEnfermagem,#painelClinico,#painelMedicacao,#painelMedicacaoHora,#painelAdmin";
 const candidatos=[...app.querySelectorAll("div,span")].filter(el=>{
 if(el.closest(".topo-sistema"))return false;
 if(el.closest("#topoBotoes"))return false;
@@ -264,3 +268,4 @@ setInterval(aplicarTudo,700);
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",iniciar,{once:true});
 else iniciar();
 })();
+
