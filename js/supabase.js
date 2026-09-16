@@ -2,17 +2,14 @@
 001 – CONFIG SUPABASE
 ==================================================== */
 const SUPABASE_URL="https://whvwqektkinnhdprehss.supabase.co"
-const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU"
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6IndodndxZWt0a2lubmhkcHJlaHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTY2MzYsImV4cCI6MjA4Nzg3MjYzNn0.gdTMT25dc4x7YlLQEWHKd-6dM32nKp5mnRwMk_fiEdU"
 
 /* garantir que SDK carregou */
 if(typeof supabase==="undefined"){
   console.error("Supabase SDK não carregou")
+  window.db=null
 }else{
-  const supabaseClient=supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  )
-  db=supabaseClient
+  window.db=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY)
   console.log("Supabase conectado")
 }
 
@@ -20,15 +17,12 @@ if(typeof supabase==="undefined"){
 003 – KEEP ALIVE
 ==================================================== */
 setInterval(async()=>{
-  if(!db)return
+  if(!window.db)return
   try{
-    await db
-      .from("pacientes")
-      .select("id")
-      .limit(1)
+    await window.db.from("pacientes").select("id").limit(1)
     console.log("Supabase ativo")
   }catch(e){
-    console.log("Erro keep alive")
+    console.log("Erro keep alive",e)
   }
 },300000)
 
@@ -36,10 +30,10 @@ setInterval(async()=>{
 004 – AUDITORIA GLOBAL
 ==================================================== */
 async function registrarAuditoria({acao,tabela,registro_id,antes,depois}){
-  if(!db)return
+  if(!window.db)return
   const usuario_id=localStorage.getItem("usuario_id")
   const usuario_nome=localStorage.getItem("usuario_nome")
-  await db.from("auditoria").insert({
+  await window.db.from("auditoria").insert({
     usuario_id,
     usuario_nome,
     acao,
@@ -52,8 +46,6 @@ async function registrarAuditoria({acao,tabela,registro_id,antes,depois}){
 
 /* ====================================================
 900 – APRIMORAMENTOS HARMONIA CARE
-Carrega visual profissional e backup/recuperação depois
-do sistema original, sem alterar a lógica assistencial.
 ==================================================== */
 window.addEventListener("load",()=>{
   try{
@@ -61,7 +53,7 @@ window.addEventListener("load",()=>{
       const link=document.createElement("link")
       link.id="harmonia-ilpi-css"
       link.rel="stylesheet"
-      link.href="css/harmonia-ilpi.css?v=20260915"
+      link.href="css/harmonia-ilpi.css?v=20260916"
       document.head.appendChild(link)
     }
 
@@ -70,12 +62,13 @@ window.addEventListener("load",()=>{
       const script=document.createElement("script")
       script.id=id
       script.src=src
-      script.defer=true
+      script.async=false
       document.body.appendChild(script)
     }
 
-    carregarScript("harmonia-visual-ilpi","js/visual-ilpi.js?v=20260915")
-    carregarScript("harmonia-backup-recuperacao","js/backup-recuperacao.js?v=20260915")
+    carregarScript("harmonia-login-fix","js/login-fix.js?v=20260916")
+    carregarScript("harmonia-visual-ilpi","js/visual-ilpi.js?v=20260916")
+    carregarScript("harmonia-backup-recuperacao","js/backup-recuperacao.js?v=20260916")
   }catch(e){
     console.error("Falha ao carregar aprimoramentos Harmonia Care",e)
   }
