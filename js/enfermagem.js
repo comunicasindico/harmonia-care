@@ -78,7 +78,7 @@ if(!s)return
 try{
 let usuarioId=localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
 let pacientes=[]
-if(usuarioId&&usuarioId!=="admin"){
+if(usuarioId&&usuarioId!=="admin"&&Number(localStorage.getItem("usuario_hierarquia")||5)!==1){
 const{data:rel}=await db.from("pacientes_profissionais").select("paciente_id").eq("usuario_id",usuarioId).eq("ativo",true)
 const ids=rel?rel.map(function(r){return r.paciente_id}):[]
 if(ids.length){
@@ -918,3 +918,4 @@ await autoFinalizarPendentesApos2Dias()
 window.executarRotina=executarRotina
 window.executarTodos=executarTodos
 window.executarRotinaTodosPaciente=executarRotinaTodosPaciente
+

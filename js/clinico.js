@@ -36,7 +36,7 @@ if(!db)return
 if(!EMPRESA_ID)return
 let usuarioId=localStorage.getItem("usuario_id")||PROFISSIONAL_ID||null
 let query=db.from("pacientes").select("*")
-if(usuarioId&&usuarioId!=="admin"){
+if(usuarioId&&usuarioId!=="admin"&&Number(localStorage.getItem("usuario_hierarquia")||5)!==1){
 const {data:rel}=await db.from("pacientes_profissionais").select("paciente_id").eq("usuario_id",usuarioId).eq("ativo",true)
 const ids=rel?.map(r=>r.paciente_id)||[]
 if(ids.length)query=query.in("id",ids)

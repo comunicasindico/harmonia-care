@@ -136,7 +136,7 @@
     }
     const originalLoad=window.carregarUsuarios;
     if(typeof originalLoad==='function'&&!originalLoad.__hc2026){
-      const f=async function(){await originalLoad.apply(this,arguments);qsa('#tabelaUsuariosAdmin tr').forEach(tr=>{const td=tr.children[3];if(td&&/nutricionista/i.test(td.textContent))td.innerHTML='<span class="hc-chip hc-nutri-badge">Nutricionista</span>'});};f.__hc2026=true;window.carregarUsuarios=f;
+      const f=async function(){await originalLoad.apply(this,arguments);qsa('#tabelaUsuariosAdmin tr').forEach(tr=>{const td=tr.children[3];if(td&&!td.querySelector('select,input')&&td.textContent.trim().toLowerCase()==='nutricionista')td.innerHTML='<span class="hc-chip hc-nutri-badge">Nutricionista</span>'});};f.__hc2026=true;window.carregarUsuarios=f;
     }
     const painel=qs('#painelAdmin .box');
     if(painel&&!qs('.hc-admin-note',painel)){const d=document.createElement('div');d.className='hc-admin-note';d.textContent='Atribua pacientes pelo botão “Pacientes” de cada profissional. Cuidadores permanecem visíveis ao nível 1 e podem receber exatamente os pacientes autorizados.';painel.insertBefore(d,painel.children[1]||null)}
@@ -146,3 +146,4 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
   window.addEventListener('load',()=>setTimeout(boot,200));
 })();
+

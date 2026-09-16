@@ -1,3 +1,9 @@
+function validarLinhaUsuario(linha){
+const campos=['.u_nome','.u_apelido','.u_email','.u_perfil','.u_hierarquia'];
+if(!linha||campos.some(c=>!linha.querySelector(c))){alert('Clique em Editar antes de salvar. Se os campos não aparecerem, recarregue a página.');return false;}
+if(campos.some(c=>!linha.querySelector(c).value.trim())){alert('Preencha nome, apelido, e-mail, perfil e hierarquia. Nenhum cadastro foi salvo.');return false;}
+return true;
+}
 /* ====================================================
 090 – BACKUP COMPLETO DO SISTEMA (JSON)
 ==================================================== */
@@ -80,16 +86,17 @@ let html=""
 /* 🔥 CONTAGEM DE PACIENTES POR USUÁRIO */
 const {data:vinculos}=await db
 .from("pacientes_profissionais")
-.select("usuario_id")
-.eq("ativo",true)
+.select("usuario_id,paciente_id")
+.eq("ativo",true).eq("empresa_id",EMPRESA_ID)
 
 const mapaQtd={}
 vinculos?.forEach(v=>{
-mapaQtd[v.usuario_id]=(mapaQtd[v.usuario_id]||0)+1
+if(!mapaQtd[v.usuario_id])mapaQtd[v.usuario_id]=new Set()
+mapaQtd[v.usuario_id].add(v.paciente_id)
 })
 lista.forEach(u=>{
 let cor="#fff"
-let qtd=mapaQtd[u.id]||0
+let qtd=mapaQtd[u.id]?.size||0
 if(u.perfil==="administrador")cor="#e3f2fd"
 else if(u.perfil==="medico")cor="#fdecea"
 else if(u.perfil==="enfermeiro")cor="#e8f5e9"
@@ -97,13 +104,13 @@ else if(u.perfil==="cuidador")cor="#fff8e1"
 else if(u.perfil==="fisioterapeuta")cor="#f3e5f5"
 else if(u.perfil==="estagiario")cor="#ede7f6"
 if(!MODO_EDICAO_ADMIN){
-html+=`<tr data-id="${u.id}" style="background:${cor}">
+html+=`<tr data-id="${u.id}" data-ativo="${u.ativo!==false}" style="background:${cor}">
 <td>${u.nome_completo||""}</td>
 <td>${u.nome_apelido||""}</td>
 <td>${u.email||""}</td>
 <td>${u.perfil||""}</td>
 <td>${u.hierarquia||""}</td>
-<td>
+<td>••••••</td><td>
 <button onclick="verPacientesDoProfissional('${u.id}')" class="btn-primary">
 Pacientes (${qtd})
 </button>
@@ -111,7 +118,7 @@ Pacientes (${qtd})
 </tr>`
 }
 else{
-html+=`<tr data-id="${u.id}" style="background:${cor}">
+html+=`<tr data-id="${u.id}" data-ativo="${u.ativo!==false}" style="background:${cor}">
 <td><input class="u_nome" value="${u.nome_completo||""}"></td>
 <td><input class="u_apelido" value="${u.nome_apelido||""}"></td>
 <td><input class="u_email" value="${u.email||""}"></td>
@@ -144,6 +151,7 @@ montarResumoUsuarios(lista,mapaQtd)
 ==================================================== */
 async function salvarUsuario(id,btn){
 const tr=btn.closest("tr")
+if(!validarLinhaUsuario(tr))return
 /* 🔹 PERFIL */
 let perfilUI=tr.querySelector(".u_perfil")?.value||""
 const mapaPerfil={
@@ -154,7 +162,7 @@ const mapaPerfil={
 "Fisioterapeuta":"fisioterapeuta",
 "Estagiário":"estagiario"
 }
-let perfilFinal=mapaPerfil[perfilUI]||"cuidador"
+let perfilFinal=mapaPerfil[perfilUI]||perfilUI
 /* 🔹 DADOS */
 const dados={
 nome_completo:tr.querySelector(".u_nome")?.value||"",
@@ -164,7 +172,7 @@ perfil:perfilFinal,
 hierarquia:parseInt(
 tr.querySelector(".u_hierarquia")?.value||5
 ),
-ativo:true
+ativo:tr.dataset.ativo!=="false"
 }
 /* 🔹 SENHA */
 const novaSenha=tr.querySelector(".u_senha")?.value
@@ -333,13 +341,14 @@ if(!db)return
 if(!id)return
 const linha=document.querySelector(`tr[data-id="${id}"]`)
 if(!linha)return
+if(!validarLinhaUsuario(linha))return
 const dados={
 nome_completo:linha.querySelector(".u_nome")?.value||"",
 nome_apelido:linha.querySelector(".u_apelido")?.value||"",
 email:linha.querySelector(".u_email")?.value||"",
 perfil:linha.querySelector(".u_perfil")?.value||"",
 hierarquia:parseInt(linha.querySelector(".u_hierarquia")?.value||5),
-ativo:true
+ativo:linha.dataset.ativo!=="false"
 }
 const novaSenha=linha.querySelector(".u_senha")?.value
 if(novaSenha)dados.senha_hash=novaSenha
@@ -369,8 +378,10 @@ carregarUsuarios()
 async function salvarUsuarios(){
 if(!db)return
 if(window._salvandoUsuarios)return
-window._salvandoUsuarios=true
 const linhas=document.querySelectorAll("#tabelaUsuariosAdmin tr[data-id]")
+if(!linhas.length)return
+if(![...linhas].every(validarLinhaUsuario))return
+window._salvandoUsuarios=true
 let promessas=[]
 for(const tr of linhas){
 const id=tr.getAttribute("data-id")
@@ -381,7 +392,7 @@ nome_apelido:tr.querySelector(".u_apelido")?.value||"",
 email:tr.querySelector(".u_email")?.value||"",
 perfil:tr.querySelector(".u_perfil")?.value||"",
 hierarquia:parseInt(tr.querySelector(".u_hierarquia")?.value||5),
-ativo:true
+ativo:tr.dataset.ativo!=="false"
 }
 const novaSenha=tr.querySelector(".u_senha")?.value
 if(novaSenha)dados.senha_hash=novaSenha
@@ -554,7 +565,7 @@ el.style.display=nome.includes(txt)?"flex":"none"
 ==================================================== */
 function montarResumoUsuarios(lista,mapaQtd){
 let total=lista.length
-let totalPacientes=Object.values(mapaQtd).reduce((a,b)=>a+b,0)
+let totalPacientes=new Set(lista.flatMap(u=>[...(mapaQtd[u.id]||[])])).size
 let html=`
 <div style="display:flex;gap:10px;margin-bottom:10px">
 <div style="background:#3498db;color:#fff;padding:10px;border-radius:8px">👥 Profissionais<br><b>${total}</b></div>

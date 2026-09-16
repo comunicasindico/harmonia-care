@@ -271,6 +271,7 @@ if(id==='painelNutricao'){const target=window.HarmoniaNutricao.target;window.Har
 /* 🔥 CARREGAMENTO */
 if(id==="painelEnfermagem"&&typeof carregarRotinas==="function")carregarRotinas()
 if(id==="painelClinico"&&typeof carregarClinico==="function")carregarClinico()
+if(id==="painelAdmin"&&typeof carregarUsuarios==="function")carregarUsuarios()
 if(id==="painelMedicacao"){
 setTimeout(function(){
 if(typeof carregarStatusMedicacoes==="function")carregarStatusMedicacoes()
