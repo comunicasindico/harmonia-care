@@ -1,703 +1,474 @@
 /* =========================================================
 HARMONIA CARE — TEMA PROFISSIONAL ILPI
-Camada visual não destrutiva. Mantém IDs e lógica existentes.
 ========================================================= */
-
 :root{
-  --hc-primary:#0f766e;
-  --hc-primary-2:#115e59;
-  --hc-secondary:#2563eb;
-  --hc-success:#16a34a;
-  --hc-warning:#d97706;
-  --hc-danger:#dc2626;
-  --hc-ink:#17324d;
-  --hc-muted:#64748b;
-  --hc-border:#dbe4ec;
-  --hc-soft:#f4f8fb;
-  --hc-card:#ffffff;
-  --hc-shadow:0 10px 30px rgba(15, 23, 42, .09);
-  --hc-shadow-sm:0 4px 14px rgba(15, 23, 42, .07);
-  --hc-radius:18px;
+--hc-primary:#0f766e;
+--hc-primary-2:#115e59;
+--hc-secondary:#2563eb;
+--hc-success:#16a34a;
+--hc-warning:#d97706;
+--hc-danger:#dc2626;
+--hc-ink:#17324d;
+--hc-muted:#64748b;
+--hc-border:#dbe4ec;
+--hc-soft:#f4f8fb;
+--hc-card:#ffffff;
+--hc-shadow:0 10px 30px rgba(15,23,42,.09);
+--hc-shadow-sm:0 4px 14px rgba(15,23,42,.07);
+--hc-radius:18px;
 }
-
 html,body{
-  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important;
-  color:var(--hc-ink);
+font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important;
+color:var(--hc-ink);
 }
-
 body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  z-index:-1;
-  background:linear-gradient(135deg,rgba(240,253,250,.92),rgba(239,246,255,.90));
+content:"";
+position:fixed;
+inset:0;
+pointer-events:none;
+z-index:-1;
+background:linear-gradient(135deg,rgba(240,253,250,.92),rgba(239,246,255,.90));
 }
-
 #login{
-  min-height:100svh!important;
-  padding:24px!important;
-  background:
-    linear-gradient(135deg,rgba(10,55,70,.58),rgba(15,118,110,.42)),
-    url("../img/harmoniafrente.png") center/cover no-repeat!important;
+min-height:100svh!important;
+padding:24px!important;
+background:linear-gradient(135deg,rgba(10,55,70,.58),rgba(15,118,110,.42)),url("../img/harmoniafrente.png") center/cover no-repeat!important;
 }
-
 .login-box,.login-card{
-  width:min(420px,94vw)!important;
-  padding:34px 30px!important;
-  border:1px solid rgba(255,255,255,.72)!important;
-  border-radius:24px!important;
-  background:rgba(255,255,255,.95)!important;
-  box-shadow:0 28px 70px rgba(2,8,23,.30)!important;
-  backdrop-filter:blur(16px)!important;
+width:min(420px,94vw)!important;
+padding:34px 30px!important;
+border:1px solid rgba(255,255,255,.72)!important;
+border-radius:24px!important;
+background:rgba(255,255,255,.95)!important;
+box-shadow:0 28px 70px rgba(2,8,23,.30)!important;
+backdrop-filter:blur(16px)!important;
 }
-
 .titulo-login-topo{
-  margin:0 0 6px!important;
-  padding:0!important;
-  font-size:34px!important;
-  line-height:1.05!important;
-  color:var(--hc-primary)!important;
-  -webkit-text-fill-color:initial!important;
-  background:none!important;
-  text-shadow:none!important;
-  letter-spacing:-.8px!important;
+margin:0 0 6px!important;
+padding:0!important;
+font-size:34px!important;
+line-height:1.05!important;
+color:var(--hc-primary)!important;
+-webkit-text-fill-color:initial!important;
+background:none!important;
+text-shadow:none!important;
+letter-spacing:-.8px!important;
 }
-
 .hc-login-subtitle{
-  text-align:center;
-  color:var(--hc-muted);
-  font-size:13px;
-  margin:0 0 22px;
+text-align:center;
+color:var(--hc-muted);
+font-size:13px;
+margin:0 0 22px;
 }
-
 .login-box img,.login-card img{
-  height:52px!important;
-  width:auto!important;
-  object-fit:contain;
+height:52px!important;
+width:auto!important;
+object-fit:contain;
 }
-
 .login-box input,.login-card input{
-  min-height:48px!important;
-  margin-bottom:12px!important;
-  padding:12px 14px!important;
-  border:1px solid var(--hc-border)!important;
-  border-radius:12px!important;
-  background:#fff!important;
-  color:var(--hc-ink)!important;
-  outline:none!important;
-  transition:.2s ease;
+min-height:48px!important;
+margin-bottom:12px!important;
+padding:12px 14px!important;
+border:1px solid var(--hc-border)!important;
+border-radius:12px!important;
+background:#fff!important;
+color:var(--hc-ink)!important;
+outline:none!important;
+transition:.2s ease;
 }
-
 .login-box input:focus,.login-card input:focus{
-  border-color:#5eead4!important;
-  box-shadow:0 0 0 4px rgba(20,184,166,.13)!important;
+border-color:#5eead4!important;
+box-shadow:0 0 0 4px rgba(20,184,166,.13)!important;
 }
-
 .btn-entrar{
-  width:100%!important;
-  min-height:48px!important;
-  margin-top:8px!important;
-  border-radius:12px!important;
-  background:linear-gradient(135deg,var(--hc-primary),#14b8a6)!important;
-  box-shadow:0 10px 22px rgba(15,118,110,.24)!important;
-  font-weight:800!important;
+width:100%!important;
+min-height:48px!important;
+margin-top:8px!important;
+border-radius:12px!important;
+background:linear-gradient(135deg,var(--hc-primary),#14b8a6)!important;
+box-shadow:0 10px 22px rgba(15,118,110,.24)!important;
+font-weight:800!important;
 }
-
 #app{
-  padding:14px!important;
-  max-width:1600px!important;
-  min-height:100vh;
-  background:linear-gradient(180deg,rgba(248,250,252,.96),rgba(241,245,249,.94))!important;
+padding:10px!important;
+max-width:1600px!important;
+min-height:100vh;
+background:linear-gradient(180deg,rgba(248,250,252,.96),rgba(241,245,249,.94))!important;
 }
-
 .topo-sistema{
-  position:sticky!important;
-  top:8px!important;
-  z-index:60!important;
-  min-height:72px!important;
-  margin-bottom:14px!important;
-  padding:12px 16px!important;
-  border:1px solid rgba(219,228,236,.92)!important;
-  border-radius:18px!important;
-  background:rgba(255,255,255,.96)!important;
-  box-shadow:var(--hc-shadow)!important;
+position:sticky!important;
+top:8px!important;
+z-index:60!important;
+min-height:72px!important;
+margin-bottom:10px!important;
+padding:12px 16px!important;
+border:1px solid rgba(219,228,236,.92)!important;
+border-radius:18px!important;
+background:rgba(255,255,255,.96)!important;
+box-shadow:var(--hc-shadow)!important;
 }
-
 .titulo-sistema{
-  display:flex;
-  align-items:center;
-  gap:12px;
+display:flex;
+align-items:center;
+gap:12px;
 }
-
 .topo-sistema img,.logo-topo{
-  max-height:42px!important;
-  width:auto!important;
+max-height:42px!important;
+width:auto!important;
 }
-
 .titulo-3d{
-  font-size:22px!important;
-  letter-spacing:-.4px!important;
-  background:none!important;
-  color:var(--hc-ink)!important;
-  -webkit-text-fill-color:initial!important;
+font-size:22px!important;
+letter-spacing:-.4px!important;
+background:none!important;
+color:var(--hc-ink)!important;
+-webkit-text-fill-color:initial!important;
 }
-
 .hc-brand-stack{
-  display:flex;
-  flex-direction:column;
-  gap:2px;
+display:flex;
+flex-direction:column;
+gap:2px;
 }
-
 .hc-brand-kicker{
-  color:var(--hc-primary);
-  font-size:11px;
-  font-weight:800;
-  letter-spacing:.08em;
-  text-transform:uppercase;
+color:var(--hc-primary);
+font-size:11px;
+font-weight:800;
+letter-spacing:.08em;
+text-transform:uppercase;
 }
-
-.hc-user-chip{
-  margin-left:auto;
-  display:inline-flex;
-  align-items:center;
-  gap:7px;
-  padding:7px 10px;
-  border-radius:999px;
-  background:#f0fdfa;
-  color:var(--hc-primary-2);
-  border:1px solid #ccfbf1;
-  font-size:12px;
-  font-weight:700;
-}
-
-#topoBotoes{
-  display:flex!important;
-  gap:8px!important;
-  padding:10px!important;
-  border:1px solid var(--hc-border);
-  border-radius:16px;
-  background:rgba(255,255,255,.90);
-  box-shadow:var(--hc-shadow-sm);
-  align-items:center;
-}
-
-button,.btn-topo,.btn-primary,.btn-secondary,.btn-success,.btn-danger{
-  min-height:40px;
-  border-radius:11px!important;
-  box-shadow:none!important;
-  font-weight:700!important;
-  transition:transform .12s ease,box-shadow .12s ease,background .12s ease!important;
-}
-
-button:hover,.btn-topo:hover,.btn-primary:hover,.btn-secondary:hover,.btn-success:hover{
-  transform:translateY(-1px);
-  box-shadow:0 6px 16px rgba(15,23,42,.10)!important;
-}
-
-.btn-primary{
-  background:#ecfeff!important;
-  color:#0f766e!important;
-  border:1px solid #99f6e4!important;
-}
-
-.btn-secondary{
-  background:#eff6ff!important;
-  color:#1d4ed8!important;
-  border:1px solid #bfdbfe!important;
-}
-
-.btn-success{
-  background:#f0fdf4!important;
-  color:#15803d!important;
-  border:1px solid #bbf7d0!important;
-}
-
-.btn-danger,.btn-sair{
-  background:#fff1f2!important;
-  color:#be123c!important;
-  border:1px solid #fecdd3!important;
-  box-shadow:none!important;
-}
-
-#topoBotoes button.ativo{
-  background:linear-gradient(135deg,var(--hc-primary),#14b8a6)!important;
-  color:#fff!important;
-  border-color:transparent!important;
-}
-
-#btnBackup{
-  background:#f5f3ff!important;
-  color:#6d28d9!important;
-  border:1px solid #ddd6fe!important;
-}
-
-.card,.box,
-#painelEnfermagem>div,
-#painelClinico>div,
-#painelMedicacao>div,
-#painelMedicacaoHora>div,
-#painelAdmin>div{
-  border-color:var(--hc-border)!important;
-}
-
-.card,.box{
-  border-radius:var(--hc-radius)!important;
-  box-shadow:var(--hc-shadow-sm)!important;
-  padding:16px!important;
-}
-
-table{
-  overflow:hidden;
-  border-radius:12px;
-  background:#fff;
-}
-
-thead th,th{
-  background:#f8fafc;
-  color:#334155;
-  font-weight:800!important;
-}
-
-th,td{
-  padding:9px 8px!important;
-  border-bottom:1px solid #edf2f7!important;
-  vertical-align:middle;
-}
-
-tr:hover td{
-  background:#fbfdff;
-}
-
-select,input,textarea{
-  border-color:var(--hc-border)!important;
-  border-radius:10px!important;
-}
-
-select:focus,input:focus,textarea:focus{
-  outline:none!important;
-  border-color:#5eead4!important;
-  box-shadow:0 0 0 3px rgba(20,184,166,.12)!important;
-}
-
-.turnos{
-  padding:8px;
-  border-radius:14px;
-  background:#fff;
-  border:1px solid var(--hc-border);
-  box-shadow:var(--hc-shadow-sm);
-}
-
-.turno-btn{
-  opacity:1!important;
-  background:#f1f5f9!important;
-  color:#475569!important;
-  border:1px solid #e2e8f0!important;
-}
-
-.turno-ativo{
-  background:linear-gradient(135deg,var(--hc-primary),#14b8a6)!important;
-  color:#fff!important;
-  border-color:transparent!important;
-}
-
-.card-medicacao{
-  border:1px solid var(--hc-border)!important;
-  border-radius:16px!important;
-  box-shadow:var(--hc-shadow-sm)!important;
-  padding:14px!important;
-}
-
-.badge-rotina{
-  border-radius:999px!important;
-  padding:6px 10px!important;
-}
-
-#statusSync{
-  background:#0f172a!important;
-  border:1px solid rgba(255,255,255,.16);
-}
-
-.hc-section-title{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin:6px 0 12px;
-}
-
-.hc-section-title h2{
-  margin:0;
-  font-size:18px;
-  color:var(--hc-ink);
-}
-
-.hc-section-title span{
-  color:var(--hc-muted);
-  font-size:12px;
-}
-
-.hc-backup-card{
-  margin:14px 0;
-  padding:16px;
-  border:1px solid #c7d2fe;
-  border-radius:18px;
-  background:linear-gradient(135deg,#eef2ff,#faf5ff);
-  box-shadow:var(--hc-shadow-sm);
-}
-
-.hc-backup-card h3{
-  margin:0 0 4px;
-  color:#4338ca;
-}
-
-.hc-backup-card p{
-  margin:0 0 12px;
-  color:#64748b;
-  font-size:13px;
-}
-
-.hc-backup-actions{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
-
-.hc-btn-restore{
-  background:#fff!important;
-  color:#4338ca!important;
-  border:1px solid #c7d2fe!important;
-}
-
-.hc-progress-modal{
-  position:fixed;
-  inset:0;
-  z-index:99999;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  background:rgba(15,23,42,.50);
-  backdrop-filter:blur(4px);
-}
-
-.hc-progress-box{
-  width:min(460px,94vw);
-  padding:22px;
-  border-radius:18px;
-  background:#fff;
-  box-shadow:0 30px 80px rgba(0,0,0,.30);
-}
-
-.hc-progress-box h3{
-  margin:0 0 8px;
-}
-
-.hc-progress-track{
-  height:10px;
-  border-radius:999px;
-  background:#e2e8f0;
-  overflow:hidden;
-}
-
-.hc-progress-fill{
-  height:100%;
-  width:0;
-  background:linear-gradient(90deg,var(--hc-primary),#22c55e);
-  transition:width .2s ease;
-}
-
-.hc-progress-text{
-  margin-top:8px;
-  font-size:12px;
-  color:#64748b;
-}
-
-@media(max-width:900px){
-  #app{padding:8px!important;}
-  .topo-sistema{
-    top:4px!important;
-    border-radius:14px!important;
-  }
-  .titulo-3d{font-size:18px!important;}
-  .hc-user-chip{width:100%;margin:4px 0 0;}
-  #topoBotoes{
-    overflow-x:auto;
-    flex-wrap:nowrap!important;
-    -webkit-overflow-scrolling:touch;
-  }
-  #topoBotoes button{
-    flex:0 0 auto;
-    white-space:nowrap!important;
-  }
-  .card,.box{padding:12px!important;}
-  table{font-size:12px;}
-}
-
-@media(max-width:600px){
-  #login{padding:14px!important;}
-  .login-box,.login-card{padding:28px 20px!important;}
-  .titulo-login-topo{font-size:30px!important;}
-  .topo-sistema{padding:10px!important;}
-  .hc-brand-kicker{font-size:9px;}
-  .titulo-3d{font-size:17px!important;}
-  th,td{padding:7px 6px!important;}
-  .hc-backup-actions button{width:100%;}
-}
-
-/* =========================================================
-HARMONIA CARE — AJUSTE GLOBAL DE ESPAÇAMENTO DOS PAINÉIS
-========================================================= */
-
-/* área geral */
-#app{
-  padding:10px !important;
-}
-
-/* todos os painéis */
-#painelEnfermagem,
-#painelClinico,
-#painelMedicacao,
-#painelMedicacaoHora,
-#painelAdmin{
-  padding:8px !important;
-  margin:0 !important;
-}
-
-/* blocos internos principais */
-#painelEnfermagem > *,
-#painelClinico > *,
-#painelMedicacao > *,
-#painelMedicacaoHora > *,
-#painelAdmin > *{
-  margin-top:0 !important;
-  margin-bottom:10px !important;
-}
-
-/* cards e caixas */
-.card,
-.box,
-.card-medicacao,
-.turnos,
-.hc-backup-card,
-#painelEnfermagem > div,
-#painelClinico > div,
-#painelMedicacao > div,
-#painelMedicacaoHora > div,
-#painelAdmin > div{
-  margin-bottom:10px !important;
-  padding:12px !important;
-}
-
-/* títulos */
-h1,h2,h3,h4,h5,h6{
-  margin-top:0 !important;
-  margin-bottom:8px !important;
-}
-
-.hc-section-title{
-  margin:0 0 8px 0 !important;
-}
-
-/* campos e grupos de formulário */
-label{
-  margin-bottom:4px !important;
-}
-
-input,
-select,
-textarea{
-  margin-bottom:6px !important;
-}
-
-form,
-.form-group,
-.campo,
-.grupo,
-.linha,
-.row,
-.col{
-  margin-top:0 !important;
-  margin-bottom:8px !important;
-  gap:8px !important;
-}
-
-/* botões */
-button,
-.btn-topo,
-.btn-primary,
-.btn-secondary,
-.btn-success,
-.btn-danger{
-  margin-top:4px !important;
-  margin-bottom:4px !important;
-}
-
-/* barra superior de botões */
-#topoBotoes{
-  gap:8px !important;
-  padding:8px !important;
-  margin-bottom:10px !important;
-}
-
-/* tabelas */
-table{
-  margin-bottom:8px !important;
-}
-
-th,td{
-  padding:7px 8px !important;
-}
-
-/* turnos */
-.turnos{
-  gap:8px !important;
-  margin-bottom:10px !important;
-}
-
-#listaMedicacoes,
-.grid-medicacoes{
-  gap:10px !important;
-  margin-top:8px !important;
-  align-items:flex-start !important;
-  align-content:flex-start !important;
-}
-
-.card-medicacao{
-  margin-bottom:8px !important;
-}
-
-/* evita espaços gigantes em colunas/lados */
-#painelMedicacao *,
-#painelEnfermagem *,
-#painelClinico *,
-#painelMedicacaoHora *,
-#painelAdmin *{
-  align-content:flex-start !important;
-}
-
-/* se houver containers flex ou grid */
-.row,
-.linha,
-.grid,
-.grid-medicacoes{
-  justify-content:flex-start !important;
-  align-items:flex-start !important;
-}
-
-/* mobile */
-@media(max-width:768px){
-  #app{
-    padding:8px !important;
-  }
-
-  #painelEnfermagem,
-  #painelClinico,
-  #painelMedicacao,
-  #painelMedicacaoHora,
-  #painelAdmin{
-    padding:6px !important;
-  }
-
-  .card,
-  .box,
-  .card-medicacao,
-  .turnos,
-  .hc-backup-card{
-    padding:10px !important;
-    margin-bottom:8px !important;
-  }
-
-  #topoBotoes{
-    gap:6px !important;
-    padding:6px !important;
-  }
-}
-/* =========================================================
-AJUSTES BÁSICOS SOLICITADOS
-========================================================= */
-
-/* topo: KPIs ao lado do nome */
 .hc-top-right{
-  margin-left:auto;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-wrap:wrap;
+margin-left:auto;
+display:flex;
+align-items:center;
+gap:10px;
+flex-wrap:wrap;
 }
-
 .hc-top-kpis{
-  display:flex;
-  align-items:center;
-  gap:8px;
+display:flex;
+align-items:center;
+gap:8px;
 }
-
-.hc-top-kpis > *{
-  margin:0 !important;
+.hc-top-kpis>*{
+margin:0!important;
 }
-
-/* legenda + manhã/tarde/noite */
+.hc-user-chip{
+display:inline-flex;
+align-items:center;
+gap:7px;
+padding:7px 12px;
+border-radius:999px;
+background:#f0fdfa;
+color:var(--hc-primary-2);
+border:1px solid #ccfbf1;
+font-size:12px;
+font-weight:700;
+}
+#topoBotoes{
+display:flex!important;
+gap:8px!important;
+padding:8px!important;
+margin-bottom:10px!important;
+border:1px solid var(--hc-border);
+border-radius:16px;
+background:rgba(255,255,255,.90);
+box-shadow:var(--hc-shadow-sm);
+align-items:center;
+}
+button,.btn-topo,.btn-primary,.btn-secondary,.btn-success,.btn-danger{
+min-height:40px;
+margin-top:4px!important;
+margin-bottom:4px!important;
+border-radius:11px!important;
+box-shadow:none!important;
+font-weight:700!important;
+transition:transform .12s ease,box-shadow .12s ease,background .12s ease!important;
+}
+button:hover,.btn-topo:hover,.btn-primary:hover,.btn-secondary:hover,.btn-success:hover{
+transform:translateY(-1px);
+box-shadow:0 6px 16px rgba(15,23,42,.10)!important;
+}
+.btn-primary{
+background:#ecfeff!important;
+color:#0f766e!important;
+border:1px solid #99f6e4!important;
+}
+.btn-secondary{
+background:#eff6ff!important;
+color:#1d4ed8!important;
+border:1px solid #bfdbfe!important;
+}
+.btn-success{
+background:#f0fdf4!important;
+color:#15803d!important;
+border:1px solid #bbf7d0!important;
+}
+.btn-danger,.btn-sair{
+background:#fff1f2!important;
+color:#be123c!important;
+border:1px solid #fecdd3!important;
+box-shadow:none!important;
+}
+#topoBotoes button.ativo{
+background:linear-gradient(135deg,var(--hc-primary),#14b8a6)!important;
+color:#fff!important;
+border-color:transparent!important;
+}
+#btnBackup{
+background:#f5f3ff!important;
+color:#6d28d9!important;
+border:1px solid #ddd6fe!important;
+}
+#painelEnfermagem,#painelClinico,#painelMedicacao,#painelMedicacaoHora,#painelAdmin{
+padding:8px!important;
+margin:0!important;
+}
+#painelEnfermagem>*,#painelClinico>*,#painelMedicacao>*,#painelMedicacaoHora>*,#painelAdmin>*{
+margin-top:0!important;
+margin-bottom:10px!important;
+}
+.card,.box,.card-medicacao,.turnos,.hc-backup-card,#painelEnfermagem>div,#painelClinico>div,#painelMedicacao>div,#painelMedicacaoHora>div,#painelAdmin>div{
+margin-bottom:10px!important;
+padding:12px!important;
+border-color:var(--hc-border)!important;
+}
+.card,.box{
+border-radius:var(--hc-radius)!important;
+box-shadow:var(--hc-shadow-sm)!important;
+}
+h1,h2,h3,h4,h5,h6{
+margin-top:0!important;
+margin-bottom:8px!important;
+}
+.hc-section-title{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+margin:0 0 8px!important;
+}
+.hc-section-title h2{
+margin:0;
+font-size:18px;
+color:var(--hc-ink);
+}
+.hc-section-title span{
+color:var(--hc-muted);
+font-size:12px;
+}
+label{
+margin-bottom:4px!important;
+}
+input,select,textarea{
+margin-bottom:6px!important;
+border-color:var(--hc-border)!important;
+border-radius:10px!important;
+}
+select:focus,input:focus,textarea:focus{
+outline:none!important;
+border-color:#5eead4!important;
+box-shadow:0 0 0 3px rgba(20,184,166,.12)!important;
+}
+form,.form-group,.campo,.grupo,.linha,.row,.col{
+margin-top:0!important;
+margin-bottom:8px!important;
+gap:8px!important;
+}
+table{
+margin-bottom:8px!important;
+overflow:hidden;
+border-radius:12px;
+background:#fff;
+}
+thead th,th{
+background:#f8fafc;
+color:#334155;
+font-weight:800!important;
+}
+th,td{
+padding:7px 8px!important;
+border-bottom:1px solid #edf2f7!important;
+vertical-align:middle;
+}
+tr:hover td{
+background:#fbfdff;
+}
+.turnos{
+gap:8px!important;
+margin-bottom:10px!important;
+border-radius:14px;
+background:#fff;
+border:1px solid var(--hc-border);
+box-shadow:var(--hc-shadow-sm);
+}
+.turno-btn{
+opacity:1!important;
+background:#f1f5f9!important;
+color:#475569!important;
+border:1px solid #e2e8f0!important;
+}
+.turno-ativo{
+background:linear-gradient(135deg,var(--hc-primary),#14b8a6)!important;
+color:#fff!important;
+border-color:transparent!important;
+}
 .hc-legenda-turnos{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:16px;
-  width:100%;
-  margin:8px 0 10px 0;
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap:16px;
+width:100%;
+margin:8px 0 10px;
 }
-
 .hc-legenda-turnos .turnos{
-  margin:0 !important;
-  margin-left:auto !important;
-  flex-shrink:0;
+margin:0 0 0 auto!important;
+display:flex!important;
+gap:8px!important;
+flex-shrink:0;
 }
-
-.hc-legenda-turnos .turnos button,
-.hc-legenda-turnos .turno-btn{
-  min-width:72px;
+.hc-legenda-turnos .turnos button,.hc-legenda-turnos .turno-btn{
+min-width:72px;
 }
-
-/* progresso com tique ao lado */
+#listaMedicacoes,.grid-medicacoes{
+gap:10px!important;
+margin-top:8px!important;
+align-items:flex-start!important;
+align-content:flex-start!important;
+}
+.card-medicacao{
+margin-bottom:8px!important;
+border:1px solid var(--hc-border)!important;
+border-radius:16px!important;
+box-shadow:var(--hc-shadow-sm)!important;
+padding:12px!important;
+}
+.badge-rotina{
+border-radius:999px!important;
+padding:6px 10px!important;
+}
 .hc-progresso-inline{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  font-weight:700;
-  font-size:inherit;
+display:inline-flex;
+align-items:center;
+gap:6px;
+font-weight:700;
 }
-
 .hc-progresso-texto{
-  font-weight:700;
-  font-size:inherit;
+font-weight:700;
+white-space:nowrap;
 }
-
 .hc-progresso-check{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:28px;
-  height:28px;
-  border-radius:999px;
-  background:#22c55e;
-  color:#fff;
-  font-weight:900;
-  font-size:16px;
-  line-height:1;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+width:20px;
+height:20px;
+border-radius:50%;
+background:#22c55e;
+color:#fff;
+font-size:12px;
+font-weight:900;
+line-height:1;
 }
-
-/* mobile */
+#statusSync{
+background:#0f172a!important;
+border:1px solid rgba(255,255,255,.16);
+}
+.hc-backup-card{
+margin:14px 0;
+padding:16px!important;
+border:1px solid #c7d2fe;
+border-radius:18px;
+background:linear-gradient(135deg,#eef2ff,#faf5ff);
+box-shadow:var(--hc-shadow-sm);
+}
+.hc-backup-card h3{
+margin:0 0 4px;
+color:#4338ca;
+}
+.hc-backup-card p{
+margin:0 0 12px;
+color:#64748b;
+font-size:13px;
+}
+.hc-backup-actions{
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+.hc-btn-restore{
+background:#fff!important;
+color:#4338ca!important;
+border:1px solid #c7d2fe!important;
+}
+.hc-progress-modal{
+position:fixed;
+inset:0;
+z-index:99999;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+background:rgba(15,23,42,.50);
+backdrop-filter:blur(4px);
+}
+.hc-progress-box{
+width:min(460px,94vw);
+padding:22px;
+border-radius:18px;
+background:#fff;
+box-shadow:0 30px 80px rgba(0,0,0,.30);
+}
+.hc-progress-box h3{
+margin:0 0 8px;
+}
+.hc-progress-track{
+height:10px;
+border-radius:999px;
+background:#e2e8f0;
+overflow:hidden;
+}
+.hc-progress-fill{
+height:100%;
+width:0;
+background:linear-gradient(90deg,var(--hc-primary),#22c55e);
+transition:width .2s ease;
+}
+.hc-progress-text{
+margin-top:8px;
+font-size:12px;
+color:#64748b;
+}
+#painelMedicacao *,#painelEnfermagem *,#painelClinico *,#painelMedicacaoHora *,#painelAdmin *{
+align-content:flex-start!important;
+}
+.row,.linha,.grid,.grid-medicacoes{
+justify-content:flex-start!important;
+align-items:flex-start!important;
+}
+@media(max-width:900px){
+#app{padding:8px!important;}
+.topo-sistema{top:4px!important;border-radius:14px!important;}
+.titulo-3d{font-size:18px!important;}
+.hc-user-chip{width:100%;margin:4px 0 0;}
+#topoBotoes{overflow-x:auto;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch;}
+#topoBotoes button{flex:0 0 auto;white-space:nowrap!important;}
+.card,.box{padding:12px!important;}
+table{font-size:12px;}
+}
 @media(max-width:768px){
-  .hc-top-right{
-    width:100%;
-    justify-content:flex-start;
-  }
-
-  .hc-legenda-turnos{
-    flex-direction:column;
-    align-items:flex-start;
-  }
-
-  .hc-legenda-turnos .turnos{
-    margin-left:0 !important;
-  }
+#app{padding:8px!important;}
+#painelEnfermagem,#painelClinico,#painelMedicacao,#painelMedicacaoHora,#painelAdmin{padding:6px!important;}
+.card,.box,.card-medicacao,.turnos,.hc-backup-card{padding:10px!important;margin-bottom:8px!important;}
+#topoBotoes{gap:6px!important;padding:6px!important;}
+.hc-top-right{width:100%;justify-content:flex-start;}
+.hc-legenda-turnos{flex-direction:column;align-items:flex-start;}
+.hc-legenda-turnos .turnos{margin-left:0!important;}
+}
+@media(max-width:600px){
+#login{padding:14px!important;}
+.login-box,.login-card{padding:28px 20px!important;}
+.titulo-login-topo{font-size:30px!important;}
+.topo-sistema{padding:10px!important;}
+.hc-brand-kicker{font-size:9px;}
+.titulo-3d{font-size:17px!important;}
+th,td{padding:7px 6px!important;}
+.hc-backup-actions button{width:100%;}
 }
