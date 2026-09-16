@@ -82,3 +82,134 @@
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar); else iniciar();
 })();
+/* =========================================================
+AJUSTES BÁSICOS DE LAYOUT
+1. Move os indicadores 141 / 0 / 0 para o topo, ao lado do usuário
+2. Move manhã / tarde / noite para a direita da legenda
+3. Coloca o tique verde ao lado do 100% (3/3)
+========================================================= */
+
+function aplicarAjustesBasicosHarmonia(){
+  moverIndicadoresParaTopo();
+  moverTurnosParaDireitaDaLegenda();
+  alinharTiqueComProgresso();
+}
+
+function moverIndicadoresParaTopo(){
+  const topo = document.querySelector(".topo-sistema");
+  const chip = document.querySelector(".hc-user-chip");
+  const sair = document.querySelector(".btn-sair, #btnSair, button[onclick*='logout']");
+  if(!topo || !chip) return;
+
+  if(document.getElementById("hcTopKpis")) return;
+
+  let kpis = null;
+
+  const possiveisContainers = [
+    "#cardsResumo",
+    ".cards-resumo",
+    ".resumo-cards",
+    ".kpi-container",
+    ".status-cards"
+  ];
+
+  for(const sel of possiveisContainers){
+    const el = document.querySelector(sel);
+    if(el && el.children.length >= 3){
+      kpis = el;
+      break;
+    }
+  }
+
+  if(!kpis){
+    const blocos = [...document.querySelectorAll("#app > div, #app > section")]
+      .find(el => {
+        const textos = el.innerText || "";
+        return textos.includes("141") && textos.includes("0");
+      });
+    if(blocos) kpis = blocos;
+  }
+
+  if(!kpis) return;
+
+  const itens = [...kpis.children].slice(0,3);
+  if(!itens.length) return;
+
+  const wrap = document.createElement("div");
+  wrap.id = "hcTopKpis";
+  wrap.className = "hc-top-kpis";
+
+  itens.forEach(item => wrap.appendChild(item));
+
+  const right = document.createElement("div");
+  right.className = "hc-top-right";
+
+  right.appendChild(wrap);
+  right.appendChild(chip);
+
+  if(sair) right.appendChild(sair);
+
+  topo.appendChild(right);
+}
+
+function moverTurnosParaDireitaDaLegenda(){
+  if(document.getElementById("hcLegendaTurnos")) return;
+
+  const turnos = document.querySelector(".turnos");
+  if(!turnos) return;
+
+  const candidatos = [...document.querySelectorAll("#painelEnfermagem div, #painelEnfermagem p, #painelEnfermagem small")];
+  const legenda = candidatos.find(el => (el.textContent || "").includes("Legenda:"));
+  if(!legenda) return;
+
+  const wrap = document.createElement("div");
+  wrap.id = "hcLegendaTurnos";
+  wrap.className = "hc-legenda-turnos";
+
+  legenda.parentNode.insertBefore(wrap, legenda);
+  wrap.appendChild(legenda);
+  wrap.appendChild(turnos);
+}
+
+function alinharTiqueComProgresso(){
+  const tabelas = [...document.querySelectorAll("table")];
+  const tabela = tabelas.find(t => (t.innerText || "").includes("Progresso") && (t.innerText || "").includes("Rotinas"));
+  if(!tabela) return;
+
+  const linhas = tabela.querySelectorAll("tbody tr");
+  linhas.forEach(tr => {
+    const tds = tr.querySelectorAll("td");
+    if(tds.length < 2) return;
+
+    const tdProgresso = tds[1];
+    if(tdProgresso.querySelector(".hc-progresso-inline")) return;
+
+    const texto = [...tdProgresso.querySelectorAll("*")]
+      .find(el => (el.textContent || "").includes("%"));
+
+    const check = [...tdProgresso.querySelectorAll("*")]
+      .find(el => {
+        const tx = (el.textContent || "").trim();
+        return tx === "✓" || tx === "✔" || tx === "✅";
+      });
+
+    if(!texto || !check) return;
+
+    const wrap = document.createElement("div");
+    wrap.className = "hc-progresso-inline";
+
+    const txt = document.createElement("span");
+    txt.className = "hc-progresso-texto";
+    txt.textContent = texto.textContent.trim();
+
+    const ok = document.createElement("span");
+    ok.className = "hc-progresso-check";
+    ok.textContent = "✓";
+
+    wrap.appendChild(txt);
+    wrap.appendChild(ok);
+
+    tdProgresso.innerHTML = "";
+    tdProgresso.appendChild(wrap);
+  });
+}
