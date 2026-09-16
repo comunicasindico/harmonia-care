@@ -4,14 +4,22 @@ async function abrirPainelMedicacao(){await carregarPacientesMedicacao();await c
 function obterCorUsuario(nome){
 if(!nome)return"#e5e7eb"
 const cores=[
-"#fde68a", // amarelo
-"#fca5a5", // vermelho claro
-"#93c5fd", // azul claro
-"#86efac", // verde claro
-"#c4b5fd", // roxo claro
-"#f9a8d4", // rosa claro
-"#67e8f9", // ciano
-"#fdba74"  // laranja claro
+"#fde68a",
+"#fca5a5",
+"#93c5fd",
+"#86efac",
+"#c4b5fd",
+"#f9a8d4",
+"#67e8f9",
+"#fdba74",
+"#a7f3d0",
+"#fcd34d",
+"#bfdbfe",
+"#ddd6fe",
+"#fecaca",
+"#bbf7d0",
+"#fbcfe8",
+"#bae6fd"
 ]
 let hash=0
 for(let i=0;i<nome.length;i++){
