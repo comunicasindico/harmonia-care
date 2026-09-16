@@ -78,19 +78,13 @@
   marcarAtivo();
 
   const menu=document.getElementById('topoBotoes');
-  if(menu)menu.addEventListener('click',()=>setTimeout(marcarAtivo,80));
 
-  // novos ajustes de layout
-  setTimeout(aplicarAjustesBasicosHarmonia,300);
-  setTimeout(aplicarAjustesBasicosHarmonia,1200);
+  if(menu){
+    menu.addEventListener('click',()=>{
+      setTimeout(marcarAtivo,80);
+    });
+  }
 }
-
-if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',iniciar);
-}else{
-  iniciar();
-}
-})();
 /* =========================================================
 AJUSTES BÁSICOS DE LAYOUT
 1. Move os indicadores 141 / 0 / 0 para o topo, ao lado do usuário
@@ -220,5 +214,68 @@ function alinharTiqueComProgresso(){
 
     tdProgresso.innerHTML = "";
     tdProgresso.appendChild(wrap);
+  });
+}
+/* =========================================================
+MANTÉM OS AJUSTES MESMO QUANDO OS PAINÉIS SÃO REDESENHADOS
+========================================================= */
+
+let hcAjustandoLayout = false;
+let hcTimerLayout = null;
+
+function manterAjustesHarmonia(){
+  if(hcAjustandoLayout) return;
+
+  clearTimeout(hcTimerLayout);
+
+  hcTimerLayout = setTimeout(()=>{
+    hcAjustandoLayout = true;
+
+    try{
+      aplicarAjustesBasicosHarmonia();
+    }catch(e){
+      console.error("Erro nos ajustes Harmonia:",e);
+    }
+
+    requestAnimationFrame(()=>{
+      hcAjustandoLayout = false;
+    });
+  },80);
+}
+
+/* primeira aplicação */
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", manterAjustesHarmonia, {once:true});
+}else{
+  manterAjustesHarmonia();
+}
+
+/* reaplica somente quando os painéis realmente mudarem */
+const hcApp = document.getElementById("app");
+
+if(hcApp){
+  const hcObserver = new MutationObserver((mutacoes)=>{
+    const houveMudanca = mutacoes.some(m =>
+      m.type === "childList" &&
+      (m.addedNodes.length > 0 || m.removedNodes.length > 0)
+    );
+
+    if(houveMudanca){
+      manterAjustesHarmonia();
+    }
+  });
+
+  hcObserver.observe(hcApp,{
+    childList:true,
+    subtree:true
+  });
+}
+
+/* também reaplica ao trocar de painel */
+const hcMenu = document.getElementById("topoBotoes");
+
+if(hcMenu){
+  hcMenu.addEventListener("click",()=>{
+    setTimeout(manterAjustesHarmonia,150);
   });
 }
