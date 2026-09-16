@@ -520,3 +520,41 @@ th,td{padding:7px 6px!important;}
 .badge-rotina{font-weight:800!important;}
 .rotina-ok-manha,.rotina-ok-tarde,.rotina-ok-noite{color:#fff!important;}
 #rotinas td:first-child{color:#0f172a!important;font-weight:800!important;}
+.badge-rotina{
+display:flex!important;
+align-items:center!important;
+justify-content:center!important;
+gap:6px!important;
+min-height:52px!important;
+padding:8px 12px!important;
+font-weight:800!important;
+font-size:13px!important;
+line-height:1.2!important;
+text-align:left!important;
+}
+.badge-rotina span{
+font-size:13px!important;
+font-weight:900!important;
+line-height:1.15!important;
+}
+.rotina-ok-manha,.rotina-ok-tarde,.rotina-ok-noite{
+color:#fff!important;
+}
+.rotina-ok-manha span,.rotina-ok-tarde span,.rotina-ok-noite span{
+color:#fff!important;
+text-shadow:0 1px 2px rgba(0,0,0,.55)!important;
+}
+.rotina-automatica{
+background:#facc15!important;
+color:#111827!important;
+border:1px solid #eab308!important;
+font-weight:900!important;
+}
+.rotina-automatica span{
+color:#111827!important;
+text-shadow:none!important;
+}
+.nome-profissional{
+font-weight:900!important;
+white-space:normal!important;
+}
