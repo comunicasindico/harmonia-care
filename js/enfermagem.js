@@ -150,6 +150,12 @@ renderizarRotinas(lista)
 renderizarBotoesRotinas()
 calcularIndicadores(lista)
 }
+function nomeRotinaCompacto(nome){
+return String(nome||"")
+.replace(/\(manhã\)/gi,"(M)")
+.replace(/\(tarde\)/gi,"(T)")
+.replace(/\(noite\)/gi,"(N)")
+}
 /* ====================================================024 – RENDERIZAR==================================================== */
 function renderizarRotinas(lista){
 const t=document.getElementById("rotinas");if(!t)return
@@ -198,7 +204,7 @@ prof=` <span class="nome-profissional manual">✔ ${nomeProf}</span>`
 }
 linha+=`<div style="display:flex;justify-content:center">
 <div class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">
-${r.rotina}${prof}
+${nomeRotinaCompacto(r.rotina)}${prof}
 </div>
 </div>`
 }
@@ -323,7 +329,7 @@ let nome=lista.find(r=>r.rotina_id==rid&&r.turno===turno)?.rotina||""
 html+=`<div style="display:flex;justify-content:center">
 <button onclick="executarRotinaTodosPaciente()"
 style="background:${cor};color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer">
-✔ ${nome}
+✔ ${nomeRotinaCompacto(nome)}
 </button>
 </div>`
 }
