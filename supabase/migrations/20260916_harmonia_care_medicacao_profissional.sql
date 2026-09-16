@@ -1,4 +1,5 @@
 -- Harmonia Care 2026 - migração aditiva e não destrutiva
+-- Banco usado pelo app: whvwqektkinnhdprehss (harmonia-db)
 -- Classificação regulatória e duração terapêutica são conceitos separados.
 
 alter table if exists public.medicacoes
@@ -22,8 +23,22 @@ alter table if exists public.medicacoes_modelo
   add column if not exists classificacao_medicamento text default 'comum',
   add column if not exists duracao_tipo text default 'continuo',
   add column if not exists via_administracao text,
-  add column if not exists frequencia text,
   add column if not exists observacoes text;
+
+-- Permite nutricionista sem excluir perfis existentes.
+alter table public.usuarios drop constraint if exists usuarios_perfil_check;
+alter table public.usuarios add constraint usuarios_perfil_check
+  check (perfil = any (array[
+    'proprietario','administrador','enfermeiro','cuidador','medico',
+    'fisioterapeuta','estagiario','cozinha','nutricionista'
+  ]::text[])) not valid;
+
+-- Disponibiliza o cargo no cadastro administrativo, sem duplicar.
+insert into public.cargos_hospitalares (nome,hierarquia)
+select 'Nutricionista',5
+where not exists (
+  select 1 from public.cargos_hospitalares where lower(nome)=lower('Nutricionista')
+);
 
 -- Valores aceitos sem bloquear cadastros antigos.
 do $$
@@ -49,6 +64,9 @@ create index if not exists idx_medicacoes_paciente_status_periodo
 
 create index if not exists idx_pacientes_profissionais_usuario_ativo
   on public.pacientes_profissionais (usuario_id, ativo);
+
+-- O banco já possui índice único pacientes_profissionais_unique
+-- em (usuario_id, paciente_id, turno), compatível com o upsert atual do app.
 
 comment on column public.medicacoes.classificacao_medicamento is 'Classificação: comum, controlado ou controle_especial';
 comment on column public.medicacoes.duracao_tipo is 'Duração terapêutica: continuo ou temporario';
