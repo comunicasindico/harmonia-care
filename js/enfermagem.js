@@ -4,6 +4,43 @@ async function abrirPainelMedicacao(){await carregarPacientesMedicacao();await c
 function obterCorUsuario(nome){if(!nome)return"#64748b";let hash=0;for(let i=0;i<nome.length;i++){hash=nome.charCodeAt(i)+((hash<<5)-hash)}let cor="#";for(let i=0;i<3;i++){let value=(hash>>(i*8))&255;cor+=("00"+value.toString(16)).slice(-2)}return cor}
 /* ====================================================020A – USUARIO LOGADO==================================================== */
 function obterUsuarioLogado(){let id=localStorage.getItem("usuario_id");let nome=localStorage.getItem("usuario_nome");let hierarquia=localStorage.getItem("usuario_hierarquia");let perfil=(localStorage.getItem("usuario_perfil")||"admin").toLowerCase();if(!nome||nome==="null"||nome==="")nome="Administrador";if(!hierarquia||hierarquia==="null"){hierarquia="1";localStorage.setItem("usuario_hierarquia","1")}return{id:id||null,nome:nome,hierarquia:Number(hierarquia),perfil:perfil}}
+/* ====================================================020B – FINALIZAÇÃO AUTOMÁTICA APÓS 2 DIAS==================================================== */
+async function autoFinalizarPendentesApos2Dias(){
+if(!db||!EMPRESA_ID)return
+if(window.__HC_AUTO_FINALIZANDO__)return
+window.__HC_AUTO_FINALIZANDO__=true
+try{
+const hoje=new Date()
+hoje.setHours(0,0,0,0)
+const limite=new Date(hoje)
+limite.setDate(limite.getDate()-2)
+const ano=limite.getFullYear()
+const mes=String(limite.getMonth()+1).padStart(2,"0")
+const dia=String(limite.getDate()).padStart(2,"0")
+const dataLimite=`${ano}-${mes}-${dia}`
+const{data:pendentes,error}=await db.from("rotinas_execucao").select("id,paciente_id,rotina_id,data,turno,status").eq("empresa_id",EMPRESA_ID).eq("status","pendente").lte("data",dataLimite)
+if(error){
+console.error("Erro ao localizar pendências antigas:",error)
+return
+}
+if(!pendentes||!pendentes.length)return
+const ids=pendentes.map(r=>r.id).filter(Boolean)
+if(!ids.length)return
+const{error:updateError}=await db.from("rotinas_execucao").update({
+status:"automatico",
+profissional_nome:"Automático"
+}).in("id",ids)
+if(updateError){
+console.error("Erro na finalização automática:",updateError)
+return
+}
+console.log(`Finalização automática: ${ids.length} pendência(s) regularizada(s).`)
+}catch(e){
+console.error("Erro em autoFinalizarPendentesApos2Dias:",e)
+}finally{
+window.__HC_AUTO_FINALIZANDO__=false
+}
+}
 /* ====================================================020C – DATA==================================================== */
 window.obterDataSelecionada=function(){const d=document.getElementById("dataInicio")?.value;if(d&&d.includes("/")){const[a,b,c]=d.split("/");return`${c}-${b.padStart(2,"0")}-${a.padStart(2,"0")}`}return d||new Date().toISOString().slice(0,10)}
 /* ====================================================021B – TURNO==================================================== */
@@ -44,6 +81,7 @@ console.error("Erro geral pacientes:",e)
 /* ====================================================023 – CARREGAR ROTINAS==================================================== */
 async function carregarRotinas(){
 if(!db||!EMPRESA_ID)return
+await autoFinalizarPendentesApos2Dias()
 const turno=(TURNO_ATUAL||"manha").toLowerCase()
 const dataHoje=obterDataSelecionada()
 let usuarioId=localStorage.getItem("usuario_id")
@@ -102,8 +140,8 @@ rotina_id:r.id,
 paciente:p.nome_completo,
 rotina:r.nome,
 turno:r.turno||turno,
-status:e&&e.status==="executado"?"executado":"pendente",
-profissional_nome:e?e.profissional_nome||"":""
+status:e?(e.status||"pendente"):"pendente",
+profissional_nome:e?(e.profissional_nome||""):""
 })
 }
 }
@@ -126,7 +164,7 @@ return na.localeCompare(nb,"pt-BR")
 pacientesOrdenados.forEach(pid=>{
 const p=map[pid]
 let total=p.rotinas.length
-let executadas=p.rotinas.filter(r=>(r.status||"")==="executado").length
+let executadas=p.rotinas.filter(r=>["executado","automatico"].includes(r.status||"")).length
 let colunas={}
 p.rotinas.forEach(r=>{colunas[r.rotina_id]=r})
 let baseOrdem=[]
@@ -144,15 +182,20 @@ let r=colunas[rid]
 if(!r){linha+=`<div></div>`;continue;}
 let turno=(r.turno||"").toLowerCase()
 let classe="rotina-pendente"
-if(r.status==="executado"){
+if(r.status==="automatico"){
+classe="rotina-automatica"
+}else if(r.status==="executado"){
 if(turno==="manha")classe="rotina-ok-manha"
 else if(turno==="tarde")classe="rotina-ok-tarde"
 else if(turno==="noite")classe="rotina-ok-noite"
 }
 let nomeProf=r.profissional_nome||""
-let corProf="#64748b"
-if(r.status==="executado"&&nomeProf)corProf=obterCorUsuario(nomeProf)
-let prof=r.status==="executado"&&nomeProf?` <span style="color:${corProf};font-weight:bold">✔ ${nomeProf}</span>`:""
+let prof=""
+if(r.status==="automatico"){
+prof=` <span class="nome-profissional automatico">● Automático</span>`
+}else if(r.status==="executado"&&nomeProf){
+prof=` <span class="nome-profissional manual">✔ ${nomeProf}</span>`
+}
 linha+=`<div style="display:flex;justify-content:center">
 <div class="badge-rotina ${classe}" data-paciente="${r.paciente_id}" data-rotina="${r.rotina_id}">
 ${r.rotina}${prof}
@@ -181,7 +224,9 @@ document.querySelectorAll(".badge-rotina").forEach(el=>{
 el.onclick=function(){
 const p=this.dataset.paciente
 const r=this.dataset.rotina
+const automatico=this.classList.contains("rotina-automatica")
 const executado=this.classList.contains("rotina-ok-manha")||this.classList.contains("rotina-ok-tarde")||this.classList.contains("rotina-ok-noite")
+if(automatico)return
 if(executado){desfazerRotina(p,r)}else{executarRotina(p,r,this)}
 }
 })
@@ -290,7 +335,7 @@ function calcularIndicadores(lista){
 let e=0,p=0
 for(let i=0;i<lista.length;i++){
 let r=lista[i]
-if(r.status==="executado")e++
+if(r.status==="executado"||r.status==="automatico")e++
 else p++
 }
 const elE=document.getElementById("indicadorExecutado")
@@ -660,10 +705,12 @@ return e.data===dia && normalizar(e.rotina_modelos?.nome||"")===nomeNorm
 if(registros.length===0){
 matriz[dia][nomeNorm]="neutro"
 }else{
-const temExecutado = registros.some(r=>r.status==="executado")
-
+const temExecutado=registros.some(r=>r.status==="executado")
+const temAutomatico=registros.some(r=>r.status==="automatico")
 if(temExecutado){
 matriz[dia][nomeNorm]="executado"
+}else if(temAutomatico){
+matriz[dia][nomeNorm]="automatico"
 }else{
 matriz[dia][nomeNorm]="pendente"
 }
@@ -693,6 +740,8 @@ const status=matriz[dia][normalizar(nome)]
 let celula=""
 if(status==="executado"){
 celula=`<span style="color:#27ae60;font-weight:bold">✔</span>`
+}else if(status==="automatico"){
+celula=`<span style="display:inline-flex;align-items:center;justify-content:center;background:#facc15;color:#111827;font-weight:900;border-radius:5px;padding:2px 5px">A</span>`
 }else if(status==="pendente"){
 celula=`<span style="color:#e74c3c;font-weight:bold">✖</span>`
 }else{
@@ -825,6 +874,15 @@ if(p.dm)texto+=" | Controle glicêmico"
 if(p.has||p.cardiopatia)texto+=" | Monitorar PA"
 return texto
 }
+/* ====================================================098 – VERIFICAÇÃO AUTOMÁTICA PERIÓDICA==================================================== */
+window.addEventListener("load",()=>{
+setTimeout(async()=>{
+await autoFinalizarPendentesApos2Dias()
+},3000)
+setInterval(async()=>{
+await autoFinalizarPendentesApos2Dias()
+},3600000)
+})
 /* ====================================================999 – EXPORT==================================================== */
 window.executarRotina=executarRotina
 window.executarTodos=executarTodos
