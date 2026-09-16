@@ -13,7 +13,17 @@
     b.textContent="Entrar";
   }
 
+  function carregarHarmonia2026(){
+    if(document.querySelector('script[data-hc2026]'))return;
+    const s=document.createElement('script');
+    s.src='js/harmonia-2026.js?cache=20260916c';
+    s.defer=true;
+    s.dataset.hc2026='1';
+    document.head.appendChild(s);
+  }
+
   document.addEventListener("DOMContentLoaded",()=>{
+    carregarHarmonia2026();
     const b=document.getElementById("btnEntrar");
     if(!b)return;
     b.addEventListener("click",()=>{
