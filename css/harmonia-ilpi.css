@@ -462,7 +462,6 @@ HARMONIA CARE — AJUSTE GLOBAL DE ESPAÇAMENTO DOS PAINÉIS
 #painelAdmin{
   padding:8px !important;
   margin:0 !important;
-  display:block !important;
 }
 
 /* blocos internos principais */
@@ -554,11 +553,6 @@ th,td{
 .turnos{
   gap:8px !important;
   margin-bottom:10px !important;
-}
-
-/* medicação */
-#painelMedicacao{
-  display:block !important;
 }
 
 #listaMedicacoes,
