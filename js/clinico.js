@@ -70,7 +70,7 @@ let dietaHTML=window.MODO_EDICAO_CLINICO
 ?renderSelectDieta(key)
 :formatarDieta(p)
 html+=`<tr data-id="${p?.id||""}">
-<td>${p?.nome_apelido||p?.nome_completo||""}</td>
+<td><div class="clin-paciente"><strong class="clin-nome"></strong></div></td>
 <td>${calcularIdade(p?.data_nascimento)||""}</td>
 <td>${p?.has?"✔":""}</td>
 <td>${p?.dm?"✔":""}</td>
@@ -84,7 +84,21 @@ html+=`<tr data-id="${p?.id||""}">
 </tr>`
 }
 tabela.innerHTML=html
-if(window.HarmoniaNutricao?.allowed())tabela.querySelectorAll('tr[data-id]').forEach(tr=>{const b=document.createElement('button');b.type='button';b.textContent='Nutrição / evolução';b.style.cssText='display:block;margin-top:6px;font-size:11px;background:#e0f2ed;color:#087f78';b.onclick=()=>{window.HarmoniaNutricao.target=tr.dataset.id;abrirPainel('painelNutricao');};tr.children[0].appendChild(b);});
+const pacientesPorId=new Map((data||[]).map(p=>[String(p.id),p]));
+tabela.querySelectorAll('tr[data-id]').forEach(tr=>{
+const p=pacientesPorId.get(tr.dataset.id);
+const nome=p?.nome_apelido||p?.nome_completo||"";
+tr.querySelector('.clin-nome').textContent=nome;
+if(!window.HarmoniaNutricao?.allowed())return;
+const b=document.createElement('button');
+b.type='button';
+b.className='clin-nutricao';
+b.textContent='Nutrição ↗';
+b.title='Nutrição e evolução do paciente';
+b.setAttribute('aria-label','Abrir nutrição e evolução de '+nome);
+b.onclick=()=>{window.HarmoniaNutricao.target=tr.dataset.id;abrirPainel('painelNutricao');};
+tr.querySelector('.clin-paciente').appendChild(b);
+});
 atualizarIndicadoresDieta(dietaLivre,hipossodica,diabetica,pastosa,vegetariana,liquida)
 ativarEventosClinico()
 }
@@ -155,7 +169,7 @@ vegetariana:{nome:"Vegetariana",icone:"🥗",cor:"#eafaf1"}
 }
 let key=getDietaKey(p.dieta_texto)
 let d=DIETAS[key]
-return`<span style="padding:3px 8px;border-radius:6px;font-size:11px;background:${d.cor};font-weight:bold">${d.icone} ${d.nome}</span>`
+return`<span class="clin-dieta-chip" style="background:${d.cor}">${d.icone} ${d.nome}</span>`
 }
 
 /* ====================================================
@@ -361,6 +375,5 @@ if(!confirmar)return
 await db.from("pacientes").update({ativo:false}).eq("id",id).eq("empresa_id",EMPRESA_ID)
 await carregarClinico()
 }
-
 
 

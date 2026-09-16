@@ -1,0 +1,109 @@
+/* Quadro clínico compacto: uma linha por paciente, sem cortar informações. */
+#painelClinico .clin-tabela-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#painelClinico .clin-tabela-scroll:focus-visible {
+  outline: 2px solid #087f78;
+  outline-offset: 2px;
+}
+#app #tabelaClinica {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+#app #tabelaClinica th,
+#app #tabelaClinica td {
+  padding: 5px 6px !important;
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  vertical-align: middle;
+}
+#app #tabelaClinica th {
+  padding-top: 9px !important;
+  padding-bottom: 9px !important;
+  font-size: 10px !important;
+  letter-spacing: .15px;
+}
+#app #tabelaClinica th:first-child,
+#app #tabelaClinica td:first-child {
+  width: 1%;
+  text-align: left;
+}
+#app #tabelaClinica th:nth-child(n+2):nth-child(-n+10),
+#app #tabelaClinica td:nth-child(n+2):nth-child(-n+10) {
+  width: 1%;
+  text-align: center;
+}
+#app #tabelaClinica th:nth-child(11),
+#app #tabelaClinica td:nth-child(11) {
+  text-align: left;
+  font-size: 11px !important;
+}
+#app #tabelaClinica tbody tr:nth-child(even) td {
+  background: #f7faf9;
+}
+#app #tabelaClinica tbody tr:hover td {
+  background: #edf7f4;
+}
+#app #tabelaClinica .clin-paciente {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+#app #tabelaClinica .clin-nome {
+  font-weight: 800;
+  color: #173e43;
+  white-space: nowrap;
+}
+#app #tabelaClinica .clin-nutricao {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-height: 26px;
+  padding: 3px 6px !important;
+  margin: 0 !important;
+  border: 1px solid #c4e6dd;
+  border-radius: 5px !important;
+  background: #e0f2ed;
+  color: #087f78;
+  font-size: 10px !important;
+  line-height: 1.2;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+}
+#app #tabelaClinica .clin-nutricao:focus-visible {
+  outline: 2px solid #087f78;
+  outline-offset: 2px;
+}
+#app #tabelaClinica .clin-dieta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 5px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+#app #tabelaClinica input,
+#app #tabelaClinica select {
+  width: auto;
+  min-width: 0;
+  min-height: 26px;
+  padding: 3px 4px !important;
+  margin: 0 !important;
+  border-radius: 5px !important;
+  font-size: 11px;
+  line-height: 1.2;
+}
+@media (max-width: 700px) {
+  #app #tabelaClinica th,
+  #app #tabelaClinica td { padding-left: 4px !important; padding-right: 4px !important; }
+}
