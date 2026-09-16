@@ -10,6 +10,7 @@ begin
  insert into harmonia_nutri_private.sessions values(encode(sha256(convert_to(tok,'UTF8')),'hex'),uid,now()+interval '1 minute'),(encode(sha256(convert_to(ctok,'UTF8')),'hex'),cid,now()+interval '1 minute');
  bad:=false;begin perform public.nutricao_api('list','invalid','{}');exception when insufficient_privilege then bad:=true;end;if not bad then raise exception 'Token inválido aceito';end if;
  bad:=false;begin perform public.nutricao_api('list',ctok,'{}');exception when insufficient_privilege then bad:=true;end;if not bad then raise exception 'Cuidador acessou nutrição';end if;
+ if jsonb_typeof(public.nutricao_api('patients',tok,'{}'))<>'array' then raise exception 'Falha ao listar pacientes';end if;
  if has_table_privilege('anon','public.nutricao_avaliacoes','SELECT') or has_table_privilege('authenticated','public.nutricao_avaliacoes','UPDATE') then raise exception 'Tabela com acesso direto';end if;
  select count(*) into original_count from public.nutricao_avaliacoes;
  r:=public.nutricao_api('save',tok,jsonb_build_object('paciente_id',pid,'data_avaliacao',current_date,'profissional_nome','TESTE TRANSACIONAL','peso_kg',64,'altura_cm',160,'cp_cm',32,'cb_cm',26,'ficha',jsonb_build_object('orientacoes','Teste que será revertido'),'medidas_extras','[]'::jsonb));
