@@ -106,6 +106,10 @@ border:1px solid rgba(219,228,236,.92)!important;
 border-radius:18px!important;
 background:rgba(255,255,255,.96)!important;
 box-shadow:var(--hc-shadow)!important;
+display:flex!important;
+align-items:center!important;
+gap:12px!important;
+flex-wrap:wrap!important;
 }
 .titulo-sistema{
 display:flex;
@@ -136,42 +140,55 @@ letter-spacing:.08em;
 text-transform:uppercase;
 }
 .hc-top-right{
-margin-left:auto;
-display:flex;
-align-items:center;
-gap:10px;
-flex-wrap:wrap;
+margin-left:auto!important;
+display:flex!important;
+align-items:center!important;
+justify-content:flex-end!important;
+gap:8px!important;
+flex-wrap:nowrap!important;
+}
+.hc-user-chip{
+display:inline-flex!important;
+align-items:center!important;
+gap:7px!important;
+padding:7px 12px!important;
+margin:0!important;
+width:auto!important;
+white-space:nowrap!important;
+border-radius:999px!important;
+background:#f0fdfa!important;
+color:var(--hc-primary-2)!important;
+border:1px solid #ccfbf1!important;
+font-size:12px!important;
+font-weight:700!important;
 }
 .hc-top-kpis{
-display:flex;
-align-items:center;
-gap:8px;
+display:flex!important;
+align-items:center!important;
+justify-content:center!important;
+gap:7px!important;
+margin:0!important;
+padding:0!important;
+flex-wrap:nowrap!important;
 }
 .hc-top-kpis>*{
 margin:0!important;
+flex:0 0 auto!important;
 }
-.hc-user-chip{
-display:inline-flex;
-align-items:center;
-gap:7px;
-padding:7px 12px;
-border-radius:999px;
-background:#f0fdfa;
-color:var(--hc-primary-2);
-border:1px solid #ccfbf1;
-font-size:12px;
-font-weight:700;
+.hc-top-right .btn-sair,.hc-top-right #btnSair,.hc-top-right button[onclick*="logout"]{
+margin:0!important;
+flex:0 0 auto!important;
 }
 #topoBotoes{
 display:flex!important;
 gap:8px!important;
 padding:8px!important;
 margin-bottom:10px!important;
-border:1px solid var(--hc-border);
-border-radius:16px;
-background:rgba(255,255,255,.90);
-box-shadow:var(--hc-shadow-sm);
-align-items:center;
+border:1px solid var(--hc-border)!important;
+border-radius:16px!important;
+background:rgba(255,255,255,.90)!important;
+box-shadow:var(--hc-shadow-sm)!important;
+align-items:center!important;
 }
 button,.btn-topo,.btn-primary,.btn-secondary,.btn-success,.btn-danger{
 min-height:40px;
@@ -291,13 +308,44 @@ vertical-align:middle;
 tr:hover td{
 background:#fbfdff;
 }
+.hc-legenda-turnos{
+display:flex!important;
+align-items:center!important;
+justify-content:space-between!important;
+gap:16px!important;
+width:100%!important;
+margin:6px 0 8px!important;
+}
+.hc-legenda-turnos>*:first-child{
+flex:1 1 auto!important;
+margin:0!important;
+}
+.hc-legenda-turnos .turnos{
+display:flex!important;
+align-items:center!important;
+justify-content:flex-end!important;
+gap:8px!important;
+margin:0!important;
+padding:8px!important;
+flex:0 0 auto!important;
+visibility:visible!important;
+opacity:1!important;
+}
 .turnos{
 gap:8px!important;
 margin-bottom:10px!important;
-border-radius:14px;
-background:#fff;
-border:1px solid var(--hc-border);
-box-shadow:var(--hc-shadow-sm);
+border-radius:14px!important;
+background:#fff!important;
+border:1px solid var(--hc-border)!important;
+box-shadow:var(--hc-shadow-sm)!important;
+}
+.hc-legenda-turnos .turno-btn,.hc-legenda-turnos .turnos button{
+display:inline-flex!important;
+align-items:center!important;
+justify-content:center!important;
+min-width:72px!important;
+visibility:visible!important;
+opacity:1!important;
 }
 .turno-btn{
 opacity:1!important;
@@ -309,23 +357,6 @@ border:1px solid #e2e8f0!important;
 background:linear-gradient(135deg,var(--hc-primary),#14b8a6)!important;
 color:#fff!important;
 border-color:transparent!important;
-}
-.hc-legenda-turnos{
-display:flex;
-justify-content:space-between;
-align-items:flex-start;
-gap:16px;
-width:100%;
-margin:8px 0 10px;
-}
-.hc-legenda-turnos .turnos{
-margin:0 0 0 auto!important;
-display:flex!important;
-gap:8px!important;
-flex-shrink:0;
-}
-.hc-legenda-turnos .turnos button,.hc-legenda-turnos .turno-btn{
-min-width:72px;
 }
 #listaMedicacoes,.grid-medicacoes{
 gap:10px!important;
@@ -345,27 +376,33 @@ border-radius:999px!important;
 padding:6px 10px!important;
 }
 .hc-progresso-inline{
-display:inline-flex;
-align-items:center;
-gap:6px;
-font-weight:700;
+display:inline-flex!important;
+align-items:center!important;
+justify-content:center!important;
+gap:6px!important;
+font-weight:700!important;
+white-space:nowrap!important;
 }
 .hc-progresso-texto{
-font-weight:700;
-white-space:nowrap;
+font-weight:700!important;
+white-space:nowrap!important;
 }
 .hc-progresso-check{
-display:inline-flex;
-align-items:center;
-justify-content:center;
-width:20px;
-height:20px;
-border-radius:50%;
-background:#22c55e;
-color:#fff;
-font-size:12px;
-font-weight:900;
-line-height:1;
+display:inline-flex!important;
+align-items:center!important;
+justify-content:center!important;
+width:18px!important;
+height:18px!important;
+min-width:18px!important;
+min-height:18px!important;
+padding:0!important;
+margin:0!important;
+border-radius:50%!important;
+background:#22c55e!important;
+color:#fff!important;
+font-size:11px!important;
+font-weight:900!important;
+line-height:1!important;
 }
 #statusSync{
 background:#0f172a!important;
@@ -436,9 +473,6 @@ margin-top:8px;
 font-size:12px;
 color:#64748b;
 }
-#painelMedicacao *,#painelEnfermagem *,#painelClinico *,#painelMedicacaoHora *,#painelAdmin *{
-align-content:flex-start!important;
-}
 .row,.linha,.grid,.grid-medicacoes{
 justify-content:flex-start!important;
 align-items:flex-start!important;
@@ -447,7 +481,9 @@ align-items:flex-start!important;
 #app{padding:8px!important;}
 .topo-sistema{top:4px!important;border-radius:14px!important;}
 .titulo-3d{font-size:18px!important;}
-.hc-user-chip{width:100%;margin:4px 0 0;}
+.hc-top-right{margin-left:auto!important;display:flex!important;width:auto!important;justify-content:flex-end!important;flex-wrap:wrap!important;}
+.hc-user-chip{width:auto!important;margin:0!important;}
+.hc-top-kpis{display:flex!important;gap:6px!important;}
 #topoBotoes{overflow-x:auto;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch;}
 #topoBotoes button{flex:0 0 auto;white-space:nowrap!important;}
 .card,.box{padding:12px!important;}
@@ -458,9 +494,9 @@ table{font-size:12px;}
 #painelEnfermagem,#painelClinico,#painelMedicacao,#painelMedicacaoHora,#painelAdmin{padding:6px!important;}
 .card,.box,.card-medicacao,.turnos,.hc-backup-card{padding:10px!important;margin-bottom:8px!important;}
 #topoBotoes{gap:6px!important;padding:6px!important;}
-.hc-top-right{width:100%;justify-content:flex-start;}
-.hc-legenda-turnos{flex-direction:column;align-items:flex-start;}
-.hc-legenda-turnos .turnos{margin-left:0!important;}
+.hc-top-right{width:100%!important;justify-content:flex-end!important;gap:6px!important;}
+.hc-legenda-turnos{display:flex!important;flex-direction:row!important;align-items:center!important;}
+.hc-legenda-turnos .turnos{margin-left:auto!important;display:flex!important;}
 }
 @media(max-width:600px){
 #login{padding:14px!important;}
@@ -471,4 +507,8 @@ table{font-size:12px;}
 .titulo-3d{font-size:17px!important;}
 th,td{padding:7px 6px!important;}
 .hc-backup-actions button{width:100%;}
+.hc-user-chip{font-size:11px!important;padding:6px 9px!important;}
+.hc-top-kpis{gap:4px!important;}
+.hc-legenda-turnos{gap:8px!important;flex-wrap:wrap!important;}
+.hc-legenda-turnos .turnos{margin-left:auto!important;}
 }
