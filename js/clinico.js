@@ -3,6 +3,10 @@
 ==================================================== */
 window.MODO_EDICAO_CLINICO=false
 
+function textoClinicoSeguro(valor){
+return String(valor??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+}
+
 function normalizar(txt){
 return (txt||"")
 .toString()
@@ -77,10 +81,10 @@ html+=`<tr data-id="${p?.id||""}">
 <td>${p?.da||p?.demencia?"✔":""}</td>
 <td>${p?.cardiopatia||p?.cardio?"✔":""}</td>
 <td>${p?.acamado||p?.restrito_leito?"✔":""}</td>
-<td>${p?.pressao_arterial||""}</td>
+<td>${textoClinicoSeguro(p?.pressao_arterial)}</td>
 <td>${dietaHTML||""}</td>
 <td>${p?.grau_risco||""}</td>
-<td>${montarColunaOutras(p)||""}</td>
+<td>${textoClinicoSeguro(montarColunaOutras(p))}</td>
 </tr>`
 }
 tabela.innerHTML=html
@@ -296,20 +300,20 @@ if(!db){console.error("Supabase ainda não carregou");return}
 const {data,error}=await db.from("pacientes").select("*").eq("id",pacienteId).single()
 if(error){console.error("Erro clínico paciente",error);return}
 let html=`<div class="box"><h3>Dados Clínicos do Paciente</h3><table class="tabela-clinica-edicao">
-<tr><td><b>Paciente</b></td><td>${data.nome_completo}</td></tr>
+<tr><td><b>Paciente</b></td><td>${textoClinicoSeguro(data.nome_completo)}</td></tr>
 <tr><td><b>Idade</b></td><td>${calcularIdade(data.data_nascimento)}</td></tr>
 <tr><td><b>HAS</b></td><td>${data.has?"✔ SIM":"—"}</td></tr>
 <tr><td><b>Diabetes</b></td><td>${data.dm?"✔ SIM":"—"}</td></tr>
 <tr><td><b>Demência</b></td><td>${data.da?"✔ SIM":"—"}</td></tr>
 <tr><td><b>Cardiopatia</b></td><td>${data.cardiopatia?"✔ SIM":"—"}</td></tr>
 <tr><td><b>Acamado</b></td><td>${data.acamado?"✔ SIM":"—"}</td></tr>
-<tr><td><b>Pressão Arterial</b></td><td>${data.pressao_arterial??"-"}</td></tr>
-<tr><td><b>Dieta Especial</b></td><td>${data.dieta_especial?"SIM":"NÃO"} ${data.dieta_texto??""}</td></tr>
+<tr><td><b>Pressão Arterial</b></td><td>${textoClinicoSeguro(data.pressao_arterial??"-")}</td></tr>
+<tr><td><b>Dieta Especial</b></td><td>${data.dieta_especial?"SIM":"NÃO"} ${textoClinicoSeguro(data.dieta_texto)}</td></tr>
 <tr><td><b>Grau de Risco</b></td><td>${data.grau_risco??"-"}</td></tr>
 <tr>
 <td><b>Outras Comorbidades</b></td>
 <td style="color:#c0392b;font-weight:bold">
-${data.outras_comorbidades&&data.outras_comorbidades.trim()!==""?data.outras_comorbidades:"Não informado"}
+${textoClinicoSeguro(data.outras_comorbidades&&data.outras_comorbidades.trim()!==""?data.outras_comorbidades:"Não informado")}
 </td>
 </tr>
 </table></div>`
@@ -327,4 +331,3 @@ if(!confirmar)return
 await db.from("pacientes").update({ativo:false}).eq("id",id).eq("empresa_id",EMPRESA_ID)
 await carregarClinico()
 }
-

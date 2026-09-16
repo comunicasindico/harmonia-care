@@ -28,6 +28,10 @@ for(const file of ['clinico.js','paciente-editor.js'])w.eval(fs.readFileSync(pat
 async function run(){
   await w.carregarClinico();
   assert.equal(d.querySelectorAll('.clin-editar').length,2);
+  patients[0].outras_comorbidades='Texto literal <img src=x onerror=alert(1)>';
+  await w.carregarClinico();
+  assert.equal(d.querySelector('#quadroClinico img'),null);
+  assert.match(d.querySelector('#quadroClinico').textContent,/<img src=x/);
   await w.HarmoniaPaciente.open('paciente-a');
   assert.equal($('ceTitle').textContent,'Paciente fictício A');
   assert.equal($('ce_data_nascimento').value,'1940-05-15');
