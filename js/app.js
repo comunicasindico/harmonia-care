@@ -111,6 +111,8 @@ localStorage.setItem("usuario_perfil",(user.perfil||"cuidador").toLowerCase())
 const EMPRESA_FIXA="d9f678e5-6c7a-485e-895c-cb4791db840e"
 localStorage.setItem("empresa_id",EMPRESA_FIXA)
 EMPRESA_ID=EMPRESA_FIXA
+if(window.HarmoniaMedicacao?.allowed()){try{await window.HarmoniaMedicacao.authenticate(loginInput,senha);}catch(e){console.warn("Confirmação de acesso à Medicação será solicitada no painel.");}}
+if(document.getElementById("senha"))document.getElementById("senha").value=""
 console.log("LOGIN OK:",localStorage.getItem("usuario_id"))
 const telaLogin=document.getElementById("login")
 const telaApp=document.getElementById("app")
@@ -190,8 +192,13 @@ autoFinalizarNaoObrigatorios()
 /* ====================================================
 013 – LOGOUT
 ==================================================== */
-function logout(){
-localStorage.clear()
+async function logout(){
+await window.HarmoniaMedicacao?.logout();
+const pendenciasMed=localStorage.getItem("fila_medicacao");
+const pendenciasRotinas=localStorage.getItem("fila_rotinas");
+localStorage.clear();
+if(pendenciasMed)localStorage.setItem("fila_medicacao",pendenciasMed);
+if(pendenciasRotinas)localStorage.setItem("fila_rotinas",pendenciasRotinas);
 location.reload()
 }
 /* ====================================================
@@ -255,6 +262,8 @@ if(fim && !fim.value)fim.value=dataLocal
 }
 /* ====================================================017 – NAVEGAÇÃO PAINÉIS (FINAL CORRIGIDO)==================================================== */
 function abrirPainel(id){
+if(["painelMedicacao","painelMedicacaoHora"].includes(id)&&!window.HarmoniaMedicacao?.allowed()){alert("Este perfil não tem acesso à Medicação.");return;}
+if(window.HarmoniaMedicacao?.hasUnsaved()&&!window.HarmoniaMedicacao.discard())return;
 if(id==='painelEquipe'&&!window.HarmoniaEquipe?.allowed()){alert('Gestão disponível ao nível 1.');return;}
 if(id!=='painelEquipe'&&window.HarmoniaEquipe?.hasUnsaved()&&!window.HarmoniaEquipe.discard())return;
 if(id==='painelNutricao'&&!window.HarmoniaNutricao?.allowed()){alert('Painel disponível para nutricionista e nível 1.');return;}
@@ -272,18 +281,8 @@ if(id==='painelNutricao'){const target=window.HarmoniaNutricao.target;window.Har
 if(id==="painelEnfermagem"&&typeof carregarRotinas==="function")carregarRotinas()
 if(id==="painelClinico"&&typeof carregarClinico==="function")carregarClinico()
 if(id==="painelAdmin"&&typeof carregarUsuarios==="function")carregarUsuarios()
-if(id==="painelMedicacao"){
-setTimeout(function(){
-if(typeof carregarStatusMedicacoes==="function")carregarStatusMedicacoes()
-if(typeof carregarPacientesMedicacao==="function")carregarPacientesMedicacao()
-if(typeof carregarMedicacoes==="function")carregarMedicacoes()
-},100)
-}
-if(id==="painelMedicacaoHora" && typeof carregarMedicacoesHora==="function"){
-setTimeout(function(){
-carregarMedicacoesHora()
-},100)
-}
+if(id==="painelMedicacao")window.HarmoniaMedicacao.open();
+if(id==="painelMedicacaoHora")window.HarmoniaMedicacao.openHours();
 /* 🔥 BOTÃO PENDENTES (NOVO PADRÃO) */
 const btnPendentes=document.getElementById("btnPendentesTodos")
 if(btnPendentes){
@@ -311,6 +310,7 @@ document.querySelectorAll("#topoBotoes button").forEach(b=>b.style.display="none
 if(window.HarmoniaNutricao?.allowed())ids.push("btnNutricao")
 if(window.HarmoniaEquipe?.allowed())ids.push("btnEquipe")
 ids.forEach(id=>{
+if(["btnMedicacao","btnMedicacaoHora","btnPDFMedicacaoPaciente","btnPDFMedicacaoGeral"].includes(id)&&!window.HarmoniaMedicacao?.allowed())return;
 const el=document.getElementById(id)
 if(el)el.style.display="inline-block"
 })
@@ -452,6 +452,7 @@ salvarFilaMedicacao()
 071 – SINCRONIZAR FILA MEDICACAO
 ==================================================== */
 async function sincronizarFilaMedicacao(){
+if(window.HarmoniaMedicacao)return; // Preserved legacy queue requires individual review.
 
 if(!db||!window.FILA_MEDICACAO.length)return
 

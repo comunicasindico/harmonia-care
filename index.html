@@ -33,15 +33,15 @@ window.TURNO_ATUAL=h<12?"manha":h<18?"tarde":"noite"
 004 – SISTEMA
 ==================================================== -->
 <script defer src="js/supabase.js?cache=20260916n1"></script>
-<script defer src="js/login-fix.js?cache=20260917admin1"></script>
+<script defer src="js/login-fix.js?cache=20260917med1"></script>
 <script defer src="js/pdf.js?cache=20260512"></script>
 <script defer src="js/enfermagem.js?cache=20260917admin1"></script>
 <script defer src="js/clinico.js?cache=20260917paciente2"></script>
 <script defer src="js/paciente-editor.js?v=20260917paciente1"></script>
-<script defer src="js/medicacao.js?cache=20260512"></script>
-<script defer src="js/medicacaohora.js?cache=20260512"></script>
+<script defer src="js/medicacao-v2.js?v=20260917med1"></script>
+
 <script defer src="js/admin.js?cache=20260917admin1"></script>
-<script defer src="js/app.js?cache=20260917paciente1"></script>
+<script defer src="js/app.js?cache=20260917med1"></script>
 <!-- ====================================================
 002 – ESTILOS GLOBAIS (FINAL LIMPO + OTIMIZADO)
 ==================================================== -->
@@ -167,6 +167,7 @@ background:linear-gradient(45deg,#16a085,#2ecc71);
 </style>
 <link rel="stylesheet" href="css/nutricao.css?v=20260916n1">
 <link rel="stylesheet" href="css/clinico.css?v=20260917paciente1">
+<link rel="stylesheet" href="css/medicacao.css?v=20260917med1">
 <script defer src="js/nutricao.js?v=20260916n1"></script>
 <script defer src="js/equipe.js?v=20260916n1"></script>
 </head>
@@ -224,7 +225,7 @@ background:linear-gradient(45deg,#16a085,#2ecc71);
 <button id="btnEquipe" onclick="abrirPainel('painelEquipe')" class="btn-primary">Cuidadores e vínculos</button>
 <button id="btnNutricao" onclick="abrirPainel('painelNutricao')" class="btn-primary">Nutrição</button>
 <button id="btnClinico" onclick="abrirPainel('painelClinico')" class="btn-secondary">Painel Clínico</button>
-<button id="btnMedicacao" onclick="abrirPainel('painelMedicacao');abrirPainelMedicacao()" class="btn-primary">💊 Medicação</button>
+<button id="btnMedicacao" onclick="abrirPainel('painelMedicacao')" class="btn-primary">💊 Medicação</button>
 <button id="btnMedicacaoHora" onclick="abrirPainel('painelMedicacaoHora')" class="btn-secondary">⏰ Medicação p/Hora</button>
 
 <button id="btnPDFMedicacaoPaciente" class="btn-primary" onclick="gerarPDFMedicacaoPaciente()">📄 PDF Paciente Medicação</button>
@@ -258,106 +259,8 @@ background:linear-gradient(45deg,#16a085,#2ecc71);
 ==================================================== -->
 <section id="painelEquipe" style="display:none" aria-label="Cuidadores e pacientes vinculados"></section>
 <section id="painelNutricao" style="display:none" aria-label="Painel Nutrição"></section>
-<div id="painelMedicacao" class="box" style="display:none">
-
-<h3 style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
-<span>💊 Controle de Medicação</span>
-<span style="font-size:13px;display:flex;gap:12px;align-items:center;">
-<span style="display:flex;align-items:center;gap:4px;">
-<span style="width:10px;height:10px;background:#facc15;border-radius:50%;display:inline-block;"></span>
-Não medicado: <b id="countNaoMed">0</b>
-</span>
-<span style="display:flex;align-items:center;gap:4px;">
-<span style="width:10px;height:10px;background:#22c55e;border-radius:50%;display:inline-block;"></span>
-Medicado: <b id="countSimMed">0</b>
-</span>
-</span>
-</h3>
-
-<select id="buscaPacienteMedicacao"></select>
-
-<div style="background:#fff;padding:12px;margin-bottom:10px;border-radius:10px">
-
-<div style="font-weight:bold;margin-bottom:6px">Cadastrar ou Editar Medicação</div>
-
-<input id="nomeMedicacao">
-
-<input id="doseMedicacao" placeholder="Dosagem"
-style="width:100%;margin-bottom:6px;padding:6px">
-
-<label style="font-size:12px;font-weight:bold;margin-bottom:4px;display:block">
-Tipo da Medicação
-</label>
-
-<div style="display:flex;gap:8px;margin-bottom:6px">
-<select id="obrigatorioMedicacao" style="width:40%;padding:6px;border-radius:6px">
-<option value="true">✔ Obrigatório</option>
-<option value="false">⚠ Não obrigatório</option>
-</select>
-
-<select id="listaMedicacoesEditar" style="width:60%;padding:6px;border-radius:6px">
-<option value="">🔄 Alterar medicação existente</option>
-</select>
-</div>
-
-<div onclick="toggleHorariosMedicacao()"
-style="background:#f1f5f9;padding:8px;border-radius:8px;margin-bottom:6px;cursor:pointer;font-weight:bold">
-
-⏰ Selecionar Horários ▼
-
-</div>
-
-<div id="boxHorariosMedicacao" style="display:none">
-
-<div id="horarioMedicacao"
-style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:8px">
-
-</div>
-
-</div>
-<!-- 🔥 PATCH 017 – PERÍODO -->
-<div style="display:flex;gap:6px;margin-bottom:6px">
-<input id="dataInicioMedicacao" type="date" style="flex:1;padding:6px">
-<input id="dataFimMedicacao" type="date" style="flex:1;padding:6px">
-</div>
-
-<div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
-<button onclick="setPeriodoDias(1)" style="padding:4px 8px;border:none;border-radius:6px;background:#e5e7eb">Hoje</button>
-<button onclick="setPeriodoDias(7)" style="padding:4px 8px;border:none;border-radius:6px;background:#e5e7eb">7 dias</button>
-<button onclick="setPeriodoDias(15)" style="padding:4px 8px;border:none;border-radius:6px;background:#e5e7eb">15 dias</button>
-<button onclick="setPeriodoDias(30)" style="padding:4px 8px;border:none;border-radius:6px;background:#e5e7eb">30 dias</button>
-</div>
-<button onclick="filtrarPeriodoMedicacao()" 
-style="background:#2563eb;color:#fff;border:none;padding:6px 10px;border-radius:6px;margin-bottom:8px">
-🔎 Pesquisar Período
-</button>
-<button onclick="salvarNovaMedicacao()"
-style="background:#10b981;color:#fff;border:none;padding:6px 10px;border-radius:6px">
-Salvar
-</button>
-</div>
-
-<div id="listaMedicacoes"></div>
-</div>
-<!-- ====================================================
-009 – PAINEL MEDICAÇÃO p/HORA (CORRIGIDO)
-==================================================== -->
-<div id="painelMedicacaoHora" class="box" style="display:none">
-<h3 style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
-<span>⏰ Medicação por Hora</span>
-<span style="font-size:13px;display:flex;gap:14px;align-items:center;">
-<span style="display:flex;align-items:center;gap:6px;">
-<span style="width:10px;height:10px;background:#facc15;border-radius:50%;display:inline-block;"></span>
-A medicar: <b id="countNaoMedHora">0</b>
-</span>
-<span style="display:flex;align-items:center;gap:6px;">
-<span style="width:10px;height:10px;background:#22c55e;border-radius:50%;display:inline-block;"></span>
-Medicação não concedida: <b id="countSimMedHora">0</b>
-</span>
-</span>
-</h3>
-<div id="listaMedicacoesHora"></div>
-</div>
+<section id="painelMedicacao" class="box hm" style="display:none" aria-label="Painel Medicação"></section>
+<section id="painelMedicacaoHora" class="box hm" style="display:none" aria-label="Medicação por horário"></section>
 <!-- ====================================================
 010 – PAINEL ENFERMAGEM
 ==================================================== -->
@@ -569,7 +472,7 @@ btn.classList.toggle("ativo")
 })
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="js/pdfmedicacao.js"></script>
+<script src="js/pdfmedicacao.js?v=20260917med1"></script>
 
 <script>
 function mostrarProgresso(p=10){

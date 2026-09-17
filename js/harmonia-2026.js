@@ -142,7 +142,7 @@
     if(painel&&!qs('.hc-admin-note',painel)){const d=document.createElement('div');d.className='hc-admin-note';d.textContent='Atribua pacientes pelo botão “Pacientes” de cada profissional. Cuidadores permanecem visíveis ao nível 1 e podem receber exatamente os pacientes autorizados.';painel.insertBefore(d,painel.children[1]||null)}
   }
 
-  function boot(){injectStyles();ensureMedicationFields();patchMedication();patchAdmin();}
+  function boot(){injectStyles();if(!window.HarmoniaMedicacao){ensureMedicationFields();patchMedication();}patchAdmin();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
   window.addEventListener('load',()=>setTimeout(boot,200));
 })();

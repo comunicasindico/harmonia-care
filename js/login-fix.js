@@ -16,7 +16,7 @@
   function carregarHarmonia2026(){
     if(document.querySelector('script[data-hc2026]'))return;
     const s=document.createElement('script');
-    s.src='js/harmonia-2026.js?cache=20260917admin1';
+    s.src='js/harmonia-2026.js?cache=20260917med1';
     s.defer=true;
     s.dataset.hc2026='1';
     document.head.appendChild(s);
