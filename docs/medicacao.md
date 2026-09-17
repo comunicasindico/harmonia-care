@@ -31,3 +31,11 @@ Novas administrações guardam uma cópia da prescrição e o instante do regist
 Fila antiga do dispositivo: preservada para conferência, sem envio automático por rotinas antigas. A opção de exportação permite conciliar pendências com o histórico. O painel novo exige confirmação do banco para considerar uma dose administrada.
 
 Testes: `tests/medicacao-ui.cjs` (JSDOM, jsPDF e AutoTable) e `tests/medicacao-transacional.sql` (fixtures fictícias, transação revertida). Cobrem filtros, datas inclusivas, relatório histórico, isolamento por prescrição, falha de gravação, concorrência, vínculos, autorização, anulação e preservação de dose histórica.
+
+## Reinício dos registros em setembro de 2026
+
+A pedido da gestão, as marcações anteriores, até **16/09/2026 inclusive**, foram copiadas para backup privado e retiradas das tabelas de execução. A cópia inclui 65.590 registros de rotinas, 10.126 aplicações, 259 prescrições, 47 pacientes e 12 modelos de rotina. Prescrições, pacientes, modelos e vínculos permanecem ativos. Registros posteriores ao corte não são removidos.
+
+**Medicação → Backup anterior → Baixar cópia completa** permite ao nível 1 obter o arquivo JSON integral, com manifesto e contagens verificadas. O backup fica protegido no banco. Ele não é mesclado automaticamente com os novos relatórios operacionais. Registros órfãos sem vínculo demonstrável com a instituição não foram alterados.
+
+Filas antigas e a geração automática de pendências não podem preencher novamente o período arquivado. Novas marcações manuais das rotinas são permitidas. Para medicação, **Detalhes → Lançamento retroativo** exige nível 1, data, horário e justificativa, preservando a data real em que o lançamento foi registrado. Administrações futuras não são confirmadas antecipadamente; prescrições com início futuro continuam disponíveis para planejamento.

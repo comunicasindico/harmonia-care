@@ -43,7 +43,7 @@ const ano=limite.getFullYear()
 const mes=String(limite.getMonth()+1).padStart(2,"0")
 const dia=String(limite.getDate()).padStart(2,"0")
 const dataLimite=`${ano}-${mes}-${dia}`
-const{data:pendentes,error}=await db.from("rotinas_execucao").select("id,paciente_id,rotina_id,data,turno,status").eq("empresa_id",EMPRESA_ID).eq("status","pendente").lte("data",dataLimite)
+const{data:pendentes,error}=await db.from("rotinas_execucao").select("id,paciente_id,rotina_id,data,turno,status").eq("empresa_id",EMPRESA_ID).eq("status","pendente").gt("data","2026-09-16").lte("data",dataLimite)
 if(error){
 console.error("Erro ao localizar pendências antigas:",error)
 return
@@ -293,6 +293,7 @@ rotina_id:rotinaId,
 data:d,
 turno:t,
 status:"executado",
+lancamento_manual:true,
 usuario_id:user.id,
 profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
@@ -413,6 +414,7 @@ rotina_id:r.rotina_id,
 data:d,
 turno:t,
 status:"executado",
+lancamento_manual:true,
 usuario_id:user.id,
 profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
@@ -491,6 +493,7 @@ rotina_id:r.rotina_id,
 data:d,
 turno:t,
 status:"executado",
+lancamento_manual:true,
 profissional_nome:user.nome,
 empresa_id:EMPRESA_ID
 })
@@ -538,6 +541,7 @@ window._gerandoRotinas=true
 try{
 const dataRaw=document.getElementById("dataInicio")?.value
 const hoje=dataRaw&&dataRaw.includes("/")?dataRaw.split("/").reverse().join("-"):(dataRaw||new Date().toISOString().slice(0,10))
+if(hoje<="2026-09-16")return; // Historical dates are populated only by deliberate manual entries.
 const turno=TURNO_ATUAL||"manha"
 const {data:pacientes,error:e1}=await db.from("pacientes").select("id").eq("empresa_id",EMPRESA_ID).eq("ativo",true)
 if(e1||!pacientes?.length){console.error("Erro pacientes",e1);return}

@@ -48,15 +48,17 @@ let fila=[...window.FILA_ROTINAS]
 let novaFila=[]
 for(let i=0;i<fila.length;i++){
 let item=fila[i]
+if(item.data<="2026-09-16"&&!item.lancamento_manual){novaFila.push(item);continue;}
+const {tentativas,ts,...payload}=item;
 try{
-const res=await db.from("rotinas_execucao").upsert(item,{onConflict:"paciente_id,rotina_id,data,turno,empresa_id"})
+const res=await db.from("rotinas_execucao").upsert(payload,{onConflict:"paciente_id,rotina_id,data,turno,empresa_id"})
 if(res.error){
 item.tentativas++
-if(item.tentativas<5)novaFila.push(item)
+novaFila.push(item)
 }
 }catch(e){
 item.tentativas++
-if(item.tentativas<5)novaFila.push(item)
+novaFila.push(item)
 }
 if(i%5===0)await new Promise(r=>setTimeout(r,0))
 }
@@ -486,12 +488,12 @@ onConflict:"medicacao_id,data,horario,empresa_id,paciente_id"
 if(error){
 console.error("ERRO REAL:",error)
 item.tentativas=(item.tentativas||0)+1
-if(item.tentativas<5)novaFila.push(item)
+novaFila.push(item)
 }
 
 }catch(e){
 item.tentativas=(item.tentativas||0)+1
-if(item.tentativas<5)novaFila.push(item)
+novaFila.push(item)
 }
 
 /* 🔥 NÃO TRAVAR UI */

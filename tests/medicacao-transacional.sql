@@ -35,6 +35,17 @@ begin
  bad:=false;begin perform public.medicacao_api('administer',tok,jsonb_build_object('id',r->>'id','versao',r->>'versao','data',today,'horario','19:00'));exception when others then bad:=true;end;if not bad then raise exception 'Tratamento encerrado administrado';end if;
  if jsonb_array_length(public.medicacao_api('executions',tok,jsonb_build_object('from',today,'to',today,'paciente_id',pid)))<>1 then raise exception 'Histórico perdido ao encerrar';end if;
  if jsonb_array_length(public.medicacao_api('audit',tok,jsonb_build_object('id',r->>'id')))<5 then raise exception 'Auditoria incompleta';end if;
+ r:=public.medicacao_api('save',tok,payload||jsonb_build_object('data_inicio',today-2));
+ bad:=false;begin perform public.medicacao_api('administer',tok,jsonb_build_object('id',r->>'id','versao',r->>'versao','data',today-1,'horario','07:00'));exception when insufficient_privilege then bad:=true;end;if not bad then raise exception 'Retroativo sem justificativa aceito';end if;
+ ex:=public.medicacao_api('administer',tok,jsonb_build_object('id',r->>'id','versao',r->>'versao','data',today-1,'horario','07:00','retroativo',true,'motivo','Teste retroativo revertido'));
+ if (ex->>'data')::date<>today-1 or ex->>'registrado_em' is null then raise exception 'Registro retroativo incorreto';end if;
+ if jsonb_typeof(public.medicacao_backup('info',tok,'{}'))<>'array' then raise exception 'Backup não acessível ao gestor';end if;
+ bad:=false;begin perform public.medicacao_backup('info',ntok,'{}');exception when insufficient_privilege then bad:=true;end;if not bad then raise exception 'Backup acessível a não gestor';end if;
+ insert into public.rotinas_execucao(id,empresa_id,paciente_id,data,status) values(gen_random_uuid(),company,pid,'2026-09-16','pendente');
+ if exists(select 1 from public.rotinas_execucao where paciente_id=pid) then raise exception 'Período antigo preenchido automaticamente';end if;
+ bad:=false;begin insert into public.rotinas_execucao(id,empresa_id,paciente_id,data,status) values(gen_random_uuid(),company,pid,'2026-09-16','executado');exception when others then bad:=true;end;if not bad then raise exception 'Fila antiga reaplicada';end if;
+ insert into public.rotinas_execucao(id,empresa_id,paciente_id,data,status,lancamento_manual) values(gen_random_uuid(),company,pid,'2026-09-16','executado',true);
+ if not exists(select 1 from public.rotinas_execucao where paciente_id=pid and lancamento_manual=true) then raise exception 'Novo lançamento manual rejeitado';end if;
  perform set_config('harmonia.qa_token',tok,true);
 end $test$;
 set local role anon;
